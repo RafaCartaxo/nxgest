@@ -1,8 +1,9 @@
-import { NavLink } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Globe, Sun, Moon } from "lucide-react"
+import { Globe, Sun, Moon, Shield, LogOut } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useTheme } from "../theme/useTheme.js"
+import { useAuth } from "../auth/AuthContext.js"
 
 const locales = [
   { code: "pt-BR", label: "PT" },
@@ -13,6 +14,8 @@ const locales = [
 export function Navbar() {
   const { t, i18n } = useTranslation()
   const { theme, toggle } = useTheme()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [langOpen, setLangOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -25,6 +28,11 @@ export function Navbar() {
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
+
+  function handleLogout() {
+    logout()
+    navigate("/login")
+  }
 
   const links = [
     { to: "/", label: t("nav.central") },
@@ -54,14 +62,17 @@ export function Navbar() {
             </NavLink>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={toggle}
-          className="shrink-0 flex items-center px-2 py-3 text-text-muted hover:text-text-primary"
-        >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
-        <div ref={ref} className="relative ml-auto shrink-0">
+        {user?.role === "admin" && (
+          <NavLink
+            to="/admin"
+            className="flex items-center gap-1 px-3 py-3 text-xs font-medium text-text-muted hover:text-text-primary"
+          >
+            <Shield className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Admin</span>
+          </NavLink>
+        )}
+        <div className="flex-1" />
+        <div ref={ref} className="relative shrink-0">
           <button
             type="button"
             onClick={() => setLangOpen(!langOpen)}
@@ -87,6 +98,23 @@ export function Navbar() {
             </div>
           )}
         </div>
+        <button
+          type="button"
+          onClick={toggle}
+          className="shrink-0 flex items-center px-2 py-3 text-text-muted hover:text-text-primary"
+        >
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+        {user && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="shrink-0 flex items-center px-2 py-3 text-text-muted hover:text-text-primary"
+            title={t("auth.sair")}
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </nav>
   )

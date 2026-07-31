@@ -296,6 +296,56 @@
     "CONTRACT_HAS_PAYMENTS": "Contract has registered payments.",
     "INSUFFICIENT_BALANCE": "Insufficient balance.",
     "VALIDATION_ERROR": "Invalid data.",
-    "UNKNOWN_ERROR": "Unexpected error. Please try again."
+    "UNKNOWN_ERROR": "Unexpected error. Please try again.",
+    "UNAUTHORIZED": "Authentication token missing.",
+    "TOKEN_EXPIRED": "Invalid or expired token.",
+    "INVALID_CREDENTIALS": "Invalid email or password.",
+    "FORBIDDEN": "Administrator access required.",
+    "EMAIL_DUPLICATED": "Email already registered.",
+    "OPERATOR_NOT_FOUND": "Operator not found.",
+    "INTERNAL_ERROR": "Internal server error. Please try again."
+  },
+  "auth": {
+    "title": "Sign In",
+    "email": "Email",
+    "senha": "Password",
+    "entrar": "Sign In",
+    "sair": "Sign Out",
+    "erroLogin": "Invalid email or password.",
+    "tokenExpirado": "Session expired. Please sign in again."
+  },
+  "admin": {
+    "title": "Administration",
+    "operadores": "Operators",
+    "novoOperador": "New Operator",
+    "editarOperador": "Edit Operator",
+    "nome": "Name",
+    "email": "Email",
+    "senha": "Password",
+    "role": "Role",
+    "roleAdmin": "Administrator",
+    "roleOperator": "Operator",
+    "totalOperadores": "Operators",
+    "totalClientes": "Total Clients",
+    "contratosAtivos": "Active Contracts",
+    "resultadoDia": "Daily Result",
+    "removerConfirmacao": "Remove operator?",
+    "removerConfirmacaoMessage": "Remove this operator? Their data will remain in the system.",
+    "removerSucesso": "Operator removed.",
+    "criarSucesso": "Operator created.",
+    "editarSucesso": "Operator updated.",
+    "erroCarregar": "Error loading administration data.",
+    "emptyMessage": "No operators registered.",
+    "buscarPlaceholder": "Search by name or email...",
+    "senhaOpcional": "Leave blank to keep current",
+    "erroAutoRemover": "You cannot remove yourself.",
+    "erroAutoRebaixar": "You cannot change your own role.",
+    "validacao": {
+      "nomeObrigatorio": "Name is required.",
+      "emailObrigatorio": "Email is required.",
+      "emailInvalido": "Invalid email.",
+      "senhaCurta": "Password must be at least 6 characters.",
+      "roleObrigatorio": "Select a role."
+    }
   }
 }

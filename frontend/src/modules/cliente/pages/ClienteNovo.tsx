@@ -19,6 +19,7 @@ export function ClienteNovo() {
   const feedback = useFeedback()
 
   const form = useForm<ClienteFormData>({
+    shouldFocusError: true,
     resolver: zodResolver(getClienteSchema(t)),
     defaultValues: {
       nome: "",
@@ -97,8 +98,16 @@ export function ClienteNovo() {
               nome: "nome",
               comercio: "comercio",
               "endereco.logradouro": "logradouro",
+              "endereco.bairro": "bairro",
+              "endereco.numero": "numero",
+              "endereco.complemento": "complemento",
               "endereco.cidade": "cidade",
               "endereco.estado": "estado",
+              "enderecoComercio.logradouro": "comercioLogradouro",
+              "enderecoComercio.cidade": "comercioCidade",
+              "enderecoComercio.estado": "comercioEstado",
+              "enderecoComercio.numero": "comercioNumero",
+              "enderecoComercio.bairro": "comercioBairro",
             }
             for (const d of err.details) {
               const formField = fieldMap[d.field]
@@ -106,7 +115,9 @@ export function ClienteNovo() {
                 form.setError(formField as keyof ClienteFormData, { message: d.message })
               }
             }
-            return
+            const firstField = fieldMap[err.details[0]?.field]
+            if (firstField) form.setFocus(firstField as keyof ClienteFormData)
+            throw err
           }
           if (err instanceof ApiError) {
             throw new Error(err.message)

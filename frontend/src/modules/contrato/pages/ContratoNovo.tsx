@@ -34,6 +34,7 @@ export function ContratoNovo() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<ContratoFormData>({
+    shouldFocusError: true,
     resolver: zodResolver(getContratoSchema(t)),
     defaultValues: {
       valorBase: "",
@@ -123,6 +124,23 @@ export function ContratoNovo() {
           })
           navigate(`/contratos/${contrato.id}`, { replace: true })
         } catch (err) {
+          if (err instanceof ApiError && err.details) {
+            const fieldMap: Record<string, string> = {
+              valorBase: "valorBase",
+              percentualJuros: "percentualJuros",
+              quantidadeParcelas: "quantidadeParcelas",
+              dataInicio: "dataInicio",
+            }
+            for (const d of err.details) {
+              const formField = fieldMap[d.field]
+              if (formField) {
+                form.setError(formField as keyof ContratoFormData, { message: d.message })
+              }
+            }
+            const firstField = fieldMap[err.details[0]?.field]
+            if (firstField) form.setFocus(firstField as keyof ContratoFormData)
+            throw err
+          }
           if (err instanceof ApiError) {
             throw new Error(err.message)
           }

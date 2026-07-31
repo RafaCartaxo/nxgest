@@ -296,6 +296,56 @@
     "CONTRACT_HAS_PAYMENTS": "Contrato possui pagamentos registrados.",
     "INSUFFICIENT_BALANCE": "Saldo insuficiente.",
     "VALIDATION_ERROR": "Dados inválidos.",
-    "UNKNOWN_ERROR": "Erro inesperado. Tente novamente."
+    "UNKNOWN_ERROR": "Erro inesperado. Tente novamente.",
+    "UNAUTHORIZED": "Token de autenticação ausente.",
+    "TOKEN_EXPIRED": "Token inválido ou expirado.",
+    "INVALID_CREDENTIALS": "E-mail ou senha inválidos.",
+    "FORBIDDEN": "Acesso restrito a administradores.",
+    "EMAIL_DUPLICATED": "E-mail já cadastrado.",
+    "OPERATOR_NOT_FOUND": "Operador não encontrado.",
+    "INTERNAL_ERROR": "Erro interno do servidor. Tente novamente."
+  },
+  "auth": {
+    "title": "Entrar",
+    "email": "E-mail",
+    "senha": "Senha",
+    "entrar": "Entrar",
+    "sair": "Sair",
+    "erroLogin": "E-mail ou senha inválidos.",
+    "tokenExpirado": "Sessão expirada. Faça login novamente."
+  },
+  "admin": {
+    "title": "Administração",
+    "operadores": "Operadores",
+    "novoOperador": "Novo Operador",
+    "editarOperador": "Editar Operador",
+    "nome": "Nome",
+    "email": "E-mail",
+    "senha": "Senha",
+    "role": "Papel",
+    "roleAdmin": "Administrador",
+    "roleOperator": "Operador",
+    "totalOperadores": "Operadores",
+    "totalClientes": "Total de Clientes",
+    "contratosAtivos": "Contratos Ativos",
+    "resultadoDia": "Resultado do Dia",
+    "removerConfirmacao": "Remover operador?",
+    "removerConfirmacaoMessage": "Remover este operador? Seus dados permanecerão no sistema.",
+    "removerSucesso": "Operador removido.",
+    "criarSucesso": "Operador criado.",
+    "editarSucesso": "Operador atualizado.",
+    "erroCarregar": "Erro ao carregar dados de administração.",
+    "emptyMessage": "Nenhum operador cadastrado.",
+    "buscarPlaceholder": "Buscar por nome ou e-mail...",
+    "senhaOpcional": "Deixe em branco para manter a atual",
+    "erroAutoRemover": "Você não pode remover a si mesmo.",
+    "erroAutoRebaixar": "Você não pode alterar seu próprio papel.",
+    "validacao": {
+      "nomeObrigatorio": "Informe o nome.",
+      "emailObrigatorio": "Informe o e-mail.",
+      "emailInvalido": "E-mail inválido.",
+      "senhaCurta": "A senha deve ter ao menos 6 caracteres.",
+      "roleObrigatorio": "Selecione um papel."
+    }
   }
 }

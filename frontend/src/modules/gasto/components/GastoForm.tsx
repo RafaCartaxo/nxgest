@@ -7,6 +7,7 @@ import { createGasto, type CreateGastoInput } from "../services/gasto.service.js
 import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
 import { ChevronDown } from "lucide-react"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
+import { ApiError } from "../../../api/client.js"
 
 interface GastoFormProps {
   onSuccess: () => void
@@ -19,6 +20,7 @@ export function GastoForm({ onSuccess }: GastoFormProps) {
   const hoje = getLocalDateString(new Date())
 
   const form = useForm<GastoFormData>({
+    shouldFocusError: true,
     resolver: zodResolver(getGastoSchema(t)),
     defaultValues: {
       valor: "",
@@ -44,14 +46,35 @@ export function GastoForm({ onSuccess }: GastoFormProps) {
       success: t("gasto.sucesso"),
       error: t("gasto.erroCriar"),
       action: async () => {
-        await createGasto(payload)
-        form.reset({
-          valor: "",
-          categoria: "",
-          data: hoje,
-          observacao: "",
-        })
-        onSuccess()
+        try {
+          await createGasto(payload)
+          form.reset({
+            valor: "",
+            categoria: "",
+            data: hoje,
+            observacao: "",
+          })
+          onSuccess()
+        } catch (err) {
+          if (err instanceof ApiError && err.details) {
+            const fieldMap: Record<string, string> = {
+              valor: "valor",
+              categoria: "categoria",
+              data: "data",
+              observacao: "observacao",
+            }
+            for (const d of err.details) {
+              const formField = fieldMap[d.field]
+              if (formField) {
+                form.setError(formField as keyof GastoFormData, { message: d.message })
+              }
+            }
+            const firstField = fieldMap[err.details[0]?.field]
+            if (firstField) form.setFocus(firstField as keyof GastoFormData)
+            throw err
+          }
+          throw err
+        }
       },
     })
   }

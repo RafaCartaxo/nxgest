@@ -296,6 +296,56 @@
     "CONTRACT_HAS_PAYMENTS": "El contrato tiene pagos registrados.",
     "INSUFFICIENT_BALANCE": "Saldo insuficiente.",
     "VALIDATION_ERROR": "Datos inválidos.",
-    "UNKNOWN_ERROR": "Error inesperado. Intente de nuevo."
+    "UNKNOWN_ERROR": "Error inesperado. Intente de nuevo.",
+    "UNAUTHORIZED": "Token de autenticación ausente.",
+    "TOKEN_EXPIRED": "Token inválido o expirado.",
+    "INVALID_CREDENTIALS": "Correo o contraseña inválidos.",
+    "FORBIDDEN": "Acceso restringido a administradores.",
+    "EMAIL_DUPLICATED": "Correo ya registrado.",
+    "OPERATOR_NOT_FOUND": "Operador no encontrado.",
+    "INTERNAL_ERROR": "Error interno del servidor. Intente de nuevo."
+  },
+  "auth": {
+    "title": "Iniciar Sesión",
+    "email": "Correo electrónico",
+    "senha": "Contraseña",
+    "entrar": "Entrar",
+    "sair": "Salir",
+    "erroLogin": "Correo o contraseña inválidos.",
+    "tokenExpirado": "Sesión expirada. Inicie sesión nuevamente."
+  },
+  "admin": {
+    "title": "Administración",
+    "operadores": "Operadores",
+    "novoOperador": "Nuevo Operador",
+    "editarOperador": "Editar Operador",
+    "nome": "Nombre",
+    "email": "Correo electrónico",
+    "senha": "Contraseña",
+    "role": "Rol",
+    "roleAdmin": "Administrador",
+    "roleOperator": "Operador",
+    "totalOperadores": "Operadores",
+    "totalClientes": "Total de Clientes",
+    "contratosAtivos": "Contratos Activos",
+    "resultadoDia": "Resultado del Día",
+    "removerConfirmacao": "¿Eliminar operador?",
+    "removerConfirmacaoMessage": "¿Eliminar este operador? Sus datos permanecerán en el sistema.",
+    "removerSucesso": "Operador eliminado.",
+    "criarSucesso": "Operador creado.",
+    "editarSucesso": "Operador actualizado.",
+    "erroCarregar": "Error al cargar datos de administración.",
+    "emptyMessage": "Ningún operador registrado.",
+    "buscarPlaceholder": "Buscar por nombre o correo...",
+    "senhaOpcional": "Dejar en blanco para mantener actual",
+    "erroAutoRemover": "No puedes eliminarte a ti mismo.",
+    "erroAutoRebaixar": "No puedes cambiar tu propio rol.",
+    "validacao": {
+      "nomeObrigatorio": "El nombre es obligatorio.",
+      "emailObrigatorio": "El correo es obligatorio.",
+      "emailInvalido": "Correo inválido.",
+      "senhaCurta": "La contraseña debe tener al menos 6 caracteres.",
+      "roleObrigatorio": "Selecciona un rol."
+    }
   }
 }
