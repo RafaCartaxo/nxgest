@@ -51,6 +51,10 @@ export async function apiRequest<T>(
     return undefined as T
   }
 
+  if (response.status === 0) {
+    throw new Error("Failed to fetch")
+  }
+
   const data = await response.json()
 
   if (!response.ok) {

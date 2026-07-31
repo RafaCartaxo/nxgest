@@ -3,7 +3,7 @@ export interface Usuario {
   nome: string
   email: string
   senhaHash: string
-  role: "admin" | "operator"
+  role: "super_admin" | "admin" | "operator"
   createdAt: string
   deletedAt: string | null
 }

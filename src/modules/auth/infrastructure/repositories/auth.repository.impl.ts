@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, and, isNull } from "drizzle-orm"
 import { db, usuarios } from "../../../../database.js"
 import type { IAuthRepository } from "../../application/ports/auth.repository.js"
 import type { Usuario } from "../../domain/usuario.entity.js"
@@ -13,10 +13,10 @@ export class AuthRepository implements IAuthRepository {
   }
 
   async findById(id: string): Promise<Usuario | null> {
-    const rows = await db.select().from(usuarios).where(eq(usuarios.id, id))
+    const rows = await db.select().from(usuarios).where(and(eq(usuarios.id, id), isNull(usuarios.deletedAt)))
     const row = rows[0]
     if (!row) return null
-    return { ...row, role: row.role as "admin" | "operator" }
+    return { ...row, role: row.role as "admin" | "operator" | "super_admin" }
   }
 
   async create(input: { nome: string; email: string; senhaHash: string; role: "admin" | "operator" }): Promise<Usuario> {

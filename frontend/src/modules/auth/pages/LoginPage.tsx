@@ -22,7 +22,12 @@ export function LoginPage() {
     try {
       await login(email, senha)
       navigate("/")
-    } catch {
+    } catch (err) {
+      if (err instanceof TypeError && err.message === "Failed to fetch") {
+        setErro("Erro de conexão. Verifique sua internet.")
+        setLoading(false)
+        return
+      }
       setErro(t("auth.erroLogin"))
     } finally {
       setLoading(false)
