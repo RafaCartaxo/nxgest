@@ -48,7 +48,7 @@ Preparar e executar o primeiro deploy do NX Gestão para um cliente real, dispon
 | Volumes Docker | `nxgestao_nxgestao_data` (banco), `nxgestao_caddy_data`, `nxgestao_caddy_config` |
 | Banco | SQLite `/data/gestao.db` (volume persistente) |
 | HTTPS | Let's Encrypt emitido automaticamente pelo Caddy |
-| Admin default | `admin@cobranca.com` (senha no arquivo local `/tmp/opencode/vps-admin-pw.txt`, fora do repo) |
+| Admin default | `admin@cobranca.com` (senha no arquivo local `~/.config/nxgestao/vps-admin-pw.txt`, fora do repo) |
 | Backup | Cron 2x/dia → `/opt/backups` (script `/opt/scripts/backup-nxgestao.sh`, retém 14 dias) |
 
 ### Segurança aplicada no VPS
@@ -63,7 +63,7 @@ Preparar e executar o primeiro deploy do NX Gestão para um cliente real, dispon
 | Usuário | Email | Role | Status |
 |---------|-------|------|--------|
 | Admin | `admin@cobranca.com` | admin | Seed automático (senha via `ADMIN_DEFAULT_PASSWORD`) |
-| Thalia N Medina | `thalianietomedina@hotmail.com` | admin | Criada via `POST /api/admin/operadores` em 31/07/2026 (senha em `/tmp/opencode/thaliana-pw.txt`) |
+| Thalia N Medina | `thalianietomedina@hotmail.com` | admin | Criada via `POST /api/admin/operadores` em 31/07/2026 (senha em `~/.config/nxgestao/thaliana-pw.txt`) |
 
 ---
 

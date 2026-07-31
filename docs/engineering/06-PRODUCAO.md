@@ -47,13 +47,24 @@ As credenciais **não ficam no repositório**. Localização dos valores:
 
 | Credencial | Onde está | Nota |
 |-----------|-----------|------|
-| Admin default (`admin@cobranca.com`) | `.env` no VPS (`ADMIN_DEFAULT_PASSWORD`) + cópia local em `/tmp/opencode/vps-admin-pw.txt` | Senha gerada no deploy |
-| Thalia N Medina (`thalianietomedina@hotmail.com`) | Cópia local `/tmp/opencode/thaliana-pw.txt` | Criada via admin em 31/07/2026 |
+| Admin default (`admin@cobranca.com`) | `.env` no VPS (`ADMIN_DEFAULT_PASSWORD`) + cópia local em `~/.config/nxgestao/vps-admin-pw.txt` | Senha gerada no deploy |
+| Thalia N Medina (`thalianietomedina@hotmail.com`) | Cópia local `~/.config/nxgestao/thaliana-pw.txt` | Criada via admin em 31/07/2026 |
 | `JWT_SECRET` | `.env` no VPS | Gerado com `openssl rand -hex 32` |
-| Senha root do VPS | Cópia local `/tmp/opencode/vps-root-pw.txt` | Trocada no primeiro acesso; SSH usa chave |
+| Senha root do VPS | Cópia local `~/.config/nxgestao/vps-root-pw.txt` | Trocada no primeiro acesso; SSH usa chave |
 | Usuários do sistema | Criados via `POST /api/admin/operadores` (role `admin`/`operator`) | Ver PLAN-017 |
 
 > **Regra:** nunca versionar `.env`, senhas ou tokens. Trocar senha via `chpasswd` se vazar em chat/log.
+
+### 3.1 — Acessos externos (contas fora do repo)
+
+| Serviço | Conta | Como acessar | Detalhes |
+|---------|-------|--------------|----------|
+| Painel VPS (`vpshostingservice.co`) | `rafael.cartaxo@hotmail.com` | Login no site do provedor | Senha não registrada no repo — ver `~/.config/nxgestao/ACESSOS.md` |
+| DuckDNS (`nxgestao.duckdns.org`) | `rafael.cartaxo@hotmail.com` | Login via Google (OAuth) | Domínio provisório; migrar para `.com.br` |
+| GitHub | `RafaCartaxo` | `gh` CLI (keyring) | Repo `RafaCartaxo/nxgestao` |
+| VPS SSH | `root` | Chave ed25519 local | Senha desabilitada (`PasswordAuthentication no`) |
+
+> Todos os valores de senha externos ficam em **`~/.config/nxgestao/ACESSOS.md`** (chmod 600, fora do repo).
 
 ---
 
