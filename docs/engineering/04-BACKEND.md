@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.1
+**Versão:** 1.2
 
-**Última atualização:** 27/06/2026
+**Última atualização:** 30/07/2026
 
 ---
 
@@ -27,6 +27,8 @@ O backend será desenvolvido utilizando:
 - Drizzle ORM (ou tecnologia equivalente)
 - Zod para validações
 - Vitest para testes
+- JWT (jsonwebtoken) para autenticação
+- bcryptjs para hash de senhas
 
 A substituição de qualquer tecnologia deverá preservar a arquitetura definida neste projeto.
 
@@ -422,4 +424,6 @@ A clareza da implementação possui prioridade sobre micro-otimizações.
 - DATABASE.md
 - DOMAIN.md
 - BUSINESS-RULES.md
+- ADR-001
+- ADR-003
 - ADR-001

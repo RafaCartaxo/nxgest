@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.3
+**Versão:** 1.4
 
-**Última atualização:** 29/06/2026
+**Última atualização:** 30/07/2026
 
 ---
 
@@ -135,6 +135,22 @@ Representa uma saída financeira realizada pelo operador.
 
 ---
 
+## Historico Operacional
+
+Representa o registro de atendimento em campo, sem impacto financeiro.
+
+O Histórico Operacional registra cada visita realizada pelo operador a um cliente, armazenando o tipo de atendimento e, quando aplicável, a data de promessa de pagamento. É uma entidade exclusivamente operacional — não gera movimentações financeiras.
+
+### Responsabilidades
+
+* Registrar o cliente e contrato visitados.
+* Registrar o tipo de atendimento (visitado, não localizado, promessa).
+* Armazenar data de promessa quando aplicável.
+* Servir como registro histórico das operações em campo.
+* Permitir filtro por data para consulta de atendimentos do dia.
+
+---
+
 ## FechamentoSemanal
 
 Representa o registro de consolidação financeira de um período semanal.
@@ -150,9 +166,30 @@ O FechamentoSemanal é gerado automaticamente a cada sete dias e não pode ser e
 * Servir como registro histórico dos fechamentos.
 * Não pode ser editado nem removido.
 
+## Usuario
+
+Representa um operador ou administrador com acesso ao sistema.
+
+Cada Usuario possui credenciais próprias e um papel que determina seu nível de acesso. Todos os dados operacionais (clientes, contratos, pagamentos, movimentações financeiras, caixa, gastos, histórico operacional e fechamentos semanais) pertencem a um Usuario e são isolados por ele.
+
+### Responsabilidades
+
+* Armazenar credenciais de acesso (email e senha).
+* Definir o papel do usuário (admin ou operator).
+* Servir como escopo de isolamento para todos os dados operacionais.
+* Permitir que o administrador gerencie outros operadores.
+* Manter rastreabilidade de qual operador realizou cada operação.
+
+### Papéis (role)
+
+* **admin** — Acesso irrestrito. Visualiza e gerencia dados de todos os operadores. Único papel capaz de criar, editar e remover outros usuários.
+* **operator** — Acesso restrito aos próprios dados. Realiza operações do dia a dia (clientes, contratos, pagamentos, caixa, gastos).
+
 ---
 
 # Relacionamentos
+
+Um Usuario possui todos os dados operacionais do sistema (Clientes, Contratos, Pagamentos, Movimentações Financeiras, Caixa, Gastos, Histórico Operacional, Fechamentos Semanais).
 
 Um Cliente pode possuir vários Contratos.
 
@@ -194,6 +231,13 @@ O Caixa consolida exclusivamente as Movimentações Financeiras registradas pelo
 * Parcial
 * Paga
 
+---
+
+## Usuario
+
+* admin
+* operator
+
 
 
 # Responsabilidades Gerais
@@ -210,4 +254,6 @@ As regras de negócio que envolvem múltiplas entidades deverão ser definidas e
 
 * NORTH-STAR.md
 * ADR-001
+* ADR-003
 * PROJECT.md
+* BUSINESS-RULES.md

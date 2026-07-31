@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 2.5
+**Versão:** 2.6
 
-**Última atualização:** 11/07/2026
+**Última atualização:** 30/07/2026
 
 ---
 
@@ -33,7 +33,7 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 
 | Módulo | BRs | Depende de |
 |--------|-----|------------|
-| Auth | BR-055 a BR-058 | Fase 5.2 (PLAN-015) |
+| Auth | BR-055 a BR-058, BR-066 a BR-071 | Fase 5.2a (PLAN-015), Fase 5.2b (PLAN-017) |
 | Mapa | — | Fase 5.3 |
 | PWA | — | Fase 5.4 |
 | Testes | — | Fase 5.5 |
@@ -540,33 +540,46 @@ Entregas:
 - Variáveis CSS para modo escuro
 - **Status:** Concluído — `plans/PLAN-013-dark-mode.md`
 
-### 5.2 Multi-usuário + autenticação
+### 5.2 Multi-usuário + Autenticação + Admin Panel
 
-**Status:** Planejado
+**Status:** Concluído ✅
 
-- Login JWT com email + senha
+A autenticação multi-usuário e o painel de administração são implementados em duas ondas:
+
+#### 5.2a — Autenticação base (PLAN-015)
+
+- Login JWT com email + senha (BR-055, BR-058)
 - Isolamento de dados por operador (BR-056)
-- Admin cria novos operadores (BR-057)
-- Middleware de autenticação em todas as rotas `/api/*`
 - 8 tabelas com coluna `userId` + filtro em ~60 queries
 - Frontend: LoginPage, AuthContext, ProtectedRoute, logout no Navbar
 - **Prioridade:** Média
 
-#### Referência
+#### 5.2b — Admin Panel + Permissões (PLAN-017)
 
-- `plans/PLAN-015-autenticacao.md` — Plano detalhado
+- Coluna `role` (`admin` / `operator`) na tabela `usuarios` (BR-066)
+- Middleware `admin.middleware.ts` para rotas administrativas
+- Módulo admin backend: CRUD de operadores + dashboard consolidado (BR-067, BR-068)
+- AdminPage: gestão de operadores com componentes shared existentes
+- Restrições: admin não pode auto-remover (BR-070) nem auto-rebaixar (BR-069)
+- **Prioridade:** Média
+
+#### Referências
+
+- `plans/PLAN-015-autenticacao.md` — Plano de autenticação base
+- `plans/PLAN-017-admin-panel.md` — Plano do painel de administração
+- `foundation/ADR-003-Auth-Autorizacao.md` — Decisão arquitetural do subsistema de auth
 
 ### 5.3 Visualização em mapa
 - Integração com Google Maps (já tem `maps.ts`)
 - Pin dos clientes no mapa
 - Rota otimizada
-- **Priordiade:** Média — jã existe `RotaCobrancaSection`
+- **Prioridade:** Média — já existe `RotaCobrancaSection`
 
 ### 5.4 PWA / instalação mobile
 - Service worker
 - Manifest.json
 - Cache de assets
-- **Priordiade:** Média — melhor experiência mobile
+- **Prioridade:** Média — melhor experiência mobile
 
 ### 5.5 Testes automatizados
 - Vitest para backend
@@ -593,7 +606,8 @@ Entregas:
 | M4 — ErrorBoundary + Feedback infra | F3 | +1 sessão | ErrorBoundary no App, FeedbackOverlay funcional, zero consumidores ainda |
 | M5 — Formulários migrados + Feedback ativo | F3 | +2 sessões | 4 formulários com react-hook-form+zod, Feedback Global integrado, Button.loading removido |
 | M6 — Caixa + Gasto | F4 | ✅ Concluído | BR-018 a BR-028 implementados, testados |
-| M7 — Autenticação + Multi-usuário | F5 | Planejado | PLAN-015 em execução |
+| M7a — Autenticação base (PLAN-015) | F5 | ✅ Concluído | Login JWT, isolamento de dados, LoginPage, AuthContext, ProtectedRoute |
+| M7b — Admin Panel (PLAN-017) | F5 | ✅ Concluído | Coluna `role`, admin.middleware, CRUD operadores, AdminPage, dashboard consolidado |
 | M8 — PWA + Mapa | F5 | TBD | Funcionalidades extras |
 | M9 — Endereço do Comércio | F5 | Planejado | PLAN-016: endereço comércio separado + GPS |
 
@@ -619,10 +633,13 @@ A Fase 3 possui checklist próprio: `tasks/2026-07-03/CHECKLIST-FASE3.md`.
 
 - `product/00-PROJECT.md` — Visão do produto
 - `product/01-DOMAIN.md` — Entidades do domínio
-- `product/02-BUSINESS-RULES.md` — Regras de negócio (BR-001 a BR-058)
+- `product/02-BUSINESS-RULES.md` — Regras de negócio (BR-001 a BR-071)
 - `product/03-PRD.md` — Product Requirements Document
 - `product/05-CONVENTIONS.md` — Convenções de código
-- `engineering/05-MAPEAMENTO-TELAS.md` — Mapeamento das 10 telas
+- `foundation/ADR-001-Arquitetura.md` — Decisão arquitetural base
+- `foundation/ADR-002-Arquitetura-Front.md` — Decisão arquitetural do frontend
+- `foundation/ADR-003-Auth-Autorizacao.md` — Decisão arquitetural de auth + autorização
+- `engineering/05-MAPEAMENTO-TELAS.md` — Mapeamento das 12 telas
 - `engineering/design/02-DESIGN-SYSTEM.md` — Identidade visual
 - `engineering/design/03-COMPONENT-ARCHITECTURE.md` — Arquitetura de componentes
 - `engineering/design/04-UI-COMPONENTS.md` — Catálogo de componentes
@@ -631,3 +648,5 @@ A Fase 3 possui checklist próprio: `tasks/2026-07-03/CHECKLIST-FASE3.md`.
 - `engineering/tasks/2026-07-02/CHECKLIST.md` — Checklist de preparação para F1
 - `plans/PLAN-004-feedback.md` — Sistema global de feedback (estratégia refinada)
 - `plans/PLAN-005-cliente-card.md` — ClienteCard: componentização e padronização
+- `plans/PLAN-015-autenticacao.md` — Plano de autenticação multi-usuário
+- `plans/PLAN-017-admin-panel.md` — Plano do painel de administração

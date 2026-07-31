@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.1
+**Versão:** 1.2
 
-**Última atualização:** 27/06/2026
+**Última atualização:** 30/07/2026
 
 ---
 
@@ -51,13 +51,38 @@ O sistema deverá persistir as seguintes entidades:
 - Gasto
 - Fechamento Semanal (corresponde à entidade de domínio FechamentoSemanal)
 - Historico Operacional (entidade exclusivamente operacional, sem impacto financeiro)
-- Usuario (administrador do sistema — login e senha)
+- Usuario (operador ou administrador do sistema — autenticação e isolamento de dados)
+
+**Atributos do Usuario:** `id`, `nome`, `email` (único), `senhaHash`, `role` (`admin` ou `operator`), `createdAt`, `deletedAt`
+
+**Isolamento por Usuario:** todas as entidades operacionais abaixo recebem a coluna `userId` (FK → `usuarios.id`) para garantir isolamento total de dados entre operadores:
+
+- Cliente, Contrato, Pagamento, Movimentação Financeira, Caixa, Gasto, Fechamento Semanal, Historico Operacional
+
+As entidades Parcela e PagamentoParcela não recebem `userId` diretamente — são acessadas via JOIN com a tabela pai (Contrato e Pagamento, respectivamente), que já possuem o filtro.
 
 Entidades de interface, como Dashboard e Mapa, não deverão possuir persistência própria.
 
 ---
 
 # Relacionamentos
+
+## Usuario
+
+Um Usuario possui todos os dados operacionais do sistema. As seguintes entidades referenciam diretamente um Usuario através da coluna `userId`:
+
+- Cliente
+- Contrato
+- Pagamento
+- Movimentação Financeira
+- Caixa
+- Gasto
+- Fechamento Semanal
+- Historico Operacional
+
+O isolamento de dados é garantido pelo filtro `WHERE userId = ?` em todas as queries operacionais.
+
+---
 
 ## Cliente
 
@@ -113,6 +138,7 @@ Todos os seus indicadores deverão ser calculados automaticamente a partir dessa
 
 A persistência deverá garantir as seguintes regras:
 
+- Um Usuario não poderá ser removido fisicamente (soft-delete via `deletedAt`).
 - Um Cliente não poderá possuir Contratos órfãos.
 - Uma Parcela nunca poderá existir sem um Contrato.
 - Um Pagamento nunca poderá existir sem um Contrato.

@@ -2,15 +2,15 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.1
+**Versão:** 1.2
 
-**Data:** 27/06/2026
+**Última atualização:** 30/07/2026
 
 ---
 
 # Contexto
 
-O sistema será utilizado principalmente em dispositivos móveis, por um único operador, possuindo uma interface focada em produtividade, simplicidade e facilidade de manutenção.
+O sistema será utilizado principalmente em dispositivos móveis, por operadores autenticados, com suporte a múltiplos usuários e perfil de administrador, possuindo uma interface focada em produtividade, simplicidade e facilidade de manutenção.
 
 O backend concentra toda a lógica de negócio do sistema.
 
@@ -56,6 +56,8 @@ Exemplos:
 - Caixa
 - Dashboard
 - Mapa
+- Auth
+- Admin
 
 Cada módulo poderá conter seus próprios componentes, páginas, hooks, serviços e tipos, preservando o isolamento entre contextos.
 
@@ -205,3 +207,4 @@ A partir desta decisão, o frontend passa a utilizar React como biblioteca para 
 - BACKEND.md
 - API.md
 - ADR-001
+- ADR-003

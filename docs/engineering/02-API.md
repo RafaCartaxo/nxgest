@@ -1,6 +1,6 @@
 # API
 
-**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa e Gasto documentados
+**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa e Gasto documentados; módulos Auth e Admin planejados (PLAN-015, PLAN-017)
 
 **Versão:** 1.2
 
@@ -1111,8 +1111,9 @@ Remove um gasto (soft delete). Não estorna o caixa — o histórico é preserva
 | Método | Endpoint | Auth | Descrição |
 |---------|----------|------|-----------|
 | POST | `/api/auth/login` | Não | Autenticar e receber JWT |
-| POST | `/api/auth/register` | Sim | Criar novo operador (admin) |
 | GET | `/api/auth/me` | Sim | Dados do operador logado |
+
+> **Registro de operadores:** Movido para o [Módulo Admin](#módulo-admin) — `POST /api/admin/operadores`.
 
 ---
 
@@ -1158,50 +1159,6 @@ Autentica um operador e retorna token JWT.
 
 ---
 
-# POST /api/auth/register
-
-Cria um novo operador. Apenas administradores podem usar este endpoint.
-
-**Auth:** Sim (Bearer token de admin)
-
-## Request
-
-```json
-{
-    "nome": "Novo Operador",
-    "email": "operador@cobranca.com",
-    "senha": "********"
-}
-```
-
-## Validações
-
-| Campo | Obrigatório | Regra |
-|---------|------------|--------|
-| nome | Sim | 2 a 100 caracteres |
-| email | Sim | Email válido e único |
-| senha | Sim | Mínimo 6 caracteres |
-
-## Response 201
-
-```json
-{
-    "id": "d4e5f6a7-...",
-    "nome": "Novo Operador",
-    "email": "operador@cobranca.com",
-    "createdAt": "2026-07-11T10:00:00.000Z"
-}
-```
-
-## Possíveis Erros
-
-| Código | HTTP |
-|---------|------|
-| EMAIL_DUPLICADO | 409 |
-| VALIDATION_ERROR | 422 |
-
----
-
 # GET /api/auth/me
 
 Retorna os dados do operador autenticado.
@@ -1214,7 +1171,8 @@ Retorna os dados do operador autenticado.
 {
     "id": "a1b2c3d4-...",
     "nome": "Admin",
-    "email": "admin@cobranca.com"
+    "email": "admin@cobranca.com",
+    "role": "admin"
 }
 ```
 
@@ -1223,3 +1181,30 @@ Retorna os dados do operador autenticado.
 | Código | HTTP |
 |---------|------|
 | TOKEN_INVALIDO | 401 |
+
+---
+
+# Módulo Admin
+
+Gestão de operadores e dashboard consolidado. Acesso exclusivo para administradores (`role = 'admin'`).
+
+## Endpoints
+
+| Método | Endpoint | Auth | Descrição |
+|---------|----------|------|-----------|
+| GET | `/api/admin/operadores` | Admin | Listar todos operadores com estatísticas |
+| POST | `/api/admin/operadores` | Admin | Criar novo operador |
+| PATCH | `/api/admin/operadores/:id` | Admin | Editar operador (nome, email, role, senha) |
+| DELETE | `/api/admin/operadores/:id` | Admin | Remover operador (soft-delete) |
+| GET | `/api/admin/dashboard` | Admin | KPIs consolidados de todos operadores |
+
+## Regras de negócio
+
+| BR | Descrição |
+|----|-----------|
+| BR-066 | Papéis `admin` e `operator` com níveis de acesso distintos |
+| BR-067 | Apenas admin pode gerenciar operadores |
+| BR-068 | Admin visualiza dashboard consolidado |
+| BR-069 | Admin não pode rebaixar o próprio papel |
+| BR-070 | Admin não pode remover a si mesmo |
+| BR-071 | Remoção de operador é lógica (`deletedAt`), dados preservados |

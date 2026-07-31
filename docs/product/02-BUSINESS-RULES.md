@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.5
+**Versão:** 1.6
 
-**Última atualização:** 11/07/2026
+**Última atualização:** 30/07/2026
 
 ---
 
@@ -305,6 +305,59 @@ Ao expirar, o operador é redirecionado para a tela de login. Nenhuma operação
 
 ---
 
+# Administração
+
+## BR-066
+
+Todo usuário do sistema possui um papel (`role`): `admin` ou `operator`.
+
+O papel determina o nível de acesso:
+
+- **admin** — Acesso irrestrito a todos os dados de todos os operadores. Pode gerenciar operadores (criar, editar, remover) e visualizar dashboard consolidado.
+- **operator** — Acesso restrito aos próprios dados. Não pode acessar, visualizar ou modificar dados de outros operadores.
+
+---
+
+## BR-067
+
+Apenas administradores (`role = 'admin'`) podem listar, criar, editar e remover operadores.
+
+Qualquer tentativa de um operador comum acessar endpoints de gestão de usuários deve resultar em erro 403 (proibido).
+
+---
+
+## BR-068
+
+O administrador pode visualizar um dashboard consolidado com KPIs agregados de todos os operadores (total de clientes, contratos ativos, resultado do dia).
+
+Este dashboard é acessível exclusivamente pela rota `/admin`.
+
+---
+
+## BR-069
+
+Um administrador não pode alterar o próprio papel (`role`) para `operator`.
+
+Esta restrição garante que sempre exista ao menos um administrador no sistema.
+
+---
+
+## BR-070
+
+Um administrador não pode remover a si mesmo.
+
+O sistema deve verificar se o `id` do operador a ser removido é igual ao `id` do usuário autenticado e bloquear a operação.
+
+---
+
+## BR-071
+
+Ao remover um operador, seus dados operacionais (clientes, contratos, pagamentos, caixa, gastos, histórico) permanecem íntegros no banco de dados.
+
+A remoção é lógica (`deletedAt`) e apenas bloqueia o login do operador. Nenhum dado operacional é excluído em cascata.
+
+---
+
 # Histórico
 
 ## BR-029
@@ -438,15 +491,17 @@ A cidade no endereço do cliente é opcional.
 
 ## BR-043
 
-O CPF do cliente, quando informado, deve ser único no sistema.
+O CPF do cliente, quando informado, deve ser único por operador.
 
-Não é permitido cadastrar dois clientes com o mesmo CPF.
+Não é permitido cadastrar dois clientes com o mesmo CPF para o mesmo operador. Operadores diferentes podem cadastrar clientes com o mesmo CPF — o índice único composto `(cpf, userId)` garante essa regra no banco.
 
-Na criação, o sistema deve verificar se o CPF já existe antes de salvar.
+Na criação, o sistema deve verificar se o CPF já existe para aquele operador antes de salvar.
 
-Na edição, o sistema deve verificar se o CPF já existe, excluindo o próprio cliente da consulta.
+Na edição, o sistema deve verificar se o CPF já existe para aquele operador, excluindo o próprio cliente da consulta.
 
 A validação só deve ser aplicada quando o CPF for informado (campo opcional).
+
+> **BR-043-A (futuro):** Tornar o CPF único globalmente no sistema. Ao tentar cadastrar um CPF já existente (de outro operador), informar "CPF já cadastrado no sistema" sem expor os dados do cliente. Feature depende de mecanismo de transferência de cliente entre operadores (admin).
 
 ---
 
@@ -529,3 +584,4 @@ Todo pagamento deve ser registrado na tabela `pagamentos`, com sua distribuiçã
 - ADR-001
 - PLAN-009-conceito-atendimento.md
 - PLAN-015-autenticacao.md
+- PLAN-017-admin-panel.md

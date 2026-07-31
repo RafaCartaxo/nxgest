@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.2
+**Versão:** 1.3
 
-**Última atualização:** 11/07/2026
+**Última atualização:** 30/07/2026
 
 ---
 
@@ -65,7 +65,7 @@ Estrutura atual:
 ```text
 src/
 
-modules/        ← módulos de negócio (cliente, contrato, operacoes)
+modules/        ← módulos de negócio (cliente, contrato, pagamento, operacoes, caixa, gasto, auth, admin)
 shared/         ← componentes, feedback, tema, utilitários reutilizáveis
   components/   ← 12 componentes (Button, Card, StatusBadge, ErrorBanner, etc.)
   feedback/     ← FeedbackOverlay, FeedbackProvider, useFeedback
@@ -342,5 +342,7 @@ A arquitetura deverá permitir:
 * PROJECT.md
 * ARCHITECTURE.md
 * BACKEND.md
+* ADR-002
+* ADR-003
 * API.md
 * ADR-002

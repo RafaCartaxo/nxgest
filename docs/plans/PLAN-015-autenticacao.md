@@ -1,10 +1,12 @@
 # PLAN-015 — Autenticação Multi-Usuário
 
-**Status:** Planejado
+**Status:** Concluído
 
-**Versão:** 1.0
+**Versão:** 1.2
 
 **Início:** 11/07/2026
+
+**Última atualização:** 30/07/2026
 
 **Roadmap:** product/04-ROADMAP.md §5.2
 
@@ -84,7 +86,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
   nome TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   senhaHash TEXT NOT NULL,
-  createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+  role TEXT NOT NULL DEFAULT 'operator' CHECK(role IN ('admin', 'operator')),
+  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+  deletedAt TEXT
 )
 ```
 
@@ -107,9 +111,34 @@ Todas com `NOT NULL` após backfill.
 
 Inserido via migration: `admin@cobranca.com` com senha hash fixa. Em seguida, todas as tabelas existentes recebem `userId = admin.id`.
 
-#### A.4 — Drizzle schema
+#### A.4 — Drizzle schema + Ordem da migration
 
 Adicionar `usuarios` e `userId` aos schemas Drizzle correspondentes.
+
+**Ordem obrigatória da migration em `createTables()`:**
+1. `CREATE TABLE usuarios` — tabela deve existir antes de qualquer FK
+2. `INSERT INTO usuarios (admin)` — admin default deve existir antes do backfill
+3. `ALTER TABLE ... ADD COLUMN userId` — adiciona a coluna nas 8 tabelas
+4. `UPDATE ... SET userId = admin.id` — backfill dos dados existentes com o admin
+
+#### A.5 — Arquivo de tipos `express.d.ts`
+
+Criar `src/shared/types/express.d.ts` antes de implementar os middlewares:
+
+```typescript
+export {}
+
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string
+      userRole?: "admin" | "operator"
+    }
+  }
+}
+```
+
+O `export {}` é obrigatório — o projeto usa `NodeNext` module resolution, que exige que arquivos de declaração sejam módulos explícitos para o `declare global` funcionar. O `include: ["src"]` do `tsconfig.json` automaticamente inclui este arquivo.
 
 ---
 
@@ -121,24 +150,25 @@ Adicionar `usuarios` e `userId` aos schemas Drizzle correspondentes.
 
 | Arquivo | Função |
 |---------|--------|
-| `src/modules/auth/domain/usuario.entity.ts` | Interface `Usuario`: id, nome, email, senhaHash, createdAt |
+| `src/modules/auth/domain/usuario.entity.ts` | Interface `Usuario`: id, nome, email, senhaHash, role, createdAt |
 | `src/modules/auth/domain/errors/auth.error.ts` | `CredenciaisInvalidasError`, `EmailDuplicadoError` |
 | `src/modules/auth/application/ports/auth.repository.ts` | `IAuthRepository`: `findByEmail`, `create`, `findById` |
 | `src/modules/auth/infrastructure/repositories/auth.repository.impl.ts` | Implementação Drizzle |
 | `src/modules/auth/application/use-cases/LoginUseCase.ts` | Validar email + bcrypt.compare, gerar JWT |
-| `src/modules/auth/application/use-cases/RegistrarUseCase.ts` | Criar usuário (protegido, só admin) |
-| `src/modules/auth/presentation/controllers/auth.controller.ts` | Handlers: `login`, `register`, `me` |
-| `src/modules/auth/presentation/routes/auth.routes.ts` | Router com 3 endpoints |
-| `src/shared/utils/jwt.ts` | `sign(payload): string`, `verify(token): payload` |
-| `src/shared/middleware/auth.middleware.ts` | Extrai JWT do header `Authorization`, decodifica, injeta `req.userId` |
+| `src/modules/auth/application/use-cases/RegistrarUseCase.ts` | Criar usuário — movido para `POST /api/admin/operadores` no PLAN-017 |
+| `src/modules/auth/presentation/controllers/auth.controller.ts` | Handlers: `login`, `me` |
+| `src/modules/auth/presentation/routes/auth.routes.ts` | Router com 2 endpoints |
+| `src/shared/utils/jwt.ts` | `sign(payload: { userId, role }): string`, `verify(token): { userId, role }` |
+| `src/shared/middleware/auth.middleware.ts` | Extrai JWT do header `Authorization`, decodifica, injeta `req.userId` e `req.userRole` |
 
 #### B.2 — Endpoints
 
 | Método | Rota | Auth | Descrição |
 |--------|------|------|-----------|
 | `POST` | `/api/auth/login` | Não | `{ email, senha }` → `{ token, usuario }` |
-| `POST` | `/api/auth/register` | Sim | `{ nome, email, senha }` → `Usuario` |
 | `GET` | `/api/auth/me` | Sim | Retorna dados do usuário logado |
+
+> **Nota:** O registro de novos operadores (`POST /api/auth/register` do plano original) é responsabilidade do **PLAN-017** via `POST /api/admin/operadores`. O módulo `auth` limita-se a login + identidade.
 
 #### B.3 — Middleware em `main.ts`
 
@@ -151,13 +181,13 @@ app.use("/api/clientes", clienteRoutes)
 
 #### B.4 — Pacotes novos
 
-`npm install jsonwebtoken bcryptjs` + `npm install -D @types/jsonwebtoken`
+`npm install jsonwebtoken bcryptjs` + `npm install -D @types/jsonwebtoken @types/bcryptjs`
 
 ---
 
-### Fase C — Backend: Filtrar queries por `userId`
+### Fase C — Backend: Filtrar queries por `userId` ✅ Concluída
 
-**Arquivos:** ~38 alterados (todos os repositories, use cases, controllers)
+**Arquivos:** ~46 alterados (todos os repositories, use cases, controllers de 6 módulos)
 
 #### C.1 — Padrão de injeção
 
@@ -192,25 +222,25 @@ Antes: singleton global (`id = 'default'`). Depois: uma linha por usuário (`INS
 
 ### Fase D — Frontend
 
-**Arquivos:** 4 novos + 5 alterados
+**Arquivos:** 4 novos + 6 alterados
 
 #### D.1 — Novos arquivos
 
 | Arquivo | Função |
 |---------|--------|
-| `src/modules/auth/services/auth.service.ts` | `login()`, `register()`, `getMe()` |
-| `src/modules/auth/pages/LoginPage.tsx` | Formulário email + senha, chama `login()`, armazena token, redireciona para `/` |
-| `src/shared/auth/AuthContext.tsx` | Provider com estado `{ user, token, login, logout, loading }` |
-| `src/shared/auth/ProtectedRoute.tsx` | Verifica `token`; sem token → redireciona para `/login` |
+| `frontend/src/modules/auth/services/auth.service.ts` | `login()`, `getMe()` |
+| `frontend/src/modules/auth/pages/LoginPage.tsx` | Formulário email + senha, chama `login()`, armazena token, redireciona para `/` |
+| `frontend/src/shared/auth/AuthContext.tsx` | Provider com estado `{ user, token, login, logout, loading }` |
+| `frontend/src/shared/auth/ProtectedRoute.tsx` | Verifica `token`; sem token → redireciona para `/login` |
 
 #### D.2 — Arquivos alterados
 
 | Arquivo | Mudança |
 |---------|---------|
-| `src/api/client.ts` | Adicionar header `Authorization: Bearer ${token}` lendo de localStorage |
-| `src/main.tsx` | Adicionar `<AuthProvider>` após `<QueryClientProvider>` |
-| `src/App.tsx` | Rota `/login` (pública) + wrapper `<ProtectedRoute>` nas demais |
-| `src/shared/components/Navbar.tsx` | Exibir nome do usuário + botão "Sair" |
+| `frontend/src/api/client.ts` | Adicionar header `Authorization: Bearer ${token}` de `localStorage`; interceptar 401 para redirecionar ao `/login` e limpar token |
+| `frontend/src/main.tsx` | Adicionar `<AuthProvider>` após `<QueryClientProvider>` |
+| `frontend/src/App.tsx` | Rota `/login` (pública) + wrapper `<ProtectedRoute>` nas demais |
+| `frontend/src/shared/components/Navbar.tsx` | Exibir nome do usuário + botão "Sair" |
 | i18n (3 locales) | ~8 chaves: `auth.title`, `auth.email`, `auth.senha`, `auth.entrar`, `auth.sair`, `auth.erroLogin`, `auth.tokenExpirado` |
 
 ---
@@ -220,18 +250,14 @@ Antes: singleton global (`id = 'default'`). Depois: uma linha por usuário (`INS
 ### POST /api/auth/login
 
 **Request:** `{ "email": "admin@cobranca.com", "senha": "********" }`  
-**Response 200:** `{ "token": "eyJ...", "usuario": { "id": "...", "nome": "Admin", "email": "..." } }`  
+**Response 200:** `{ "token": "eyJ...", "usuario": { "id": "...", "nome": "Admin", "email": "...", "role": "admin" } }`  
 
-### POST /api/auth/register
-
-**Request:** `{ "nome": "Novo Operador", "email": "op@cobranca.com", "senha": "********" }`  
-**Auth:** Sim (admin)  
-**Response 201:** `{ "id": "...", "nome": "Novo Operador", "email": "op@cobranca.com", "createdAt": "..." }`  
+> **Registro de operadores:** Movido para `POST /api/admin/operadores`. Consulte `plans/PLAN-017-admin-panel.md`.
 
 ### GET /api/auth/me
 
 **Auth:** Sim  
-**Response 200:** `{ "id": "...", "nome": "Admin", "email": "admin@cobranca.com" }`  
+**Response 200:** `{ "id": "...", "nome": "Admin", "email": "admin@cobranca.com", "role": "admin" }`  
 
 ---
 
@@ -270,9 +296,9 @@ Antes: singleton global (`id = 'default'`). Depois: uma linha por usuário (`INS
 |------|-------|-----------|--------------|
 | A — Database | 0 | 1 | 🟡 Média |
 | B — Auth Backend | 9 | 2 | 🟡 Média |
-| C — Queries userId | 0 | ~38 | 🔴 Alta |
-| D — Frontend Auth | 4 | 5 | 🟡 Média |
-| **Total** | **13** | **~46** | |
+| C — Queries userId | 0 | ~46 | 🔴 Alta ✅ |
+| D — Frontend Auth | 4 | 6 | 🟡 Média |
+| **Total** | **13** | **~47** | |
 
 ---
 
@@ -294,3 +320,23 @@ Antes: singleton global (`id = 'default'`). Depois: uma linha por usuário (`INS
 - `engineering/02-API.md`
 - `engineering/04-BACKEND.md`
 - `engineering/03-FRONTEND.md`
+- `foundation/ADR-001-Arquitetura.md`
+- `foundation/ADR-002-Arquitetura-Front.md`
+- `foundation/ADR-003-Auth-Autorizacao.md`
+- `plans/PLAN-017-admin-panel.md`
+
+---
+
+## Ajustes para Admin Panel (PLAN-017)
+
+Este plano (PLAN-015) fornece a base de autenticação. A gestão de operadores, o painel de administração e o middleware de autorização por papel (`admin.middleware.ts`) são responsabilidade do **PLAN-017 — Admin Panel + Níveis Permissionais**, que estende este plano com:
+
+- Coluna `role` na tabela `usuarios` (já incluída em A.1 acima)
+- `role` no payload JWT (já incluído em B.1 acima)
+- Módulo `admin` (backend + frontend)
+- Middleware `admin.middleware.ts`
+- AdminPage (`/admin`) + OperadorForm
+- Dashboard consolidado para admin
+- Endpoints `/api/admin/*`
+
+Consulte `plans/PLAN-017-admin-panel.md` para o plano completo.

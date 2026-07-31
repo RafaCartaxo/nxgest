@@ -1,10 +1,10 @@
 # PRD
 
-**Status:** Em construção
+**Status:** Aprovado
 
-**Versão:** 0.1
+**Versão:** 1.0
 
-**Última atualização:** 28/06/2026
+**Última atualização:** 30/07/2026
 
 ---
 
@@ -16,7 +16,7 @@ Sistema de gestão de cobranças em campo para operações de crediário com cob
 
 # Público-Alvo
 
-Operador único responsável pela gestão de clientes e cobranças em campo, com uso predominante em dispositivo móvel.
+Operadores autenticados responsáveis pela gestão de clientes e cobranças em campo, com uso predominante em dispositivo móvel. O sistema suporta múltiplos operadores com isolamento de dados e um perfil de administrador para gestão centralizada.
 
 ---
 
@@ -29,6 +29,10 @@ Operador único responsável pela gestão de clientes e cobranças em campo, com
 - Controle de caixa e gastos
 - Dashboard com indicadores financeiros
 - Visualização de clientes em mapa
+- Autenticação multi-usuário com JWT
+- Painel de administração com gestão de operadores
+- Autenticação multi-usuário com JWT
+- Painel de administração com gestão de operadores
 
 ---
 
@@ -45,3 +49,4 @@ Operador único responsável pela gestão de clientes e cobranças em campo, com
 - NORTH-STAR.md
 - PROJECT.md
 - BUSINESS-RULES.md
+- 04-ROADMAP.md

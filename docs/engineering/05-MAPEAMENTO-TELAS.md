@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.5
+**Versão:** 1.7
 
-**Última atualização:** 11/07/2026
+**Última atualização:** 30/07/2026
 
 ---
 
@@ -28,8 +28,10 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 8 | Novo Contrato | `/contratos/novo` | contrato | Formulário |
 | 9 | Detalhe do Contrato | `/contratos/:id` | contrato | Detalhe |
 | 10 | Editar Contrato | `/contratos/:id/editar` | contrato | Formulário |
+| 11 | Login | `/login` | auth | Formulário |
+| 12 | Administração | `/admin` | admin | Dashboard |
 
-**Total:** 10 telas | 4 módulos | 27 componentes (12 shared + 3 feedback + 10 módulo + 2 domínio)
+**Total:** 12 telas | 5 módulos | 34 componentes (12 shared + 3 feedback + 13 módulo + 2 domínio + 4 auth/admin)
 
 ---
 
@@ -41,6 +43,9 @@ App
 │   ├── NavLink: Central (/)
 │   ├── NavLink: Clientes (/clientes)
 │   ├── NavLink: Contratos (/contratos)
+│   ├── NavLink: Caixa (/caixa)
+│   ├── NavLink: Admin (/admin) [condicional: role=admin]
+│   ├── Nome do usuário + botão Sair
 │   └── Language Switcher (PT/EN/ES)
 │
 ├── [Shared Components]
@@ -60,7 +65,25 @@ App
 │   ├── ClienteCard (list-item, detail)
 │   └── ContratoCard (list-item, detail)
 │
+├── [Shared Auth]
+│   ├── AuthContext (Provider: user, token, login, logout)
+│   └── ProtectedRoute (sem token → /login)
+│
 └── [Pages]
+    ├── LoginPage
+    │   ├── Identidade visual (logo/nome do sistema)
+    │   ├── Campo email
+    │   ├── Campo senha
+    │   └── Botão Entrar + feedback de erro
+    │
+    ├── AdminPage
+    │   ├── EstadoTela > Conteúdo
+    │   │   ├── KPIs consolidados (KpiCard × 4)
+    │   │   ├── SectionHeader ("Operadores" + botão Novo)
+    │   │   ├── SearchBar (busca por nome/email)
+    │   │   └── OperadoresList (Card.Root list-item × N)
+    │   └── OperadorForm (Modal: nome, email, senha, role)
+    │
     ├── OperacoesDashboard
     │   ├── IndicadoresCards (4 cards: a receber, recebido, clientes, resultado)
     │   ├── RotaCobrancaSection (card c/ botão Iniciar Rota)
@@ -521,6 +544,99 @@ App
 
 ---
 
+## 11. Login
+
+**Arquivo:** `frontend/src/modules/auth/pages/LoginPage.tsx`
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────┐
+│                                  │
+│        🏷️ Nome do Sistema        │
+│                                  │
+│  E-mail *      [_____________]   │
+│  Senha *       [_____________]   │
+│                                  │
+│  [       Entrar       ]          │
+│                                  │
+│  ⚠ E-mail ou senha inválidos.   │  ← Erro condicional
+└──────────────────────────────────┘
+```
+
+**Aderência ao Design System:**
+
+| Regra | Status | Observação |
+|-------|--------|------------|
+| Header | — | Sem Navbar; tela isolada pré-auth |
+| Inputs | ✅ `rounded-md border px-3 py-2 text-base` | |
+| Botão | ✅ `Button primary` com `useFeedback().run()` | |
+| Loading | ✅ Spinner no botão durante login | |
+| Erro | ✅ `ErrorBanner` condicional abaixo do botão | |
+| Acessibilidade | ✅ `type="email"`, `type="password"`, `autoComplete` | |
+| i18n | ✅ `auth.*` (pt-BR, en, es) | |
+
+---
+
+## 12. Administração
+
+**Arquivo:** `frontend/src/modules/admin/pages/AdminPage.tsx`
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────┐
+│ ← Administração                  │
+├──────────────────────────────────┤
+│ ┌────────┬────────┬────────┬────┐│
+│ │  Opers │Clientes│Contr At│Res ││  ← KpiCard × 4 (admin)
+│ │    3   │   45   │   12   │ R$ ││
+│ └────────┴────────┴────────┴────┘│
+│                                  │
+│ Operadores           + Novo Op.  │  ← SectionHeader
+│ [🔍 Buscar por nome/email...  ]  │  ← SearchBar
+│                                  │
+│ ┌──────────────────────────────┐ │
+│ │ Admin Joao     Administrador │ │  ← Card.Root list-item
+│ │ joao@cobranca.com            │ │     StatusBadge: role
+│ │ 15 clientes · 4 contratos    │ │     Card.Indicators: stats
+│ │                  [✏️] [🗑️]   │ │     Card.Actions
+│ ├──────────────────────────────┤ │
+│ │ Maria Op       Operador      │ │
+│ │ maria@cobranca.com           │ │
+│ │ 30 clientes · 8 contratos    │ │
+│ │                  [✏️] [🗑️]   │ │
+│ └──────────────────────────────┘ │
+└──────────────────────────────────┘
+
+Modal OperadorForm (criação/edição):
+┌──────────────────────────────────┐
+│ Novo Operador / Editar Operador  │
+├──────────────────────────────────┤
+│ Nome *        [_____________]    │
+│ E-mail *      [_____________]    │
+│ Senha *       [_____________]    │  ← Oculto na edição
+│ Papel *       [admin ▾]          │  ← Select admin/operator
+│                                  │
+│ [Cancelar]        [Salvar]       │
+└──────────────────────────────────┘
+```
+
+**Aderência ao Design System:**
+
+| Regra | Status | Observação |
+|-------|--------|------------|
+| Header | ✅ `t("admin.title")` com i18n | |
+| KPIs | ✅ Reusa `KpiCard` (blue, green, yellow, gray) | |
+| Busca | ✅ `SearchBar` com placeholder i18n | |
+| Cards | ✅ `Card.Root list-item` com Header/Body/Actions | |
+| Status | ✅ `StatusBadge`: admin=info, operator=neutral | |
+| Formulário | ✅ `react-hook-form` + `zod` + `useFeedback().run()` | |
+| Modal | ✅ `ConfirmModal` para remoção de operador | |
+| Estados | ✅ `EstadoTela` (loading/empty/error) na lista | |
+| Restrições | ✅ Admin não remove a si mesmo; não rebaixa o próprio role | BR-069, BR-070 |
+| i18n | ✅ `admin.*` (pt-BR, en, es) | |
+
+---
+
 # Design System Reference (Resumo)
 
 ## Cores (Tokens)
@@ -605,6 +721,8 @@ Ao implementar uma nova tela, verificar:
 | 02/07/2026 | 1.2 | Roadmap v2.0: Fases definidas, status por tela, referências atualizadas |
 | 04/07/2026 | 1.3 | Adicionado ClienteCard e ContratoCard na árvore de componentes |
 | 04/07/2026 | 1.4 | Removidas pendências de gap-3 e hover, padronização visual concluída |
+| 30/07/2026 | 1.6 | Adicionada tela 11 (Login) e 12 (Admin); auth context e protected route; Navbar com admin link condicional |
+| 30/07/2026 | 1.7 | Dark mode em LoginPage e Admin Panel (tokens CSS); scroll-to-error em todos os formulários (shouldFocusError + setFocus); field-level errors em ContratoNovo/Edit e GastoForm |
 
 # Referências
 
