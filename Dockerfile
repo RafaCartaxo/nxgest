@@ -1,4 +1,5 @@
 FROM node:20-slim AS build
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -22,5 +23,7 @@ COPY --from=build /app/dist/ ./dist/
 COPY --from=build /app/frontend/dist/ ./frontend/dist/
 
 EXPOSE 8080
+ENV NODE_ENV=production
+RUN mkdir -p /data && chown node:node /data && chown node:node /app
 USER node
 CMD ["node", "dist/main.js"]
