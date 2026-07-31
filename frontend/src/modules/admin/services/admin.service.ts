@@ -25,7 +25,9 @@ export async function listOperadores(empresaId?: string): Promise<OperadorRow[]>
 }
 
 export async function createOperador(data: { nome: string; email: string; senha: string; role: "admin" | "operator"; empresaId?: string }): Promise<OperadorRow> {
-  return apiRequest<OperadorRow>("POST", "/admin/operadores", data)
+  const params = data.empresaId ? `?empresaId=${data.empresaId}` : ""
+  const { empresaId, ...body } = data
+  return apiRequest<OperadorRow>("POST", `/admin/operadores${params}`, body)
 }
 
 export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "operator"; senha?: string }, empresaId?: string): Promise<OperadorRow> {

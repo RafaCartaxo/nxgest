@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.1
+**Versão:** 1.2
 
-**Última atualização:** 27/06/2026
+**Última atualização:** 31/07/2026
 
 ---
 
@@ -62,6 +62,8 @@ Exemplos:
 - Gasto
 - Dashboard
 - Mapa
+- Admin (gestão de operadores, isolamento multi-tenant)
+- Empresa (gestão de empresas, acessível apenas por super_admin)
 
 Novos módulos poderão ser adicionados sem impactar os existentes.
 

@@ -15,14 +15,10 @@ export class AdminRepository implements IAdminRepository {
 
     const result: OperadorRow[] = []
     for (const row of rows) {
-      const [clientesCount, contratosCount] = await Promise.all([
-        empresaId
-          ? db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt), eq(clientes.userId, usuarios.id), eq(usuarios.empresaId, empresaId)))
-          : db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
-        empresaId
-          ? db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.userId, usuarios.id), eq(usuarios.empresaId, empresaId)))
-          : db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
-      ])
+    const [clientesCount, contratosCount] = await Promise.all([
+      db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
+      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
+    ])
       result.push({
         id: row.id,
         nome: row.nome,
@@ -47,12 +43,8 @@ export class AdminRepository implements IAdminRepository {
     if (rows.length === 0) return null
     const row = rows[0]
     const [clientesCount, contratosCount] = await Promise.all([
-      empresaId
-        ? db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt), eq(clientes.userId, usuarios.id), eq(usuarios.empresaId, empresaId)))
-        : db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
-      empresaId
-        ? db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.userId, usuarios.id), eq(usuarios.empresaId, empresaId)))
-        : db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
+      db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
+      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
     ])
     return {
       ...row,
@@ -127,9 +119,7 @@ export class AdminRepository implements IAdminRepository {
   async getDashboardStats(empresaId?: string | null): Promise<AdminDashboardStats> {
     const hoje = getLocalDateString(new Date())
 
-    const byEmpresa = empresaId ? (tabela: string, coluna: string) => and(eq(clientes.userId, usuarios.id), eq(usuarios.empresaId, empresaId)) : undefined
-
-    const [totalOps, totalClientesResult, contratosResult, recebidoResult] = await Promise.all([
+    const [totalOps, totalClientesResult, contratosResult, recebidoResult, entradasResult, saidasResult] = await Promise.all([
       empresaId
         ? db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.empresaId, empresaId)))
         : db.select({ total: count() }).from(usuarios).where(isNull(usuarios.deletedAt)),
@@ -142,13 +132,16 @@ export class AdminRepository implements IAdminRepository {
       empresaId
         ? db.select({ total: sum(pagamentos.valor) }).from(pagamentos).innerJoin(usuarios, eq(pagamentos.userId, usuarios.id)).where(and(eq(pagamentos.data, hoje), eq(usuarios.empresaId, empresaId)))
         : db.select({ total: sum(pagamentos.valor) }).from(pagamentos).where(eq(pagamentos.data, hoje)),
+      empresaId
+        ? db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).innerJoin(usuarios, eq(movimentacoesFinanceiras.userId, usuarios.id)).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje), eq(usuarios.empresaId, empresaId)))
+        : db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje))),
+      empresaId
+        ? db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).innerJoin(usuarios, eq(movimentacoesFinanceiras.userId, usuarios.id)).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje), eq(usuarios.empresaId, empresaId)))
+        : db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje))),
     ])
 
-    const entradas = await db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje)))
-    const saidas = await db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje)))
-
-    const entradasValor = Number(entradas[0].total) || 0
-    const saidasValor = Number(saidas[0].total) || 0
+    const entradasValor = Number(entradasResult[0].total) || 0
+    const saidasValor = Number(saidasResult[0].total) || 0
 
     return {
       totalOperadores: totalOps[0].total,

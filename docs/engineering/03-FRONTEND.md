@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.3
+**Versão:** 1.4
 
-**Última atualização:** 30/07/2026
+**Última atualização:** 31/07/2026
 
 ---
 
@@ -66,6 +66,10 @@ Estrutura atual:
 src/
 
 modules/        ← módulos de negócio (cliente, contrato, pagamento, operacoes, caixa, gasto, auth, admin)
+  admin/
+    components/  ← EmpresaList, EmpresaForm, OperadoresList, OperadorForm
+    pages/       ← AdminPage, SuperAdminPage
+    services/    ← admin.service.ts, empresa.service.ts
 shared/         ← componentes, feedback, tema, utilitários reutilizáveis
   components/   ← 12 componentes (Button, Card, StatusBadge, ErrorBanner, etc.)
   feedback/     ← FeedbackOverlay, FeedbackProvider, useFeedback

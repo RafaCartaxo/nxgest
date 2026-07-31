@@ -252,11 +252,92 @@
               "path": ["api", "pagamentos", "contrato", "{{contratoId}}"]
             }
           }
-        }
-      ]
-    }
-  ],
-  "variable": [
+         }
+       ]
+     },
+     {
+       "name": "Empresas",
+       "item": [
+         {
+           "name": "Listar Empresas",
+           "request": {
+             "method": "GET",
+             "header": [
+               { "key": "Authorization", "value": "Bearer {{token}}" }
+             ],
+             "url": {
+               "raw": "{{baseUrl}}/api/admin/empresas",
+               "host": ["{{baseUrl}}"],
+               "path": ["api", "admin", "empresas"]
+             },
+             "description": "Lista todas as empresas (super_admin apenas)"
+           }
+         },
+         {
+           "name": "Criar Empresa",
+           "request": {
+             "method": "POST",
+             "header": [
+               { "key": "Authorization", "value": "Bearer {{token}}" },
+               { "key": "Content-Type", "value": "application/json" }
+             ],
+             "body": {
+               "mode": "raw",
+               "raw": "{\n  \"nome\": \"Empresa Exemplo\",\n  \"adminNome\": \"João Administrador\",\n  \"adminEmail\": \"admin@empresa.com\",\n  \"adminSenha\": \"senhaSegura123\"\n}"
+             },
+             "url": {
+               "raw": "{{baseUrl}}/api/admin/empresas",
+               "host": ["{{baseUrl}}"],
+               "path": ["api", "admin", "empresas"]
+             },
+             "description": "Cria empresa + admin inicial em transação atômica (super_admin apenas)"
+           }
+         }
+       ]
+     },
+     {
+       "name": "Admin (Atualizado)",
+       "item": [
+         {
+           "name": "Listar Operadores (com empresaId)",
+           "request": {
+             "method": "GET",
+             "header": [
+               { "key": "Authorization", "value": "Bearer {{token}}" }
+             ],
+             "url": {
+               "raw": "{{baseUrl}}/api/admin/operadores?empresaId={{empresaId}}",
+               "host": ["{{baseUrl}}"],
+               "path": ["api", "admin", "operadores"],
+               "query": [
+                 { "key": "empresaId", "value": "{{empresaId}}", "disabled": false }
+               ]
+             },
+             "description": "Lista operadores filtrados por empresa (admin: empresa do token; super_admin: query param)"
+           }
+         },
+         {
+           "name": "Dashboard (com empresaId)",
+           "request": {
+             "method": "GET",
+             "header": [
+               { "key": "Authorization", "value": "Bearer {{token}}" }
+             ],
+             "url": {
+               "raw": "{{baseUrl}}/api/admin/dashboard?empresaId={{empresaId}}",
+               "host": ["{{baseUrl}}"],
+               "path": ["api", "admin", "dashboard"],
+               "query": [
+                 { "key": "empresaId", "value": "{{empresaId}}", "disabled": false }
+               ]
+             },
+             "description": "KPIs filtrados por empresa (admin: empresa do token; super_admin: query param)"
+           }
+         }
+       ]
+     }
+   ],
+   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:3000",
@@ -269,6 +350,11 @@
     },
     {
       "key": "contratoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "empresaId",
       "value": "",
       "type": "string"
     }

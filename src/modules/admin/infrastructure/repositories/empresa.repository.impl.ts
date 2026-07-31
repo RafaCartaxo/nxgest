@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm"
-import { db, empresas, usuarios } from "../../../../database.js"
+import { eq, and, count, isNull } from "drizzle-orm"
+import { db, empresas, usuarios, clientes, contratos } from "../../../../database.js"
 import type { IEmpresaRepository } from "../../application/ports/empresa.repository.js"
-import type { Empresa } from "../../domain/empresa.entity.js"
+import type { EmpresaComStats } from "../../domain/empresa.entity.js"
 import type { IAuthRepository } from "../../../../modules/auth/application/ports/auth.repository.js"
 import { v4 as uuid } from "uuid"
 import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
@@ -9,13 +9,43 @@ import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth
 export class EmpresaRepository implements IEmpresaRepository {
   constructor(private readonly authRepository: IAuthRepository) {}
 
-  async findAll(): Promise<Empresa[]> {
-    return db.select().from(empresas).orderBy(empresas.createdAt)
+  async findAll(): Promise<EmpresaComStats[]> {
+    const rows = await db.select().from(empresas).orderBy(empresas.createdAt)
+    return Promise.all(
+      rows.map(async (row) => {
+        const [totalOps, totalClientesResult, contratosResult] = await Promise.all([
+          db.select({ total: count() }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), isNull(usuarios.deletedAt))),
+          db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, row.id))),
+          db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(usuarios.empresaId, row.id))),
+        ])
+        return {
+          id: row.id,
+          nome: row.nome,
+          createdAt: row.createdAt,
+          totalOperadores: totalOps[0].total,
+          totalClientes: totalClientesResult[0].total,
+          contratosAtivos: contratosResult[0].total,
+        }
+      })
+    )
   }
 
-  async findById(id: string): Promise<Empresa | null> {
+  async findById(id: string): Promise<EmpresaComStats | null> {
     const [row] = await db.select().from(empresas).where(eq(empresas.id, id)).limit(1)
-    return row ?? null
+    if (!row) return null
+    const [totalOps, totalClientesResult, contratosResult] = await Promise.all([
+      db.select({ total: count() }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), isNull(usuarios.deletedAt))),
+      db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, row.id))),
+      db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(usuarios.empresaId, row.id))),
+    ])
+    return {
+      id: row.id,
+      nome: row.nome,
+      createdAt: row.createdAt,
+      totalOperadores: totalOps[0].total,
+      totalClientes: totalClientesResult[0].total,
+      contratosAtivos: contratosResult[0].total,
+    }
   }
 
   async create(input: { nome: string; adminNome: string; adminEmail: string; adminSenhaHash: string }) {
@@ -24,28 +54,30 @@ export class EmpresaRepository implements IEmpresaRepository {
       throw new EmailDuplicadoError()
     }
 
-    const empresaId = uuid()
-    const adminId = uuid()
+    return db.transaction(async (tx) => {
+      const empresaId = uuid()
+      const adminId = uuid()
 
-    await db.insert(empresas).values({
-      id: empresaId,
-      nome: input.nome,
-      createdAt: new Date().toISOString(),
+      await tx.insert(empresas).values({
+        id: empresaId,
+        nome: input.nome,
+        createdAt: new Date().toISOString(),
+      })
+
+      await tx.insert(usuarios).values({
+        id: adminId,
+        nome: input.adminNome,
+        email: input.adminEmail,
+        senhaHash: input.adminSenhaHash,
+        role: "admin",
+        empresaId: empresaId,
+        createdAt: new Date().toISOString(),
+      })
+
+      return {
+        empresa: { id: empresaId, nome: input.nome, createdAt: new Date().toISOString(), totalOperadores: 1, totalClientes: 0, contratosAtivos: 0 },
+        admin: { id: adminId, nome: input.adminNome, email: input.adminEmail },
+      }
     })
-
-    await db.insert(usuarios).values({
-      id: adminId,
-      nome: input.adminNome,
-      email: input.adminEmail,
-      senhaHash: input.adminSenhaHash,
-      role: "admin",
-      empresaId: empresaId,
-      createdAt: new Date().toISOString(),
-    })
-
-    return {
-      empresa: { id: empresaId, nome: input.nome, createdAt: new Date().toISOString() },
-      admin: { id: adminId, nome: input.adminNome, email: input.adminEmail },
-    }
   }
 }

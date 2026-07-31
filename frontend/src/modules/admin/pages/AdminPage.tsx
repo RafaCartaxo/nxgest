@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { useParams } from "react-router-dom"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -14,6 +15,8 @@ import { ApiError } from "../../../api/client.js"
 export function AdminPage() {
   const { t } = useTranslation()
   const feedback = useFeedback()
+  const { id } = useParams<{ id?: string }>()
+  const empresaId = id || undefined
   const [operadores, setOperadores] = useState<OperadorRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -27,7 +30,7 @@ export function AdminPage() {
     setLoading(true)
     setError(null)
     try {
-      const [ops, dash] = await Promise.all([listOperadores(), getDashboard()])
+      const [ops, dash] = await Promise.all([listOperadores(empresaId), getDashboard(empresaId)])
       setOperadores(ops)
       setStats(dash)
     } catch (err) {
@@ -35,7 +38,7 @@ export function AdminPage() {
     } finally {
       setLoading(false)
     }
-  }, [t])
+  }, [t, empresaId])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -47,7 +50,7 @@ export function AdminPage() {
   async function handleCreate(data: { nome: string; email: string; role: "admin" | "operator"; senha?: string }) {
     if (!data.senha) return
     await feedback.run({
-      action: async () => { await createOperador({ nome: data.nome, email: data.email, senha: data.senha!, role: data.role }) },
+      action: async () => { await createOperador({ nome: data.nome, email: data.email, senha: data.senha!, role: data.role, empresaId }) },
       loading: t("common.saving"),
       success: t("admin.criarSucesso"),
       error: t("admin.erroCarregar"),
@@ -56,10 +59,10 @@ export function AdminPage() {
     fetchData()
   }
 
-  async function handleUpdate(data: { nome: string; email: string; role: "admin" | "operator"; senha?: string }) {
+  async function handleUpdate(data: { nome?: string; email?: string; role?: "admin" | "operator"; senha?: string }) {
     if (!editingOp) return
     await feedback.run({
-      action: async () => { await updateOperador(editingOp.id, data) },
+      action: async () => { await updateOperador(editingOp.id, data, empresaId) },
       loading: t("common.saving"),
       success: t("admin.editarSucesso"),
       error: t("admin.erroCarregar"),
@@ -71,7 +74,7 @@ export function AdminPage() {
   async function handleDeleteConfirm() {
     if (!deleteId) return
     await feedback.run({
-      action: async () => { await deleteOperador(deleteId) },
+      action: async () => { await deleteOperador(deleteId, empresaId) },
       loading: t("common.deleting"),
       success: t("admin.removerSucesso"),
       error: t("admin.erroCarregar"),

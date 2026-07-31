@@ -1,14 +1,14 @@
 # PLAN-019 — Multi-Tenant: Super Admin + Empresas
 
-**Status:** Em andamento
+**Status:** Concluído
 
-**Versão:** 1.1
+**Versão:** 1.2
 
 **Data:** 30/07/2026
 
-**Última atualização:** 30/07/2026
+**Última atualização:** 31/07/2026
 
-**Roadmap:** product/04-ROADMAP.md §5.8 (nova)
+**Roadmap:** product/04-ROADMAP.md §5.7 (Multi-Tenant)
 
 **Dependências:**
 - PLAN-015 (Autenticação Multi-Usuário)
@@ -953,29 +953,29 @@ Zero coluna empresaId nas 10 tabelas operacionais.
 
 ## Critérios de conclusão
 
-- [ ] Rate limiting: 10 tentativas/15min no login
-- [ ] `auth.middleware` valida existência do usuário no banco
-- [ ] `GET /api/auth/me` filtra soft-delete e retorna `empresaId` + `empresaNome`
-- [ ] Tabela `empresas` criada e populada no seed
-- [ ] Coluna `empresaId` em `usuarios` com backfill
-- [ ] `super@nxgestao.com` funcional como super_admin
-- [ ] `empresaId` no JWT, no `req`, no `AuthUser`
-- [ ] `adminMiddleware` aceita `admin` e `super_admin`
-- [ ] `superAdminMiddleware` restringe rotas de empresa
-- [ ] `POST /api/admin/empresas` cria empresa + admin atomicamente
-- [ ] `GET /api/admin/empresas` lista empresas com stats + botão "Acessar"
-- [ ] `GET /api/admin/operadores?empresaId=X` — filtro condicional
-- [ ] Admin da Empresa A não vê/edita/remove operadores da Empresa B
-- [ ] Super_admin vê tudo (sem filtro) ou drill-down (`?empresaId=X`)
-- [ ] Super_admin no drill-down: cria operador na empresa correta, NÃO cria sem especificar empresa
-- [ ] Operador herda `empresaId` do admin que o criou
-- [ ] SuperAdminPage funcional (KPIs + lista + formulário + drill-down)
-- [ ] Navbar com link "Empresas" condicional (super_admin)
-- [ ] Tipos frontend aceitam `"super_admin"`, `empresaId`, `empresaNome`
-- [ ] LoginPage com feedback de erro de rede
-- [ ] `tsc --noEmit` passa em todo o projeto
-- [ ] i18n com chaves `superAdmin.*` em pt-BR, en, es
-- [ ] `admin@cobranca.com` continua funcional vinculado à empresa "Desenvolvimento"
+- [x] Rate limiting: 10 tentativas/15min no login
+- [x] `auth.middleware` valida existência do usuário no banco
+- [x] `GET /api/auth/me` filtra soft-delete e retorna `empresaId` + `empresaNome`
+- [x] Tabela `empresas` criada e populada no seed
+- [x] Coluna `empresaId` em `usuarios` com backfill
+- [x] `super@nxgestao.com` funcional como super_admin
+- [x] `empresaId` no JWT, no `req`, no `AuthUser`
+- [x] `adminMiddleware` aceita `admin` e `super_admin`
+- [x] `superAdminMiddleware` restringe rotas de empresa
+- [x] `POST /api/admin/empresas` cria empresa + admin atomicamente
+- [x] `GET /api/admin/empresas` lista empresas com stats + botão "Acessar"
+- [x] `GET /api/admin/operadores?empresaId=X` — filtro condicional
+- [x] Admin da Empresa A não vê/edita/remove operadores da Empresa B
+- [x] Super_admin vê tudo (sem filtro) ou drill-down (`?empresaId=X`)
+- [x] Super_admin no drill-down: cria operador na empresa correta, NÃO cria sem especificar empresa
+- [x] Operador herda `empresaId` do admin que o criou
+- [x] SuperAdminPage funcional (KPIs + lista + formulário + drill-down)
+- [x] Navbar com link "Empresas" condicional (super_admin)
+- [x] Tipos frontend aceitam `"super_admin"`, `empresaId`, `empresaNome`
+- [x] LoginPage com feedback de erro de rede
+- [x] `tsc --noEmit` passa em todo o projeto
+- [x] i18n com chaves `superAdmin.*` em pt-BR, en, es
+- [x] `admin@cobranca.com` continua funcional vinculado à empresa "Desenvolvimento"
 
 ---
 

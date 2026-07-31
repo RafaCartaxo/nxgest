@@ -483,7 +483,7 @@ export async function createTables() {
 
     if (adminRow) {
       sqlite.prepare(
-        "UPDATE usuarios SET empresaId = ? WHERE empresaId IS NULL AND id != ?"
+        "UPDATE usuarios SET empresaId = ? WHERE empresaId IS NULL AND id != ? AND role != 'super_admin'"
       ).run(adminRow.empresaId, adminRow.id)
     }
   }

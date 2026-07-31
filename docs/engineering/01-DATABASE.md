@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.2
+**Versão:** 1.3
 
-**Última atualização:** 30/07/2026
+**Última atualização:** 31/07/2026
 
 ---
 
@@ -52,8 +52,9 @@ O sistema deverá persistir as seguintes entidades:
 - Fechamento Semanal (corresponde à entidade de domínio FechamentoSemanal)
 - Historico Operacional (entidade exclusivamente operacional, sem impacto financeiro)
 - Usuario (operador ou administrador do sistema — autenticação e isolamento de dados)
+- Empresa (unidade de isolamento multi-tenant; super_admin tem empresaId null)
 
-**Atributos do Usuario:** `id`, `nome`, `email` (único), `senhaHash`, `role` (`admin` ou `operator`), `createdAt`, `deletedAt`
+**Atributos do Usuario:** `id`, `nome`, `email` (único), `senhaHash`, `role` (`super_admin` | `admin` | `operator`), `createdAt`, `deletedAt`, `empresaId` (FK → `empresas.id`, nullable — `null` para super_admin)
 
 **Isolamento por Usuario:** todas as entidades operacionais abaixo recebem a coluna `userId` (FK → `usuarios.id`) para garantir isolamento total de dados entre operadores:
 
@@ -62,6 +63,40 @@ O sistema deverá persistir as seguintes entidades:
 As entidades Parcela e PagamentoParcela não recebem `userId` diretamente — são acessadas via JOIN com a tabela pai (Contrato e Pagamento, respectivamente), que já possuem o filtro.
 
 Entidades de interface, como Dashboard e Mapa, não deverão possuir persistência própria.
+
+---
+
+# Multi-Tenant (PLAN-019)
+
+O sistema adota o modelo de multi-tenant por empresa. O isolamento de dados é feito via JOIN, sem colunas adicionais nas tabelas operacionais.
+
+## Entidade Empresa
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| id | UUID v4 | Sim | Chave primária |
+| nome | TEXT | Sim | Nome da empresa |
+| createdAt | TEXT | Sim | Data de criação |
+
+## Isolamento por empresaId
+
+A coluna `empresaId` (UUID, nullable FK → `empresas.id`) foi adicionada à tabela `usuarios`. O valor `null` indica super_admin (acesso transversal a todas as empresas).
+
+| Papel | empresaId | Escopo de dados |
+|-------|-----------|-----------------|
+| `super_admin` | `null` | Acessa todas as empresas (drill-down opcional via `?empresaId=`) |
+| `admin` | UUID da empresa | Acessa apenas os dados da sua empresa |
+| `operator` | UUID da empresa | Acessa apenas os dados da sua empresa |
+
+O isolamento é resolvido por JOIN: `clientes.userId → usuarios.id → usuarios.empresaId`. Nenhuma tabela operacional recebe a coluna `empresaId`.
+
+## Seed inicial
+
+O banco é populado com:
+
+1. `super@nxgestao.com` — `role = super_admin`, `empresaId = null` (credenciais via `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_DEFAULT_PASSWORD`)
+2. Empresa "Desenvolvimento" — vinculada ao admin existente (`admin@cobranca.com`)
+3. Todos os operadores órfãos (sem empresa) vinculados à empresa "Desenvolvimento" (super_admin nunca é vinculado)
 
 ---
 

@@ -595,7 +595,7 @@ A autenticação multi-usuário e o painel de administração são implementados
 
 ### 5.7 Multi-Tenant: Super Admin + Empresas
 
-**Status:** Em andamento
+**Status:** Concluído
 
 **Objetivo:** Transformar o sistema de single-tenant para multi-tenant, introduzindo papel `super_admin`, entidade `Empresa` e isolamento de dados por `empresaId` (derivado via JOIN, zero coluna nova nas 10 tabelas operacionais).
 
@@ -644,7 +644,7 @@ A autenticação multi-usuário e o painel de administração são implementados
 | M7b — Admin Panel (PLAN-017) | F5 | ✅ Concluído | Coluna `role`, admin.middleware, CRUD operadores, AdminPage, dashboard consolidado |
 | M8 — PWA + Mapa | F5 | TBD | Funcionalidades extras |
 | M9 — Endereço do Comércio | F5 | Planejado | PLAN-016: endereço comércio separado + GPS |
-| M10 — Multi-Tenant (PLAN-019) | F5 | Em andamento | Super admin, empresas, isolamento por empresaId, hardening de auth |
+| M10 — Multi-Tenant (PLAN-019) | F5 | Concluído | Super admin, empresas, isolamento por empresaId, hardening de auth |
 
 ---
 

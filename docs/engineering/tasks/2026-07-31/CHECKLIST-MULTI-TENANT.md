@@ -1,6 +1,6 @@
 # CHECKLIST — Multi-Tenant (PLAN-019)
 
-**Status:** Em andamento
+**Status:** Concluído
 
 **Data:** 31/07/2026
 
@@ -103,12 +103,18 @@ Isolamento via JOIN nas queries (zero novas colunas nas tabelas operacionais).
 
 ---
 
-## Pendente
+## Concluído
 
-- [ ] `docs/engineering/02-API.md` — endpoints de empresas e operadores atualizados com empresaId (em progresso)
-- [ ] `docs/engineering/tasks/2026-07-31/CHECKLIST-MULTI-TENANT.md` — este arquivo (em progresso)
-- [ ] `npm run build` — verificação final de compilação
-- [ ] Commit das atualizações de docs
+- [x] `docs/engineering/02-API.md` — endpoints de empresas e operadores atualizados com empresaId
+- [x] `docs/engineering/tasks/2026-07-31/CHECKLIST-MULTI-TENANT.md` — este arquivo
+- [x] `npm run build` — verificação final de compilação ✅
+- [x] Commit das atualizações de docs ✅
+
+## Resultados de verificação
+
+- `npm run build` → OK (backend tsc + frontend vite)
+- Código revisado via SKILL-005 (Code Reviewer) — 5 bugs críticos corrigidos antes da finalização
+- Todos os commits pushados para `main` branch
 
 ---
 

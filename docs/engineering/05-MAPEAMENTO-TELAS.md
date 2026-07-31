@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.7
+**Versão:** 1.8
 
-**Última atualização:** 30/07/2026
+**Última atualização:** 31/07/2026
 
 ---
 
@@ -30,8 +30,9 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 10 | Editar Contrato | `/contratos/:id/editar` | contrato | Formulário |
 | 11 | Login | `/login` | auth | Formulário |
 | 12 | Administração | `/admin` | admin | Dashboard |
+| 13 | Super Admin (Empresas) | `/admin/empresas` | admin | Dashboard |
 
-**Total:** 12 telas | 5 módulos | 34 componentes (12 shared + 3 feedback + 13 módulo + 2 domínio + 4 auth/admin)
+**Total:** 13 telas | 5 módulos | 37 componentes (12 shared + 3 feedback + 15 módulo + 2 domínio + 5 auth/admin)
 
 ---
 
@@ -45,6 +46,7 @@ App
 │   ├── NavLink: Contratos (/contratos)
 │   ├── NavLink: Caixa (/caixa)
 │   ├── NavLink: Admin (/admin) [condicional: role=admin]
+│   ├── NavLink: Empresas (/admin/empresas) [condicional: role=super_admin]
 │   ├── Nome do usuário + botão Sair
 │   └── Language Switcher (PT/EN/ES)
 │
@@ -711,6 +713,46 @@ Ao implementar uma nova tela, verificar:
 - [ ] Busca textual segue padrão `Search icon + pl-10`
 - [ ] Layout `max-w-2xl mx-auto p-4`
 
+## 13. Super Admin — Gestão de Empresas
+
+**Arquivo:** `frontend/src/modules/admin/pages/SuperAdminPage.tsx`
+
+**Rota:** `/admin/empresas` (acesso restrito a `role = super_admin`)
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────┐
+│ ← Super Admin                    │
+├──────────────────────────────────┤
+│ ┌────────┬────────┬────────┐    │
+│ │Empresas│Opers   │Clientes│    │  ← KpiCard × 3 (super admin)
+│ │   2    │   5    │   45   │    │
+│ └────────┴────────┴────────┘    │
+│                                  │
+│ Empresas               + Nova   │  ← SectionHeader
+│ ┌──────────────────────────────┐ │
+│ │ Desenvolvimento              │ │  ← Card.Root list-item
+│ │ 3 operadores · 12 clientes  │ │     Card.Header: nome
+│ │ 8 contratos ativos          │ │     Card.Body: stats
+│ │                    [Acessar] │ │     Card.Actions: drill-down
+│ └──────────────────────────────┘ │
+│ ┌──────────────────────────────┐ │
+│ │ Vendas Corp                  │ │
+│ │ 1 operador · 5 clientes     │ │
+│ │ 3 contratos ativos          │ │
+│ │                    [Acessar] │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ [+ Nova Empresa]  ← modal      │  ← EmpresaForm
+└──────────────────────────────────┘
+```
+
+**Comportamento:**
+- Lista todas as empresas com KPIs (totalOperadores, totalClientes, contratosAtivos) via JOIN com usuários/clientes/contratos
+- "Acessar" navega para `/admin/empresas/:id` (AdminPage filtrado por empresa)
+- "+ Nova Empresa" abre modal com EmpresaForm (cria empresa + admin inicial em transação atômica)
+- KPIs globais somam stats de todas as empresas
+
 ---
 
 # Histórico de Correções
@@ -718,11 +760,12 @@ Ao implementar uma nova tela, verificar:
 | Data | Versão | Mudança |
 |------|--------|---------|
 | 02/07/2026 | 1.0 | Mapeamento inicial das 10 telas |
-| 02/07/2026 | 1.2 | Roadmap v2.0: Fases definidas, status por tela, referências atualizadas |
+| 02/07/2026 | 1.2 | Roadmap v2.0: fases definidas, status por tela, referências atualizadas |
 | 04/07/2026 | 1.3 | Adicionado ClienteCard e ContratoCard na árvore de componentes |
 | 04/07/2026 | 1.4 | Removidas pendências de gap-3 e hover, padronização visual concluída |
 | 30/07/2026 | 1.6 | Adicionada tela 11 (Login) e 12 (Admin); auth context e protected route; Navbar com admin link condicional |
 | 30/07/2026 | 1.7 | Dark mode em LoginPage e Admin Panel (tokens CSS); scroll-to-error em todos os formulários (shouldFocusError + setFocus); field-level errors em ContratoNovo/Edit e GastoForm |
+| 31/07/2026 | 1.8 | Adicionada tela 13 (SuperAdminPage); drill-down por empresa no AdminPage; Navbar com link Empresas para super_admin; AuthContext com empresaId/empresaNome |
 
 # Referências
 

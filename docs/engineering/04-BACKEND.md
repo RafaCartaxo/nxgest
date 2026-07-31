@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.2
+**Versão:** 1.3
 
-**Última atualização:** 30/07/2026
+**Última atualização:** 31/07/2026
 
 ---
 
@@ -27,10 +27,26 @@ O backend será desenvolvido utilizando:
 - Drizzle ORM (ou tecnologia equivalente)
 - Zod para validações
 - Vitest para testes
-- JWT (jsonwebtoken) para autenticação
+- JWT (jsonwebtoken) para autenticação (payload inclui empresaId)
 - bcryptjs para hash de senhas
+- express-rate-limit para proteção de login (10 req/15min por IP)
 
 A substituição de qualquer tecnologia deverá preservar a arquitetura definida neste projeto.
+
+- JWT (jsonwebtoken) para autenticação (payload inclui empresaId)
+- bcryptjs para hash de senhas
+- express-rate-limit para proteção de login (10 req/15min por IP)
+
+---
+
+## Middlewares de Autenticação e Autorização
+
+| Middleware | Localização | Descrição |
+|------------|-------------|-----------|
+| `authMiddleware` | `src/shared/middleware/auth.middleware.ts` | Async — decodifica JWT, valida existência do usuário no DB (filtra soft-delete), injeta `req.userId`, `req.userRole`, `req.empresaId` |
+| `adminMiddleware` | `src/shared/middleware/admin.middleware.ts` | Aceita `admin` e `super_admin` |
+| `superAdminMiddleware` | `src/shared/middleware/super-admin.middleware.ts` | Restrito a `super_admin` — usado nas rotas de gestão de empresas |
+| `rateLimit` (login) | `src/modules/auth/presentation/routes/auth.routes.ts` | 10 tentativas/IP a cada 15 min no POST /login |
 
 ---
 

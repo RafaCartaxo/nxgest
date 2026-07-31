@@ -12,7 +12,7 @@
 
 - [00-PROJECT.md](product/00-PROJECT.md) — Visão do produto, escopo, funcionalidades e premissas
 - [01-DOMAIN.md](product/01-DOMAIN.md) — Entidades, responsabilidades, relacionamentos e estados
-- [02-BUSINESS-RULES.md](product/02-BUSINESS-RULES.md) — Regras de negócio (BR-001 a BR-071)
+- [02-BUSINESS-RULES.md](product/02-BUSINESS-RULES.md) — Regras de negócio (BR-001 a BR-077)
 - [03-PRD.md](product/03-PRD.md) — Product Requirements Document
 - [04-ROADMAP.md](product/04-ROADMAP.md) — Roadmap do produto (v2.6, Fases 0-5)
 - [05-CONVENTIONS.md](product/05-CONVENTIONS.md) — Convenções de código e nomenclatura
