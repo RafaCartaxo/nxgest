@@ -3,8 +3,10 @@ import type { Database as DatabaseType } from "better-sqlite3"
 import { drizzle } from "drizzle-orm/better-sqlite3"
 import { sqliteTable, text, real, integer } from "drizzle-orm/sqlite-core"
 import { getLocalDateString } from "./shared/utils/parseDateLocal.js"
+import { randomUUID } from "node:crypto"
+import bcrypt from "bcryptjs"
 
-const sqlite: DatabaseType = new Database("gestao.db")
+const sqlite: DatabaseType = new Database(process.env.DB_PATH ?? "gestao.db")
 export { sqlite }
 sqlite.pragma("journal_mode = WAL")
 sqlite.pragma("foreign_keys = ON")
@@ -36,6 +38,7 @@ export const clientes = sqliteTable("clientes", {
   createdAt: text("createdAt").notNull(),
   updatedAt: text("updatedAt").notNull(),
   deletedAt: text("deletedAt"),
+  userId: text("userId"),
 })
 
 export const contratos = sqliteTable("contratos", {
@@ -51,6 +54,7 @@ export const contratos = sqliteTable("contratos", {
   createdAt: text("createdAt").notNull(),
   updatedAt: text("updatedAt").notNull(),
   deletedAt: text("deletedAt"),
+  userId: text("userId"),
 })
 
 export const parcelas = sqliteTable("parcelas", {
@@ -77,12 +81,14 @@ export const movimentacoesFinanceiras = sqliteTable("movimentacoesFinanceiras", 
   descricao: text("descricao"),
   data: text("data").notNull(),
   createdAt: text("createdAt").notNull(),
+  userId: text("userId"),
 })
 
 export const caixaConfig = sqliteTable("caixa_config", {
   id: text("id").primaryKey().default("default"),
   caixaBase: real("caixaBase").notNull().default(0),
   updatedAt: text("updatedAt").notNull(),
+  userId: text("userId"),
 })
 
 export const pagamentos = sqliteTable("pagamentos", {
@@ -91,6 +97,7 @@ export const pagamentos = sqliteTable("pagamentos", {
   valor: real("valor").notNull(),
   data: text("data").notNull(),
   createdAt: text("createdAt").notNull(),
+  userId: text("userId"),
 })
 
 export const pagamentoParcelas = sqliteTable("pagamento_parcelas", {
@@ -107,6 +114,7 @@ export const historicoOperacional = sqliteTable("historico_operacional", {
   tipo: text("tipo").notNull(),
   dataPromessa: text("dataPromessa"),
   createdAt: text("createdAt").notNull(),
+  userId: text("userId"),
 })
 
 export const gastos = sqliteTable("gastos", {
@@ -117,6 +125,7 @@ export const gastos = sqliteTable("gastos", {
   data: text("data").notNull(),
   createdAt: text("createdAt").notNull(),
   deletedAt: text("deletedAt"),
+  userId: text("userId"),
 })
 
 export const fechamentosSemanais = sqliteTable("fechamentos_semanais", {
@@ -129,9 +138,20 @@ export const fechamentosSemanais = sqliteTable("fechamentos_semanais", {
   caixaBase: real("caixaBase").notNull().default(0),
   saldoFechamento: real("saldoFechamento").notNull().default(0),
   createdAt: text("createdAt").notNull(),
+  userId: text("userId"),
 })
 
-export function createTables() {
+export const usuarios = sqliteTable("usuarios", {
+  id: text("id").primaryKey(),
+  nome: text("nome").notNull(),
+  email: text("email").notNull().unique(),
+  senhaHash: text("senhaHash").notNull(),
+  role: text("role").notNull().default("operator"),
+  createdAt: text("createdAt").notNull(),
+  deletedAt: text("deletedAt"),
+})
+
+export async function createTables() {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS clientes (
       id TEXT PRIMARY KEY,
@@ -157,7 +177,8 @@ export function createTables() {
       comercioLng REAL,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL,
-      deletedAt TEXT
+      deletedAt TEXT,
+      userId TEXT
     );
 
     CREATE TABLE IF NOT EXISTS contratos (
@@ -173,6 +194,7 @@ export function createTables() {
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL,
       deletedAt TEXT,
+      userId TEXT,
       FOREIGN KEY (clienteId) REFERENCES clientes(id)
     );
 
@@ -200,18 +222,20 @@ export function createTables() {
       origemId TEXT NOT NULL,
       descricao TEXT,
       data TEXT NOT NULL,
-      createdAt TEXT NOT NULL
+      createdAt TEXT NOT NULL,
+      userId TEXT
     );
 
     CREATE TABLE IF NOT EXISTS caixa_config (
       id TEXT PRIMARY KEY DEFAULT 'default',
       caixaBase REAL NOT NULL DEFAULT 0,
-      updatedAt TEXT NOT NULL
+      updatedAt TEXT NOT NULL,
+      userId TEXT
     );
 
     INSERT OR IGNORE INTO caixa_config (id, caixaBase, updatedAt) VALUES ('default', 0, datetime('now'));
 
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_cpf ON clientes(cpf) WHERE cpf IS NOT NULL AND deletedAt IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_cpf ON clientes(cpf, userId) WHERE cpf IS NOT NULL AND deletedAt IS NULL;
     CREATE INDEX IF NOT EXISTS idx_movimentacoes_data ON movimentacoesFinanceiras(data);
     CREATE INDEX IF NOT EXISTS idx_movimentacoes_origem ON movimentacoesFinanceiras(origem, origemId);
     CREATE INDEX IF NOT EXISTS idx_parcelas_contrato ON parcelas(contratoId);
@@ -223,6 +247,7 @@ export function createTables() {
       valor REAL NOT NULL,
       data TEXT NOT NULL,
       createdAt TEXT NOT NULL,
+      userId TEXT,
       FOREIGN KEY (contratoId) REFERENCES contratos(id)
     );
 
@@ -245,7 +270,8 @@ export function createTables() {
       contratoId TEXT NOT NULL,
       tipo TEXT NOT NULL CHECK(tipo IN ('visitado', 'nao_localizado', 'promessa')),
       dataPromessa TEXT,
-      createdAt TEXT NOT NULL
+      createdAt TEXT NOT NULL,
+      userId TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_historico_operacional_dia
@@ -258,7 +284,8 @@ export function createTables() {
       observacao TEXT,
       data TEXT NOT NULL,
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-      deletedAt TEXT
+      deletedAt TEXT,
+      userId TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_gastos_data ON gastos(data);
@@ -272,10 +299,21 @@ export function createTables() {
       resultado REAL NOT NULL,
       caixaBase REAL NOT NULL DEFAULT 0,
       saldoFechamento REAL NOT NULL DEFAULT 0,
-      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      userId TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_fechamentos_semanais_data ON fechamentos_semanais(dataInicio);
+
+    CREATE TABLE IF NOT EXISTS usuarios (
+      id TEXT PRIMARY KEY,
+      nome TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      senhaHash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'operator' CHECK(role IN ('admin', 'operator')),
+      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      deletedAt TEXT
+    );
 
   `)
 
@@ -334,4 +372,41 @@ export function createTables() {
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioEstado TEXT") } catch { /* ja existe */ }
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioLat REAL") } catch { /* ja existe */ }
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioLng REAL") } catch { /* ja existe */ }
+
+  // Migracao: adicionar coluna userId nas tabelas operacionais (ignorar se ja existe)
+  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN userId TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE contratos ADD COLUMN userId TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE pagamentos ADD COLUMN userId TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE movimentacoesFinanceiras ADD COLUMN userId TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE caixa_config ADD COLUMN userId TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE historico_operacional ADD COLUMN userId TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE gastos ADD COLUMN userId TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE fechamentos_semanais ADD COLUMN userId TEXT") } catch { /* ja existe */ }
+
+  // Migracao: recriar indice unico de CPF como composto (cpf, userId)
+  // Antes: global — impedia mesmo CPF entre operadores diferentes
+  // Depois: por operador — permite mesmo CPF em operadores diferentes
+  try {
+    sqlite.exec("DROP INDEX IF EXISTS idx_clientes_cpf")
+    sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_cpf ON clientes(cpf, userId) WHERE cpf IS NOT NULL AND deletedAt IS NULL")
+  } catch { /* indice ja atualizado */ }
+
+  // Seed: admin default (se ainda nao existir)
+  const adminExists = sqlite.prepare("SELECT id FROM usuarios WHERE email = ?").get("admin@cobranca.com")
+  if (!adminExists) {
+    const adminId = randomUUID()
+    const hash = bcrypt.hashSync(process.env.ADMIN_DEFAULT_PASSWORD ?? "admin123", 10)
+    sqlite.prepare(
+      "INSERT OR IGNORE INTO usuarios (id, nome, email, senhaHash, role) VALUES (?, ?, ?, ?, ?)"
+    ).run(adminId, "Admin", "admin@cobranca.com", hash, "admin")
+
+    // Backfill: associar dados existentes ao admin
+    const tables = [
+      "clientes", "contratos", "pagamentos", "movimentacoesFinanceiras",
+      "caixa_config", "historico_operacional", "gastos", "fechamentos_semanais"
+    ]
+    for (const table of tables) {
+      sqlite.prepare(`UPDATE ${table} SET userId = ? WHERE userId IS NULL`).run(adminId)
+    }
+  }
 }
