@@ -57,3 +57,12 @@ npm test                 # vitest
 ## Agentes do projeto
 
 Subagentes customizados (se existirem) ficam em `.opencode/agents/`. Cada um tem escopo e permissões próprios; todos herdam estas regras.
+
+## Skills do ambiente
+
+- **`handoff`** (global, opencode + Claude Code) — gera documento de transição
+  resumindo a conversa atual para outro agente/sessão continuar. Instalada em:
+  `~/.config/opencode/skills/handoff/SKILL.md` e `~/.claude/skills/handoff/SKILL.md`.
+  Fonte: `mattpocock/skills` (skills/productivity/handoff).
+- O documento gerado segue as instruções da própria skill (temp dir do SO,
+  seção "suggested skills", referências por caminho, segredos redigidos).
