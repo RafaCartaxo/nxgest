@@ -9,6 +9,7 @@ import { OperadorNaoEncontradoError, NaoPodeAutoModificarError } from "../../dom
 import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
 
 export class AdminController {
+  private repository: IAdminRepository
   private listUseCase: ListOperadoresUseCase
   private criarUseCase: CriarOperadorUseCase
   private editarUseCase: EditarOperadorUseCase
@@ -16,6 +17,7 @@ export class AdminController {
   private dashboardGetter: IAdminRepository
 
   constructor(repository: IAdminRepository) {
+    this.repository = repository
     this.listUseCase = new ListOperadoresUseCase(repository)
     this.criarUseCase = new CriarOperadorUseCase(repository)
     this.editarUseCase = new EditarOperadorUseCase(repository)
@@ -23,9 +25,17 @@ export class AdminController {
     this.dashboardGetter = repository
   }
 
-  list = async (_req: Request, res: Response) => {
+  private resolveEmpresaId(req: Request): string | null | undefined {
+    if (req.userRole === "super_admin") {
+      return (req.query.empresaId as string) || undefined
+    }
+    return req.empresaId
+  }
+
+  list = async (req: Request, res: Response) => {
     try {
-      const operadores = await this.listUseCase.execute()
+      const targetEmpresaId = this.resolveEmpresaId(req)
+      const operadores = await this.listUseCase.execute(targetEmpresaId)
       res.json(operadores)
     } catch (err) {
       console.error("Erro ao listar operadores:", err)
@@ -35,13 +45,18 @@ export class AdminController {
 
   create = async (req: Request, res: Response) => {
     try {
+      const targetEmpresaId = this.resolveEmpresaId(req) ?? null
+      if (req.userRole === "super_admin" && !targetEmpresaId) {
+        res.status(400).json({ code: "VALIDATION_ERROR", message: "Informe a empresa (empresaId)." })
+        return
+      }
       const { nome, email, senha, role } = req.body
       if (!nome || !email || !senha || !role) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Nome, email, senha e role são obrigatórios." })
         return
       }
       const senhaHash = await bcrypt.hash(senha, 10)
-      const operador = await this.criarUseCase.execute({ nome, email, senhaHash, role })
+      const operador = await this.criarUseCase.execute({ nome, email, senhaHash, role, empresaId: targetEmpresaId })
       res.status(201).json(operador)
     } catch (err) {
       if (err instanceof EmailDuplicadoError) {
@@ -55,15 +70,16 @@ export class AdminController {
 
   update = async (req: Request, res: Response) => {
     try {
+      const targetEmpresaId = this.resolveEmpresaId(req)
       const userId = req.userId!
       const { nome, email, role, senha } = req.body
-      const data: { nome?: string; email?: string; role?: "admin" | "operator"; senhaHash?: string } = {}
+      const data: { nome?: string; email?: string; role?: "admin" | "operator" | "super_admin"; senhaHash?: string } = {}
       if (nome !== undefined) data.nome = nome
       if (email !== undefined) data.email = email
       if (role !== undefined) data.role = role
       if (senha !== undefined) data.senhaHash = await bcrypt.hash(senha, 10)
 
-      const operador = await this.editarUseCase.execute(req.params.id, data, userId)
+      const operador = await this.editarUseCase.execute(req.params.id, data, userId, targetEmpresaId)
       res.json(operador)
     } catch (err) {
       if (err instanceof OperadorNaoEncontradoError) {
@@ -81,8 +97,9 @@ export class AdminController {
 
   remove = async (req: Request, res: Response) => {
     try {
+      const targetEmpresaId = this.resolveEmpresaId(req)
       const userId = req.userId!
-      await this.removerUseCase.execute(req.params.id, userId)
+      await this.removerUseCase.execute(req.params.id, userId, targetEmpresaId)
       res.status(204).send()
     } catch (err) {
       if (err instanceof OperadorNaoEncontradoError) {
@@ -98,9 +115,10 @@ export class AdminController {
     }
   }
 
-  dashboard = async (_req: Request, res: Response) => {
+  dashboard = async (req: Request, res: Response) => {
     try {
-      const stats = await this.dashboardGetter.getDashboardStats()
+      const targetEmpresaId = this.resolveEmpresaId(req)
+      const stats = await this.dashboardGetter.getDashboardStats(targetEmpresaId)
       res.json(stats)
     } catch (err) {
       console.error("Erro ao carregar dashboard admin:", err)

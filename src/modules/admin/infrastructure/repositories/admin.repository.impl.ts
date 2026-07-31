@@ -6,42 +6,60 @@ import { NaoPodeAutoModificarError, OperadorNaoEncontradoError } from "../../dom
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
 export class AdminRepository implements IAdminRepository {
-  async findAllOperadores(): Promise<OperadorRow[]> {
-    const rows = await db.select().from(usuarios).where(isNull(usuarios.deletedAt)).orderBy(usuarios.createdAt)
+  async findAllOperadores(empresaId?: string | null): Promise<OperadorRow[]> {
+    const conditions = [isNull(usuarios.deletedAt)]
+    if (empresaId) {
+      conditions.push(eq(usuarios.empresaId, empresaId))
+    }
+    const rows = await db.select().from(usuarios).where(and(...conditions)).orderBy(usuarios.createdAt)
 
     const result: OperadorRow[] = []
     for (const row of rows) {
       const [clientesCount, contratosCount] = await Promise.all([
-        db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
-        db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
+        empresaId
+          ? db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt), eq(clientes.userId, usuarios.id), eq(usuarios.empresaId, empresaId)))
+          : db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
+        empresaId
+          ? db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.userId, usuarios.id), eq(usuarios.empresaId, empresaId)))
+          : db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
       ])
       result.push({
         id: row.id,
         nome: row.nome,
         email: row.email,
-        role: row.role as "admin" | "operator",
+        role: row.role as "super_admin" | "admin" | "operator",
         createdAt: row.createdAt,
         deletedAt: row.deletedAt,
         totalClientes: clientesCount[0].total,
         contratosAtivos: contratosCount[0].total,
+        empresaId: row.empresaId ?? null,
       })
     }
     return result
   }
 
-  async findById(id: string): Promise<OperadorRow | null> {
-    const rows = await db.select().from(usuarios).where(and(eq(usuarios.id, id), isNull(usuarios.deletedAt)))
+  async findById(id: string, empresaId?: string | null): Promise<OperadorRow | null> {
+    const conditions = [eq(usuarios.id, id), isNull(usuarios.deletedAt)]
+    if (empresaId) {
+      conditions.push(eq(usuarios.empresaId, empresaId))
+    }
+    const rows = await db.select().from(usuarios).where(and(...conditions))
     if (rows.length === 0) return null
     const row = rows[0]
     const [clientesCount, contratosCount] = await Promise.all([
-      db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
-      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
+      empresaId
+        ? db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt), eq(clientes.userId, usuarios.id), eq(usuarios.empresaId, empresaId)))
+        : db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
+      empresaId
+        ? db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.userId, usuarios.id), eq(usuarios.empresaId, empresaId)))
+        : db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
     ])
     return {
       ...row,
-      role: row.role as "admin" | "operator",
+      role: row.role as "super_admin" | "admin" | "operator",
       totalClientes: clientesCount[0].total,
       contratosAtivos: contratosCount[0].total,
+      empresaId: row.empresaId ?? null,
     }
   }
 
@@ -55,13 +73,14 @@ export class AdminRepository implements IAdminRepository {
     ])
     return {
       ...row,
-      role: row.role as "admin" | "operator",
+      role: row.role as "super_admin" | "admin" | "operator",
       totalClientes: clientesCount[0].total,
       contratosAtivos: contratosCount[0].total,
+      empresaId: row.empresaId ?? null,
     }
   }
 
-  async create(input: { nome: string; email: string; senhaHash: string; role: "admin" | "operator" }): Promise<OperadorRow> {
+  async create(input: { nome: string; email: string; senhaHash: string; role: "admin" | "operator"; empresaId: string | null }): Promise<OperadorRow> {
     const id = uuid()
     await db.insert(usuarios).values({
       id,
@@ -69,17 +88,18 @@ export class AdminRepository implements IAdminRepository {
       email: input.email,
       senhaHash: input.senhaHash,
       role: input.role,
+      empresaId: input.empresaId,
       createdAt: new Date().toISOString(),
     })
-    return { id, nome: input.nome, email: input.email, role: input.role, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0 }
+    return { id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0 }
   }
 
-  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "operator"; senhaHash?: string }, currentUserId: string): Promise<OperadorRow | null> {
+  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "operator"; senhaHash?: string }, currentUserId: string, empresaId?: string | null): Promise<OperadorRow | null> {
     if (id === currentUserId && data.role && data.role !== "admin") {
       throw new NaoPodeAutoModificarError("Você não pode alterar seu próprio papel.")
     }
 
-    const existing = await this.findById(id)
+    const existing = await this.findById(id, empresaId)
     if (!existing) throw new OperadorNaoEncontradoError()
 
     const updateData: Record<string, unknown> = {}
@@ -90,28 +110,38 @@ export class AdminRepository implements IAdminRepository {
 
     await db.update(usuarios).set(updateData).where(eq(usuarios.id, id))
 
-    return this.findById(id)
+    return this.findById(id, empresaId)
   }
 
-  async softDelete(id: string, currentUserId: string): Promise<void> {
+  async softDelete(id: string, currentUserId: string, empresaId?: string | null): Promise<void> {
     if (id === currentUserId) {
       throw new NaoPodeAutoModificarError("Você não pode remover a si mesmo.")
     }
 
-    const existing = await db.select().from(usuarios).where(eq(usuarios.id, id))
-    if (existing.length === 0) throw new OperadorNaoEncontradoError()
+    const existing = await this.findById(id, empresaId)
+    if (!existing) throw new OperadorNaoEncontradoError()
 
     await db.update(usuarios).set({ deletedAt: new Date().toISOString() }).where(eq(usuarios.id, id))
   }
 
-  async getDashboardStats(): Promise<AdminDashboardStats> {
+  async getDashboardStats(empresaId?: string | null): Promise<AdminDashboardStats> {
     const hoje = getLocalDateString(new Date())
 
+    const byEmpresa = empresaId ? (tabela: string, coluna: string) => and(eq(clientes.userId, usuarios.id), eq(usuarios.empresaId, empresaId)) : undefined
+
     const [totalOps, totalClientesResult, contratosResult, recebidoResult] = await Promise.all([
-      db.select({ total: count() }).from(usuarios).where(isNull(usuarios.deletedAt)),
-      db.select({ total: count() }).from(clientes).where(isNull(clientes.deletedAt)),
-      db.select({ total: count() }).from(contratos).where(isNull(contratos.deletedAt)),
-      db.select({ total: sum(pagamentos.valor) }).from(pagamentos).where(eq(pagamentos.data, hoje)),
+      empresaId
+        ? db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.empresaId, empresaId)))
+        : db.select({ total: count() }).from(usuarios).where(isNull(usuarios.deletedAt)),
+      empresaId
+        ? db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, empresaId)))
+        : db.select({ total: count() }).from(clientes).where(isNull(clientes.deletedAt)),
+      empresaId
+        ? db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(usuarios.empresaId, empresaId)))
+        : db.select({ total: count() }).from(contratos).where(isNull(contratos.deletedAt)),
+      empresaId
+        ? db.select({ total: sum(pagamentos.valor) }).from(pagamentos).innerJoin(usuarios, eq(pagamentos.userId, usuarios.id)).where(and(eq(pagamentos.data, hoje), eq(usuarios.empresaId, empresaId)))
+        : db.select({ total: sum(pagamentos.valor) }).from(pagamentos).where(eq(pagamentos.data, hoje)),
     ])
 
     const entradas = await db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje)))
