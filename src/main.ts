@@ -12,6 +12,7 @@ import { contratoRoutes } from "./modules/contrato/presentation/routes/contrato.
 import { pagamentoRoutes } from "./modules/pagamento/presentation/routes/pagamento.routes.js"
 import { operacoesRoutes } from "./modules/operacoes/presentation/routes/operacoes.routes.js"
 import { caixaRoutes } from "./modules/caixa/presentation/routes/caixa.routes.js"
+import { empresaRoutes } from "./modules/admin/presentation/routes/empresa.routes.js"
 import { gastoRoutes } from "./modules/gasto/presentation/routes/gasto.routes.js"
 
 await createTables()
@@ -26,6 +27,7 @@ app.use(express.json())
 app.use("/api/health", healthRoutes)
 app.use("/api/auth", authRoutes)
 app.use("/api/admin", authMiddleware, adminRoutes)
+app.use("/api/admin/empresas", authMiddleware, empresaRoutes)
 
 app.use("/api/clientes", authMiddleware, clienteRoutes)
 app.use("/api/contratos", authMiddleware, contratoRoutes)
