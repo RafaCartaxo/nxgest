@@ -3,7 +3,7 @@ import type { IOperacoesRepository, RegistrarVisitaInput, RegistrarVisitaOutput 
 export class RegistrarVisitaUseCase {
   constructor(private repo: IOperacoesRepository) {}
 
-  async execute(input: RegistrarVisitaInput): Promise<RegistrarVisitaOutput> {
-    return this.repo.registrarVisita(input)
+  async execute(userId: string, input: RegistrarVisitaInput): Promise<RegistrarVisitaOutput> {
+    return this.repo.registrarVisita(userId, input)
   }
 }

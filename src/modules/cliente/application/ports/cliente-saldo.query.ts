@@ -1,3 +1,3 @@
 export interface IClienteSaldoQuery {
-  sumByClienteId(clienteId: string): Promise<number>
+  sumByClienteId(userId: string, clienteId: string): Promise<number>
 }

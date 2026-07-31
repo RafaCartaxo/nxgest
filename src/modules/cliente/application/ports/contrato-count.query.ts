@@ -1,3 +1,3 @@
 export interface IContratoCountQuery {
-  countByClienteId(clienteId: string): Promise<number>
+  countByClienteId(userId: string, clienteId: string): Promise<number>
 }

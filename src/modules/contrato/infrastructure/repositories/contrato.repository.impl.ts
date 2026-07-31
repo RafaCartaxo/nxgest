@@ -49,9 +49,10 @@ export class ContratoRepository implements IContratoRepository {
     this.drizzle = drizzle ?? db
   }
 
-  async save(contrato: Contrato): Promise<void> {
+  async save(userId: string, contrato: Contrato): Promise<void> {
     await this.drizzle.insert(contratos).values({
       id: contrato.id,
+      userId,
       clienteId: contrato.clienteId,
       valorBase: contrato.valorBase,
       percentualJuros: contrato.percentualJuros,
@@ -66,7 +67,7 @@ export class ContratoRepository implements IContratoRepository {
     })
   }
 
-  async saveParcela(parcela: Parcela): Promise<void> {
+  async saveParcela(_userId: string, parcela: Parcela): Promise<void> {
     await this.drizzle.insert(parcelas).values({
       id: parcela.id,
       contratoId: parcela.contratoId,
@@ -83,7 +84,7 @@ export class ContratoRepository implements IContratoRepository {
     })
   }
 
-  async updateParcela(id: string, data: Partial<Parcela>): Promise<void> {
+  async updateParcela(_userId: string, id: string, data: Partial<Parcela>): Promise<void> {
     await this.drizzle
       .update(parcelas)
       .set({
@@ -93,30 +94,30 @@ export class ContratoRepository implements IContratoRepository {
       .where(eq(parcelas.id, id))
   }
 
-  async findById(id: string): Promise<Contrato | null> {
+  async findById(userId: string, id: string): Promise<Contrato | null> {
     const rows = await this.drizzle
       .select()
       .from(contratos)
-      .where(and(eq(contratos.id, id), isNull(contratos.deletedAt)))
+      .where(and(eq(contratos.id, id), isNull(contratos.deletedAt), eq(contratos.userId, userId)))
       .limit(1)
     if (rows.length === 0) return null
     return rowToContrato(rows[0])
   }
 
-  async findByIdWithParcelas(id: string): Promise<ContratoComParcelas | null> {
+  async findByIdWithParcelas(userId: string, id: string): Promise<ContratoComParcelas | null> {
     const rows = await this.drizzle
       .select()
       .from(contratos)
-      .where(and(eq(contratos.id, id), isNull(contratos.deletedAt)))
+      .where(and(eq(contratos.id, id), isNull(contratos.deletedAt), eq(contratos.userId, userId)))
       .limit(1)
     if (rows.length === 0) return null
     const contrato = rowToContrato(rows[0])
-    const parcelasList = await this.findParcelasByContratoId(id)
+    const parcelasList = await this.findParcelasByContratoId(userId, id)
     return { ...contrato, parcelas: parcelasList }
   }
 
-  async findAll(params: FindAllParams): Promise<FindAllResult> {
-    const conditions = [sql`${contratos.deletedAt} IS NULL`]
+  async findAll(userId: string, params: FindAllParams): Promise<FindAllResult> {
+    const conditions = [sql`${contratos.deletedAt} IS NULL`, sql`${contratos.userId} = ${userId}`]
     if (params.clienteId) {
       conditions.push(sql`${contratos.clienteId} = ${params.clienteId}`)
     }
@@ -187,7 +188,7 @@ export class ContratoRepository implements IContratoRepository {
     }
   }
 
-  async findParcelasByContratoId(contratoId: string): Promise<Parcela[]> {
+  async findParcelasByContratoId(_userId: string, contratoId: string): Promise<Parcela[]> {
     const rows = await this.drizzle
       .select()
       .from(parcelas)
@@ -201,8 +202,8 @@ export class ContratoRepository implements IContratoRepository {
     return rows.map(rowToParcela)
   }
 
-  async update(id: string, data: Partial<Contrato>): Promise<Contrato | null> {
-    const existing = await this.findById(id)
+  async update(userId: string, id: string, data: Partial<Contrato>): Promise<Contrato | null> {
+    const existing = await this.findById(userId, id)
     if (!existing) return null
 
     const input = data as Record<string, unknown>
@@ -218,49 +219,49 @@ export class ContratoRepository implements IContratoRepository {
     if (input.estado !== undefined) updateData.estado = input.estado
     if (input.updatedAt !== undefined) updateData.updatedAt = input.updatedAt
     if (Object.keys(updateData).length === 0) return existing
-    await this.drizzle.update(contratos).set(updateData).where(eq(contratos.id, id))
-    return this.findById(id)
+    await this.drizzle.update(contratos).set(updateData).where(and(eq(contratos.id, id), eq(contratos.userId, userId)))
+    return this.findById(userId, id)
   }
 
-  async softDelete(id: string): Promise<void> {
+  async softDelete(userId: string, id: string): Promise<void> {
     await this.drizzle
       .update(contratos)
       .set({ deletedAt: new Date().toISOString() })
-      .where(eq(contratos.id, id))
+      .where(and(eq(contratos.id, id), eq(contratos.userId, userId)))
   }
 
-  async softDeleteParcelasByContratoId(contratoId: string): Promise<void> {
+  async softDeleteParcelasByContratoId(_userId: string, contratoId: string): Promise<void> {
     await this.drizzle
       .update(parcelas)
       .set({ deletedAt: new Date().toISOString() })
       .where(eq(parcelas.contratoId, contratoId))
   }
 
-  async hasPayments(contratoId: string): Promise<boolean> {
+  async hasPayments(userId: string, contratoId: string): Promise<boolean> {
     const rows = await this.drizzle
       .select({ total: count() })
       .from(pagamentos)
-      .where(eq(pagamentos.contratoId, contratoId))
+      .where(and(eq(pagamentos.contratoId, contratoId), eq(pagamentos.userId, userId)))
     return rows[0].total > 0
   }
 
-  async getSaldoAtual(): Promise<number> {
-    const caixa = await this.getCaixaConfig()
+  async getSaldoAtual(userId: string): Promise<number> {
+    const caixa = await this.getCaixaConfig(userId)
     const base = caixa?.caixaBase ?? 0
     const entradas = sqlite
-      .prepare("SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'entrada'")
-      .get() as { total: number }
+      .prepare("SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'entrada' AND userId = ?")
+      .get(userId) as { total: number }
     const saidas = sqlite
-      .prepare("SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'saida'")
-      .get() as { total: number }
+      .prepare("SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'saida' AND userId = ?")
+      .get(userId) as { total: number }
     return base + (Number(entradas.total) || 0) - (Number(saidas.total) || 0)
   }
 
-  async getCaixaConfig(): Promise<CaixaConfig | null> {
+  async getCaixaConfig(userId: string): Promise<CaixaConfig | null> {
     const rows = await this.drizzle
       .select()
       .from(caixaConfig)
-      .where(eq(caixaConfig.id, "default"))
+      .where(and(eq(caixaConfig.id, "default"), eq(caixaConfig.userId, userId)))
       .limit(1)
     if (rows.length === 0) return null
     return {
@@ -270,7 +271,7 @@ export class ContratoRepository implements IContratoRepository {
     }
   }
 
-  async updateCaixaBase(valor: number): Promise<void> {
+  async updateCaixaBase(userId: string, valor: number): Promise<void> {
     const now = new Date().toISOString()
     await this.drizzle
       .update(caixaConfig)
@@ -278,12 +279,13 @@ export class ContratoRepository implements IContratoRepository {
         caixaBase: sql`${caixaConfig.caixaBase} + ${valor}`,
         updatedAt: now,
       })
-      .where(eq(caixaConfig.id, "default"))
+      .where(and(eq(caixaConfig.id, "default"), eq(caixaConfig.userId, userId)))
   }
 
-  async saveMovimentacaoFinanceira(mov: MovimentacaoFinanceira): Promise<void> {
+  async saveMovimentacaoFinanceira(userId: string, mov: MovimentacaoFinanceira): Promise<void> {
     await this.drizzle.insert(movimentacoesFinanceiras).values({
       id: mov.id,
+      userId,
       tipo: mov.tipo,
       valor: mov.valor,
       origem: mov.origem,
@@ -295,6 +297,7 @@ export class ContratoRepository implements IContratoRepository {
   }
 
   async transaction<T>(
+    userId: string,
     fn: (repo: IContratoRepository) => Promise<T>
   ): Promise<T> {
     sqlite.exec("BEGIN IMMEDIATE")

@@ -4,7 +4,7 @@ import type { ListGastosInput } from "./ListGastosInput.js"
 export class ListGastosUseCase {
   constructor(private readonly repository: IGastoRepository) {}
 
-  async execute(input: ListGastosInput) {
-    return this.repository.findAll(input)
+  async execute(userId: string, input: ListGastosInput) {
+    return this.repository.findAll(userId, input)
   }
 }

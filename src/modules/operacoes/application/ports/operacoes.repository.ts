@@ -71,9 +71,9 @@ export interface ParcelaHojeCliente {
 }
 
 export interface IOperacoesRepository {
-  listarCobrancasDoDia(operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult>
-  listarPagamentosDoDia(dataInicio?: string, dataFim?: string): Promise<PagamentoDoDiaItem[]>
-  listarParcelasHoje(): Promise<ParcelaHojeCliente[]>
-  listarParcelasSemana(): Promise<ParcelaHojeCliente[]>
-  registrarVisita(input: RegistrarVisitaInput): Promise<RegistrarVisitaOutput>
+  listarCobrancasDoDia(userId: string, operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult>
+  listarPagamentosDoDia(userId: string, dataInicio?: string, dataFim?: string): Promise<PagamentoDoDiaItem[]>
+  listarParcelasHoje(userId: string): Promise<ParcelaHojeCliente[]>
+  listarParcelasSemana(userId: string): Promise<ParcelaHojeCliente[]>
+  registrarVisita(userId: string, input: RegistrarVisitaInput): Promise<RegistrarVisitaOutput>
 }

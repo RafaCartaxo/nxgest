@@ -4,7 +4,7 @@ import type { ListarMovimentacoesInput } from "./ListarMovimentacoesInput.js"
 export class ListarMovimentacoesUseCase {
   constructor(private readonly repository: ICaixaRepository) {}
 
-  async execute(input: ListarMovimentacoesInput) {
-    return this.repository.listMovimentacoes(input)
+  async execute(userId: string, input: ListarMovimentacoesInput) {
+    return this.repository.listMovimentacoes(userId, input)
   }
 }

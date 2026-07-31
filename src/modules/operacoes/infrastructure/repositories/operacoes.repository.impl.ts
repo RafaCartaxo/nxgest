@@ -49,7 +49,7 @@ interface CobrancaRow {
 }
 
 export class OperacoesRepository implements IOperacoesRepository {
-  async listarCobrancasDoDia(operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult> {
+  async listarCobrancasDoDia(userId: string, operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult> {
     const hoje = getLocalDateString(new Date())
 
     const rows = sqlite.prepare(`
@@ -107,9 +107,11 @@ LEFT JOIN (
      WHERE h2.clienteId = h.clienteId
        AND h2.contratoId = h.contratoId
        AND date(h2.createdAt) = ?
+       AND h2.userId = ?
      ORDER BY h2.createdAt DESC LIMIT 1) AS resultadoOperacional
   FROM historico_operacional h
   WHERE date(h.createdAt) = ?
+    AND h.userId = ?
   GROUP BY clienteId, contratoId
 ) v ON v.clienteId = c.id AND v.contratoId = ct.id
       WHERE p.saldoPendente > 0
@@ -117,12 +119,13 @@ LEFT JOIN (
         AND p.deletedAt IS NULL
         AND ct.deletedAt IS NULL
         AND c.deletedAt IS NULL
+        AND ct.userId = ?
       GROUP BY c.id, ct.id
       ORDER BY
         situacao DESC,
         MIN(p.dataVencimento) ASC,
         ct.createdAt ASC
-    `).all(hoje, hoje, hoje, hoje) as CobrancaRow[]
+    `).all(hoje, hoje, userId, hoje, userId, hoje, userId) as CobrancaRow[]
 
     const aReceberHojeRow = sqlite.prepare(`
       SELECT COALESCE(SUM(p.saldoPendente), 0) AS total
@@ -132,7 +135,8 @@ LEFT JOIN (
         AND p.saldoPendente > 0
         AND p.deletedAt IS NULL
         AND ct.deletedAt IS NULL
-    `).get(hoje) as { total: number }
+        AND ct.userId = ?
+    `).get(hoje, userId) as { total: number }
 
     const atrasadoRow = sqlite.prepare(`
       SELECT COALESCE(SUM(p.saldoPendente), 0) AS total
@@ -142,7 +146,8 @@ LEFT JOIN (
         AND p.saldoPendente > 0
         AND p.deletedAt IS NULL
         AND ct.deletedAt IS NULL
-    `).get(hoje) as { total: number }
+        AND ct.userId = ?
+    `).get(hoje, userId) as { total: number }
 
     const aVencerRow = sqlite.prepare(`
       SELECT COALESCE(SUM(p.saldoPendente), 0) AS total
@@ -152,13 +157,15 @@ LEFT JOIN (
         AND p.saldoPendente > 0
         AND p.deletedAt IS NULL
         AND ct.deletedAt IS NULL
-    `).get(hoje, hoje) as { total: number }
+        AND ct.userId = ?
+    `).get(hoje, hoje, userId) as { total: number }
 
     const recebidoHojeRow = sqlite.prepare(`
       SELECT COALESCE(SUM(valor), 0) AS total
       FROM pagamentos
       WHERE data = ?
-    `).get(hoje) as { total: number }
+        AND userId = ?
+    `).get(hoje, userId) as { total: number }
 
     const hasGPS = typeof operadorLat === "number" && typeof operadorLng === "number"
 
@@ -247,7 +254,7 @@ LEFT JOIN (
     }
   }
 
-  async listarPagamentosDoDia(dataInicio?: string, dataFim?: string): Promise<PagamentoDoDiaItem[]> {
+  async listarPagamentosDoDia(userId: string, dataInicio?: string, dataFim?: string): Promise<PagamentoDoDiaItem[]> {
     const inicio = dataInicio ?? getLocalDateString(new Date())
     const fim = dataFim ?? inicio
 
@@ -266,13 +273,14 @@ LEFT JOIN (
       WHERE p.data >= ? AND p.data <= ?
         AND ct.deletedAt IS NULL
         AND cli.deletedAt IS NULL
+        AND ct.userId = ?
       ORDER BY p.createdAt DESC
-    `).all(inicio, fim) as PagamentoDoDiaItem[]
+    `).all(inicio, fim, userId) as PagamentoDoDiaItem[]
 
     return rows
   }
 
-  async listarParcelasHoje(): Promise<ParcelaHojeCliente[]> {
+  async listarParcelasHoje(userId: string): Promise<ParcelaHojeCliente[]> {
     const hoje = getLocalDateString(new Date())
 
     const rows = sqlite.prepare(`
@@ -291,8 +299,9 @@ LEFT JOIN (
         AND p.deletedAt IS NULL
         AND ct.deletedAt IS NULL
         AND c.deletedAt IS NULL
+        AND ct.userId = ?
       ORDER BY c.nome ASC, p.numero ASC
-    `).all(hoje) as {
+    `).all(hoje, userId) as {
       clienteId: string
       clienteNome: string
       contratoId: string
@@ -323,7 +332,7 @@ LEFT JOIN (
     return Array.from(clientesMap.values())
   }
 
-  async listarParcelasSemana(): Promise<ParcelaHojeCliente[]> {
+  async listarParcelasSemana(userId: string): Promise<ParcelaHojeCliente[]> {
     const hoje = getLocalDateString(new Date())
     const seteDias = new Date()
     seteDias.setDate(seteDias.getDate() + 7)
@@ -346,8 +355,9 @@ LEFT JOIN (
         AND p.deletedAt IS NULL
         AND ct.deletedAt IS NULL
         AND c.deletedAt IS NULL
+        AND ct.userId = ?
       ORDER BY c.nome ASC, p.dataVencimento ASC, p.numero ASC
-    `).all(hoje, fim) as {
+    `).all(hoje, fim, userId) as {
       clienteId: string
       clienteNome: string
       contratoId: string
@@ -378,14 +388,14 @@ LEFT JOIN (
     return Array.from(clientesMap.values())
   }
 
-  async registrarVisita(input: RegistrarVisitaInput): Promise<RegistrarVisitaOutput> {
+  async registrarVisita(userId: string, input: RegistrarVisitaInput): Promise<RegistrarVisitaOutput> {
     const id = uuidv4()
     const createdAt = new Date().toISOString()
 
     sqlite.prepare(`
-      INSERT INTO historico_operacional (id, clienteId, contratoId, tipo, dataPromessa, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(id, input.clienteId, input.contratoId, input.tipo, input.dataPromessa ?? null, createdAt)
+      INSERT INTO historico_operacional (id, clienteId, contratoId, tipo, dataPromessa, userId, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, input.clienteId, input.contratoId, input.tipo, input.dataPromessa ?? null, userId, createdAt)
 
     return {
       id,

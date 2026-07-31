@@ -3,7 +3,7 @@ import type { IOperacoesRepository, PagamentoDoDiaItem } from "../../ports/opera
 export class ListarPagamentosDoDiaUseCase {
   constructor(private repo: IOperacoesRepository) {}
 
-  async execute(dataInicio?: string, dataFim?: string): Promise<PagamentoDoDiaItem[]> {
-    return this.repo.listarPagamentosDoDia(dataInicio, dataFim)
+  async execute(userId: string, dataInicio?: string, dataFim?: string): Promise<PagamentoDoDiaItem[]> {
+    return this.repo.listarPagamentosDoDia(userId, dataInicio, dataFim)
   }
 }

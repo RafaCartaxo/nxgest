@@ -50,7 +50,8 @@ export class ContratoController {
     }
 
     try {
-      const contrato = await this.createContrato.execute(parsed.data)
+      const userId = req.userId!
+      const contrato = await this.createContrato.execute(userId, parsed.data)
       res.status(201).json(contrato)
     } catch (error) {
       if (error instanceof SaldoInsuficienteError) {
@@ -81,7 +82,8 @@ export class ContratoController {
     }
 
     try {
-      const result = await this.listContratos.execute(parsed.data)
+      const userId = req.userId!
+      const result = await this.listContratos.execute(userId, parsed.data)
       res.status(200).json({ data: result.data, pagination: result.pagination })
     } catch (error) {
       console.error("Erro ao listar contratos:", error)
@@ -91,7 +93,8 @@ export class ContratoController {
 
   async getById(req: Request, res: Response) {
     try {
-      const contrato = await this.findContrato.execute(req.params.id)
+      const userId = req.userId!
+      const contrato = await this.findContrato.execute(userId, req.params.id)
       res.status(200).json(contrato)
     } catch (error) {
       if (error instanceof ContratoNotFoundError) {
@@ -118,7 +121,9 @@ export class ContratoController {
     }
 
     try {
+      const userId = req.userId!
       const contrato = await this.updateContrato.execute(
+        userId,
         req.params.id,
         parsed.data
       )
@@ -143,7 +148,8 @@ export class ContratoController {
 
   async remove(req: Request, res: Response) {
     try {
-      await this.deleteContrato.execute(req.params.id)
+      const userId = req.userId!
+      await this.deleteContrato.execute(userId, req.params.id)
       res.status(204).send()
     } catch (error) {
       if (error instanceof ContratoNotFoundError) {

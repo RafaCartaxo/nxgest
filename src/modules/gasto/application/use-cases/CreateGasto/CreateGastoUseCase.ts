@@ -9,7 +9,7 @@ export class CreateGastoUseCase {
     private readonly caixaRepository: ICaixaRepository,
   ) {}
 
-  async execute(input: CreateGastoInput) {
+  async execute(userId: string, input: CreateGastoInput) {
     const id = v4()
     const now = new Date().toISOString()
 
@@ -22,9 +22,9 @@ export class CreateGastoUseCase {
       createdAt: now,
     }
 
-    await this.gastoRepository.save(gasto)
+    await this.gastoRepository.save(userId, gasto)
 
-    await this.caixaRepository.saveMovimentacaoFinanceira({
+    await this.caixaRepository.saveMovimentacaoFinanceira(userId, {
       id: v4(),
       tipo: "saida",
       valor: input.valor,

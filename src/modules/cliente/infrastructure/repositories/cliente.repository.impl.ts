@@ -43,8 +43,9 @@ function rowToCliente(row: ClienteRow): Cliente {
 }
 
 export class ClienteRepository implements IClienteRepository {
-  async save(cliente: Cliente): Promise<void> {
+  async save(userId: string, cliente: Cliente): Promise<void> {
     await db.insert(clientes).values({
+      userId,
       id: cliente.id,
       nome: cliente.nome,
       cpf: cliente.cpf ?? null,
@@ -72,21 +73,21 @@ export class ClienteRepository implements IClienteRepository {
     })
   }
 
-  async findByCpf(cpf: string): Promise<Cliente | null> {
+  async findByCpf(userId: string, cpf: string): Promise<Cliente | null> {
     const rows = await db
       .select()
       .from(clientes)
-      .where(and(eq(clientes.cpf, cpf), isNull(clientes.deletedAt)))
+      .where(and(eq(clientes.userId, userId), eq(clientes.cpf, cpf), isNull(clientes.deletedAt)))
       .limit(1)
     if (rows.length === 0) return null
     return rowToCliente(rows[0])
   }
 
-  async findById(id: string): Promise<Cliente | null> {
+  async findById(userId: string, id: string): Promise<Cliente | null> {
     const rows = await db
       .select()
       .from(clientes)
-      .where(and(eq(clientes.id, id), isNull(clientes.deletedAt)))
+      .where(and(eq(clientes.userId, userId), eq(clientes.id, id), isNull(clientes.deletedAt)))
       .limit(1)
 
     if (rows.length === 0) return null
@@ -94,8 +95,8 @@ export class ClienteRepository implements IClienteRepository {
     return rowToCliente(rows[0])
   }
 
-  async findAll(params: FindAllParams): Promise<FindAllResult> {
-    const conditions = [sql`${clientes.deletedAt} IS NULL`]
+  async findAll(userId: string, params: FindAllParams): Promise<FindAllResult> {
+    const conditions = [sql`${clientes.deletedAt} IS NULL`, eq(clientes.userId, userId)]
 
     if (params.nome) {
       conditions.push(sql`${clientes.nome} LIKE ${`%${params.nome}%`}`)
@@ -136,8 +137,8 @@ export class ClienteRepository implements IClienteRepository {
     }
   }
 
-  async update(id: string, data: Partial<Cliente>): Promise<Cliente | null> {
-    const existing = await this.findById(id)
+  async update(userId: string, id: string, data: Partial<Cliente>): Promise<Cliente | null> {
+    const existing = await this.findById(userId, id)
     if (!existing) return null
 
     const updateData: Record<string, unknown> = {}
@@ -185,26 +186,27 @@ export class ClienteRepository implements IClienteRepository {
       return existing
     }
 
-    await db.update(clientes).set(updateData).where(eq(clientes.id, id))
+    await db.update(clientes).set(updateData).where(and(eq(clientes.userId, userId), eq(clientes.id, id)))
 
-    return this.findById(id)
+    return this.findById(userId, id)
   }
 
-  async softDelete(id: string): Promise<void> {
+  async softDelete(userId: string, id: string): Promise<void> {
     await db
       .update(clientes)
       .set({
         deletedAt: new Date().toISOString(),
       })
-      .where(eq(clientes.id, id))
+      .where(and(eq(clientes.userId, userId), eq(clientes.id, id)))
   }
 
-  async hasActiveContracts(clienteId: string): Promise<boolean> {
+  async hasActiveContracts(userId: string, clienteId: string): Promise<boolean> {
     const rows = await db
       .select({ total: count() })
       .from(contratos)
       .where(
         and(
+          eq(contratos.userId, userId),
           eq(contratos.clienteId, clienteId),
           isNull(contratos.deletedAt)
         )

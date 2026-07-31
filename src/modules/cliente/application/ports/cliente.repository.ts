@@ -19,11 +19,11 @@ export interface FindAllResult {
 }
 
 export interface IClienteRepository {
-  save(cliente: Cliente): Promise<void>
-  findById(id: string): Promise<Cliente | null>
-  findByCpf(cpf: string): Promise<Cliente | null>
-  findAll(params: FindAllParams): Promise<FindAllResult>
-  update(id: string, data: Partial<Cliente>): Promise<Cliente | null>
-  softDelete(id: string): Promise<void>
-  hasActiveContracts(clienteId: string): Promise<boolean>
+  save(userId: string, cliente: Cliente): Promise<void>
+  findById(userId: string, id: string): Promise<Cliente | null>
+  findByCpf(userId: string, cpf: string): Promise<Cliente | null>
+  findAll(userId: string, params: FindAllParams): Promise<FindAllResult>
+  update(userId: string, id: string, data: Partial<Cliente>): Promise<Cliente | null>
+  softDelete(userId: string, id: string): Promise<void>
+  hasActiveContracts(userId: string, clienteId: string): Promise<boolean>
 }

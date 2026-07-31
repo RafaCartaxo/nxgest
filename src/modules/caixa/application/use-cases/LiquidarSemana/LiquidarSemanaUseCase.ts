@@ -6,7 +6,7 @@ import { getLocalDateString } from "../../../../../shared/utils/parseDateLocal.j
 export class LiquidarSemanaUseCase {
   constructor(private readonly repository: ICaixaRepository) {}
 
-  async execute() {
+  async execute(userId: string) {
     const hoje = new Date()
     const diaSemana = hoje.getDay()
 
@@ -19,18 +19,18 @@ export class LiquidarSemanaUseCase {
     const dataInicio = getLocalDateString(segunda)
     const dataFim = getLocalDateString(domingo)
 
-    const existente = await this.repository.findFechamentoPorPeriodo(dataInicio, dataFim)
+    const existente = await this.repository.findFechamentoPorPeriodo(userId, dataInicio, dataFim)
     if (existente) throw new SemanaJaLiquidadaError()
 
-    const caixa = await this.repository.getCaixaConfig()
+    const caixa = await this.repository.getCaixaConfig(userId)
     const caixaBase = caixa?.caixaBase ?? 0
 
-    const ultimo = await this.repository.getUltimaLiquidacao()
+    const ultimo = await this.repository.getUltimaLiquidacao(userId)
     const baseFechamento = ultimo?.saldoFechamento ?? caixaBase
 
     const [totalRecebido, totalGasto] = await Promise.all([
-      this.repository.getRecebidoSemana(dataInicio, dataFim),
-      this.repository.getGastoSemana(dataInicio, dataFim),
+      this.repository.getRecebidoSemana(userId, dataInicio, dataFim),
+      this.repository.getGastoSemana(userId, dataInicio, dataFim),
     ])
 
     const resultado = totalRecebido - totalGasto
@@ -49,7 +49,7 @@ export class LiquidarSemanaUseCase {
       createdAt: now,
     }
 
-    await this.repository.saveFechamentoSemanal(fechamento)
+    await this.repository.saveFechamentoSemanal(userId, fechamento)
     return fechamento
   }
 }

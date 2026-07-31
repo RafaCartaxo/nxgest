@@ -6,17 +6,17 @@ import type { AjustarCaixaBaseInput } from "./AjustarCaixaBaseInput.js"
 export class AjustarCaixaBaseUseCase {
   constructor(private readonly repository: ICaixaRepository) {}
 
-  async execute(input: AjustarCaixaBaseInput) {
-    const caixa = await this.repository.getCaixaConfig()
+  async execute(userId: string, input: AjustarCaixaBaseInput) {
+    const caixa = await this.repository.getCaixaConfig(userId)
     if (!caixa) throw new CaixaNotFoundError()
 
     const diferenca = input.valor - caixa.caixaBase
     const now = new Date().toISOString()
     const hoje = now.split("T")[0]
 
-    await this.repository.updateCaixaBase(diferenca)
+    await this.repository.updateCaixaBase(userId, diferenca)
 
-    await this.repository.saveMovimentacaoFinanceira({
+    await this.repository.saveMovimentacaoFinanceira(userId, {
       id: v4(),
       tipo: diferenca >= 0 ? "entrada" : "saida",
       valor: Math.abs(diferenca),
@@ -26,7 +26,7 @@ export class AjustarCaixaBaseUseCase {
       createdAt: now,
     })
 
-    const atualizado = await this.repository.getCaixaConfig()
+    const atualizado = await this.repository.getCaixaConfig(userId)
     return { caixaBase: atualizado!.caixaBase }
   }
 }

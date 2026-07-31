@@ -13,15 +13,15 @@ export class CreatePagamentoUseCase {
     private contratoRepo: IContratoRepository
   ) {}
 
-  async execute(input: CreatePagamentoInput) {
+  async execute(userId: string, input: CreatePagamentoInput) {
     const now = new Date()
     const data = getLocalDateString(now)
     const createdAt = now.toISOString()
 
     const pagamentoId = uuid()
 
-    await this.contratoRepo.transaction(async (repo) => {
-      const contrato = await repo.findByIdWithParcelas(input.contratoId)
+    await this.contratoRepo.transaction(userId, async (repo) => {
+      const contrato = await repo.findByIdWithParcelas(userId, input.contratoId)
       if (!contrato) {
         throw new ContratoNotFoundError(input.contratoId)
       }
@@ -38,7 +38,7 @@ export class CreatePagamentoUseCase {
         valor: input.valor,
         data,
         createdAt,
-      })
+      }, userId)
 
       for (const item of preview.parcelas) {
         if (item.valorAplicado <= 0) continue
@@ -47,7 +47,7 @@ export class CreatePagamentoUseCase {
         const novoEstado = item.estadoPrevisto === "Paga" ? "Paga" as const : "Parcial" as const
         const dataQuitacao = item.estadoPrevisto === "Paga" ? data : null
 
-        await repo.updateParcela(parcela.id, {
+        await repo.updateParcela(userId, parcela.id, {
           valorPago: Math.round((parcela.valorPago + item.valorAplicado) * 100) / 100,
           saldoPendente: item.saldoRestante,
           estado: novoEstado,
@@ -60,18 +60,18 @@ export class CreatePagamentoUseCase {
           pagamentoId,
           parcelaId: parcela.id,
           valor: item.valorAplicado,
-        })
+        }, userId)
       }
 
       if (preview.todasPagas) {
-        await repo.update(contrato.id, {
+        await repo.update(userId, contrato.id, {
           estado: "Finalizado",
           updatedAt: createdAt,
         })
       }
 
       const movId = uuid()
-      await repo.saveMovimentacaoFinanceira({
+      await repo.saveMovimentacaoFinanceira(userId, {
         id: movId,
         tipo: "entrada",
         valor: input.valor,

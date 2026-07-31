@@ -6,9 +6,9 @@ import { CpfDuplicadoError } from "../../../domain/errors/cpf-duplicado.error.js
 export class CreateClienteUseCase {
   constructor(private readonly repository: IClienteRepository) {}
 
-  async execute(input: CreateClienteInput) {
+  async execute(userId: string, input: CreateClienteInput) {
     if (input.cpf) {
-      const existente = await this.repository.findByCpf(input.cpf)
+      const existente = await this.repository.findByCpf(userId, input.cpf)
       if (existente) {
         throw new CpfDuplicadoError(input.cpf)
       }
@@ -30,7 +30,7 @@ export class CreateClienteUseCase {
       updatedAt: now,
     }
 
-    await this.repository.save(cliente)
+    await this.repository.save(userId, cliente)
 
     return cliente
   }

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3"
 import { db, pagamentos, pagamentoParcelas } from "../../../../database.js"
 import type { Pagamento, PagamentoParcela, PagamentoComDetalhes } from "../../domain/pagamento.entity.js"
@@ -14,17 +14,18 @@ export class PagamentoRepository implements IPagamentoRepository {
     this.drizzle = drizzle ?? db
   }
 
-  async save(pagamento: Pagamento): Promise<void> {
+  async save(pagamento: Pagamento, userId: string): Promise<void> {
     await this.drizzle.insert(pagamentos).values({
       id: pagamento.id,
       contratoId: pagamento.contratoId,
       valor: pagamento.valor,
       data: pagamento.data,
       createdAt: pagamento.createdAt,
+      userId,
     })
   }
 
-  async savePagamentoParcela(relacao: PagamentoParcela): Promise<void> {
+  async savePagamentoParcela(relacao: PagamentoParcela, _userId: string): Promise<void> {
     await this.drizzle.insert(pagamentoParcelas).values({
       id: relacao.id,
       pagamentoId: relacao.pagamentoId,
@@ -33,11 +34,11 @@ export class PagamentoRepository implements IPagamentoRepository {
     })
   }
 
-  async findByContratoId(contratoId: string): Promise<PagamentoComDetalhes[]> {
+  async findByContratoId(contratoId: string, userId: string): Promise<PagamentoComDetalhes[]> {
     const rows = await this.drizzle
       .select()
       .from(pagamentos)
-      .where(eq(pagamentos.contratoId, contratoId))
+      .where(and(eq(pagamentos.contratoId, contratoId), eq(pagamentos.userId, userId)))
       .orderBy(pagamentos.createdAt)
 
     const result: PagamentoComDetalhes[] = []

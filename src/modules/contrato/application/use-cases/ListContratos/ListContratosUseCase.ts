@@ -4,7 +4,7 @@ import type { FindContratosQuery } from "./ListContratosQuery.js"
 export class ListContratosUseCase {
   constructor(private readonly repository: IContratoRepository) {}
 
-  async execute(query: FindContratosQuery) {
-    return this.repository.findAll(query)
+  async execute(userId: string, query: FindContratosQuery) {
+    return this.repository.findAll(userId, query)
   }
 }

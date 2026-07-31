@@ -5,11 +5,11 @@ import type { ICaixaRepository, ListMovimentacoesParams, ListMovimentacoesResult
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
 export class CaixaRepository implements ICaixaRepository {
-  async getCaixaConfig(): Promise<CaixaConfig | null> {
+  async getCaixaConfig(userId: string): Promise<CaixaConfig | null> {
     const rows = await db
       .select()
       .from(caixaConfig)
-      .where(eq(caixaConfig.id, "default"))
+      .where(and(eq(caixaConfig.id, "default"), eq(caixaConfig.userId, userId)))
       .limit(1)
     if (rows.length === 0) return null
     return {
@@ -19,7 +19,7 @@ export class CaixaRepository implements ICaixaRepository {
     }
   }
 
-  async updateCaixaBase(valor: number): Promise<void> {
+  async updateCaixaBase(userId: string, valor: number): Promise<void> {
     const now = new Date().toISOString()
     await db
       .update(caixaConfig)
@@ -27,10 +27,10 @@ export class CaixaRepository implements ICaixaRepository {
         caixaBase: sql`${caixaConfig.caixaBase} + ${valor}`,
         updatedAt: now,
       })
-      .where(eq(caixaConfig.id, "default"))
+      .where(and(eq(caixaConfig.id, "default"), eq(caixaConfig.userId, userId)))
   }
 
-  async saveMovimentacaoFinanceira(m: MovimentacaoFinanceira): Promise<void> {
+  async saveMovimentacaoFinanceira(userId: string, m: MovimentacaoFinanceira): Promise<void> {
     await db.insert(movimentacoesFinanceiras).values({
       id: m.id,
       tipo: m.tipo,
@@ -38,18 +38,22 @@ export class CaixaRepository implements ICaixaRepository {
       origem: m.origem,
       origemId: m.origemId ?? "",
       descricao: m.descricao ?? null,
+      userId,
       data: m.data,
       createdAt: m.createdAt,
     })
   }
 
-  async listMovimentacoes(params: ListMovimentacoesParams): Promise<ListMovimentacoesResult> {
+  async listMovimentacoes(userId: string, params: ListMovimentacoesParams): Promise<ListMovimentacoesResult> {
     const page = params.page ?? 1
     const limit = params.limit ?? 20
     const offset = (page - 1) * limit
 
     const conditions: string[] = ["1=1"]
     const bindings: string[] = []
+
+    conditions.push("m.userId = ?")
+    bindings.push(userId)
 
     if (params.dataInicio) {
       conditions.push("m.data >= ?")
@@ -121,12 +125,13 @@ export class CaixaRepository implements ICaixaRepository {
     }
   }
 
-  async getRecebidoSemana(dataInicio: string, dataFim: string): Promise<number> {
+  async getRecebidoSemana(userId: string, dataInicio: string, dataFim: string): Promise<number> {
     const result = await db
       .select({ total: sum(movimentacoesFinanceiras.valor) })
       .from(movimentacoesFinanceiras)
       .where(
         and(
+          eq(movimentacoesFinanceiras.userId, userId),
           eq(movimentacoesFinanceiras.origem, "Pagamento"),
           gte(movimentacoesFinanceiras.data, dataInicio),
           lte(movimentacoesFinanceiras.data, dataFim),
@@ -135,12 +140,13 @@ export class CaixaRepository implements ICaixaRepository {
     return Number(result[0]?.total) || 0
   }
 
-  async getGastoSemana(dataInicio: string, dataFim: string): Promise<number> {
+  async getGastoSemana(userId: string, dataInicio: string, dataFim: string): Promise<number> {
     const result = await db
       .select({ total: sum(movimentacoesFinanceiras.valor) })
       .from(movimentacoesFinanceiras)
       .where(
         and(
+          eq(movimentacoesFinanceiras.userId, userId),
           eq(movimentacoesFinanceiras.origem, "Gasto"),
           gte(movimentacoesFinanceiras.data, dataInicio),
           lte(movimentacoesFinanceiras.data, dataFim),
@@ -149,9 +155,9 @@ export class CaixaRepository implements ICaixaRepository {
     return Number(result[0]?.total) || 0
   }
 
-  async getSaldoAtual(dataInicio?: string): Promise<number> {
-    let entradasQuery = `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'entrada'`
-    let saidasQuery = `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'saida'`
+  async getSaldoAtual(userId: string, dataInicio?: string): Promise<number> {
+    let entradasQuery = `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'entrada' AND userId = ?`
+    let saidasQuery = `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'saida' AND userId = ?`
 
     if (dataInicio) {
       const filtro = ` AND data >= '${dataInicio}'`
@@ -159,66 +165,67 @@ export class CaixaRepository implements ICaixaRepository {
       saidasQuery += filtro
     }
 
-    const entradas = sqlite.prepare(entradasQuery).get() as { total: number }
-    const saidas = sqlite.prepare(saidasQuery).get() as { total: number }
+    const entradas = sqlite.prepare(entradasQuery).get(userId) as { total: number }
+    const saidas = sqlite.prepare(saidasQuery).get(userId) as { total: number }
 
-    const caixa = await this.getCaixaConfig()
+    const caixa = await this.getCaixaConfig(userId)
     const base = caixa?.caixaBase ?? 0
     const totalEntradas = Number(entradas.total) || 0
     const totalSaidas = Number(saidas.total) || 0
     return base + totalEntradas - totalSaidas
   }
 
-  async getLucro(): Promise<number> {
+  async getLucro(userId: string): Promise<number> {
     const entradas = sqlite.prepare(
-      `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'entrada'`
-    ).get() as { total: number }
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'entrada' AND userId = ?`
+    ).get(userId) as { total: number }
     const saidas = sqlite.prepare(
-      `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'saida'`
-    ).get() as { total: number }
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'saida' AND userId = ?`
+    ).get(userId) as { total: number }
     return (Number(entradas.total) || 0) - (Number(saidas.total) || 0)
   }
 
-  async getAReceberHoje(): Promise<number> {
+  async getAReceberHoje(userId: string): Promise<number> {
     const hoje = getLocalDateString(new Date())
     const result = sqlite
       .prepare(
         `SELECT COALESCE(SUM(p.saldoPendente), 0) AS total
          FROM parcelas p
          JOIN contratos ct ON ct.id = p.contratoId
-         WHERE p.dataVencimento = ? AND p.saldoPendente > 0 AND p.deletedAt IS NULL AND ct.deletedAt IS NULL`
+         WHERE p.dataVencimento = ? AND p.saldoPendente > 0 AND p.deletedAt IS NULL AND ct.deletedAt IS NULL AND ct.userId = ?`
       )
-      .get(hoje) as { total: number }
+      .get(hoje, userId) as { total: number }
     return result.total
   }
 
-  async getRecebidoHoje(): Promise<number> {
+  async getRecebidoHoje(userId: string): Promise<number> {
     const hoje = getLocalDateString(new Date())
     const result = sqlite
       .prepare(
         `SELECT COALESCE(SUM(valor), 0) AS total
          FROM pagamentos
-         WHERE data = ?`
+         WHERE data = ? AND userId = ?`
       )
-      .get(hoje) as { total: number }
+      .get(hoje, userId) as { total: number }
     return result.total
   }
 
-  async getVendasSemana(dataInicio: string, dataFim: string): Promise<number> {
+  async getVendasSemana(userId: string, dataInicio: string, dataFim: string): Promise<number> {
     const result = sqlite
       .prepare(
         `SELECT COALESCE(SUM(valorBase), 0) AS total
          FROM contratos
-         WHERE dataInicio >= ? AND dataInicio <= ? AND deletedAt IS NULL`
+         WHERE dataInicio >= ? AND dataInicio <= ? AND deletedAt IS NULL AND userId = ?`
       )
-      .get(dataInicio, dataFim) as { total: number }
+      .get(dataInicio, dataFim, userId) as { total: number }
     return result.total
   }
 
-  async getUltimaLiquidacao(): Promise<FechamentoSemanal | null> {
+  async getUltimaLiquidacao(userId: string): Promise<FechamentoSemanal | null> {
     const rows = await db
       .select()
       .from(fechamentosSemanais)
+      .where(eq(fechamentosSemanais.userId, userId))
       .orderBy(desc(fechamentosSemanais.createdAt))
       .limit(1)
     if (rows.length === 0) return null
@@ -235,7 +242,7 @@ export class CaixaRepository implements ICaixaRepository {
     }
   }
 
-  async saveFechamentoSemanal(f: FechamentoSemanal): Promise<void> {
+  async saveFechamentoSemanal(userId: string, f: FechamentoSemanal): Promise<void> {
     await db.insert(fechamentosSemanais).values({
       id: f.id,
       dataInicio: f.dataInicio,
@@ -245,16 +252,18 @@ export class CaixaRepository implements ICaixaRepository {
       resultado: f.resultado,
       caixaBase: f.caixaBase,
       saldoFechamento: f.saldoFechamento,
+      userId,
       createdAt: f.createdAt,
     })
   }
 
-  async findFechamentoPorPeriodo(dataInicio: string, dataFim: string): Promise<FechamentoSemanal | null> {
+  async findFechamentoPorPeriodo(userId: string, dataInicio: string, dataFim: string): Promise<FechamentoSemanal | null> {
     const rows = await db
       .select()
       .from(fechamentosSemanais)
       .where(
         and(
+          eq(fechamentosSemanais.userId, userId),
           eq(fechamentosSemanais.dataInicio, dataInicio),
           eq(fechamentosSemanais.dataFim, dataFim),
         ),

@@ -31,7 +31,7 @@ export class GastoController {
         return
       }
 
-      const result = await this.createUseCase.execute(parsed.data)
+      const result = await this.createUseCase.execute(req.userId!, parsed.data)
       res.status(201).json(result)
     } catch (error) {
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao registrar gasto." })
@@ -50,7 +50,7 @@ export class GastoController {
         return
       }
 
-      const result = await this.listUseCase.execute(parsed.data)
+      const result = await this.listUseCase.execute(req.userId!, parsed.data)
       res.json(result)
     } catch (error) {
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao listar gastos." })
@@ -59,7 +59,7 @@ export class GastoController {
 
   async remove(req: Request, res: Response) {
     try {
-      await this.deleteUseCase.execute(req.params.id)
+      await this.deleteUseCase.execute(req.userId!, req.params.id)
       res.status(204).send()
     } catch (error) {
       if (error instanceof GastoNotFoundError) {

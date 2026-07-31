@@ -19,18 +19,18 @@ export interface ListMovimentacoesResult {
 }
 
 export interface ICaixaRepository {
-  getCaixaConfig(): Promise<CaixaConfig | null>
-  updateCaixaBase(valor: number): Promise<void>
-  saveMovimentacaoFinanceira(m: MovimentacaoFinanceira): Promise<void>
-  listMovimentacoes(params: ListMovimentacoesParams): Promise<ListMovimentacoesResult>
-  getRecebidoSemana(dataInicio: string, dataFim: string): Promise<number>
-  getGastoSemana(dataInicio: string, dataFim: string): Promise<number>
-  getSaldoAtual(dataInicio?: string): Promise<number>
-  getAReceberHoje(): Promise<number>
-  getRecebidoHoje(): Promise<number>
-  getVendasSemana(dataInicio: string, dataFim: string): Promise<number>
-  getUltimaLiquidacao(): Promise<FechamentoSemanal | null>
-  getLucro(): Promise<number>
-  saveFechamentoSemanal(f: FechamentoSemanal): Promise<void>
-  findFechamentoPorPeriodo(dataInicio: string, dataFim: string): Promise<FechamentoSemanal | null>
+  getCaixaConfig(userId: string): Promise<CaixaConfig | null>
+  updateCaixaBase(userId: string, valor: number): Promise<void>
+  saveMovimentacaoFinanceira(userId: string, m: MovimentacaoFinanceira): Promise<void>
+  listMovimentacoes(userId: string, params: ListMovimentacoesParams): Promise<ListMovimentacoesResult>
+  getRecebidoSemana(userId: string, dataInicio: string, dataFim: string): Promise<number>
+  getGastoSemana(userId: string, dataInicio: string, dataFim: string): Promise<number>
+  getSaldoAtual(userId: string, dataInicio?: string): Promise<number>
+  getAReceberHoje(userId: string): Promise<number>
+  getRecebidoHoje(userId: string): Promise<number>
+  getVendasSemana(userId: string, dataInicio: string, dataFim: string): Promise<number>
+  getUltimaLiquidacao(userId: string): Promise<FechamentoSemanal | null>
+  getLucro(userId: string): Promise<number>
+  saveFechamentoSemanal(userId: string, f: FechamentoSemanal): Promise<void>
+  findFechamentoPorPeriodo(userId: string, dataInicio: string, dataFim: string): Promise<FechamentoSemanal | null>
 }

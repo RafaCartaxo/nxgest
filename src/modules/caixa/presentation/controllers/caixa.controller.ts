@@ -23,10 +23,11 @@ export class CaixaController {
 
   async getStatus(req: Request, res: Response) {
     try {
+      const userId = req.userId!
       const repository = this.repository
-      const caixa = await repository.getCaixaConfig()
+      const caixa = await repository.getCaixaConfig(userId)
 
-      const ultimaLiquidacao = await repository.getUltimaLiquidacao()
+      const ultimaLiquidacao = await repository.getUltimaLiquidacao(userId)
 
       const hoje = new Date()
       const diaSemana = hoje.getDay()
@@ -55,13 +56,13 @@ export class CaixaController {
       }
 
       const [recebidoSemana, gastosSemana, saldoAtual, aReceberHoje, recebidoHoje, vendasSemana, lucro] = await Promise.all([
-        repository.getRecebidoSemana(dataInicio, dataFim),
-        repository.getGastoSemana(dataInicio, dataFim),
-        repository.getSaldoAtual(ultimaLiquidacao ? dataInicio : undefined),
-        repository.getAReceberHoje(),
-        repository.getRecebidoHoje(),
-        repository.getVendasSemana(dataInicio, dataFim),
-        repository.getLucro(),
+        repository.getRecebidoSemana(userId, dataInicio, dataFim),
+        repository.getGastoSemana(userId, dataInicio, dataFim),
+        repository.getSaldoAtual(userId, ultimaLiquidacao ? dataInicio : undefined),
+        repository.getAReceberHoje(userId),
+        repository.getRecebidoHoje(userId),
+        repository.getVendasSemana(userId, dataInicio, dataFim),
+        repository.getLucro(userId),
       ])
 
       res.json({
@@ -85,6 +86,7 @@ export class CaixaController {
 
   async ajustar(req: Request, res: Response) {
     try {
+      const userId = req.userId!
       const parsed = ajustarCaixaBaseSchema.safeParse(req.body)
       if (!parsed.success) {
         res.status(422).json({
@@ -95,7 +97,7 @@ export class CaixaController {
         return
       }
 
-      const result = await this.ajustarUseCase.execute(parsed.data)
+      const result = await this.ajustarUseCase.execute(userId, parsed.data)
       res.status(201).json(result)
     } catch (error) {
       if (error instanceof CaixaNotFoundError) {
@@ -108,6 +110,7 @@ export class CaixaController {
 
   async listMovimentacoes(req: Request, res: Response) {
     try {
+      const userId = req.userId!
       const parsed = listarMovimentacoesSchema.safeParse(req.query)
       if (!parsed.success) {
         res.status(422).json({
@@ -118,7 +121,7 @@ export class CaixaController {
         return
       }
 
-      const result = await this.listarUseCase.execute(parsed.data)
+      const result = await this.listarUseCase.execute(userId, parsed.data)
       res.json(result)
     } catch (error) {
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao listar movimentações." })
@@ -127,7 +130,8 @@ export class CaixaController {
 
   async liquidar(req: Request, res: Response) {
     try {
-      const result = await this.liquidarUseCase.execute()
+      const userId = req.userId!
+      const result = await this.liquidarUseCase.execute(userId)
       res.status(201).json(result)
     } catch (error) {
       if (error instanceof SemanaJaLiquidadaError) {

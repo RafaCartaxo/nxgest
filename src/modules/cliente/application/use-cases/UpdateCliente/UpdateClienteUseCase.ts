@@ -7,15 +7,15 @@ import type { Cliente } from "../../../domain/cliente.entity.js"
 export class UpdateClienteUseCase {
   constructor(private readonly repository: IClienteRepository) {}
 
-  async execute(id: string, input: UpdateClienteInput) {
-    const existing = await this.repository.findById(id)
+  async execute(userId: string, id: string, input: UpdateClienteInput) {
+    const existing = await this.repository.findById(userId, id)
 
     if (!existing) {
       throw new ClienteNotFoundError(id)
     }
 
     if (input.cpf !== undefined && input.cpf !== existing.cpf) {
-      const existente = await this.repository.findByCpf(input.cpf)
+      const existente = await this.repository.findByCpf(userId, input.cpf)
       if (existente) {
         throw new CpfDuplicadoError(input.cpf)
       }
@@ -50,7 +50,7 @@ export class UpdateClienteUseCase {
 
     data.updatedAt = new Date().toISOString()
 
-    const updated = await this.repository.update(id, data)
+    const updated = await this.repository.update(userId, id, data)
 
     if (!updated) {
       throw new ClienteNotFoundError(id)

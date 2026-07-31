@@ -38,7 +38,7 @@ export class PagamentoController {
     }
 
     try {
-      const pagamento = await this.createPagamento.execute(parsed.data)
+      const pagamento = await this.createPagamento.execute(req.userId!, parsed.data)
       res.status(201).json(pagamento)
     } catch (error) {
       if (error instanceof ContratoNotFoundError) {
@@ -69,7 +69,7 @@ export class PagamentoController {
     }
 
     try {
-      const result = await this.previewPagamento.execute(parsed.data)
+      const result = await this.previewPagamento.execute(req.userId!, parsed.data)
       res.status(200).json(result)
     } catch (error) {
       if (error instanceof ContratoNotFoundError) {
@@ -83,7 +83,7 @@ export class PagamentoController {
 
   async listByContrato(req: Request, res: Response) {
     try {
-      const pagamentos = await this.listPagamentos.execute(req.params.contratoId)
+      const pagamentos = await this.listPagamentos.execute(req.params.contratoId, req.userId!)
       res.status(200).json(pagamentos)
     } catch (error) {
       console.error("Erro ao listar pagamentos:", error)

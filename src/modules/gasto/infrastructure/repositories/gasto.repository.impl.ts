@@ -16,7 +16,7 @@ function rowToGasto(row: typeof gastos.$inferSelect): Gasto {
 }
 
 export class GastoRepository implements IGastoRepository {
-  async save(gasto: Gasto): Promise<void> {
+  async save(userId: string, gasto: Gasto): Promise<void> {
     await db.insert(gastos).values({
       id: gasto.id,
       valor: gasto.valor,
@@ -24,15 +24,16 @@ export class GastoRepository implements IGastoRepository {
       observacao: gasto.observacao ?? null,
       data: gasto.data,
       createdAt: gasto.createdAt,
+      userId,
     })
   }
 
-  async findAll(params: ListGastosParams): Promise<ListGastosResult> {
+  async findAll(userId: string, params: ListGastosParams): Promise<ListGastosResult> {
     const page = params.page ?? 1
     const limit = params.limit ?? 20
     const offset = (page - 1) * limit
 
-    const conditions = [isNull(gastos.deletedAt)]
+    const conditions = [isNull(gastos.deletedAt), eq(gastos.userId, userId)]
     if (params.dataInicio) {
       conditions.push(gte(gastos.data, params.dataInicio))
     }
@@ -74,20 +75,20 @@ export class GastoRepository implements IGastoRepository {
     }
   }
 
-  async findById(id: string): Promise<Gasto | null> {
+  async findById(userId: string, id: string): Promise<Gasto | null> {
     const rows = await db
       .select()
       .from(gastos)
-      .where(and(eq(gastos.id, id), isNull(gastos.deletedAt)))
+      .where(and(eq(gastos.id, id), isNull(gastos.deletedAt), eq(gastos.userId, userId)))
       .limit(1)
     if (rows.length === 0) return null
     return rowToGasto(rows[0])
   }
 
-  async softDelete(id: string): Promise<void> {
+  async softDelete(userId: string, id: string): Promise<void> {
     await db
       .update(gastos)
       .set({ deletedAt: new Date().toISOString() })
-      .where(eq(gastos.id, id))
+      .where(and(eq(gastos.id, id), eq(gastos.userId, userId)))
   }
 }

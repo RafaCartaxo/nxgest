@@ -17,6 +17,7 @@ export class OperacoesController {
 
   async cobrancas(req: Request, res: Response) {
     try {
+      const userId = req.userId!
       const sort = req.query.sort as string | undefined
       const lat = req.query.lat ? Number(req.query.lat) : undefined
       const lng = req.query.lng ? Number(req.query.lng) : undefined
@@ -24,7 +25,7 @@ export class OperacoesController {
       const operadorLat = sort === "distancia" && !isNaN(lat as number) ? lat : undefined
       const operadorLng = sort === "distancia" && !isNaN(lng as number) ? lng : undefined
 
-      const result = await this.listarCobrancas.execute(operadorLat, operadorLng)
+      const result = await this.listarCobrancas.execute(userId, operadorLat, operadorLng)
       res.status(200).json(result)
     } catch (error) {
       console.error("Erro ao listar cobranças do dia:", error)
@@ -34,9 +35,10 @@ export class OperacoesController {
 
   async pagamentosHoje(req: Request, res: Response) {
     try {
+      const userId = req.userId!
       const dataInicio = req.query.dataInicio as string | undefined
       const dataFim = req.query.dataFim as string | undefined
-      const result = await this.listarPagamentosDoDia.execute(dataInicio, dataFim)
+      const result = await this.listarPagamentosDoDia.execute(userId, dataInicio, dataFim)
       res.status(200).json(result)
     } catch (error) {
       console.error("Erro ao listar pagamentos:", error)
@@ -46,7 +48,8 @@ export class OperacoesController {
 
   async parcelasHoje(_req: Request, res: Response) {
     try {
-      const result = await this.listarParcelasHoje.execute()
+      const userId = _req.userId!
+      const result = await this.listarParcelasHoje.execute(userId)
       res.status(200).json(result)
     } catch (error) {
       console.error("Erro ao listar parcelas do dia:", error)
@@ -56,7 +59,8 @@ export class OperacoesController {
 
   async parcelasSemana(_req: Request, res: Response) {
     try {
-      const result = await this.listarParcelasSemana.execute()
+      const userId = _req.userId!
+      const result = await this.listarParcelasSemana.execute(userId)
       res.status(200).json(result)
     } catch (error) {
       console.error("Erro ao listar parcelas da semana:", error)
@@ -66,6 +70,7 @@ export class OperacoesController {
 
   async visitas(req: Request, res: Response) {
     try {
+      const userId = req.userId!
       const { clienteId, contratoId, tipo, dataPromessa } = req.body
 
       if (!clienteId || !contratoId || !tipo) {
@@ -85,7 +90,7 @@ export class OperacoesController {
         dataPromessa: dataPromessa ?? null,
       }
 
-      const result = await this.registrarVisita.execute(input)
+      const result = await this.registrarVisita.execute(userId, input)
       res.status(201).json(result)
     } catch (error) {
       console.error("Erro ao registrar visita:", error)

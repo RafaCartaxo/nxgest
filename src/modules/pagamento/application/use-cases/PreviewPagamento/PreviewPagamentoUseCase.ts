@@ -8,8 +8,8 @@ export class PreviewPagamentoUseCase {
     private contratoRepo: IContratoRepository
   ) {}
 
-  async execute(input: PreviewPagamentoInput): Promise<PreviewDistribuicao> {
-    const contrato = await this.contratoRepo.findByIdWithParcelas(input.contratoId)
+  async execute(userId: string, input: PreviewPagamentoInput): Promise<PreviewDistribuicao> {
+    const contrato = await this.contratoRepo.findByIdWithParcelas(userId, input.contratoId)
     if (!contrato) {
       throw new ContratoNotFoundError(input.contratoId)
     }

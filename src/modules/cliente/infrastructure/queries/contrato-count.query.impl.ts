@@ -3,12 +3,13 @@ import { db, contratos } from "../../../../database.js"
 import type { IContratoCountQuery } from "../../application/ports/contrato-count.query.js"
 
 export class ContratoCountQuery implements IContratoCountQuery {
-  async countByClienteId(clienteId: string): Promise<number> {
+  async countByClienteId(userId: string, clienteId: string): Promise<number> {
     const rows = await db
       .select({ total: count() })
       .from(contratos)
       .where(
         and(
+          eq(contratos.userId, userId),
           eq(contratos.clienteId, clienteId),
           isNull(contratos.deletedAt)
         )

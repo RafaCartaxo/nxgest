@@ -19,8 +19,8 @@ export interface ListGastosResult {
 }
 
 export interface IGastoRepository {
-  save(gasto: Gasto): Promise<void>
-  findAll(params: ListGastosParams): Promise<ListGastosResult>
-  findById(id: string): Promise<Gasto | null>
-  softDelete(id: string): Promise<void>
+  save(userId: string, gasto: Gasto): Promise<void>
+  findAll(userId: string, params: ListGastosParams): Promise<ListGastosResult>
+  findById(userId: string, id: string): Promise<Gasto | null>
+  softDelete(userId: string, id: string): Promise<void>
 }

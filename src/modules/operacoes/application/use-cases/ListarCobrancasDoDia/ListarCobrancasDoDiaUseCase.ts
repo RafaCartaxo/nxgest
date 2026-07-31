@@ -3,7 +3,7 @@ import type { IOperacoesRepository, CobrancaDoDiaResult } from "../../ports/oper
 export class ListarCobrancasDoDiaUseCase {
   constructor(private repo: IOperacoesRepository) {}
 
-  async execute(operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult> {
-    return this.repo.listarCobrancasDoDia(operadorLat, operadorLng)
+  async execute(userId: string, operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult> {
+    return this.repo.listarCobrancasDoDia(userId, operadorLat, operadorLng)
   }
 }

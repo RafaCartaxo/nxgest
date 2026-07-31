@@ -13,7 +13,7 @@ export class CreateContratoUseCase {
     private readonly clienteExistenceQuery: IClienteExistenceQuery
   ) {}
 
-  async execute(input: CreateContratoInput) {
+  async execute(userId: string, input: CreateContratoInput) {
     const now = new Date().toISOString()
     const hoje = getLocalDateString(new Date())
     const valorFinal =
@@ -29,13 +29,13 @@ export class CreateContratoUseCase {
       input.dataInicio
     )
 
-    await this.repository.transaction(async (repo) => {
-      const clienteExiste = await this.clienteExistenceQuery.exists(input.clienteId)
+    await this.repository.transaction(userId, async (repo) => {
+      const clienteExiste = await this.clienteExistenceQuery.exists(userId, input.clienteId)
       if (!clienteExiste) {
         throw new ClienteNotFoundError(input.clienteId)
       }
 
-      const saldoAtual = await repo.getSaldoAtual()
+      const saldoAtual = await repo.getSaldoAtual(userId)
       if (saldoAtual < input.valorBase) {
         throw new SaldoInsuficienteError(
           saldoAtual,
@@ -70,11 +70,11 @@ export class CreateContratoUseCase {
         createdAt: now,
       }
 
-      await repo.save(contrato)
+      await repo.save(userId, contrato)
       for (const parcela of parcelas) {
-        await repo.saveParcela(parcela)
+        await repo.saveParcela(userId, parcela)
       }
-      await repo.saveMovimentacaoFinanceira(movimentacao)
+      await repo.saveMovimentacaoFinanceira(userId, movimentacao)
     })
 
     return {

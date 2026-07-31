@@ -4,8 +4,8 @@ import { ContratoNotFoundError } from "../../../domain/errors/contrato-not-found
 export class FindContratoUseCase {
   constructor(private readonly repository: IContratoRepository) {}
 
-  async execute(id: string) {
-    const contrato = await this.repository.findByIdWithParcelas(id)
+  async execute(userId: string, id: string) {
+    const contrato = await this.repository.findByIdWithParcelas(userId, id)
 
     if (!contrato) {
       throw new ContratoNotFoundError(id)

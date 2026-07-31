@@ -7,18 +7,18 @@ import { getLocalDateString } from "../../../../../shared/utils/parseDateLocal.j
 export class DeleteContratoUseCase {
   constructor(private readonly repository: IContratoRepository) {}
 
-  async execute(id: string): Promise<void> {
+  async execute(userId: string, id: string): Promise<void> {
     const now = new Date().toISOString()
     const hoje = getLocalDateString(new Date())
 
-    await this.repository.transaction(async (repo) => {
-      const contrato = await repo.findById(id)
+    await this.repository.transaction(userId, async (repo) => {
+      const contrato = await repo.findById(userId, id)
 
       if (!contrato) {
         throw new ContratoNotFoundError(id)
       }
 
-      const hasPayments = await repo.hasPayments(id)
+      const hasPayments = await repo.hasPayments(userId, id)
       if (hasPayments) {
         throw new ContratoHasPaymentsError(id)
       }
@@ -34,9 +34,9 @@ export class DeleteContratoUseCase {
         createdAt: now,
       }
 
-      await repo.softDelete(id)
-      await repo.softDeleteParcelasByContratoId(id)
-      await repo.saveMovimentacaoFinanceira(movimentacao)
+      await repo.softDelete(userId, id)
+      await repo.softDeleteParcelasByContratoId(userId, id)
+      await repo.saveMovimentacaoFinanceira(userId, movimentacao)
     })
   }
 }

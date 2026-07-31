@@ -5,19 +5,19 @@ import { ClienteHasActiveContractsError } from "../../../domain/errors/cliente-h
 export class DeleteClienteUseCase {
   constructor(private readonly repository: IClienteRepository) {}
 
-  async execute(id: string): Promise<void> {
-    const cliente = await this.repository.findById(id)
+  async execute(userId: string, id: string): Promise<void> {
+    const cliente = await this.repository.findById(userId, id)
 
     if (!cliente) {
       throw new ClienteNotFoundError(id)
     }
 
-    const hasContracts = await this.repository.hasActiveContracts(id)
+    const hasContracts = await this.repository.hasActiveContracts(userId, id)
 
     if (hasContracts) {
       throw new ClienteHasActiveContractsError(id)
     }
 
-    await this.repository.softDelete(id)
+    await this.repository.softDelete(userId, id)
   }
 }

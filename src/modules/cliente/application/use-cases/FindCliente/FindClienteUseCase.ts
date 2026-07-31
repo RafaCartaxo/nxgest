@@ -10,15 +10,15 @@ export class FindClienteUseCase {
     private readonly clienteSaldoQuery?: IClienteSaldoQuery
   ) {}
 
-  async execute(id: string) {
-    const cliente = await this.repository.findById(id)
+  async execute(userId: string, id: string) {
+    const cliente = await this.repository.findById(userId, id)
 
     if (!cliente) {
       throw new ClienteNotFoundError(id)
     }
 
-    const totalContratos = await this.contratoCountQuery?.countByClienteId(id) ?? 0
-    const saldoDevedor = await this.clienteSaldoQuery?.sumByClienteId(id) ?? 0
+    const totalContratos = await this.contratoCountQuery?.countByClienteId(userId, id) ?? 0
+    const saldoDevedor = await this.clienteSaldoQuery?.sumByClienteId(userId, id) ?? 0
 
     return { ...cliente, totalContratos, saldoDevedor }
   }

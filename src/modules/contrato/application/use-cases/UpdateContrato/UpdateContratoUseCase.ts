@@ -11,18 +11,18 @@ import type { UpdateContratoInput } from "./UpdateContratoInput.js"
 export class UpdateContratoUseCase {
   constructor(private readonly repository: IContratoRepository) {}
 
-  async execute(id: string, input: UpdateContratoInput) {
+  async execute(userId: string, id: string, input: UpdateContratoInput) {
     const now = new Date().toISOString()
     const hoje = getLocalDateString(new Date())
 
-    const result = await this.repository.transaction(async (repo) => {
-      const contrato = await repo.findById(id)
+    const result = await this.repository.transaction(userId, async (repo) => {
+      const contrato = await repo.findById(userId, id)
 
       if (!contrato) {
         throw new ContratoNotFoundError(id)
       }
 
-      const hasPayments = await repo.hasPayments(id)
+      const hasPayments = await repo.hasPayments(userId, id)
       if (hasPayments) {
         throw new ContratoHasPaymentsError(id)
       }
@@ -41,7 +41,7 @@ export class UpdateContratoUseCase {
         (input.valorBase ?? contrato.valorBase) - contrato.valorBase
 
       if (diferencaBase > 0) {
-        const saldoAtual = await repo.getSaldoAtual()
+        const saldoAtual = await repo.getSaldoAtual(userId)
         if (saldoAtual < diferencaBase) {
           throw new SaldoInsuficienteError(
             saldoAtual,
@@ -64,10 +64,10 @@ export class UpdateContratoUseCase {
         updated.dataInicio
       )
 
-      await repo.update(id, updated)
-      await repo.softDeleteParcelasByContratoId(id)
+      await repo.update(userId, id, updated)
+      await repo.softDeleteParcelasByContratoId(userId, id)
       for (const parcela of novasParcelas) {
-        await repo.saveParcela(parcela)
+        await repo.saveParcela(userId, parcela)
       }
       if (diferencaBase !== 0) {
         const tipo: TipoMovimentacao = diferencaBase > 0 ? "saida" : "entrada"
@@ -81,10 +81,10 @@ export class UpdateContratoUseCase {
           data: hoje,
           createdAt: now,
         }
-        await repo.saveMovimentacaoFinanceira(mov)
+        await repo.saveMovimentacaoFinanceira(userId, mov)
       }
 
-      return repo.findByIdWithParcelas(id)
+      return repo.findByIdWithParcelas(userId, id)
     })
 
     return result

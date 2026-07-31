@@ -3,7 +3,7 @@ import type { IOperacoesRepository, ParcelaHojeCliente } from "../../ports/opera
 export class ListarParcelasHojeUseCase {
   constructor(private repo: IOperacoesRepository) {}
 
-  async execute(): Promise<ParcelaHojeCliente[]> {
-    return this.repo.listarParcelasHoje()
+  async execute(userId: string): Promise<ParcelaHojeCliente[]> {
+    return this.repo.listarParcelasHoje(userId)
   }
 }

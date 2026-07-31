@@ -1,3 +1,3 @@
 export interface IClienteExistenceQuery {
-  exists(clienteId: string): Promise<boolean>
+  exists(userId: string, clienteId: string): Promise<boolean>
 }
