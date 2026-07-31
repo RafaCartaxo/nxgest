@@ -309,18 +309,19 @@ Ao expirar, o operador é redirecionado para a tela de login. Nenhuma operação
 
 ## BR-066
 
-Todo usuário do sistema possui um papel (`role`): `admin` ou `operator`.
+Todo usuário do sistema possui um papel (`role`): `super_admin`, `admin` ou `operator`.
 
 O papel determina o nível de acesso:
 
-- **admin** — Acesso irrestrito a todos os dados de todos os operadores. Pode gerenciar operadores (criar, editar, remover) e visualizar dashboard consolidado.
-- **operator** — Acesso restrito aos próprios dados. Não pode acessar, visualizar ou modificar dados de outros operadores.
+- **super_admin** — Acesso irrestrito a todas as empresas e dados. Gerencia empresas (criar, listar). Pode fazer drill-down em qualquer empresa.
+- **admin** — Acesso a todos os dados da sua empresa. Gerencia operadores da sua empresa.
+- **operator** — Acesso restrito aos próprios dados dentro da sua empresa.
 
 ---
 
 ## BR-067
 
-Apenas administradores (`role = 'admin'`) podem listar, criar, editar e remover operadores.
+Apenas administradores (`role = 'admin'` ou `role = 'super_admin'`) podem listar, criar, editar e remover operadores.
 
 Qualquer tentativa de um operador comum acessar endpoints de gestão de usuários deve resultar em erro 403 (proibido).
 
@@ -332,21 +333,19 @@ O administrador pode visualizar um dashboard consolidado com KPIs agregados de t
 
 Este dashboard é acessível exclusivamente pela rota `/admin`.
 
+O super_admin pode visualizar o dashboard de qualquer empresa via drill-down (`?empresaId=X`) ou o agregado global.
+
 ---
 
 ## BR-069
 
-Um administrador não pode alterar o próprio papel (`role`) para `operator`.
-
-Esta restrição garante que sempre exista ao menos um administrador no sistema.
+Nenhum usuário pode alterar o próprio `role`. Esta proteção se aplica a `super_admin`, `admin` e `operator`.
 
 ---
 
 ## BR-070
 
-Um administrador não pode remover a si mesmo.
-
-O sistema deve verificar se o `id` do operador a ser removido é igual ao `id` do usuário autenticado e bloquear a operação.
+Nenhum usuário pode remover a si mesmo. Esta proteção se aplica a todos os papéis.
 
 ---
 
@@ -355,6 +354,42 @@ O sistema deve verificar se o `id` do operador a ser removido é igual ao `id` d
 Ao remover um operador, seus dados operacionais (clientes, contratos, pagamentos, caixa, gastos, histórico) permanecem íntegros no banco de dados.
 
 A remoção é lógica (`deletedAt`) e apenas bloqueia o login do operador. Nenhum dado operacional é excluído em cascata.
+
+---
+
+## BR-072
+
+Apenas o `super_admin` pode criar e listar empresas. Cada empresa possui um nome e um admin vinculado criado simultaneamente. A criação é atômica: ou ambos (empresa + admin) são criados, ou nada é criado.
+
+---
+
+## BR-073
+
+Os dados de cada empresa são completamente isolados. Um admin da Empresa A não pode acessar, visualizar ou modificar dados da Empresa B, nem gerenciar operadores de outra empresa. O `super_admin` é a única exceção — possui acesso irrestrito a todas as empresas via drill-down.
+
+---
+
+## BR-074
+
+O dashboard do admin (`GET /api/admin/dashboard`) exibe KPIs agregados apenas dos operadores da sua empresa. O `super_admin` pode visualizar o dashboard de qualquer empresa via query param `?empresaId=X`, ou o agregado global quando omitido.
+
+---
+
+## BR-075
+
+Ao criar um operador, o `empresaId` é herdado automaticamente do admin que realiza a criação. O admin não pode criar operadores em outra empresa.
+
+---
+
+## BR-076
+
+Apenas o seed inicial pode criar usuários com `role = 'super_admin'`. O endpoint `POST /api/admin/operadores` aceita apenas `role = 'admin' | 'operator'`.
+
+---
+
+## BR-077
+
+O endpoint `POST /api/auth/login` possui limite de 10 tentativas por IP a cada 15 minutos. Excedido o limite, retorna erro 429.
 
 ---
 

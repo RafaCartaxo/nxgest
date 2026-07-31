@@ -593,6 +593,40 @@ A autenticação multi-usuário e o painel de administração são implementados
 - **Status:** Planejado — `plans/PLAN-016-endereco-comercio.md`
 - **Prioridade:** Média — melhora usabilidade do operador em campo
 
+### 5.7 Multi-Tenant: Super Admin + Empresas
+
+**Status:** Em andamento
+
+**Objetivo:** Transformar o sistema de single-tenant para multi-tenant, introduzindo papel `super_admin`, entidade `Empresa` e isolamento de dados por `empresaId` (derivado via JOIN, zero coluna nova nas 10 tabelas operacionais).
+
+| Papel | Acesso |
+|---|---|
+| **super_admin** | Acesso irrestrito a todas as empresas. Gerencia empresas (criar, listar). Pode fazer drill-down em qualquer empresa. |
+| **admin** | Acesso a todos os dados da sua empresa. Gerencia operadores da sua empresa. |
+| **operator** | Acesso restrito aos próprios dados dentro da sua empresa. |
+
+**Endpoints:**
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| `GET` | `/api/admin/empresas` | super_admin | Lista todas empresas com stats |
+| `POST` | `/api/admin/empresas` | super_admin | Cria empresa + admin vinculado (atômico) |
+
+**Hardening de auth:**
+- Rate limiting: 10 tentativas/15min no `POST /api/auth/login`
+- `auth.middleware` valida existência do usuário no banco (bloqueia soft-deleted)
+- `GET /api/auth/me` retorna `empresaId` + `empresaNome`
+
+**Plano:** `plans/PLAN-019-multi-tenant.md`
+
+**Dependências:** PLAN-015 (Concluído), PLAN-017 (Concluído)
+
+---
+
+### 5.8 Testes automatizados
+- Vitest para backend
+- React Testing Library para frontend
+- **Prioridade:** Média — cobertura atual = 0%
+
 ---
 
 # Marcos (Milestones)
@@ -610,6 +644,7 @@ A autenticação multi-usuário e o painel de administração são implementados
 | M7b — Admin Panel (PLAN-017) | F5 | ✅ Concluído | Coluna `role`, admin.middleware, CRUD operadores, AdminPage, dashboard consolidado |
 | M8 — PWA + Mapa | F5 | TBD | Funcionalidades extras |
 | M9 — Endereço do Comércio | F5 | Planejado | PLAN-016: endereço comércio separado + GPS |
+| M10 — Multi-Tenant (PLAN-019) | F5 | Em andamento | Super admin, empresas, isolamento por empresaId, hardening de auth |
 
 ---
 
@@ -650,3 +685,4 @@ A Fase 3 possui checklist próprio: `tasks/2026-07-03/CHECKLIST-FASE3.md`.
 - `plans/PLAN-005-cliente-card.md` — ClienteCard: componentização e padronização
 - `plans/PLAN-015-autenticacao.md` — Plano de autenticação multi-usuário
 - `plans/PLAN-017-admin-panel.md` — Plano do painel de administração
+- `plans/PLAN-019-multi-tenant.md` — Plano multi-tenant

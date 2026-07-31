@@ -1,10 +1,10 @@
 # API
 
-**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa e Gasto documentados; módulos Auth e Admin planejados (PLAN-015, PLAN-017)
+**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa e Gasto documentados; módulos Auth e Admin documentados; módulo Multi-Tenant (Empresas) implementado (PLAN-019)
 
-**Versão:** 1.2
+**Versão:** 1.3
 
-**Última atualização:** 29/06/2026
+**Última atualização:** 31/07/2026
 
 ---
 
@@ -1172,9 +1172,13 @@ Retorna os dados do operador autenticado.
     "id": "a1b2c3d4-...",
     "nome": "Admin",
     "email": "admin@cobranca.com",
-    "role": "admin"
+    "role": "admin",
+    "empresaId": null,
+    "empresaNome": null
 }
 ```
+
+> **Nota:** `empresaId` e `empresaNome` são retornados via JOIN com a tabela `empresas`. Para `super_admin`, `empresaId` é `null` (acesso transversal); para `admin`, `empresaId` é o UUID da empresa vinculada.
 
 ## Possíveis Erros
 
@@ -1184,19 +1188,114 @@ Retorna os dados do operador autenticado.
 
 ---
 
-# Módulo Admin
+# Módulo Empresas (Multi-Tenant)
 
-Gestão de operadores e dashboard consolidado. Acesso exclusivo para administradores (`role = 'admin'`).
+Gestão de empresas. Acesso exclusivo para super administradores (`role = 'super_admin'`).
 
 ## Endpoints
 
 | Método | Endpoint | Auth | Descrição |
 |---------|----------|------|-----------|
-| GET | `/api/admin/operadores` | Admin | Listar todos operadores com estatísticas |
-| POST | `/api/admin/operadores` | Admin | Criar novo operador |
-| PATCH | `/api/admin/operadores/:id` | Admin | Editar operador (nome, email, role, senha) |
-| DELETE | `/api/admin/operadores/:id` | Admin | Remover operador (soft-delete) |
-| GET | `/api/admin/dashboard` | Admin | KPIs consolidados de todos operadores |
+| GET | `/api/admin/empresas` | Super Admin | Listar todas as empresas |
+| POST | `/api/admin/empresas` | Super Admin | Criar nova empresa com admin |
+
+---
+
+# GET /api/admin/empresas
+
+Lista todas as empresas cadastradas.
+
+**Auth:** Super Admin (`role = 'super_admin'`)
+
+## Response 200
+
+```json
+[
+    {
+        "id": "a1b2c3d4-...",
+        "nome": "Desenvolvimento",
+        "createdAt": "2026-07-31T10:00:00.000Z",
+        "totalOperadores": 3
+    }
+]
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| FORBIDDEN | 403 |
+
+---
+
+# POST /api/admin/empresas
+
+Cria uma nova empresa e o administrador inicial vinculado a ela (transação atômica).
+
+**Auth:** Super Admin (`role = 'super_admin'`)
+
+## Request
+
+```json
+{
+    "nome": "Empresa Exemplo",
+    "adminNome": "João Administrador",
+    "adminEmail": "admin@empresa.com",
+    "adminSenha": "senhaSegura123"
+}
+```
+
+## Validações
+
+| Campo | Obrigatório | Regra |
+|---------|------------|--------|
+| nome | Sim | 1 a 100 caracteres |
+| adminNome | Sim | 1 a 100 caracteres |
+| adminEmail | Sim | Email válido |
+| adminSenha | Sim | Mínimo 6 caracteres |
+
+## Response 201
+
+```json
+{
+    "empresa": {
+        "id": "a1b2c3d4-...",
+        "nome": "Empresa Exemplo",
+        "createdAt": "2026-07-31T10:00:00.000Z"
+    },
+    "admin": {
+        "id": "b2c3d4e5-...",
+        "nome": "João Administrador",
+        "email": "admin@empresa.com",
+        "role": "admin"
+    }
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| EMAIL_DUPLICATED | 409 |
+| VALIDATION_ERROR | 422 |
+
+---
+
+# Módulo Admin (Atualizado)
+
+Gestão de operadores e dashboard consolidado. Acesso para administradores (`role = 'admin'`) e super administradores (`role = 'super_admin'`).
+
+> **Multi-tenant:** Administradores só enxergam operadores e dados da sua própria empresa (`empresaId` do token). Super administradores podem acessar dados de todas as empresas ou filtrar por `empresaId` via query parameter.
+
+## Endpoints
+
+| Método | Endpoint | Auth | Descrição |
+|---------|----------|------|-----------|
+| GET | `/api/admin/operadores` | Admin / Super Admin | Listar operadores (filtrados por empresa) |
+| POST | `/api/admin/operadores` | Admin / Super Admin | Criar novo operador vinculado à empresa |
+| PATCH | `/api/admin/operadores/:id` | Admin / Super Admin | Editar operador (nome, email, role, senha) |
+| DELETE | `/api/admin/operadores/:id` | Admin / Super Admin | Remover operador (soft-delete) |
+| GET | `/api/admin/dashboard` | Admin / Super Admin | KPIs consolidados (filtrados por empresa) |
 
 ## Regras de negócio
 
@@ -1208,3 +1307,9 @@ Gestão de operadores e dashboard consolidado. Acesso exclusivo para administrad
 | BR-069 | Admin não pode rebaixar o próprio papel |
 | BR-070 | Admin não pode remover a si mesmo |
 | BR-071 | Remoção de operador é lógica (`deletedAt`), dados preservados |
+| BR-072 | Super admin acessa todas as empresas; admin acessa apenas a sua |
+| BR-073 | Super admin deve informar `empresaId` ao criar operador |
+| BR-074 | Operador criado recebe `role = 'admin'` ou `role = 'operator'` (nunca `super_admin`) |
+| BR-075 | Empresa e admin inicial são criados em transação atômica |
+| BR-076 | `empresaId` do token determina o escopo de dados do operador |
+| BR-077 | Dashboard de super admin sem `empresaId` retorna agregado de todas as empresas |

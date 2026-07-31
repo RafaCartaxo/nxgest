@@ -1,6 +1,6 @@
 # PLAN-019 — Multi-Tenant: Super Admin + Empresas
 
-**Status:** Planejado
+**Status:** Em andamento
 
 **Versão:** 1.1
 

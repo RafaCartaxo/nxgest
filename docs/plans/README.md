@@ -24,9 +24,9 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-012-resumo-operacional-rota.md](PLAN-012-resumo-operacional-rota.md) | Resumo Operacional da Rota | Concluído |
 | [PLAN-013-dark-mode.md](PLAN-013-dark-mode.md) | Dark Mode — Tema Escuro | Concluído |
 | [PLAN-014-caixa-gasto.md](PLAN-014-caixa-gasto.md) | Módulos Caixa e Gasto (Fase 4) | Concluído |
-| [PLAN-015-autenticacao.md](PLAN-015-autenticacao.md) | Autenticação Multi-Usuário (Fase 5.2) | Planejado |
+| [PLAN-015-autenticacao.md](PLAN-015-autenticacao.md) | Autenticação Multi-Usuário (Fase 5.2) | Concluído |
 | [PLAN-016-endereco-comercio.md](PLAN-016-endereco-comercio.md) | Endereço do Comércio + GPS (Fase 5.6) | Planejado |
-| [PLAN-017-admin-panel.md](PLAN-017-admin-panel.md) | Admin Panel + Níveis Permissionais (Fase 5.2b) | Planejado |
+| [PLAN-017-admin-panel.md](PLAN-017-admin-panel.md) | Admin Panel + Níveis Permissionais (Fase 5.2b) | Concluído |
 | [PLAN-018-deploy.md](PLAN-018-deploy.md) | Deploy do Primeiro Cliente (SQLite + VPS) | Concluído |
-| [PLAN-019-multi-tenant.md](PLAN-019-multi-tenant.md) | Multi-Tenant: Super Admin + Empresas | Planejado |
+| [PLAN-019-multi-tenant.md](PLAN-019-multi-tenant.md) | Multi-Tenant: Super Admin + Empresas | Em andamento |
 | [FEATURE-temp.md](FEATURE-temp.md) | Rascunho — Prévia de Pagamento | Em análise |
