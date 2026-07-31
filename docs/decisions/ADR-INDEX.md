@@ -7,6 +7,7 @@
 | [ADR-001](../foundation/ADR-001-Arquitetura.md) | Arquitetura Base do Projeto | Aprovado | 27/06/2026 |
 | [ADR-002](../foundation/ADR-002-Arquitetura-Front.md) | Arquitetura do Frontend | Aprovado | 27/06/2026 |
 | [ADR-003](../foundation/ADR-003-Auth-Autorizacao.md) | Subsistema de Autenticação e Autorização | Aprovado | 30/07/2026 |
+| [ADR-004](../foundation/ADR-004-Infra-Deploy.md) | Infraestrutura de Deploy (VPS + Caddy + DuckDNS) | Aprovado | 31/07/2026 |
 
 ## Template
 

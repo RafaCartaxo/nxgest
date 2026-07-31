@@ -12,6 +12,7 @@ Documentos técnicos que definem a arquitetura, o banco de dados, a API, o front
 | [03-FRONTEND.md](03-FRONTEND.md) | Implementação do frontend, camadas e padrões | Aprovado |
 | [04-BACKEND.md](04-BACKEND.md) | Implementação do backend, Use Cases e Ports | Aprovado |
 | [05-MAPEAMENTO-TELAS.md](05-MAPEAMENTO-TELAS.md) | Mapeamento de telas, componentes e aderência ao Design System | Aprovado |
+| [06-PRODUCAO.md](06-PRODUCAO.md) | Runbook de operação: acesso, deploy, backup, rollback, monitoramento | Aprovado |
 
 ## Design
 

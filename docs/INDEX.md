@@ -6,6 +6,7 @@
 - [ADR-001 — Arquitetura Base](foundation/ADR-001-Arquitetura.md) — Stack, arquitetura e estrutura do backend
 - [ADR-002 — Arquitetura do Frontend](foundation/ADR-002-Arquitetura-Front.md) — Stack e decisões de frontend
 - [ADR-003 — Auth + Autorização](foundation/ADR-003-Auth-Autorizacao.md) — Subsistema de autenticação e permissões
+- [ADR-004 — Infraestrutura de Deploy](foundation/ADR-004-Infra-Deploy.md) — VPS + Caddy + DuckDNS, decisão de infraestrutura
 
 ## Product
 
@@ -24,6 +25,7 @@
 - [03-FRONTEND.md](engineering/03-FRONTEND.md) — Implementação do frontend, camadas e padrões
 - [04-BACKEND.md](engineering/04-BACKEND.md) — Implementação do backend, Use Cases e Ports
 - [05-MAPEAMENTO-TELAS.md](engineering/05-MAPEAMENTO-TELAS.md) — Mapeamento de telas, componentes e aderência ao Design System
+- [06-PRODUCAO.md](engineering/06-PRODUCAO.md) — Runbook de operação: acesso, deploy, backup, rollback
 
 ### Design
 

@@ -1,26 +1,82 @@
 # PLAN-018 — Deploy do Primeiro Cliente
 
-**Status:** Planejado
+**Status:** Concluído
 
-**Versão:** 2.0
+**Versão:** 3.0
 
 **Data:** 30/07/2026
+
+**Conclusão:** 31/07/2026
 
 **Última atualização:** 31/07/2026
 
 **Roadmap:** product/04-ROADMAP.md §5 (Fase 5 — Polimento)
 
-**Mudança de estratégia (v2.0):** plataforma de deploy migrada de Fly.io para VPS Hostinger — custo fixo hospedando todos os clientes (multi-tenant PLAN-019), em vez de 1 deploy por cliente.
+**Mudança de estratégia (v2.0):** plataforma de deploy migrada de Fly.io para VPS — custo fixo hospedando todos os clientes (multi-tenant PLAN-019), em vez de 1 deploy por cliente.
+
+**Correção de provedor (v3.0):** o provedor contratado foi a **VPS Hosting Service** (`vpshostingservice.co`), e **não** a Hostinger. O servidor é AlmaLinux 8.10 (não Ubuntu) e **não oferece snapshots/backups do provedor** — a rede de segurança é o backup cron próprio (ver `engineering/06-PRODUCAO.md`).
 
 **Dependências:**
 - PLAN-015 (Autenticação Multi-Usuário)
 - PLAN-017 (Admin Panel + Níveis Permissionais)
+
+**Projeto implantado:**
+- URL: `https://nxgestao.duckdns.org`
+- IP: `172.245.152.223`
+- Detalhes completos de operação: [engineering/06-PRODUCAO.md](../engineering/06-PRODUCAO.md)
 
 ---
 
 ## Objetivo
 
 Preparar e executar o primeiro deploy do NX Gestão para um cliente real, disponibilizando o sistema via internet com persistência confiável, HTTPS automático e zero custo inicial.
+
+---
+
+## O que foi implantado (31/07/2026)
+
+| Item | Valor |
+|------|-------|
+| URL | `https://nxgestao.duckdns.org` |
+| IP do VPS | `172.245.152.223` |
+| Provedor | VPS Hosting Service (`vpshostingservice.co`) — IP geolocalizado em Buffalo, NY (EUA) |
+| Domínio | DuckDNS grátis (`nxgestao.duckdns.org`, A record → IP) — provisório até registrar `.com.br` |
+| SO | AlmaLinux 8.10 (Cerulean Leopard) |
+| Docker | 26.1.3 + Docker Compose v2.27.0 |
+| Caminho do repo | `/opt/nxgestao` |
+| Containers | `nxgestao-app-1` (porta 8080) + `nxgestao-caddy-1` (80/443) |
+| Volumes Docker | `nxgestao_nxgestao_data` (banco), `nxgestao_caddy_data`, `nxgestao_caddy_config` |
+| Banco | SQLite `/data/gestao.db` (volume persistente) |
+| HTTPS | Let's Encrypt emitido automaticamente pelo Caddy |
+| Admin default | `admin@cobranca.com` (senha no arquivo local `/tmp/opencode/vps-admin-pw.txt`, fora do repo) |
+| Backup | Cron 2x/dia → `/opt/backups` (script `/opt/scripts/backup-nxgestao.sh`, retém 14 dias) |
+
+### Segurança aplicada no VPS
+
+- **Senha root trocada** (a senha original do provedor foi exposta em chat — invalidada na primeira conexão)
+- **SSH:** `PasswordAuthentication no` + `PermitRootLogin prohibit-password` → acesso root **somente por chave SSH**
+- Chave ed25519 instalada em `~/.ssh/authorized_keys` (máquina local de desenvolvimento)
+- `JWT_SECRET` e senhas gerados com `openssl rand` e guardados **fora do repo** (`.env` local no VPS com `chmod 600`)
+
+### Contas criadas
+
+| Usuário | Email | Role | Status |
+|---------|-------|------|--------|
+| Admin | `admin@cobranca.com` | admin | Seed automático (senha via `ADMIN_DEFAULT_PASSWORD`) |
+| Thalia N Medina | `thalianietomedina@hotmail.com` | admin | Criada via `POST /api/admin/operadores` em 31/07/2026 (senha em `/tmp/opencode/thaliana-pw.txt`) |
+
+---
+
+## Testes executados em produção (31/07/2026)
+
+- [x] `https://nxgestao.duckdns.org/api/health` → 200 `{"status":"ok","db":"connected"}`
+- [x] Frontend carrega com `<title>NX Gestão</title>` (HTTP 200)
+- [x] Login admin (`admin@cobranca.com`) retorna token JWT
+- [x] `POST /api/clientes` cria cliente (validação de CPF/campos obrigatórios funcionando)
+- [x] `GET /api/clientes` lista com paginação
+- [x] `DELETE /api/clientes/:id` remove (204) — cliente de teste removido após validação
+- [x] Login da conta Thalia (role admin) validado
+- [x] Backup cron executado e validado (arquivo `gestao-*.db` gerado + cópia off-site baixada)
 
 ---
 
@@ -33,7 +89,7 @@ Preparar e executar o primeiro deploy do NX Gestão para um cliente real, dispon
 | Health check | **Zero** — sem endpoint de health | `GET /api/health` com verificação de conexão DB |
 | CORS | `app.use(cors())` sem restrição de origem | Configurar `CORS_ORIGIN` via env var em produção |
 | Variáveis de ambiente | `.env.example` já contém `DB_PATH`, `JWT_SECRET`, `PORT`, `NODE_ENV`, `ADMIN_DEFAULT_PASSWORD` (adicionado pelo PLAN-017). Porém: `JWT_SECRET` ainda tem fallback hardcoded (`?? "nxgestao-dev-secret"`); `DB_PATH` está no `.env.example` mas **não é usado** no código (`database.ts:9` hardcoded `"gestao.db"`); `ADMIN_DEFAULT_PASSWORD` está no `.env.example` mas também tem fallback (`?? "admin123"`) | Remover fallback do `JWT_SECRET`; fazer `database.ts` ler `DB_PATH` da env var; adicionar `CORS_ORIGIN` ao `.env.example` |
-| Deploy | **Zero** — sistema roda apenas local | VPS Hostinger + Docker Compose + Caddy |
+| Deploy | **Zero** — sistema roda apenas local | VPS + Docker Compose + Caddy |
 | Build production | Funcional — `npm run build` compila TS + Vite corretamente | Manter — apenas garantir paths corretos no container |
 | `.gitignore` | Cobre `*.db`, `.env`, `dist/`, `node_modules/` | OK — nada a fazer |
 | Logs | Apenas `console.log`/`console.error` | OK para MVP — Docker/Caddy capturam stdout/stderr nativamente |
@@ -58,7 +114,7 @@ Identificados 3 repositórios + `database.ts` que acessam diretamente a instânc
 | Decisão | Escolha | Motivo |
 |---------|---------|--------|
 | Banco de dados | **SQLite mantido** (sem migrar para PostgreSQL agora) | Evita reescrita de ~15 queries raw em 4 arquivos; elimina risco de conflito com PLAN-017; SQLite em volume persistente é suficiente para dezenas/centenas de registros com 2-3 usuários simultâneos |
-| Plataforma de deploy | **VPS Hostinger (Linux VPS Standard 2GB)** | Custo fixo ~$2/mês (promo) — 1 servidor hospeda todos os clientes (multi-tenant PLAN-019); datacenter São Paulo disponível; domínio grátis 1º ano; mais barato que Fly.io (~$4,27/mês por cliente, que multiplicaria com o crescimento) |
+| Plataforma de deploy | **VPS Hosting Service (2GB RAM)** | Custo fixo ~$2/mês — 1 servidor hospeda todos os clientes (multi-tenant PLAN-019); mais barato que Fly.io (~$4,27/mês por cliente, que multiplicaria com o crescimento). **Revisado em 31/07:** provedor é VPS Hosting Service (não Hostinger), sem backups nativos — backup cron próprio (Fase E) |
 | Persistência do banco | **Volume Docker** montado em `/data/` (volume `nxgestao_data`) | Dados sobrevivem a `docker compose up`/`down` e restarts; caminho configurável via `DB_PATH=/data/gestao.db` |
 | Containerização | **Dockerfile multi-stage** | Stage 1: build (tsc + vite). Stage 2: runtime Node 20 slim com apenas dist/ + frontend/dist/ + deps produção |
 | Proxy reverso + HTTPS | **Caddy** (no mesmo compose) | HTTPS automático via Let's Encrypt (mesma experiência do Fly); zero config de certbot; substitui o `fly.toml` |
@@ -75,7 +131,7 @@ Identificados 3 repositórios + `database.ts` que acessam diretamente a instânc
 
 ```
 Fase A (Config env) → Fase B (Health + CORS) → Fase C (Dockerfile)
-    → Fase D (VPS Hostinger) → Fase E (Pós-deploy)
+    → Fase D (VPS) → Fase E (Pós-deploy)
 ```
 
 ---
@@ -268,7 +324,7 @@ No container, a estrutura é:
 
 ---
 
-## Fase D — Configuração VPS Hostinger
+## Fase D — Configuração VPS
 
 **Arquivos:** 3 novos (`Caddyfile`, `docker-compose.prod.yml`, `scripts/deploy.sh`) + 1 remoção (`fly.toml`)
 
@@ -336,24 +392,29 @@ Modelo em `.env.production.example` (nunca commitar o `.env`).
 
 ### D.4 — Comandos de setup (executar uma vez)
 
-```bash
-# 1. Assinar VPS Hostinger (Linux VPS Standard 2GB) + registrar domínio no checkout
-# 2. Apontar DNS: registro A  →  IP do VPS (hPanel)
+> **Nota de execução real (31/07/2026):** o provedor contratado foi **VPS Hosting Service** (AlmaLinux 8.10). O comando `curl -fsSL https://get.docker.com | sh` **falha** em AlmaLinux (`Unsupported distribution`); usou-se o repositório oficial Docker via `yum-config-manager` (ver abaixo). O domínio foi um subdomínio grátis **DuckDNS**.
 
-# 3. Conectar no VPS
+```bash
+# 1. Assinar VPS (VPS Hosting Service) + criar domínio grátis em duckdns.org
+#    A record: nxgestao.duckdns.org → <ip-do-vps>
+
+# 2. Conectar no VPS (primeiro acesso: trocar senha + instalar chave SSH)
 ssh root@<ip-do-vps>
 
-# 4. Instalar Docker no VPS (Ubuntu)
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
+# 3. Instalar Docker (AlmaLinux/RHEL — get.docker.com NÃO suporta AlmaLinux)
+dnf install -y yum-utils
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl enable --now docker
 
-# 5. Clonar o repo e configurar env
-git clone https://github.com/<seu-usuario>/nxgestao.git /opt/nxgestao
+# 4. Instalar git e clonar o repo
+dnf install -y git openssl
+git clone https://github.com/RafaCartaxo/nxgestao.git /opt/nxgestao
 cd /opt/nxgestao
 cp .env.production.example .env
-# Editar .env: DOMAIN, CORS_ORIGIN, JWT_SECRET (uuidgen), ADMIN_DEFAULT_PASSWORD
+# Editar .env: DOMAIN, CORS_ORIGIN, JWT_SECRET (openssl rand -hex 32), ADMIN_DEFAULT_PASSWORD
 
-# 6. Subir
+# 5. Subir
 ./scripts/deploy.sh
 ```
 
@@ -379,17 +440,30 @@ cp .env.production.example .env
 
 **Arquivos:** 0 novos (procedimentos documentados)
 
-### E.1 — Backup manual (antes de qualquer migração futura)
+### E.1 — Backup automático (cron no VPS)
+
+> **Importante:** a VPS Hosting Service **não oferece** snapshots/backups do provedor. O backup é responsabilidade própria — executado por script cron a cada 12h, retendo 14 dias.
+
+**Script:** `/opt/scripts/backup-nxgestao.sh` (fora do repo, para não interferir no `git pull`).
 
 ```bash
-# Copiar o banco do volume para fora do container
-docker compose -f docker-compose.prod.yml exec app cp /data/gestao.db /data/gestao-backup-$(date +%Y%m%d).db
-
-# Baixar para a máquina local (roda fora do VPS)
-scp root@<ip-do-vps>:/var/lib/docker/volumes/nxgestao_nxgestao_data/_data/gestao-backup-YYYYMMDD.db .
+# Cria uma cópia do banco dentro do container e copia para /opt/backups
+docker exec nxgestao-app-1 cp /data/gestao.db /data/backup-$(date +%Y%m%d-%H%M%S).db
+docker cp nxgestao-app-1:/data/backup-<STAMP>.db /opt/backups/gestao-<STAMP>.db
+# Retenção: apaga backups com mais de 14 dias
 ```
 
-> **Nota:** o volume Docker fica em `/var/lib/docker/volumes/nxgestao_nxgestao_data/_data/` no VPS (o prefixo vem do nome do diretório do projeto). A Hostinger também oferece **backups semanais gratuitos** e snapshots do VPS — é a rede de segurança principal.
+**Cron instalado** (`crontab -l`):
+```
+0 */12 * * * /opt/scripts/backup-nxgestao.sh >/dev/null 2>&1
+```
+
+**Cópia off-site (manual):** baixar um backup para a máquina local:
+```bash
+scp root@<ip-do-vps>:/opt/backups/gestao-YYYYMMDD-HHMMSS.db .
+```
+
+**Restauração:** ver `engineering/06-PRODUCAO.md` §Restauração.
 
 ### E.2 — Deploy de atualizações (fluxo normal)
 
@@ -441,11 +515,12 @@ docker compose -f docker-compose.prod.yml restart app
 
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|--------------|---------|-----------|
-| Volume Docker `nxgestao_data` corrompido | Baixa | Alto | Backup manual antes de qualquer deploy; Hostinger faz backups semanais + snapshots do VPS |
-| VPS indisponível / queda da Hostinger | Baixa | Alto | Backups semanais; monitoramento básico (`docker stats`, uptime); provedor com uptime 99,9% |
-| Promoção VPS termina e renovação encarece | Média | Médio | Verificar valor de renovação no checkout; custo ainda competitivo vs. múltiplos deploys Fly |
+| Volume Docker `nxgestao_data` corrompido | Baixa | Alto | Backup cron a cada 12h em `/opt/backups` (retém 14 dias) + cópia off-site manual; ver `06-PRODUCAO.md` |
+| VPS indisponível / queda do provedor | Baixa | Alto | Backup cron + cópia off-site; migração de host planejada (próximo mês) — domínio DuckDNS facilita troca de IP |
+| Provedor com má reputação / risco de nulling | Média | Alto | Backups próprios a cada 12h (dados nunca ficam "reféns" no host); migrar de host no próximo mês (decisão registrada no ADR-004) |
+| Promoção VPS termina e renovação encarece | Média | Médio | Custo ainda competitivo (~$2-4/mês) vs. múltiplos deploys Fly; revisão na migração de host |
 | `user node` sem permissão de escrita em `/data` | Baixa | Médio | Dockerfile já cria `/data` com `chown node:node`; validado no build local |
-| Ataque/DDoS ao VPS | Baixa | Médio | Firewall da Hostinger + DDoS protection nativos; Caddy por HTTPS; manter SSH com chave |
+| Ataque/DDoS ao VPS | Baixa | Médio | SSH somente por chave; Caddy por HTTPS; firewall básico; senha root trocada |
 | Bloqueio do SQLite com múltiplos usuários | Baixa | Médio | WAL mode já ativo; para 2-3 operadores simultâneos não há contenção relevante |
 
 > **Nota:** O risco de conflito com PLAN-017 foi removido — o PLAN-017 já foi implementado (aguardando commit). As alterações do PLAN-018 em `database.ts` (ler `DB_PATH` da env var) e `main.ts` (health route + CORS) são independentes e não conflitam com o que foi feito.
@@ -461,7 +536,7 @@ docker compose -f docker-compose.prod.yml restart app
 | A — Config env | Existente | 0 | 3 | 🟢 Baixa |
 | B — Health + CORS | Novo | 2 | 1 | 🟢 Baixa |
 | C — Dockerfile | Novo | 3 | 0 | 🟡 Média |
-| D — VPS Hostinger | Novo | 3 (+1 removido: `fly.toml`) | 0 | 🟡 Média |
+| D — VPS | Novo | 3 (+1 removido: `fly.toml`) | 0 | 🟡 Média |
 | E — Pós-deploy | Doc | 0 | 0 | 🟢 Baixa |
 | **Total** | | **8** | **4** | |
 
@@ -476,7 +551,7 @@ docker compose -f docker-compose.prod.yml restart app
 - [ ] CORS configurável via `CORS_ORIGIN`
 - [ ] `docker build` gera imagem funcional
 - [ ] Container sobe corretamente com `docker run` + env vars
-- [ ] `./scripts/deploy.sh` sobe sem erros no VPS Hostinger
+- [ ] `./scripts/deploy.sh` sobe sem erros no VPS
 - [ ] Aplicação acessível via `https://<seu-dominio>`
 - [ ] HTTPS automático emitido pelo Caddy (Let's Encrypt)
 - [ ] Login admin default funcional em produção

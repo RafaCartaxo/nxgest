@@ -37,3 +37,4 @@ tasks/
 | [05/07/2026](2026-07-05/CHECKLIST-FASE10.md) | Fase 10 — Atendidos Hoje | Concluído |
 | [05/07/2026](2026-07-05/CHECKLIST-FASE11.md) | Fase 11 — Resumo Operacional da Rota | Concluído |
 | [11/07/2026](2026-07-11/CHECKLIST-FASE12.md) | Fase 12 — Módulos Caixa e Gasto | Concluído |
+| [31/07/2026](2026-07-31/CHECKLIST.md) | Rename para nxgestao + Deploy do Primeiro Cliente (PLAN-018) | Concluído |
