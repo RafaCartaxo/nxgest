@@ -1008,3 +1008,5 @@ Zero coluna empresaId nas 10 tabelas operacionais.
 - `plans/PLAN-015-autenticacao.md`
 - `plans/PLAN-017-admin-panel.md`
 - `plans/PLAN-018-deploy.md`
+
+> **Nota de deploy (v2.0 PLAN-018):** o deploy migrou de Fly.io para VPS Hostinger (1 VPS hospedando todos os clientes). Isso reforça o modelo deste plano: um único deploy multi-tenant com `empresa_id`, custo marginal ~$0 por cliente.
