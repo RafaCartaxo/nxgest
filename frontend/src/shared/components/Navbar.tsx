@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Globe, Sun, Moon, Shield, LogOut } from "lucide-react"
+import { Globe, Sun, Moon, Shield, Building, LogOut } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useTheme } from "../theme/useTheme.js"
 import { useAuth } from "../auth/AuthContext.js"
@@ -34,6 +34,9 @@ export function Navbar() {
     navigate("/login")
   }
 
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin"
+  const isSuperAdmin = user?.role === "super_admin"
+
   const links = [
     { to: "/", label: t("nav.central") },
     { to: "/clientes", label: t("nav.clientes") },
@@ -62,15 +65,24 @@ export function Navbar() {
             </NavLink>
           ))}
         </div>
-        {user?.role === "admin" && (
-          <NavLink
-            to="/admin"
-            className="flex items-center gap-1 px-3 py-3 text-xs font-medium text-text-muted hover:text-text-primary"
-          >
-            <Shield className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Admin</span>
-          </NavLink>
-        )}
+    {isAdmin && (
+      <NavLink
+        to="/admin"
+        className="flex items-center gap-1 px-3 py-3 text-xs font-medium text-text-muted hover:text-text-primary"
+      >
+        <Shield className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Admin</span>
+      </NavLink>
+    )}
+    {isSuperAdmin && (
+      <NavLink
+        to="/admin/empresas"
+        className="flex items-center gap-1 px-3 py-3 text-xs font-medium text-text-muted hover:text-text-primary"
+      >
+        <Building className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Empresas</span>
+      </NavLink>
+    )}
         <div className="flex-1" />
         <div ref={ref} className="relative shrink-0">
           <button

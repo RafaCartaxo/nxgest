@@ -347,5 +347,35 @@
       "senhaCurta": "A senha deve ter ao menos 6 caracteres.",
       "roleObrigatorio": "Selecione um papel."
     }
+  },
+  "superAdmin": {
+    "title": "Empresas",
+    "empresas": "Empresas",
+    "novaEmpresa": "Nova Empresa",
+    "criarEmpresa": "Criar Empresa",
+    "nomeEmpresa": "Nome da Empresa",
+    "adminNome": "Nome do Administrador",
+    "adminEmail": "E-mail do Administrador",
+    "adminSenha": "Senha do Administrador",
+    "totalEmpresas": "Empresas",
+    "totalUsuarios": "Usuários",
+    "totalClientes": "Total de Clientes",
+    "operadores": "operadores",
+    "clientes": "clientes",
+    "contratosAtivos": "contratos ativos",
+    "acessar": "Acessar",
+    "criarSucesso": "Empresa criada com sucesso.",
+    "erroCarregar": "Erro ao carregar empresas.",
+    "erroCriar": "Erro ao criar empresa.",
+    "validacao": {
+      "nomeObrigatorio": "Informe o nome da empresa.",
+      "adminNomeObrigatorio": "Informe o nome do administrador.",
+      "adminEmailInvalido": "E-mail inválido.",
+      "adminEmailObrigatorio": "Informe o e-mail do administrador.",
+      "adminSenhaCurta": "A senha deve ter ao menos 6 caracteres.",
+      "adminSenhaObrigatoria": "Informe a senha do administrador."
+    },
+    "navEmpresas": "Empresas",
+    "emptyMessage": "Nenhuma empresa cadastrada."
   }
 }

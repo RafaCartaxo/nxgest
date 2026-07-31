@@ -20,6 +20,7 @@ import { ContratoEdit } from "./modules/contrato/pages/ContratoEdit.js"
 import { CaixaPage } from "./modules/caixa/pages/CaixaPage.js"
 import { GastoPage } from "./modules/gasto/pages/GastoPage.js"
 import { AdminPage } from "./modules/admin/pages/AdminPage.js"
+import { SuperAdminPage } from "./modules/admin/pages/SuperAdminPage.js"
 
 export function App() {
   return (
@@ -48,7 +49,9 @@ export function App() {
                   <Route path="/contratos/:id/editar" element={<ContratoEdit />} />
                   <Route path="/caixa" element={<CaixaPage />} />
                   <Route path="/gastos" element={<GastoPage />} />
-                  <Route path="/admin" element={<AdminPage />} />
+                   <Route path="/admin" element={<AdminPage />} />
+                   <Route path="/admin/empresas" element={<SuperAdminPage />} />
+                   <Route path="/admin/empresas/:id" element={<AdminPage />} />
                 </Routes>
               </ErrorBoundary>
             </>

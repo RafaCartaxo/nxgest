@@ -1,0 +1,21 @@
+import { apiRequest } from "../../../api/client.js"
+
+export interface Empresa {
+  id: string
+  nome: string
+  createdAt: string
+}
+
+export interface EmpresaComStats extends Empresa {
+  totalOperadores: number
+  totalClientes: number
+  contratosAtivos: number
+}
+
+export async function listEmpresas(): Promise<EmpresaComStats[]> {
+  return apiRequest<EmpresaComStats[]>("GET", "/admin/empresas")
+}
+
+export async function createEmpresa(data: { nome: string; adminNome: string; adminEmail: string; adminSenha: string }): Promise<{ empresa: Empresa; admin: { id: string; nome: string; email: string } }> {
+  return apiRequest<{ empresa: Empresa; admin: { id: string; nome: string; email: string } }>("POST", "/admin/empresas", data)
+}

@@ -5,7 +5,9 @@ export interface AuthUser {
   id: string
   nome: string
   email: string
-  role: "admin" | "operator"
+  role: "super_admin" | "admin" | "operator"
+  empresaId?: string | null
+  empresaNome?: string | null
 }
 
 interface AuthContextType {

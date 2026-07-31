@@ -347,5 +347,35 @@
       "senhaCurta": "Password must be at least 6 characters.",
       "roleObrigatorio": "Select a role."
     }
+  },
+  "superAdmin": {
+    "title": "Companies",
+    "empresas": "Companies",
+    "novaEmpresa": "New Company",
+    "criarEmpresa": "Create Company",
+    "nomeEmpresa": "Company Name",
+    "adminNome": "Administrator Name",
+    "adminEmail": "Administrator Email",
+    "adminSenha": "Administrator Password",
+    "totalEmpresas": "Companies",
+    "totalUsuarios": "Users",
+    "totalClientes": "Total Clients",
+    "operadores": "operators",
+    "clientes": "clients",
+    "contratosAtivos": "active contracts",
+    "acessar": "Access",
+    "criarSucesso": "Company created successfully.",
+    "erroCarregar": "Error loading companies.",
+    "erroCriar": "Error creating company.",
+    "validacao": {
+      "nomeObrigatorio": "Company name is required.",
+      "adminNomeObrigatorio": "Administrator name is required.",
+      "adminEmailInvalido": "Invalid email.",
+      "adminEmailObrigatorio": "Administrator email is required.",
+      "adminSenhaCurta": "Password must be at least 6 characters.",
+      "adminSenhaObrigatoria": "Administrator password is required."
+    },
+    "navEmpresas": "Companies",
+    "emptyMessage": "No companies registered."
   }
 }
