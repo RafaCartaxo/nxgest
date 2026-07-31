@@ -1,4 +1,4 @@
-# Nexus Platform
+# NX Gestão
 
 Sistema de gestão de cobranças em campo.
 
@@ -24,8 +24,8 @@ scripts/                      — Scripts utilitários
 ## Instalação
 
 ```bash
-git clone https://github.com/RafaCartaxo/nexus-platform.git
-cd nexus-platform
+git clone https://github.com/RafaCartaxo/nxgestao.git
+cd nxgestao
 
 # Instala dependências do backend e do frontend
 npm install

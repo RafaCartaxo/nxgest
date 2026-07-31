@@ -27,7 +27,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" }
 
-  const token = localStorage.getItem("nexus_token")
+  const token = localStorage.getItem("nxgestao_token")
   if (token) {
     headers["Authorization"] = `Bearer ${token}`
   }
@@ -44,7 +44,7 @@ export async function apiRequest<T>(
   const response = await fetch(`${BASE_URL}${path}`, options)
 
   if (response.status === 401) {
-    localStorage.removeItem("nexus_token")
+    localStorage.removeItem("nxgestao_token")
   }
 
   if (response.status === 204) {

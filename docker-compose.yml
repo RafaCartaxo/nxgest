@@ -10,7 +10,7 @@ services:
       - JWT_SECRET=dev-secret-do-not-use-in-production
       - ADMIN_DEFAULT_PASSWORD=admin123
     volumes:
-      - nexus_data:/data
+      - nxgestao_data:/data
 
 volumes:
-  nexus_data:
+  nxgestao_data:

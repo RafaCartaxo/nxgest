@@ -20,7 +20,7 @@
 
 ## Objetivo
 
-Preparar e executar o primeiro deploy do Nexus Platform para um cliente real, disponibilizando o sistema via internet com persistência confiável, HTTPS automático e zero custo inicial.
+Preparar e executar o primeiro deploy do NX Gestão para um cliente real, disponibilizando o sistema via internet com persistência confiável, HTTPS automático e zero custo inicial.
 
 ---
 
@@ -32,7 +32,7 @@ Preparar e executar o primeiro deploy do Nexus Platform para um cliente real, di
 | Containerização | **Zero** — sem Dockerfile, docker-compose, `.dockerignore` | Dockerfile multi-stage |
 | Health check | **Zero** — sem endpoint de health | `GET /api/health` com verificação de conexão DB |
 | CORS | `app.use(cors())` sem restrição de origem | Configurar `CORS_ORIGIN` via env var em produção |
-| Variáveis de ambiente | `.env.example` já contém `DB_PATH`, `JWT_SECRET`, `PORT`, `NODE_ENV`, `ADMIN_DEFAULT_PASSWORD` (adicionado pelo PLAN-017). Porém: `JWT_SECRET` ainda tem fallback hardcoded (`?? "nexus-platform-dev-secret"`); `DB_PATH` está no `.env.example` mas **não é usado** no código (`database.ts:9` hardcoded `"gestao.db"`); `ADMIN_DEFAULT_PASSWORD` está no `.env.example` mas também tem fallback (`?? "admin123"`) | Remover fallback do `JWT_SECRET`; fazer `database.ts` ler `DB_PATH` da env var; adicionar `CORS_ORIGIN` ao `.env.example` |
+| Variáveis de ambiente | `.env.example` já contém `DB_PATH`, `JWT_SECRET`, `PORT`, `NODE_ENV`, `ADMIN_DEFAULT_PASSWORD` (adicionado pelo PLAN-017). Porém: `JWT_SECRET` ainda tem fallback hardcoded (`?? "nxgestao-dev-secret"`); `DB_PATH` está no `.env.example` mas **não é usado** no código (`database.ts:9` hardcoded `"gestao.db"`); `ADMIN_DEFAULT_PASSWORD` está no `.env.example` mas também tem fallback (`?? "admin123"`) | Remover fallback do `JWT_SECRET`; fazer `database.ts` ler `DB_PATH` da env var; adicionar `CORS_ORIGIN` ao `.env.example` |
 | Deploy | **Zero** — sistema roda apenas local | VPS Hostinger + Docker Compose + Caddy |
 | Build production | Funcional — `npm run build` compila TS + Vite corretamente | Manter — apenas garantir paths corretos no container |
 | `.gitignore` | Cobre `*.db`, `.env`, `dist/`, `node_modules/` | OK — nada a fazer |
@@ -59,7 +59,7 @@ Identificados 3 repositórios + `database.ts` que acessam diretamente a instânc
 |---------|---------|--------|
 | Banco de dados | **SQLite mantido** (sem migrar para PostgreSQL agora) | Evita reescrita de ~15 queries raw em 4 arquivos; elimina risco de conflito com PLAN-017; SQLite em volume persistente é suficiente para dezenas/centenas de registros com 2-3 usuários simultâneos |
 | Plataforma de deploy | **VPS Hostinger (Linux VPS Standard 2GB)** | Custo fixo ~$2/mês (promo) — 1 servidor hospeda todos os clientes (multi-tenant PLAN-019); datacenter São Paulo disponível; domínio grátis 1º ano; mais barato que Fly.io (~$4,27/mês por cliente, que multiplicaria com o crescimento) |
-| Persistência do banco | **Volume Docker** montado em `/data/` (volume `nexus_data`) | Dados sobrevivem a `docker compose up`/`down` e restarts; caminho configurável via `DB_PATH=/data/gestao.db` |
+| Persistência do banco | **Volume Docker** montado em `/data/` (volume `nxgestao_data`) | Dados sobrevivem a `docker compose up`/`down` e restarts; caminho configurável via `DB_PATH=/data/gestao.db` |
 | Containerização | **Dockerfile multi-stage** | Stage 1: build (tsc + vite). Stage 2: runtime Node 20 slim com apenas dist/ + frontend/dist/ + deps produção |
 | Proxy reverso + HTTPS | **Caddy** (no mesmo compose) | HTTPS automático via Let's Encrypt (mesma experiência do Fly); zero config de certbot; substitui o `fly.toml` |
 | Health check | Endpoint `GET /api/health` | Usado pelo Caddy (`health_uri`) e por monitoramento externo |
@@ -89,7 +89,7 @@ Fase A (Config env) → Fase B (Health + CORS) → Fase C (Dockerfile)
 | Arquivo | Mudança |
 |---------|---------|
 | `src/database.ts` | `new Database("gestao.db")` → `new Database(process.env.DB_PATH \|\| "gestao.db")` |
-| `src/shared/utils/jwt.ts` | Remover fallback `?? "nexus-platform-dev-secret"`; lançar erro se `JWT_SECRET` não definido |
+| `src/shared/utils/jwt.ts` | Remover fallback `?? "nxgestao-dev-secret"`; lançar erro se `JWT_SECRET` não definido |
 | `.env.example` | Adicionar `CORS_ORIGIN=` (demais vars `DB_PATH`, `JWT_SECRET`, `PORT`, `NODE_ENV`, `ADMIN_DEFAULT_PASSWORD` já existem — adicionadas pelo PLAN-017)
 
 ### A.2 — jwt.ts novo comportamento
@@ -259,8 +259,8 @@ No container, a estrutura é:
 
 ### C.5 — Checklist Fase C
 
-- [ ] `docker build -t nexus-platform .` completa sem erros
-- [ ] `docker run -p 3000:3000 -e JWT_SECRET=test -e DB_PATH=/tmp/test.db -e NODE_ENV=development nexus-platform` inicia
+- [ ] `docker build -t nxgestao .` completa sem erros
+- [ ] `docker run -p 3000:3000 -e JWT_SECRET=test -e DB_PATH=/tmp/test.db -e NODE_ENV=development nxgestao` inicia
 - [ ] `curl http://localhost:3000/api/health` retorna 200
 - [ ] `curl http://localhost:3000` retorna o HTML do frontend
 - [ ] Container roda como non-root (`USER node`)
@@ -297,7 +297,7 @@ services:
       - ADMIN_DEFAULT_PASSWORD=${ADMIN_DEFAULT_PASSWORD}
       - CORS_ORIGIN=${CORS_ORIGIN}
     volumes:
-      - nexus_data:/data
+      - nxgestao_data:/data
     expose:
       - "8080"
 
@@ -315,7 +315,7 @@ services:
       - caddy_config:/config
 
 volumes:
-  nexus_data:
+  nxgestao_data:
   caddy_data:
   caddy_config:
 ```
@@ -348,8 +348,8 @@ curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
 
 # 5. Clonar o repo e configurar env
-git clone https://github.com/<seu-usuario>/nexus-platform.git /opt/nexus
-cd /opt/nexus
+git clone https://github.com/<seu-usuario>/nxgestao.git /opt/nxgestao
+cd /opt/nxgestao
 cp .env.production.example .env
 # Editar .env: DOMAIN, CORS_ORIGIN, JWT_SECRET (uuidgen), ADMIN_DEFAULT_PASSWORD
 
@@ -360,7 +360,7 @@ cp .env.production.example .env
 ### D.5 — Checklist Fase D
 
 - [ ] `Caddyfile` presente com `{$DOMAIN}` + proxy reverso para `app:8080`
-- [ ] `docker-compose.prod.yml` presente com app + caddy + volume `nexus_data`
+- [ ] `docker-compose.prod.yml` presente com app + caddy + volume `nxgestao_data`
 - [ ] `scripts/deploy.sh` presente e executável
 - [ ] `fly.toml` removido do repo (decisão: VPS)
 - [ ] Domínio registrado e DNS **A** apontando para o IP do VPS
@@ -371,7 +371,7 @@ cp .env.production.example .env
 - [ ] `https://<seu-dominio>` carrega o SPA (login ou dashboard)
 - [ ] Login com admin default funcional (senha definida no `.env`)
 - [ ] HTTPS automático emitido pelo Caddy (Let's Encrypt)
-- [ ] Deploy subsequente mantém dados existentes (volume `nexus_data` preservado)
+- [ ] Deploy subsequente mantém dados existentes (volume `nxgestao_data` preservado)
 
 ---
 
@@ -386,15 +386,15 @@ cp .env.production.example .env
 docker compose -f docker-compose.prod.yml exec app cp /data/gestao.db /data/gestao-backup-$(date +%Y%m%d).db
 
 # Baixar para a máquina local (roda fora do VPS)
-scp root@<ip-do-vps>:/var/lib/docker/volumes/nexusplatform_nexus_data/_data/gestao-backup-YYYYMMDD.db .
+scp root@<ip-do-vps>:/var/lib/docker/volumes/nxgestao_nxgestao_data/_data/gestao-backup-YYYYMMDD.db .
 ```
 
-> **Nota:** o volume Docker fica em `/var/lib/docker/volumes/nexusplatform_nexus_data/_data/` no VPS (o prefixo vem do nome do diretório do projeto). A Hostinger também oferece **backups semanais gratuitos** e snapshots do VPS — é a rede de segurança principal.
+> **Nota:** o volume Docker fica em `/var/lib/docker/volumes/nxgestao_nxgestao_data/_data/` no VPS (o prefixo vem do nome do diretório do projeto). A Hostinger também oferece **backups semanais gratuitos** e snapshots do VPS — é a rede de segurança principal.
 
 ### E.2 — Deploy de atualizações (fluxo normal)
 
 ```bash
-# No VPS, dentro de /opt/nexus
+# No VPS, dentro de /opt/nxgestao
 git pull
 ./scripts/deploy.sh
 
@@ -441,7 +441,7 @@ docker compose -f docker-compose.prod.yml restart app
 
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|--------------|---------|-----------|
-| Volume Docker `nexus_data` corrompido | Baixa | Alto | Backup manual antes de qualquer deploy; Hostinger faz backups semanais + snapshots do VPS |
+| Volume Docker `nxgestao_data` corrompido | Baixa | Alto | Backup manual antes de qualquer deploy; Hostinger faz backups semanais + snapshots do VPS |
 | VPS indisponível / queda da Hostinger | Baixa | Alto | Backups semanais; monitoramento básico (`docker stats`, uptime); provedor com uptime 99,9% |
 | Promoção VPS termina e renovação encarece | Média | Médio | Verificar valor de renovação no checkout; custo ainda competitivo vs. múltiplos deploys Fly |
 | `user node` sem permissão de escrita em `/data` | Baixa | Médio | Dockerfile já cria `/data` com `chown node:node`; validado no build local |
@@ -480,7 +480,7 @@ docker compose -f docker-compose.prod.yml restart app
 - [ ] Aplicação acessível via `https://<seu-dominio>`
 - [ ] HTTPS automático emitido pelo Caddy (Let's Encrypt)
 - [ ] Login admin default funcional em produção
-- [ ] Volume `nexus_data` mantém dados entre deploys
+- [ ] Volume `nxgestao_data` mantém dados entre deploys
 - [ ] `tsc --noEmit` passa em todo o projeto
 - [ ] `.env.example` documenta todas variáveis de ambiente (incluindo `CORS_ORIGIN` e `ADMIN_DEFAULT_PASSWORD`)
 - [ ] Procedimento de backup manual documentado e testado

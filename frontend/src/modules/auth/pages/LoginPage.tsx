@@ -33,7 +33,7 @@ export function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-surface-secondary px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-text-primary">Nexus Platform</h1>
+          <h1 className="text-2xl font-bold text-text-primary">NX Gestão</h1>
           <p className="text-text-secondary mt-1 text-sm">{t("auth.title")}</p>
         </div>
 
