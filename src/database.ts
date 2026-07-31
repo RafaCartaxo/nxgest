@@ -149,6 +149,13 @@ export const usuarios = sqliteTable("usuarios", {
   role: text("role").notNull().default("operator"),
   createdAt: text("createdAt").notNull(),
   deletedAt: text("deletedAt"),
+  empresaId: text("empresaId"),
+})
+
+export const empresas = sqliteTable("empresas", {
+  id: text("id").primaryKey(),
+  nome: text("nome").notNull(),
+  createdAt: text("createdAt").notNull(),
 })
 
 export async function createTables() {
@@ -310,12 +317,46 @@ export async function createTables() {
       nome TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       senhaHash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'operator' CHECK(role IN ('admin', 'operator')),
+      role TEXT NOT NULL DEFAULT 'operator',
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-      deletedAt TEXT
+      deletedAt TEXT,
+      empresaId TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS empresas (
+      id TEXT PRIMARY KEY,
+      nome TEXT NOT NULL,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
   `)
+
+  // Migracao: adicionar coluna empresaId em bancos existentes (ignorar se ja existe)
+  try { sqlite.exec("ALTER TABLE usuarios ADD COLUMN empresaId TEXT") } catch { /* ja existe */ }
+
+  // Migracao: remover CHECK constraint de role para permitir super_admin
+  try {
+    sqlite.exec("DROP TABLE IF EXISTS usuarios_new")
+    sqlite.exec("BEGIN IMMEDIATE")
+    sqlite.exec(`
+      CREATE TABLE usuarios_new (
+        id TEXT PRIMARY KEY,
+        nome TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        senhaHash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'operator',
+        createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+        deletedAt TEXT,
+        empresaId TEXT
+      )
+    `)
+    sqlite.exec("INSERT INTO usuarios_new (id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId) SELECT id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId FROM usuarios")
+    sqlite.exec("DROP TABLE usuarios")
+    sqlite.exec("ALTER TABLE usuarios_new RENAME TO usuarios")
+    sqlite.exec("COMMIT")
+  } catch {
+    try { sqlite.exec("ROLLBACK") } catch {}
+  }
 
   // Migracao: adicionar coluna dataFinal em bancos existentes (ignorar se ja existe)
   try {
@@ -407,6 +448,43 @@ export async function createTables() {
     ]
     for (const table of tables) {
       sqlite.prepare(`UPDATE ${table} SET userId = ? WHERE userId IS NULL`).run(adminId)
+    }
+  }
+
+  // Seed: super_admin (se ainda nao existir)
+  const superEmail = process.env.SUPER_ADMIN_EMAIL ?? "super@nxgestao.com"
+  const superPassword = process.env.SUPER_ADMIN_DEFAULT_PASSWORD ?? "super123"
+  const superExists = sqlite.prepare("SELECT id FROM usuarios WHERE email = ?").get(superEmail)
+  if (!superExists) {
+    const superId = randomUUID()
+    const superHash = bcrypt.hashSync(superPassword, 10)
+    sqlite.prepare(
+      "INSERT OR IGNORE INTO usuarios (id, nome, email, senhaHash, role, createdAt) VALUES (?, ?, ?, ?, ?, datetime('now'))"
+    ).run(superId, "Super Admin", superEmail, superHash, "super_admin")
+  }
+
+  // Seed: empresa "Desenvolvimento" + backfill do admin existente
+  const devEmpresaRow = sqlite.prepare("SELECT id FROM empresas WHERE nome = ?").get("Desenvolvimento") as { id: string } | undefined
+  if (!devEmpresaRow) {
+    const devEmpresaId = randomUUID()
+    sqlite.prepare(
+      "INSERT OR IGNORE INTO empresas (id, nome, createdAt) VALUES (?, ?, datetime('now'))"
+    ).run(devEmpresaId, "Desenvolvimento")
+
+    // Vincular admin@cobranca.com à empresa Desenvolvimento
+    sqlite.prepare(
+      "UPDATE usuarios SET empresaId = ? WHERE email = ? AND empresaId IS NULL"
+    ).run(devEmpresaId, "admin@cobranca.com")
+
+    // Vincular operadores órfãos ao mesmo admin/empresa
+    const adminRow = sqlite.prepare(
+      "SELECT id, empresaId FROM usuarios WHERE email = ?"
+    ).get("admin@cobranca.com") as { id: string; empresaId: string } | undefined
+
+    if (adminRow) {
+      sqlite.prepare(
+        "UPDATE usuarios SET empresaId = ? WHERE empresaId IS NULL AND id != ?"
+      ).run(adminRow.empresaId, adminRow.id)
     }
   }
 }

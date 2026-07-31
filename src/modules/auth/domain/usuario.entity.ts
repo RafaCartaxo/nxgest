@@ -6,4 +6,5 @@ export interface Usuario {
   role: "super_admin" | "admin" | "operator"
   createdAt: string
   deletedAt: string | null
+  empresaId: string | null
 }
