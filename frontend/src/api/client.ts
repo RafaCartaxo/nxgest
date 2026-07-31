@@ -25,9 +25,16 @@ export async function apiRequest<T>(
   path: string,
   body?: unknown
 ): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+
+  const token = localStorage.getItem("nexus_token")
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`
+  }
+
   const options: RequestInit = {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers,
   }
 
   if (body !== undefined) {
@@ -35,6 +42,10 @@ export async function apiRequest<T>(
   }
 
   const response = await fetch(`${BASE_URL}${path}`, options)
+
+  if (response.status === 401) {
+    localStorage.removeItem("nexus_token")
+  }
 
   if (response.status === 204) {
     return undefined as T

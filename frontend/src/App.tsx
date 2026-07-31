@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Navbar } from "./shared/components/Navbar.js"
 import { ErrorBoundary } from "./shared/components/ErrorBoundary.js"
 import { FeedbackProvider } from "./shared/feedback/FeedbackProvider.js"
+import { AuthProvider } from "./shared/auth/AuthContext.js"
+import { ProtectedRoute } from "./shared/auth/ProtectedRoute.js"
+import { LoginPage } from "./modules/auth/pages/LoginPage.js"
 import { OperacoesDashboard } from "./modules/operacoes/pages/OperacoesDashboard.js"
 import { CobrancaListPage } from "./modules/operacoes/pages/CobrancaListPage.js"
 import { AtendidosPage } from "./modules/operacoes/pages/AtendidosPage.js"
@@ -16,31 +19,44 @@ import { ContratoNovo } from "./modules/contrato/pages/ContratoNovo.js"
 import { ContratoEdit } from "./modules/contrato/pages/ContratoEdit.js"
 import { CaixaPage } from "./modules/caixa/pages/CaixaPage.js"
 import { GastoPage } from "./modules/gasto/pages/GastoPage.js"
+import { AdminPage } from "./modules/admin/pages/AdminPage.js"
 
 export function App() {
   return (
     <BrowserRouter>
+      <AuthProvider>
       <FeedbackProvider>
-      <Navbar />
-      <ErrorBoundary>
-        <Routes>
-          <Route path="/" element={<OperacoesDashboard />} />
-          <Route path="/rota" element={<RotaPage />} />
-          <Route path="/cobrancas" element={<CobrancaListPage />} />
-          <Route path="/atendidos" element={<AtendidosPage />} />
-          <Route path="/clientes" element={<ClienteList />} />
-          <Route path="/clientes/novo" element={<ClienteNovo />} />
-          <Route path="/clientes/:id" element={<ClienteDetail />} />
-          <Route path="/clientes/:id/editar" element={<ClienteEdit />} />
-          <Route path="/contratos" element={<ContratoList />} />
-          <Route path="/contratos/novo" element={<ContratoNovo />} />
-          <Route path="/contratos/:id" element={<ContratoDetail />} />
-          <Route path="/contratos/:id/editar" element={<ContratoEdit />} />
-          <Route path="/caixa" element={<CaixaPage />} />
-          <Route path="/gastos" element={<GastoPage />} />
-        </Routes>
-      </ErrorBoundary>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={
+          <ProtectedRoute>
+            <>
+              <Navbar />
+              <ErrorBoundary>
+                <Routes>
+                  <Route path="/" element={<OperacoesDashboard />} />
+                  <Route path="/rota" element={<RotaPage />} />
+                  <Route path="/cobrancas" element={<CobrancaListPage />} />
+                  <Route path="/atendidos" element={<AtendidosPage />} />
+                  <Route path="/clientes" element={<ClienteList />} />
+                  <Route path="/clientes/novo" element={<ClienteNovo />} />
+                  <Route path="/clientes/:id" element={<ClienteDetail />} />
+                  <Route path="/clientes/:id/editar" element={<ClienteEdit />} />
+                  <Route path="/contratos" element={<ContratoList />} />
+                  <Route path="/contratos/novo" element={<ContratoNovo />} />
+                  <Route path="/contratos/:id" element={<ContratoDetail />} />
+                  <Route path="/contratos/:id/editar" element={<ContratoEdit />} />
+                  <Route path="/caixa" element={<CaixaPage />} />
+                  <Route path="/gastos" element={<GastoPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                </Routes>
+              </ErrorBoundary>
+            </>
+          </ProtectedRoute>
+        } />
+      </Routes>
       </FeedbackProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
