@@ -3,8 +3,7 @@ dist/
 *.db
 *.db-shm
 *.db-wal
-*.log
-*.err
 .env
-NUL
-.obsidian/
+.git/
+docs/
+scripts/
