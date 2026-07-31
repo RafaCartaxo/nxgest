@@ -1,4 +1,6 @@
 import type { Request, Response } from "express"
+import { eq } from "drizzle-orm"
+import { db, empresas } from "../../../../database.js"
 import type { IAuthRepository } from "../../application/ports/auth.repository.js"
 import { LoginUseCase } from "../../application/use-cases/Login/LoginUseCase.js"
 import { CredenciaisInvalidasError } from "../../domain/errors/auth.error.js"
@@ -46,11 +48,19 @@ export class AuthController {
         return
       }
 
+      let empresaNome: string | null = null
+      if (usuario.empresaId) {
+        const [empresaRow] = await db.select().from(empresas).where(eq(empresas.id, usuario.empresaId)).limit(1)
+        empresaNome = empresaRow?.nome ?? null
+      }
+
       res.json({
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
         role: usuario.role,
+        empresaId: usuario.empresaId,
+        empresaNome,
       })
     } catch (err) {
       console.error("Erro no me:", err)

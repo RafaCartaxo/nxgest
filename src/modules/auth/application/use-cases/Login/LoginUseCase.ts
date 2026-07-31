@@ -22,7 +22,7 @@ export class LoginUseCase {
       throw new CredenciaisInvalidasError()
     }
 
-    const token = signToken({ userId: usuario.id, role: usuario.role })
+    const token = signToken({ userId: usuario.id, role: usuario.role, empresaId: usuario.empresaId })
 
     return {
       token,
@@ -31,6 +31,7 @@ export class LoginUseCase {
         nome: usuario.nome,
         email: usuario.email,
         role: usuario.role,
+        empresaId: usuario.empresaId,
       },
     }
   }

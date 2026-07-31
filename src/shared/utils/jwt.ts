@@ -11,6 +11,7 @@ function getSecret(): string {
 export interface JwtPayload {
   userId: string
   role: "super_admin" | "admin" | "operator"
+  empresaId: string | null
 }
 
 export function signToken(payload: JwtPayload): string {

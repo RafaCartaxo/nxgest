@@ -26,6 +26,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     req.userId = payload.userId
     req.userRole = payload.role
+    req.empresaId = payload.empresaId
 
     next()
   } catch {
