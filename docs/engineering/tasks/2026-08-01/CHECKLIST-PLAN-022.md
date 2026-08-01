@@ -55,7 +55,7 @@ Corrigir os pontos identificados na validação do PLAN-021 em produção: "Cont
 
 - [x] `npm run build` (backend tsc + frontend vite)
 - [x] Teste de filtro em DB temporário: contrato `Finalizado` não conta, `Ativo` conta (dashboard/operador/empresa = 1)
-- [ ] Deploy no VPS (`scripts/deploy.sh`) + health check — pendente
+- [x] Deploy no VPS (`scripts/deploy.sh`) + health check — OK (`/api/health` → `{"status":"ok","db":"connected"}`)
 
 ---
 
@@ -65,7 +65,7 @@ Corrigir os pontos identificados na validação do PLAN-021 em produção: "Cont
 - JSON i18n válidos nas 3 línguas
 - `npm run build` → OK
 - Filtro de estado validado em DB temporário (contrato `Finalizado` excluído das 3 contagens)
-- Pendente: deploy no VPS + health check
+- Deploy no VPS OK: `git pull` + `./scripts/deploy.sh` (app recreated), health `{"status":"ok","db":"connected"}`, SPA servindo o novo bundle
 
 ---
 
