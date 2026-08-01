@@ -4,7 +4,7 @@ export interface OperadorRow {
   id: string
   nome: string
   email: string
-  role: "admin" | "operator"
+  role: "super_admin" | "admin" | "operator"
   createdAt: string
   deletedAt: string | null
   totalClientes: number
@@ -22,6 +22,11 @@ export interface AdminDashboardStats {
 export async function listOperadores(empresaId?: string): Promise<OperadorRow[]> {
   const params = empresaId ? `?empresaId=${empresaId}` : ""
   return apiRequest<OperadorRow[]>(`GET`, `/admin/operadores${params}`)
+}
+
+export async function getOperador(id: string, empresaId?: string): Promise<OperadorRow> {
+  const params = empresaId ? `?empresaId=${empresaId}` : ""
+  return apiRequest<OperadorRow>(`GET`, `/admin/operadores/${id}${params}`)
 }
 
 export async function createOperador(data: { nome: string; email: string; senha: string; role: "admin" | "operator"; empresaId?: string }): Promise<OperadorRow> {

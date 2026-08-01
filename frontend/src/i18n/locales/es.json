@@ -188,7 +188,6 @@
     "totalAReceber": "Total a Recibir",
     "termino": "Fin",
     "terminoLabel": "Fecha Prevista de Fin",
-
     "parcelasLabel": "Cuotas",
     "parcelaLabel": "Cuota",
     "parcelaTemplate": "Cuota {{num}} de {{total}}",
@@ -320,11 +319,12 @@
     "novoOperador": "Nuevo Operador",
     "editarOperador": "Editar Operador",
     "nome": "Nombre",
-    "email": "Correo electrónico",
+    "email": "Correo",
     "senha": "Contraseña",
     "role": "Rol",
     "roleAdmin": "Administrador",
     "roleOperator": "Operador",
+    "roleSuperAdmin": "Super Admin",
     "totalOperadores": "Operadores",
     "totalClientes": "Total de Clientes",
     "contratosAtivos": "Contratos Activos",
@@ -346,7 +346,12 @@
       "emailInvalido": "Correo inválido.",
       "senhaCurta": "La contraseña debe tener al menos 6 caracteres.",
       "roleObrigatorio": "Selecciona un rol."
-    }
+    },
+    "tabEquipe": "Equipo",
+    "tabMeusDados": "Mis datos",
+    "operadorDetail": "Detalles del operador",
+    "operadorData": "Datos de operación",
+    "caixaOperador": "Caja del operador"
   },
   "superAdmin": {
     "title": "Empresas",

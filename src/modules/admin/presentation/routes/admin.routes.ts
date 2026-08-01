@@ -10,6 +10,7 @@ const controller = new AdminController(repository)
 router.use(adminMiddleware)
 
 router.get("/operadores", controller.list)
+router.get("/operadores/:id", controller.getOperador)
 router.post("/operadores", controller.create)
 router.patch("/operadores/:id", controller.update)
 router.delete("/operadores/:id", controller.remove)

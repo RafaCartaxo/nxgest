@@ -4,6 +4,7 @@ import { ErrorBoundary } from "./shared/components/ErrorBoundary.js"
 import { FeedbackProvider } from "./shared/feedback/FeedbackProvider.js"
 import { AuthProvider } from "./shared/auth/AuthContext.js"
 import { ProtectedRoute } from "./shared/auth/ProtectedRoute.js"
+import { AdminRoute } from "./shared/auth/AdminRoute.js"
 import { LoginPage } from "./modules/auth/pages/LoginPage.js"
 import { OperacoesDashboard } from "./modules/operacoes/pages/OperacoesDashboard.js"
 import { CobrancaListPage } from "./modules/operacoes/pages/CobrancaListPage.js"
@@ -21,6 +22,7 @@ import { CaixaPage } from "./modules/caixa/pages/CaixaPage.js"
 import { GastoPage } from "./modules/gasto/pages/GastoPage.js"
 import { AdminPage } from "./modules/admin/pages/AdminPage.js"
 import { SuperAdminPage } from "./modules/admin/pages/SuperAdminPage.js"
+import { OperadorDetail } from "./modules/admin/pages/OperadorDetail.js"
 
 export function App() {
   return (
@@ -49,9 +51,10 @@ export function App() {
                   <Route path="/contratos/:id/editar" element={<ContratoEdit />} />
                   <Route path="/caixa" element={<CaixaPage />} />
                   <Route path="/gastos" element={<GastoPage />} />
-                   <Route path="/admin" element={<AdminPage />} />
-                   <Route path="/admin/empresas" element={<SuperAdminPage />} />
-                   <Route path="/admin/empresas/:id" element={<AdminPage />} />
+                   <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+                   <Route path="/admin/operadores/:id" element={<AdminRoute><OperadorDetail /></AdminRoute>} />
+                   <Route path="/admin/empresas" element={<AdminRoute><SuperAdminPage /></AdminRoute>} />
+                   <Route path="/admin/empresas/:id" element={<AdminRoute><AdminPage /></AdminRoute>} />
                 </Routes>
               </ErrorBoundary>
             </>
