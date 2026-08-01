@@ -857,7 +857,7 @@ Lista todos os pagamentos de um contrato com os detalhes de distribuição entre
 > - **operator:** ignora `usuarioId` — opera sempre sobre o caixa próprio (`req.userId`).
 > - **admin:** valida que `usuarioId` pertence à própria empresa (via `empresaId` do token); inexistente/outra empresa → `404 OPERATOR_NOT_FOUND`.
 > - **super_admin:** valida apenas a existência do usuário; pode apontar caixa de qualquer empresa.
-> - `POST /api/caixa/ajuste` com `role = operator` → `403 FORBIDDEN` (BR-079).
+> - `POST /api/caixa/ajuste` aceita `operator` para o **próprio** caixa (`req.userId`) — o operador ajusta a própria base (BR-084); `?usuarioId=` é sempre ignorado para operator (segurança preservada).
 > - `POST /api/caixa/liquidar` opera sempre sobre o caixa próprio (`req.userId`).
 
 ---
@@ -949,7 +949,6 @@ Ajusta o Caixa Total para um novo valor (BR-018). O ajuste **não** gera movimen
 
 | Código | HTTP |
 |---------|------|
-| FORBIDDEN | 403 |
 | OPERATOR_NOT_FOUND | 404 |
 | VALIDATION_ERROR | 422 |
 
@@ -1234,6 +1233,7 @@ Gestão de empresas. Acesso exclusivo para super administradores (`role = 'super
 | Método | Endpoint | Auth | Descrição |
 |---------|----------|------|-----------|
 | GET | `/api/admin/empresas` | Super Admin | Listar todas as empresas |
+| GET | `/api/admin/empresas/:id` | Super Admin | Buscar empresa por id (com totais) |
 | POST | `/api/admin/empresas` | Super Admin | Criar nova empresa com admin |
 
 ---
@@ -1252,7 +1252,9 @@ Lista todas as empresas cadastradas.
         "id": "a1b2c3d4-...",
         "nome": "Desenvolvimento",
         "createdAt": "2026-07-31T10:00:00.000Z",
-        "totalOperadores": 3
+        "totalUsuarios": 3,
+        "totalClientes": 12,
+        "contratosAtivos": 5
     }
 ]
 ```
@@ -1262,6 +1264,34 @@ Lista todas as empresas cadastradas.
 | Código | HTTP |
 |---------|------|
 | FORBIDDEN | 403 |
+
+---
+
+# GET /api/admin/empresas/:id
+
+Busca uma empresa por id, com totais de usuários, clientes e contratos ativos (PLAN-021 — contexto de empresa no painel admin).
+
+**Auth:** Super Admin (`role = 'super_admin'`)
+
+## Response 200
+
+```json
+{
+    "id": "a1b2c3d4-...",
+    "nome": "Desenvolvimento",
+    "createdAt": "2026-07-31T10:00:00.000Z",
+    "totalUsuarios": 3,
+    "totalClientes": 12,
+    "contratosAtivos": 5
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| FORBIDDEN | 403 |
+| EMPRESA_NAO_ENCONTRADA | 404 |
 
 ---
 
@@ -1335,6 +1365,39 @@ Gestão de operadores e dashboard consolidado. Acesso para administradores (`rol
 | DELETE | `/api/admin/operadores/:id` | Admin / Super Admin | Remover operador (soft-delete) |
 | GET | `/api/admin/dashboard` | Admin / Super Admin | KPIs consolidados (filtrados por empresa) |
 
+# GET /api/admin/dashboard
+
+KPIs consolidados da empresa do token (admin) ou agregado/por `?empresaId=` (super admin).
+
+## Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| empresaId | string | Não | Filtrar por empresa (apenas super_admin) |
+
+## Response 200
+
+```json
+{
+    "totalAdmins": 1,
+    "totalOperadores": 3,
+    "totalClientes": 45,
+    "contratosAtivos": 12,
+    "recebidoHoje": 480.00,
+    "resultadoDoDia": 300.00
+}
+```
+
+- `totalAdmins`: usuários com `role = 'admin'` (PLAN-021 / BR-082)
+- `totalOperadores`: usuários com `role = 'operator'` (PLAN-021 / BR-082)
+- `resultadoDoDia`: entradas − saídas do dia (movimentações financeiras)
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| INTERNAL_ERROR | 500 |
+
 ## Regras de negócio
 
 | BR | Descrição |
@@ -1352,5 +1415,9 @@ Gestão de operadores e dashboard consolidado. Acesso para administradores (`rol
 | BR-076 | `empresaId` do token determina o escopo de dados do operador |
 | BR-077 | Dashboard de super admin sem `empresaId` retorna agregado de todas as empresas |
 | BR-078 | Admin define o Caixa Base de um operador (`POST /api/caixa/ajuste?usuarioId=`) |
-| BR-079 | Operador não pode ajustar o Caixa Base próprio (403) |
+| BR-079 | ~~Operador não pode ajustar o Caixa Base próprio (403)~~ — **revogado pelo PLAN-021**: operador ajusta a própria base (`req.userId`; `?usuarioId=` ignorado). Ver BR-084 |
 | BR-080 | Admin visualiza os KPIs do caixa de um operador (`GET /api/caixa?usuarioId=`), validado dentro da empresa |
+| BR-081 | Login roteado por perfil: `operator` → `/`, `admin` → `/admin`, `super_admin` → `/admin/empresas`; `/admin` de super_admin redireciona para `/admin/empresas` |
+| BR-082 | Dashboard admin com KPIs separados: `totalAdmins` (role `admin`) e `totalOperadores` (role `operator`), agrupados em `Equipe` e `Operação` |
+| BR-083 | Card de empresa (super admin) mostra `totalUsuarios` (admin + operator) |
+| BR-084 | Operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste` sem `usuarioId`); `usuarioId` é sempre ignorado para operator |

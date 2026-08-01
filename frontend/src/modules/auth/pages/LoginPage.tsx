@@ -20,8 +20,9 @@ export function LoginPage() {
     setLoading(true)
 
     try {
-      await login(email, senha)
-      navigate("/")
+      const response = await login(email, senha)
+      const role = response.usuario.role
+      navigate(role === "super_admin" ? "/admin/empresas" : role === "admin" ? "/admin" : "/")
     } catch (err) {
       if (err instanceof TypeError && err.message === "Failed to fetch") {
         setErro("Erro de conexão. Verifique sua internet.")

@@ -13,7 +13,7 @@ export interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null
   token: string | null
-  login: (email: string, senha: string) => Promise<void>
+  login: (email: string, senha: string) => Promise<LoginResponse>
   logout: () => void
   loading: boolean
 }
@@ -49,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(TOKEN_KEY, response.token)
     setToken(response.token)
     setUser(response.usuario)
+    return response
   }, [])
 
   const logout = useCallback(() => {

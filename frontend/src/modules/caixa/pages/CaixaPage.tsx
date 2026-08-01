@@ -6,7 +6,6 @@ import { getCaixaStatus, ajustarCaixaBase, listarMovimentacoes, liquidarSemana, 
 import { listarPagamentosHoje, listarParcelasHoje, type PagamentoDoDiaItem, type ParcelaHojeCliente } from "../../operacoes/services/operacoes.service.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
 import { ApiError } from "../../../api/client.js"
-import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -27,7 +26,6 @@ export function CaixaPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const feedback = useFeedback()
-  const { user } = useAuth()
 
   const [status, setStatus] = useState<CaixaStatus | null>(null)
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoItem[]>([])
@@ -396,10 +394,9 @@ export function CaixaPage() {
             </div>
           )}
 
-          {user?.role !== "operator" && (
-            <div className="mt-8">
-              <SectionHeader title={t("caixa.ajustar")} />
-              <div className="mt-2 flex gap-2">
+          <div className="mt-8">
+            <SectionHeader title={t("caixa.ajustar")} />
+            <div className="mt-2 flex gap-2">
                 <input
                   type="text"
                   inputMode="decimal"
@@ -417,7 +414,6 @@ export function CaixaPage() {
                 </button>
               </div>
             </div>
-          )}
 
         </>
       ) : null}

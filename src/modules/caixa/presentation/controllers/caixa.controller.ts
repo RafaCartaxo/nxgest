@@ -95,11 +95,6 @@ export class CaixaController {
 
   async ajustar(req: Request, res: Response) {
     try {
-      if (req.userRole === "operator") {
-        res.status(403).json({ code: "FORBIDDEN", message: "Operador não pode ajustar o Caixa Base." })
-        return
-      }
-
       const userId = await resolveUsuarioAlvo(req, this.adminRepository)
       const parsed = ajustarCaixaBaseSchema.safeParse(req.body)
       if (!parsed.success) {

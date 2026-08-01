@@ -11,6 +11,7 @@ const controller = new EmpresaController(repository)
 router.use(superAdminMiddleware)
 
 router.get("/", controller.list)
+router.get("/:id", controller.getById)
 router.post("/", controller.create)
 
 export { router as empresaRoutes }

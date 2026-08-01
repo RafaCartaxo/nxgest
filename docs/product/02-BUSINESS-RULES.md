@@ -393,6 +393,48 @@ O endpoint `POST /api/auth/login` possui limite de 10 tentativas por IP a cada 1
 
 ---
 
+## BR-078
+
+O admin define o Caixa Base de um operador via `POST /api/caixa/ajuste?usuarioId=`, validando que o alvo pertence à própria empresa. O `super_admin` pode ajustar o caixa de operadores de qualquer empresa.
+
+---
+
+## BR-079
+
+~~Operador não pode ajustar o Caixa Base próprio (403).~~ **Revogado pelo PLAN-021** — ver BR-084.
+
+---
+
+## BR-080
+
+O admin visualiza os KPIs do caixa de um operador via `GET /api/caixa?usuarioId=`, validado dentro da empresa. O `super_admin` visualiza caixas de qualquer empresa.
+
+---
+
+## BR-081
+
+Login roteado por perfil: `operator` → `/`, `admin` → `/admin`, `super_admin` → `/admin/empresas`. O `/admin` para `super_admin` redireciona para `/admin/empresas` (não tem empresa própria para gerenciar).
+
+---
+
+## BR-082
+
+O dashboard do admin (`GET /api/admin/dashboard`) separa a contagem por papel: `totalAdmins` conta apenas usuários com `role = 'admin'` e `totalOperadores` apenas `role = 'operator'`. Os KPIs são agrupados em `Equipe` (Admins × Operadores) e `Operação` (Clientes, Contratos, Resultado do dia).
+
+---
+
+## BR-083
+
+O card de empresa (super admin) exibe `totalUsuarios`, que soma `admin` + `operator` da empresa — não apenas operadores.
+
+---
+
+## BR-084
+
+O operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste`). O query `?usuarioId=` é sempre ignorado para `operator` — o alvo é o `req.userId` (segurança preservada).
+
+---
+
 # Histórico
 
 ## BR-029

@@ -27,6 +27,20 @@ export class EmpresaController {
     }
   }
 
+  getById = async (req: Request, res: Response) => {
+    try {
+      const empresa = await this.repository.findById(req.params.id)
+      if (!empresa) {
+        res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
+        return
+      }
+      res.json(empresa)
+    } catch (err) {
+      console.error("Erro ao buscar empresa:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao buscar empresa." })
+    }
+  }
+
   create = async (req: Request, res: Response) => {
     try {
       const { nome, adminNome, adminEmail, adminSenha } = req.body

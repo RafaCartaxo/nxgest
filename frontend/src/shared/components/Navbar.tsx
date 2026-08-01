@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Globe, Sun, Moon, Shield, Building, LogOut } from "lucide-react"
+import { Globe, Sun, Moon, Shield, Building, Settings, LogOut } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useTheme } from "../theme/useTheme.js"
 import { useAuth } from "../auth/AuthContext.js"
@@ -16,12 +16,17 @@ export function Navbar() {
   const { theme, toggle } = useTheme()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const settingsRef = useRef<HTMLDivElement>(null)
+  const langRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false)
+      }
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
         setLangOpen(false)
       }
     }
@@ -65,26 +70,8 @@ export function Navbar() {
             </NavLink>
           ))}
         </div>
-    {isAdmin && (
-      <NavLink
-        to="/admin"
-        className="flex items-center gap-1 px-3 py-3 text-xs font-medium text-text-muted hover:text-text-primary"
-      >
-        <Shield className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Admin</span>
-      </NavLink>
-    )}
-    {isSuperAdmin && (
-      <NavLink
-        to="/admin/empresas"
-        className="flex items-center gap-1 px-3 py-3 text-xs font-medium text-text-muted hover:text-text-primary"
-      >
-        <Building className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Empresas</span>
-      </NavLink>
-    )}
         <div className="flex-1" />
-        <div ref={ref} className="relative shrink-0">
+        <div ref={langRef} className="relative shrink-0">
           <button
             type="button"
             onClick={() => setLangOpen(!langOpen)}
@@ -110,23 +97,58 @@ export function Navbar() {
             </div>
           )}
         </div>
-        <button
-          type="button"
-          onClick={toggle}
-          className="shrink-0 flex items-center px-2 py-3 text-text-muted hover:text-text-primary"
-        >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
-        {user && (
+        <div ref={settingsRef} className="relative shrink-0">
           <button
             type="button"
-            onClick={handleLogout}
-            className="shrink-0 flex items-center px-2 py-3 text-text-muted hover:text-text-primary"
-            title={t("auth.sair")}
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            title={t("nav.configuracoes")}
+            className="flex items-center px-3 py-3 text-text-muted hover:text-text-primary"
           >
-            <LogOut className="h-4 w-4" />
+            <Settings className="h-4 w-4" />
           </button>
-        )}
+          {settingsOpen && (
+            <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-md border border-border-light bg-surface py-1 shadow-lg">
+              {isAdmin && (
+                <NavLink
+                  to="/admin"
+                  onClick={() => setSettingsOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                >
+                  <Shield className="h-3.5 w-3.5 text-text-muted" />
+                  {t("admin.title")}
+                </NavLink>
+              )}
+              {isSuperAdmin && (
+                <NavLink
+                  to="/admin/empresas"
+                  onClick={() => setSettingsOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-surface-hover"
+                >
+                  <Building className="h-3.5 w-3.5 text-text-muted" />
+                  {t("superAdmin.navEmpresas")}
+                </NavLink>
+              )}
+              <div className="my-1 border-t border-border-light" />
+              <button
+                type="button"
+                onClick={toggle}
+                className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-primary hover:bg-surface-hover"
+              >
+                {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-text-muted" /> : <Moon className="h-3.5 w-3.5 text-text-muted" />}
+                {theme === "dark" ? t("nav.temaClaro") : t("nav.temaEscuro")}
+              </button>
+              <div className="my-1 border-t border-border-light" />
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-primary hover:bg-surface-hover"
+              >
+                <LogOut className="h-3.5 w-3.5 text-text-muted" />
+                {t("auth.sair")}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   )

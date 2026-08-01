@@ -125,10 +125,14 @@ export class AdminRepository implements IAdminRepository {
   async getDashboardStats(empresaId?: string | null): Promise<AdminDashboardStats> {
     const hoje = getLocalDateString(new Date())
 
-    const [totalOps, totalClientesResult, contratosResult, recebidoResult, entradasResult, saidasResult] = await Promise.all([
+    const countRole = (role: string) =>
       empresaId
-        ? db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.empresaId, empresaId), ne(usuarios.role, "super_admin")))
-        : db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin"))),
+        ? db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.empresaId, empresaId), eq(usuarios.role, role)))
+        : db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.role, role)))
+
+    const [totalAdminsResult, totalOps, totalClientesResult, contratosResult, recebidoResult, entradasResult, saidasResult] = await Promise.all([
+      countRole("admin"),
+      countRole("operator"),
       empresaId
         ? db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, empresaId)))
         : db.select({ total: count() }).from(clientes).where(isNull(clientes.deletedAt)),
@@ -150,6 +154,7 @@ export class AdminRepository implements IAdminRepository {
     const saidasValor = Number(saidasResult[0].total) || 0
 
     return {
+      totalAdmins: totalAdminsResult[0].total,
       totalOperadores: totalOps[0].total,
       totalClientes: totalClientesResult[0].total,
       contratosAtivos: contratosResult[0].total,

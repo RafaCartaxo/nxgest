@@ -49,7 +49,7 @@ export function SuperAdminPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <KpiCard title={t("superAdmin.totalEmpresas")} value={empresas.length.toString()} variant="blue" />
-        <KpiCard title={t("superAdmin.totalUsuarios")} value={empresas.reduce((acc, e) => acc + e.totalOperadores, 0).toString()} variant="green" />
+        <KpiCard title={t("superAdmin.totalUsuarios")} value={empresas.reduce((acc, e) => acc + e.totalUsuarios, 0).toString()} variant="green" />
         <KpiCard title={t("superAdmin.totalClientes")} value={empresas.reduce((acc, e) => acc + e.totalClientes, 0).toString()} variant="yellow" />
       </div>
 

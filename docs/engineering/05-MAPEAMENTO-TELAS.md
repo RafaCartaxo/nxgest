@@ -31,6 +31,7 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 11 | Login | `/login` | auth | Formulário |
 | 12 | Administração | `/admin` | admin | Dashboard |
 | 13 | Super Admin (Empresas) | `/admin/empresas` | admin | Dashboard |
+| 14 | Admin em contexto de empresa | `/admin/empresas/:id` | admin | Dashboard |
 
 **Total:** 13 telas | 5 módulos | 37 componentes (12 shared + 3 feedback + 15 módulo + 2 domínio + 5 auth/admin)
 
@@ -45,10 +46,12 @@ App
 │   ├── NavLink: Clientes (/clientes)
 │   ├── NavLink: Contratos (/contratos)
 │   ├── NavLink: Caixa (/caixa)
-│   ├── NavLink: Admin (/admin) [condicional: role=admin]
-│   ├── NavLink: Empresas (/admin/empresas) [condicional: role=super_admin]
-│   ├── Nome do usuário + botão Sair
-│   └── Language Switcher (PT/EN/ES)
+│   ├── Language Switcher (PT/EN/ES)
+│   └── Engrenagem (dropdown de configurações):
+│       ├── Administração (/admin) [condicional: role=admin|super_admin]
+│       ├── Empresas (/admin/empresas) [condicional: role=super_admin]
+│       ├── Tema claro/escuro
+│       └── Sair
 │
 ├── [Shared Components]
 │   ├── Button (primary, secondary, danger, ghost)
@@ -79,11 +82,14 @@ App
     │   └── Botão Entrar + feedback de erro
     │
     ├── AdminPage
-    │   ├── EstadoTela > Conteúdo
-    │   │   ├── KPIs consolidados (KpiCard × 4)
-    │   │   ├── SectionHeader ("Operadores" + botão Novo)
-    │   │   ├── SearchBar (busca por nome/email)
-    │   │   └── OperadoresList (Card.Root list-item × N)
+    │   ├── Contexto: header <h1> com nome da empresa (ou "Administração") + badge Empresa
+    │   ├── Redirect: super_admin em /admin → /admin/empresas
+    │   ├── Bloco "Equipe": KPIs Admins × Operadores (KpiCard × 2)
+    │   ├── Bloco "Operação": Clientes, Contratos, Resultado do dia (KpiCard × 3)
+    │   ├── Abas: Equipe (default) / Meus dados (admin)
+    │   ├── SectionHeader ("Operadores" + botão Novo)
+    │   ├── SearchBar (busca por nome/email)
+    │   └── OperadoresList (Card.Root list-item × N)
     │   └── OperadorForm (Modal: nome, email, senha, role)
     │
     ├── OperacoesDashboard
@@ -577,6 +583,8 @@ App
 | Acessibilidade | ✅ `type="email"`, `type="password"`, `autoComplete` | |
 | i18n | ✅ `auth.*` (pt-BR, en, es) | |
 
+**Pós-login (roteado por perfil, PLAN-021 / BR-081):** `operator` → `/`; `admin` → `/admin`; `super_admin` → `/admin/empresas`.
+
 ---
 
 ## 12. Administração
@@ -586,12 +594,18 @@ App
 **Estrutura Visual:**
 ```
 ┌──────────────────────────────────┐
-│ ← Administração                  │
+│ <Nome da Empresa>       [Empresa]│  ← Contexto (h1 + StatusBadge info)
 ├──────────────────────────────────┤
-│ ┌────────┬────────┬────────┬────┐│
-│ │  Opers │Clientes│Contr At│Res ││  ← KpiCard × 4 (admin)
-│ │    3   │   45   │   12   │ R$ ││
-│ └────────┴────────┴────────┴────┘│
+│ ┌── Equipe ────────────────────┐│
+│ ┌────────┬────────┐            ││
+│ │ Admins │  Opers │            ││  ← KpiCard × 2
+│ │    1   │    3   │            ││
+│ └────────┴────────┘            ││
+│ ┌── Operação ─────────────────┐│
+│ ┌────────┬────────┬──────────┐││
+│ │Clientes│Contr At│ Resultado│││  ← KpiCard × 3
+│ │   45   │   12   │   R$     │││
+│ └────────┴────────┴──────────┘││
 │                                  │
 │ Operadores           + Novo Op.  │  ← SectionHeader
 │ [🔍 Buscar por nome/email...  ]  │  ← SearchBar
@@ -626,8 +640,12 @@ Modal OperadorForm (criação/edição):
 
 | Regra | Status | Observação |
 |-------|--------|------------|
-| Header | ✅ `t("admin.title")` com i18n | |
-| KPIs | ✅ Reusa `KpiCard` (blue, green, yellow, gray) | |
+| Header | ✅ Nome da empresa como `<h1>` (padrão OperadorDetail) ou `t("admin.title")` | PLAN-021 |
+| Contexto | ✅ Badge "Empresa" (`StatusBadge info`) quando em contexto | |
+| Redirect | ✅ super_admin em `/admin` → `/admin/empresas` | BR-081 |
+| KPIs | ✅ Reusa `KpiCard` em blocos com `SectionHeader` (Equipe / Operação) | PLAN-021 |
+| Contagem | ✅ Admins (role admin) × Operadores (role operator) separados | BR-082 |
+| Abas | ✅ Equipe (default) / Meus dados (admin) | PLAN-020 |
 | Busca | ✅ `SearchBar` com placeholder i18n | |
 | Cards | ✅ `Card.Root list-item` com Header/Body/Actions | |
 | Status | ✅ `StatusBadge`: admin=info, operator=neutral | |
@@ -748,8 +766,8 @@ Ao implementar uma nova tela, verificar:
 ```
 
 **Comportamento:**
-- Lista todas as empresas com KPIs (totalOperadores, totalClientes, contratosAtivos) via JOIN com usuários/clientes/contratos
-- "Acessar" navega para `/admin/empresas/:id` (AdminPage filtrado por empresa)
+- Lista todas as empresas com KPIs (totalUsuarios, totalClientes, contratosAtivos) via JOIN com usuários/clientes/contratos
+- "Acessar" navega para `/admin/empresas/:id` (AdminPage filtrado por empresa, com contexto do nome da empresa)
 - "+ Nova Empresa" abre modal com EmpresaForm (cria empresa + admin inicial em transação atômica)
 - KPIs globais somam stats de todas as empresas
 
@@ -766,6 +784,7 @@ Ao implementar uma nova tela, verificar:
 | 30/07/2026 | 1.6 | Adicionada tela 11 (Login) e 12 (Admin); auth context e protected route; Navbar com admin link condicional |
 | 30/07/2026 | 1.7 | Dark mode em LoginPage e Admin Panel (tokens CSS); scroll-to-error em todos os formulários (shouldFocusError + setFocus); field-level errors em ContratoNovo/Edit e GastoForm |
 | 31/07/2026 | 1.8 | Adicionada tela 13 (SuperAdminPage); drill-down por empresa no AdminPage; Navbar com link Empresas para super_admin; AuthContext com empresaId/empresaNome |
+| 01/08/2026 | 1.9 | PLAN-021: login roteado por role; AdminPage com contexto de empresa e KPIs em blocos (Equipe/Operação, Admins × Operadores); navbar com engrenagem de configurações; operador volta a ajustar a própria base de caixa |
 
 # Referências
 

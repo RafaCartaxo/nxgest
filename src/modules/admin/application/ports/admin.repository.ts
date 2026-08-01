@@ -11,6 +11,7 @@ export interface OperadorRow {
 }
 
 export interface AdminDashboardStats {
+  totalAdmins: number
   totalOperadores: number
   totalClientes: number
   contratosAtivos: number

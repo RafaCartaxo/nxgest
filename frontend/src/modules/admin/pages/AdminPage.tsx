@@ -1,16 +1,18 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { useParams } from "react-router-dom"
+import { useParams, Navigate } from "react-router-dom"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { SearchBar } from "../../../shared/components/SearchBar/SearchBar.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
+import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { OperadoresList } from "../components/OperadoresList.js"
 import { OperadorForm } from "../components/OperadorForm.js"
 import { listOperadores, getDashboard, createOperador, updateOperador, deleteOperador, type OperadorRow } from "../services/admin.service.js"
+import { getEmpresa, type EmpresaComStats } from "../services/empresa.service.js"
 import { getCaixaStatus, type CaixaStatus } from "../../caixa/services/caixa.service.js"
 import { ApiError } from "../../../api/client.js"
 
@@ -27,7 +29,8 @@ export function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const [stats, setStats] = useState({ totalOperadores: 0, totalClientes: 0, contratosAtivos: 0, recebidoHoje: 0, resultadoDoDia: 0 })
+  const [stats, setStats] = useState({ totalAdmins: 0, totalOperadores: 0, totalClientes: 0, contratosAtivos: 0, recebidoHoje: 0, resultadoDoDia: 0 })
+  const [empresa, setEmpresa] = useState<EmpresaComStats | null>(null)
   const [meuCaixa, setMeuCaixa] = useState<CaixaStatus | null>(null)
   const [meuCaixaError, setMeuCaixaError] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
@@ -50,6 +53,15 @@ export function AdminPage() {
     }
   }, [t, empresaId])
 
+  const fetchEmpresa = useCallback(async () => {
+    if (!empresaId) return
+    try {
+      setEmpresa(await getEmpresa(empresaId))
+    } catch {
+      setEmpresa(null)
+    }
+  }, [empresaId])
+
   const fetchMeuCaixa = useCallback(async () => {
     setMeuCaixaError(false)
     try {
@@ -61,7 +73,14 @@ export function AdminPage() {
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { fetchEmpresa() }, [fetchEmpresa])
   useEffect(() => { if (tab === "meusDados") fetchMeuCaixa() }, [tab, fetchMeuCaixa])
+
+  if (user?.role === "super_admin" && !empresaId) {
+    return <Navigate to="/admin/empresas" replace />
+  }
+
+  const empresaNome = empresa?.nome ?? user?.empresaNome ?? null
 
   const filtered = operadores.filter((op) =>
     op.nome.toLowerCase().includes(search.toLowerCase()) ||
@@ -120,7 +139,12 @@ export function AdminPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
-      <SectionHeader title={t("admin.title")} />
+      <div className="mb-2 flex items-center gap-2">
+        <h1 className="flex-1 text-3xl font-semibold">{empresaNome ?? t("admin.title")}</h1>
+        {empresaNome && (
+          <StatusBadge variant="info" size="sm" label={t("admin.empresaBadge")} />
+        )}
+      </div>
 
       {isAdminSelf && (
         <div className="flex gap-1 rounded-md bg-surface-secondary p-1">
@@ -131,8 +155,14 @@ export function AdminPage() {
 
       {tab === "equipe" || !isAdminSelf ? (
         <>
+          <SectionHeader title={t("admin.secaoEquipe")} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <KpiCard title={t("admin.totalOperadores")} value={stats.totalOperadores.toString()} variant="blue" />
+            <KpiCard title={t("admin.totalAdmins")} value={stats.totalAdmins.toString()} variant="blue" />
+            <KpiCard title={t("admin.totalOperadores")} value={stats.totalOperadores.toString()} variant="info" />
+          </div>
+
+          <SectionHeader title={t("admin.secaoOperacao")} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <KpiCard title={t("admin.totalClientes")} value={stats.totalClientes.toString()} variant="green" />
             <KpiCard title={t("admin.contratosAtivos")} value={stats.contratosAtivos.toString()} variant="yellow" />
             <KpiCard title={t("admin.resultadoDia")} value={`R$ ${stats.resultadoDoDia.toFixed(2)}`} variant="gray" />

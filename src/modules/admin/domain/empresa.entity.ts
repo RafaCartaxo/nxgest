@@ -5,7 +5,7 @@ export interface Empresa {
 }
 
 export interface EmpresaComStats extends Empresa {
-  totalOperadores: number
+  totalUsuarios: number
   totalClientes: number
   contratosAtivos: number
 }

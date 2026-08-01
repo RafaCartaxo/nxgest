@@ -4,7 +4,10 @@
     "clientes": "Clientes",
     "contratos": "Contratos",
     "caixa": "Caixa",
-    "gastos": "Gastos"
+    "gastos": "Gastos",
+    "configuracoes": "Configurações",
+    "temaClaro": "Tema claro",
+    "temaEscuro": "Tema escuro"
   },
   "common": {
     "empty": "Nenhum dado encontrado.",
@@ -326,6 +329,10 @@
     "roleOperator": "Operador",
     "roleSuperAdmin": "Super Admin",
     "totalOperadores": "Operadores",
+    "totalAdmins": "Admins",
+    "secaoEquipe": "Equipe",
+    "secaoOperacao": "Operação",
+    "empresaBadge": "Empresa",
     "totalClientes": "Total de Clientes",
     "contratosAtivos": "Contratos Ativos",
     "resultadoDia": "Resultado do Dia",

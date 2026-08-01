@@ -4,7 +4,10 @@
     "clientes": "Clients",
     "contratos": "Contracts",
     "caixa": "Cash",
-    "gastos": "Expenses"
+    "gastos": "Expenses",
+    "configuracoes": "Settings",
+    "temaClaro": "Light theme",
+    "temaEscuro": "Dark theme"
   },
   "common": {
     "empty": "No data found.",
@@ -326,6 +329,10 @@
     "roleOperator": "Operator",
     "roleSuperAdmin": "Super Admin",
     "totalOperadores": "Operators",
+    "totalAdmins": "Admins",
+    "secaoEquipe": "Team",
+    "secaoOperacao": "Operations",
+    "empresaBadge": "Company",
     "totalClientes": "Total Clients",
     "contratosAtivos": "Active Contracts",
     "resultadoDia": "Daily Result",

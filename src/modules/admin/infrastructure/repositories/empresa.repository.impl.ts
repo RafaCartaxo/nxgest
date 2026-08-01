@@ -22,7 +22,7 @@ export class EmpresaRepository implements IEmpresaRepository {
           id: row.id,
           nome: row.nome,
           createdAt: row.createdAt,
-          totalOperadores: totalOps[0].total,
+          totalUsuarios: totalOps[0].total,
           totalClientes: totalClientesResult[0].total,
           contratosAtivos: contratosResult[0].total,
         }
@@ -42,7 +42,7 @@ export class EmpresaRepository implements IEmpresaRepository {
       id: row.id,
       nome: row.nome,
       createdAt: row.createdAt,
-      totalOperadores: totalOps[0].total,
+      totalUsuarios: totalOps[0].total,
       totalClientes: totalClientesResult[0].total,
       contratosAtivos: contratosResult[0].total,
     }
@@ -75,7 +75,7 @@ export class EmpresaRepository implements IEmpresaRepository {
       }).run()
 
       return {
-        empresa: { id: empresaId, nome: input.nome, createdAt: new Date().toISOString(), totalOperadores: 1, totalClientes: 0, contratosAtivos: 0 },
+        empresa: { id: empresaId, nome: input.nome, createdAt: new Date().toISOString(), totalUsuarios: 1, totalClientes: 0, contratosAtivos: 0 },
         admin: { id: adminId, nome: input.adminNome, email: input.adminEmail },
       }
     })

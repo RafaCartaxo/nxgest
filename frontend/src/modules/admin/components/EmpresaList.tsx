@@ -21,7 +21,7 @@ export function EmpresaList({ empresas }: EmpresaListProps) {
             <span className="font-medium text-text-primary">{empresa.nome}</span>
           </Card.Header>
           <Card.Body>
-            <span className="text-sm text-text-secondary">{t("superAdmin.operadores")}: {empresa.totalOperadores}</span>
+            <span className="text-sm text-text-secondary">{t("superAdmin.usuarios")}: {empresa.totalUsuarios}</span>
             <span className="text-sm text-text-secondary">{t("superAdmin.clientes")}: {empresa.totalClientes}</span>
             <span className="text-sm text-text-secondary">{t("superAdmin.contratosAtivos")}: {empresa.contratosAtivos}</span>
           </Card.Body>

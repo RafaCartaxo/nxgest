@@ -1,10 +1,13 @@
 {
   "nav": {
-    "central": "Panel",
+    "central": "Central",
     "clientes": "Clientes",
     "contratos": "Contratos",
     "caixa": "Caja",
-    "gastos": "Gastos"
+    "gastos": "Gastos",
+    "configuracoes": "Configuración",
+    "temaClaro": "Tema claro",
+    "temaEscuro": "Tema oscuro"
   },
   "common": {
     "empty": "No se encontraron datos.",
@@ -326,6 +329,10 @@
     "roleOperator": "Operador",
     "roleSuperAdmin": "Super Admin",
     "totalOperadores": "Operadores",
+    "totalAdmins": "Administradores",
+    "secaoEquipe": "Equipo",
+    "secaoOperacao": "Operación",
+    "empresaBadge": "Empresa",
     "totalClientes": "Total de Clientes",
     "contratosAtivos": "Contratos Activos",
     "resultadoDia": "Resultado del Día",
