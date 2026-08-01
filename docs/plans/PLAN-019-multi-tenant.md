@@ -269,13 +269,13 @@ catch (err) {
 
 #### Checklist Fase A
 
-- [ ] `express-rate-limit` instalado (`npm i express-rate-limit`)
-- [ ] `POST /api/auth/login` limitado a 10 tentativas/15min por IP
-- [ ] `findById` filtra `deletedAt IS NULL`
-- [ ] `auth.middleware` async — valida existência do usuário no banco (importa `db` + `usuarios` direto)
-- [ ] LoginPage mostra feedback amigável em erro de rede
-- [ ] `api/client.ts` trata `Failed to fetch` globalmente
-- [ ] `tsc --noEmit` passa no backend e frontend
+- [x] `express-rate-limit` instalado (`npm i express-rate-limit`)
+- [x] `POST /api/auth/login` limitado a 10 tentativas/15min por IP
+- [x] `findById` filtra `deletedAt IS NULL`
+- [x] `auth.middleware` async — valida existência do usuário no banco (importa `db` + `usuarios` direto)
+- [x] LoginPage mostra feedback amigável em erro de rede
+- [x] `api/client.ts` trata `Failed to fetch` globalmente
+- [x] `tsc --noEmit` passa no backend e frontend
 
 ---
 
@@ -363,14 +363,14 @@ SUPER_ADMIN_DEFAULT_PASSWORD=super123
 
 #### Checklist Fase B
 
-- [ ] Tabela `empresas` criada
-- [ ] Coluna `empresaId` adicionada em `usuarios`
-- [ ] Schema Drizzle atualizado com `empresas` + `empresaId`
-- [ ] Seed: `super@nxgestao.com` (super_admin, empresaId=null)
-- [ ] Seed: empresa "Desenvolvimento" criada
-- [ ] Seed: `admin@cobranca.com` vinculado à empresa Desenvolvimento
-- [ ] `.env.example` com novas vars do super_admin
-- [ ] `tsc --noEmit` passa
+- [x] Tabela `empresas` criada
+- [x] Coluna `empresaId` adicionada em `usuarios`
+- [x] Schema Drizzle atualizado com `empresas` + `empresaId`
+- [x] Seed: `super@nxgestao.com` (super_admin, empresaId=null)
+- [x] Seed: empresa "Desenvolvimento" criada
+- [x] Seed: `admin@cobranca.com` vinculado à empresa Desenvolvimento
+- [x] `.env.example` com novas vars do super_admin
+- [x] `tsc --noEmit` passa
 
 ---
 
@@ -450,16 +450,16 @@ export function signToken(payload: JwtPayload): string {
 
 #### Checklist Fase C
 
-- [ ] `Request` type inclui `"super_admin"` e `empresaId`
-- [ ] `Usuario` entity inclui `empresaId`
-- [ ] JWT payload inclui `empresaId`
-- [ ] `LoginUseCase` passa `empresaId` para `signToken()`
-- [ ] `auth.middleware` injeta `req.empresaId` do JWT (parte da alteração da Fase A já async)
-- [ ] `admin.middleware` aceita `admin` e `super_admin`
-- [ ] `super-admin.middleware` criado (apenas `super_admin`)
-- [ ] `GET /api/auth/me` retorna `empresaId` e `empresaNome` via LEFT JOIN com `empresas`
-- [ ] `auth.repository.impl.ts` — type assertion de `role` atualizado para incluir `"super_admin"`
-- [ ] `tsc --noEmit` passa
+- [x] `Request` type inclui `"super_admin"` e `empresaId`
+- [x] `Usuario` entity inclui `empresaId`
+- [x] JWT payload inclui `empresaId`
+- [x] `LoginUseCase` passa `empresaId` para `signToken()`
+- [x] `auth.middleware` injeta `req.empresaId` do JWT (parte da alteração da Fase A já async)
+- [x] `admin.middleware` aceita `admin` e `super_admin`
+- [x] `super-admin.middleware` criado (apenas `super_admin`)
+- [x] `GET /api/auth/me` retorna `empresaId` e `empresaNome` via LEFT JOIN com `empresas`
+- [x] `auth.repository.impl.ts` — type assertion de `role` atualizado para incluir `"super_admin"`
+- [x] `tsc --noEmit` passa
 
 ---
 
@@ -509,12 +509,12 @@ export function signToken(payload: JwtPayload): string {
 
 #### Checklist Fase D
 
-- [ ] `CriarEmpresaUseCase` com transação atômica
-- [ ] `ListarEmpresasUseCase` com stats agregados
-- [ ] `empresa.routes.ts` montado com `superAdminMiddleware`
-- [ ] `main.ts` com `empresaRoutes` em `/api/admin/empresas`
-- [ ] Validação de email duplicado
-- [ ] `tsc --noEmit` passa
+- [x] `CriarEmpresaUseCase` com transação atômica
+- [x] `ListarEmpresasUseCase` com stats agregados
+- [x] `empresa.routes.ts` montado com `superAdminMiddleware`
+- [x] `main.ts` com `empresaRoutes` em `/api/admin/empresas`
+- [x] Validação de email duplicado
+- [x] `tsc --noEmit` passa
 
 ---
 
@@ -737,16 +737,16 @@ async getDashboardStats(empresaId?: string | null): Promise<AdminDashboardStats>
 
 #### Checklist Fase E
 
-- [ ] `findAllOperadores(empresaId)` — filtro condicional; null = sem filtro
-- [ ] `findById(id, empresaId)` — valida que operador pertence à empresa
-- [ ] `create()` insere `empresaId` do criador; super_admin sem drill-down bloqueado
-- [ ] `getDashboardStats(empresaId)` — todas 5 queries (ops, clientes, contratos, pagamentos, movimentacoes) filtradas por empresaId via JOIN
-- [ ] Controller: `resolveEmpresaId()` aplicado em `list`, `create`, `update`, `remove`, `dashboard`
-- [ ] `CriarOperadorUseCase` valida que role não é `super_admin`
-- [ ] `EditarOperadorUseCase` e `RemoverOperadorUseCase` validam `empresaId` via `findById`
-- [ ] Admin da Empresa A não vê/edita/remove operadores da Empresa B
-- [ ] Super_admin (sem empresaId) vê todos operadores; (com `?empresaId=X`) vê só Empresa X
-- [ ] `tsc --noEmit` passa
+- [x] `findAllOperadores(empresaId)` — filtro condicional; null = sem filtro
+- [x] `findById(id, empresaId)` — valida que operador pertence à empresa
+- [x] `create()` insere `empresaId` do criador; super_admin sem drill-down bloqueado
+- [x] `getDashboardStats(empresaId)` — todas 5 queries (ops, clientes, contratos, pagamentos, movimentacoes) filtradas por empresaId via JOIN
+- [x] Controller: `resolveEmpresaId()` aplicado em `list`, `create`, `update`, `remove`, `dashboard`
+- [x] `CriarOperadorUseCase` valida que role não é `super_admin`
+- [x] `EditarOperadorUseCase` e `RemoverOperadorUseCase` validam `empresaId` via `findById`
+- [x] Admin da Empresa A não vê/edita/remove operadores da Empresa B
+- [x] Super_admin (sem empresaId) vê todos operadores; (com `?empresaId=X`) vê só Empresa X
+- [x] `tsc --noEmit` passa
 
 ---
 
@@ -836,17 +836,17 @@ A AdminPage atual permanece igual. A diferença é que:
 
 #### Checklist Fase F
 
-- [ ] `AuthUser` inclui `"super_admin"`, `empresaId`, `empresaNome`
-- [ ] `LoginResponse` e `MeResponse` atualizados
-- [ ] Navbar mostra "Admin" para admin e super_admin
-- [ ] Navbar mostra "Empresas" (ícone Building) apenas para super_admin
-- [ ] `SuperAdminPage` renderiza KPIs + lista + formulário
-- [ ] Botão "Acessar" navega para `/admin/empresas/:id`
-- [ ] `/admin/empresas/:id` renderiza AdminPage com filtro `empresaId` (passado via query param nas chamadas API)
-- [ ] Botão "Voltar" na AdminPage em modo drill-down
-- [ ] `admin.service.ts` — métodos `listOperadores`, `createOperador`, `updateOperador`, `deleteOperador`, `getDashboard` ganham `empresaId?: string` opcional
-- [ ] `tsc --noEmit` passa no frontend
-- [ ] i18n com chaves `superAdmin.*` em pt-BR, en, es
+- [x] `AuthUser` inclui `"super_admin"`, `empresaId`, `empresaNome`
+- [x] `LoginResponse` e `MeResponse` atualizados
+- [x] Navbar mostra "Admin" para admin e super_admin
+- [x] Navbar mostra "Empresas" (ícone Building) apenas para super_admin
+- [x] `SuperAdminPage` renderiza KPIs + lista + formulário
+- [x] Botão "Acessar" navega para `/admin/empresas/:id`
+- [x] `/admin/empresas/:id` renderiza AdminPage com filtro `empresaId` (passado via query param nas chamadas API)
+- [x] Botão "Voltar" na AdminPage em modo drill-down
+- [x] `admin.service.ts` — métodos `listOperadores`, `createOperador`, `updateOperador`, `deleteOperador`, `getDashboard` ganham `empresaId?: string` opcional
+- [x] `tsc --noEmit` passa no frontend
+- [x] i18n com chaves `superAdmin.*` em pt-BR, en, es
 
 ---
 
