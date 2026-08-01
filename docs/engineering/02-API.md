@@ -1,6 +1,6 @@
 # API
 
-**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa e Gasto documentados; módulos Auth e Admin documentados; módulo Multi-Tenant (Empresas) implementado (PLAN-019)
+**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa e Gasto documentados; módulos Auth e Admin documentados; módulo Multi-Tenant (Empresas) implementado (PLAN-019); drill-down Admin → Operador implementado (PLAN-020)
 
 **Versão:** 1.3
 
@@ -853,11 +853,26 @@ Lista todos os pagamentos de um contrato com os detalhes de distribuição entre
 | GET | `/api/caixa/movimentacoes` | Listar movimentações financeiras |
 | POST | `/api/caixa/liquidar` | Fechar semana |
 
+> **Escopo por usuário (PLAN-020):** `GET /api/caixa`, `POST /api/caixa/ajuste` e `GET /api/caixa/movimentacoes` aceitam o query parameter `usuarioId`, que aponta o caixa-alvo:
+> - **operator:** ignora `usuarioId` — opera sempre sobre o caixa próprio (`req.userId`).
+> - **admin:** valida que `usuarioId` pertence à própria empresa (via `empresaId` do token); inexistente/outra empresa → `404 OPERATOR_NOT_FOUND`.
+> - **super_admin:** valida apenas a existência do usuário; pode apontar caixa de qualquer empresa.
+> - `POST /api/caixa/ajuste` com `role = operator` → `403 FORBIDDEN` (BR-079).
+> - `POST /api/caixa/liquidar` opera sempre sobre o caixa próprio (`req.userId`).
+
 ---
 
 # GET /api/caixa
 
 Retorna o status completo do caixa: base, saldo, indicadores do dia e da semana, e dados do último fechamento.
+
+## Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| dataInicio | string | Não | Início do período (junto com dataFim) |
+| dataFim | string | Não | Fim do período (junto com dataInicio) |
+| usuarioId | string | Não | Caixa-alvo (ver escopo acima) |
 
 ## Response 200
 
@@ -889,11 +904,18 @@ Retorna o status completo do caixa: base, saldo, indicadores do dia e da semana,
 - `ultimaLiquidacao`: data do último fechamento semanal (`null` se nunca fechou)
 - `caixaUltimaLiquidacao`: snapshot do caixaBase no momento do último fechamento
 
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| OPERATOR_NOT_FOUND | 404 |
+| INTERNAL_ERROR | 500 |
+
 ---
 
 # POST /api/caixa/ajuste
 
-Ajusta o Caixa Total para um novo valor (BR-018).
+Ajusta o Caixa Total para um novo valor (BR-018). O ajuste **não** gera movimentação financeira — a base é o registro (PLAN-020, correção de dobra no saldo/lucro).
 
 ## Request
 
@@ -902,6 +924,12 @@ Ajusta o Caixa Total para um novo valor (BR-018).
     "valor": 22000.00
 }
 ```
+
+## Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| usuarioId | string | Não | Caixa-alvo (ver escopo acima) |
 
 ## Validações
 
@@ -917,6 +945,14 @@ Ajusta o Caixa Total para um novo valor (BR-018).
 }
 ```
 
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| FORBIDDEN | 403 |
+| OPERATOR_NOT_FOUND | 404 |
+| VALIDATION_ERROR | 422 |
+
 ---
 
 # GET /api/caixa/movimentacoes
@@ -930,6 +966,7 @@ Lista movimentações financeiras com paginação e filtros.
 | dataInicio | string | Não | 7 dias atrás | Filtro inicial |
 | dataFim | string | Não | hoje | Filtro final |
 | origem | string | Não | — | Contrato / Pagamento / Gasto / Ajuste |
+| usuarioId | string | Não | — | Caixa-alvo (ver escopo acima) |
 | page | number | Não | 1 | Página |
 | limit | number | Não | 20 | Itens por página |
 
@@ -1292,6 +1329,7 @@ Gestão de operadores e dashboard consolidado. Acesso para administradores (`rol
 | Método | Endpoint | Auth | Descrição |
 |---------|----------|------|-----------|
 | GET | `/api/admin/operadores` | Admin / Super Admin | Listar operadores (filtrados por empresa) |
+| GET | `/api/admin/operadores/:id` | Admin / Super Admin | Buscar operador por id (validado dentro da empresa) |
 | POST | `/api/admin/operadores` | Admin / Super Admin | Criar novo operador vinculado à empresa |
 | PATCH | `/api/admin/operadores/:id` | Admin / Super Admin | Editar operador (nome, email, role, senha) |
 | DELETE | `/api/admin/operadores/:id` | Admin / Super Admin | Remover operador (soft-delete) |
@@ -1313,3 +1351,6 @@ Gestão de operadores e dashboard consolidado. Acesso para administradores (`rol
 | BR-075 | Empresa e admin inicial são criados em transação atômica |
 | BR-076 | `empresaId` do token determina o escopo de dados do operador |
 | BR-077 | Dashboard de super admin sem `empresaId` retorna agregado de todas as empresas |
+| BR-078 | Admin define o Caixa Base de um operador (`POST /api/caixa/ajuste?usuarioId=`) |
+| BR-079 | Operador não pode ajustar o Caixa Base próprio (403) |
+| BR-080 | Admin visualiza os KPIs do caixa de um operador (`GET /api/caixa?usuarioId=`), validado dentro da empresa |

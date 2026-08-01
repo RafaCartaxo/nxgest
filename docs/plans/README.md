@@ -29,4 +29,5 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-017-admin-panel.md](PLAN-017-admin-panel.md) | Admin Panel + Níveis Permissionais (Fase 5.2b) | Concluído |
 | [PLAN-018-deploy.md](PLAN-018-deploy.md) | Deploy do Primeiro Cliente (SQLite + VPS) | Concluído |
 | [PLAN-019-multi-tenant.md](PLAN-019-multi-tenant.md) | Multi-Tenant: Super Admin + Empresas | Concluído |
+| [PLAN-020-admin-operador-caixa.md](PLAN-020-admin-operador-caixa.md) | Drill-down Admin → Operador + Caixa Base do Admin + Fix cálculo do Caixa | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Rascunho — Prévia de Pagamento | Em análise |
