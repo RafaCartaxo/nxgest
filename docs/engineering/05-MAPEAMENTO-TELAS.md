@@ -654,13 +654,13 @@ App
 ├──────────────────────────────────┤
 │ ┌── Equipe ────────────────────┐│
 │ ┌────────┬────────┐            ││
-│ │ Admins │  Opers │            ││  ← KpiCard × 2
+│ │ Admins │  Opers │            ││  ← KpiCard × 2 (clique → EquipeModal)
 │ │    1   │    3   │            ││
 │ └────────┴────────┘            ││
 │ ┌── Operação ─────────────────┐│
 │ ┌────────┬────────┬──────────┐││
-│ │Clientes│Contr At│ Resultado│││  ← KpiCard × 3
-│ │   45   │   12   │   R$     │││
+│ │Clientes│Contr At│ Resultado│││  ← KpiCard × 3 (clique, admin self)
+│ │   45   │   12   │   R$     │││     → /clientes, /contratos, ResultadoDiaModal
 │ └────────┴────────┴──────────┘││
 │                                  │
 │ Operadores           + Novo Op.  │  ← SectionHeader
@@ -670,13 +670,34 @@ App
 │ │ Admin Joao     Administrador │ │  ← Card.Root list-item
 │ │ joao@cobranca.com            │ │     StatusBadge: role
 │ │ 15 clientes · 4 contratos    │ │     Card.Indicators: stats
-│ │                  [✏️] [🗑️]   │ │     Card.Actions
+│ │                  [✏️] [🗑️]   │ │     Card.Actions (ocultas no card "Eu")
 │ ├──────────────────────────────┤ │
-│ │ Maria Op       Operador      │ │
-│ │ maria@cobranca.com           │ │
+│ │ Maria Op       Operador [Eu] │ │  ← StatusBadge success "Eu"
+│ │ maria@cobranca.com           │ │     (usuário logado — sem Editar/Remover)
 │ │ 30 clientes · 8 contratos    │ │
-│ │                  [✏️] [🗑️]   │ │
+│ │                              │ │
 │ └──────────────────────────────┘ │
+└──────────────────────────────────┘
+
+Modal EquipeModal (clique em Admins/Operadores):
+┌──────────────────────────────────┐
+│ Administradores / Operadores     │
+├──────────────────────────────────┤
+│ [Admin Joao]  [Administrador]    │  ← lista filtrada por role
+│ [Maria Op]    [Operador]         │
+│                                  │
+│ [Fechar]                         │
+└──────────────────────────────────┘
+
+Modal ResultadoDiaModal (clique em Resultado do Dia):
+┌──────────────────────────────────┐
+│ Resultado do Dia                 │
+├──────────────────────────────────┤
+│ Entradas  R$ X  ·  Saídas R$ Y   │
+│ Resultado: R$ Z                  │
+│ [lista de movimentações de hoje] │
+│                                  │
+│ [Fechar]                         │
 └──────────────────────────────────┘
 
 Modal OperadorForm (criação/edição):
@@ -701,12 +722,15 @@ Modal OperadorForm (criação/edição):
 | Redirect | ✅ super_admin em `/admin` → `/admin/empresas` | BR-081 |
 | KPIs | ✅ Reusa `KpiCard` em blocos com `SectionHeader` (Equipe / Operação) | PLAN-021 |
 | Contagem | ✅ Admins (role admin) × Operadores (role operator) separados | BR-082 |
+| KPIs clicáveis | ✅ Equipe abre `EquipeModal`; Clientes/Contratos navegam (admin self); Resultado do Dia abre `ResultadoDiaModal` | PLAN-024 |
+| Escopo KPIs Operação | ✅ Admin self → por `req.userId`; super admin → por empresa (sem clique) | PLAN-024 / BR-087 |
 | Abas | ✅ Equipe (default) / Meus dados (admin) | PLAN-020 |
 | Busca | ✅ `SearchBar` com placeholder i18n | |
-| Cards | ✅ `Card.Root list-item` com Header/Body/Actions | |
-| Status | ✅ `StatusBadge`: admin=info, operator=neutral | |
+| Cards | ✅ `Card.Root list-item` com Header (`flex-wrap`)/Body/Actions; admins no topo (role rank + nome) | PLAN-024 |
+| Usuário corrente | ✅ Card do próprio usuário com tag "Eu" (`StatusBadge success`), sem Editar/Remover | PLAN-024 |
+| Status | ✅ `StatusBadge`: admin=info, operator=neutral, Eu=success | |
 | Formulário | ✅ `react-hook-form` + `zod` + `useFeedback().run()` | |
-| Modal | ✅ `ConfirmModal` para remoção de operador | |
+| Modal | ✅ `ConfirmModal` para remoção de operador; `EquipeModal`/`ResultadoDiaModal` no padrão `PagamentosHojeModal` | |
 | Estados | ✅ `EstadoTela` (loading/empty/error) na lista | |
 | Restrições | ✅ Admin não remove a si mesmo; não rebaixa o próprio role | BR-069, BR-070 |
 | i18n | ✅ `admin.*` (pt-BR, en, es) | |
@@ -842,6 +866,7 @@ Ao implementar uma nova tela, verificar:
 | 31/07/2026 | 1.8 | Adicionada tela 13 (SuperAdminPage); drill-down por empresa no AdminPage; Navbar com link Empresas para super_admin; AuthContext com empresaId/empresaNome |
 | 01/08/2026 | 1.9 | PLAN-021: login roteado por role; AdminPage com contexto de empresa e KPIs em blocos (Equipe/Operação, Admins × Operadores); navbar com engrenagem de configurações; operador volta a ajustar a própria base de caixa |
 | 01/08/2026 | 1.10 | PLAN-022: AdminPage com header por nível (usuário/empresa + badge de role), KPIs de Operação com legenda "de {nome}", Resultado do Dia em módulo com cor/tooltip; idioma movido da barra pra engrenagem |
+| 01/08/2026 | 1.11 | PLAN-024: OperadoresList no padrão Card com admins no topo e tag "Eu"; KPIs clicáveis (EquipeModal, navegação, ResultadoDiaModal); OperadorDetail com ajuste de caixa base do operador; dashboard admin self escopado por usuário (BR-087) |
 
 # Referências
 

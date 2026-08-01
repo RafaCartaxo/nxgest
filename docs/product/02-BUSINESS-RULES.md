@@ -663,6 +663,16 @@ Todo pagamento deve ser registrado na tabela `pagamentos`, com sua distribuiçã
 
 ---
 
+## BR-087
+
+No painel admin, quando o administrador acessa o próprio painel (admin self, sem `?empresaId=`), os KPIs de Operação — `totalClientes`, `contratosAtivos`, `recebidoHoje` e `resultadoDoDia` — são escopados aos dados do **próprio usuário logado**, coincidindo com as telas de navegação (`/clientes`, `/contratos` e o caixa).
+
+O super admin (ou um admin visualizando uma empresa via `?empresaId=`) mantém a visão **agregada da empresa**. Nesse modo, os KPIs de Operação não são clicáveis (a navegação por `/clientes` e `/contratos` filtra por `req.userId` e divergiria do agregado).
+
+Os KPIs de Equipe (`totalAdmins`, `totalOperadores`) permanecem sempre por empresa.
+
+---
+
 # Referências
 
 - NORTH-STAR.md

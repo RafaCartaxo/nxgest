@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { useParams, Navigate } from "react-router-dom"
+import { useParams, Navigate, useNavigate } from "react-router-dom"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -11,6 +11,8 @@ import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { OperadoresList } from "../components/OperadoresList.js"
 import { OperadorForm } from "../components/OperadorForm.js"
+import { EquipeModal } from "../components/EquipeModal.js"
+import { ResultadoDiaModal } from "../components/ResultadoDiaModal.js"
 import { listOperadores, getDashboard, createOperador, updateOperador, deleteOperador, type OperadorRow } from "../services/admin.service.js"
 import { getEmpresa, type EmpresaComStats } from "../services/empresa.service.js"
 import { getCaixaStatus, type CaixaStatus } from "../../caixa/services/caixa.service.js"
@@ -22,6 +24,7 @@ type Tab = "equipe" | "meusDados"
 export function AdminPage() {
   const { t } = useTranslation()
   const feedback = useFeedback()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const { id } = useParams<{ id?: string }>()
   const empresaId = id || undefined
@@ -37,6 +40,8 @@ export function AdminPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingOp, setEditingOp] = useState<OperadorRow | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [equipeModal, setEquipeModal] = useState<"admin" | "operator" | null>(null)
+  const [resultadoDiaOpen, setResultadoDiaOpen] = useState(false)
 
   const isAdminSelf = user?.role === "admin" && !empresaId
 
@@ -143,8 +148,8 @@ export function AdminPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
-      <div className="mb-2 flex items-center gap-2">
-        <h1 className="flex-1 text-3xl font-semibold">{tituloHeader ?? t("admin.title")}</h1>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <h1 className="min-w-0 flex-1 text-3xl font-semibold">{tituloHeader ?? t("admin.title")}</h1>
         {tituloHeader && (
           <StatusBadge variant="info" size="sm" label={headerBadge} />
         )}
@@ -161,14 +166,14 @@ export function AdminPage() {
         <>
           <SectionHeader title={t("admin.secaoEquipe")} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <KpiCard title={t("admin.totalAdmins")} value={stats.totalAdmins.toString()} variant="blue" />
-            <KpiCard title={t("admin.totalOperadores")} value={stats.totalOperadores.toString()} variant="info" />
+            <KpiCard title={t("admin.totalAdmins")} value={stats.totalAdmins.toString()} variant="blue" onClick={() => setEquipeModal("admin")} />
+            <KpiCard title={t("admin.totalOperadores")} value={stats.totalOperadores.toString()} variant="info" onClick={() => setEquipeModal("operator")} />
           </div>
 
           <SectionHeader title={t("admin.secaoOperacao")} />
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <KpiCard title={t("admin.totalClientes")} value={stats.totalClientes.toString()} variant="green" subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined} />
-            <KpiCard title={t("admin.contratosAtivos")} value={stats.contratosAtivos.toString()} variant="yellow" subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined} />
+            <KpiCard title={t("admin.totalClientes")} value={stats.totalClientes.toString()} variant="green" subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined} onClick={isAdminSelf ? () => navigate("/clientes") : undefined} />
+            <KpiCard title={t("admin.contratosAtivos")} value={stats.contratosAtivos.toString()} variant="yellow" subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined} onClick={isAdminSelf ? () => navigate("/contratos") : undefined} />
             <KpiCard
               title={t("admin.resultadoDia")}
               value={`R$ ${formatCurrency(Math.abs(stats.resultadoDoDia))}`}
@@ -176,6 +181,7 @@ export function AdminPage() {
               valueClassName={stats.resultadoDoDia >= 0 ? "text-success-text" : "text-danger-text"}
               tooltip={t("admin.resultadoDiaTooltip")}
               subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined}
+              onClick={isAdminSelf ? () => setResultadoDiaOpen(true) : undefined}
             />
           </div>
 
@@ -241,6 +247,17 @@ export function AdminPage() {
           )}
         </EstadoTela>
       )}
+
+      <EquipeModal
+        open={equipeModal !== null}
+        role={equipeModal ?? "admin"}
+        operadores={operadores}
+        onClose={() => setEquipeModal(null)}
+      />
+      <ResultadoDiaModal
+        open={resultadoDiaOpen}
+        onClose={() => setResultadoDiaOpen(false)}
+      />
 
       <ConfirmModal
         open={!!deleteId}

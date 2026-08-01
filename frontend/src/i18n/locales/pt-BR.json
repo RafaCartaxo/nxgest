@@ -276,7 +276,9 @@
     "liquidar": "Fechar Semana",
     "liquidarConfirmacao": "Fechar a semana atual? Os indicadores serão reiniciados.",
     "liquidarSucesso": "Semana fechada.",
-    "erroCarregar": "Erro ao carregar dados do Caixa."
+    "erroCarregar": "Erro ao carregar dados do Caixa.",
+    "entradas": "Entradas",
+    "saidas": "Saídas"
   },
   "gasto": {
     "title": "Gastos",
@@ -369,7 +371,15 @@
     "tabMeusDados": "Meus dados",
     "operadorDetail": "Detalhes do operador",
     "operadorData": "Dados de operação",
-    "caixaOperador": "Caixa do operador"
+    "caixaOperador": "Caixa do operador",
+    "eu": "Eu",
+    "ajustarCaixaOperador": "Ajustar caixa base do operador",
+    "modalAdmins": "Administradores",
+    "modalOperadores": "Operadores",
+    "modalResultadoDia": "Resultado do Dia",
+    "acessar": "Acessar",
+    "editar": "Editar",
+    "remover": "Remover"
   },
   "superAdmin": {
     "title": "Empresas",

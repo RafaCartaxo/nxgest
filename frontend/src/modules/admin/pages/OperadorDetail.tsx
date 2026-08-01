@@ -3,16 +3,19 @@ import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { ChevronLeft } from "lucide-react"
 import { getOperador, type OperadorRow } from "../services/admin.service.js"
-import { getCaixaStatus, type CaixaStatus } from "../../caixa/services/caixa.service.js"
+import { getCaixaStatus, ajustarCaixaBase, type CaixaStatus } from "../../caixa/services/caixa.service.js"
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
+import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 
 export function OperadorDetail() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const feedback = useFeedback()
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const empresaId = searchParams.get("empresaId") || undefined
@@ -21,6 +24,7 @@ export function OperadorDetail() {
   const [caixa, setCaixa] = useState<CaixaStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [ajusteValor, setAjusteValor] = useState("")
 
   const fetch = useCallback(async () => {
     if (!id) return
@@ -41,6 +45,22 @@ export function OperadorDetail() {
   }, [id, empresaId, t])
 
   useEffect(() => { fetch() }, [fetch])
+
+  async function handleAjustar() {
+    if (!id) return
+    const valor = unmaskMonetario(ajusteValor)
+    if (valor <= 0) return
+    await feedback.run({
+      action: async () => {
+        await ajustarCaixaBase(valor, id)
+        setAjusteValor("")
+        await fetch()
+      },
+      loading: t("common.saving"),
+      success: t("caixa.ajustarSucesso"),
+      error: t("admin.erroCarregar"),
+    })
+  }
 
   return (
     <div className="mx-auto max-w-2xl p-4">
@@ -91,6 +111,25 @@ export function OperadorDetail() {
               <KpiCard title={t("caixa.aReceberHoje")} value={`R$ ${caixa.aReceberHoje.toFixed(2)}`} variant="blue" />
               <KpiCard title={t("caixa.recebidoSemana")} value={`R$ ${caixa.recebidoSemana.toFixed(2)}`} variant="green" />
               <KpiCard title={t("caixa.cobradoHoje")} value={`R$ ${caixa.recebidoHoje.toFixed(2)}`} variant="green" />
+            </div>
+
+            <SectionHeader title={t("admin.ajustarCaixaOperador")} />
+            <div className="mt-2 flex gap-2">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={ajusteValor}
+                onChange={(e) => setAjusteValor(maskMonetario(e.target.value))}
+                placeholder="R$ 0,00"
+                className="block w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAjustar}
+                className="flex-shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
+              >
+                {t("caixa.ajustarSalvar")}
+              </button>
             </div>
           </>
         )}

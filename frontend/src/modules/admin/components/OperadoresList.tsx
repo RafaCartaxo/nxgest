@@ -13,52 +13,76 @@ interface Props {
   onDelete: (id: string) => void
 }
 
+const roleRank: Record<string, number> = { super_admin: 0, admin: 1, operator: 2 }
+
+function roleLabel(t: (k: string) => string, role: OperadorRow["role"]): string {
+  if (role === "super_admin") return t("admin.roleSuperAdmin")
+  if (role === "admin") return t("admin.roleAdmin")
+  return t("admin.roleOperator")
+}
+
 export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { user } = useAuth()
 
-  const visible = user?.role === "admin" ? operadores.filter((op) => op.id !== user.id) : operadores
+  const sorted = [...operadores].sort((a, b) => {
+    const rankDiff = (roleRank[a.role] ?? 9) - (roleRank[b.role] ?? 9)
+    if (rankDiff !== 0) return rankDiff
+    return a.nome.localeCompare(b.nome)
+  })
 
-  if (visible.length === 0) {
+  if (sorted.length === 0) {
     return <p className="text-center text-text-secondary py-8">{t("common.empty")}</p>
   }
 
   return (
-    <div className="space-y-2">
-      {visible.map((op) => (
-        <Card.Root key={op.id} variant="list-item">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-base font-semibold">{op.nome}</p>
-              <p className="text-sm text-text-secondary">{op.email}</p>
-              <div className="mt-1 flex gap-4">
-                <span className="text-xs text-text-secondary">{op.totalClientes} {t("cliente.title").toLowerCase()}</span>
-                <span className="text-xs text-text-secondary">{op.contratosAtivos} {t("contrato.title").toLowerCase()}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
+    <div className="space-y-3">
+      {sorted.map((op) => {
+        const isSelf = user?.id === op.id
+        return (
+          <Card.Root key={op.id} variant="list-item">
+            <Card.Header className="flex-wrap">
+              <span className="min-w-0 flex-1 truncate text-base font-semibold">{op.nome}</span>
+              {isSelf && <StatusBadge variant="success" size="sm" label={t("admin.eu")} />}
               <StatusBadge
                 variant={op.role === "operator" ? "neutral" : "info"}
                 size="sm"
-                label={op.role === "super_admin" ? t("admin.roleSuperAdmin") : op.role === "admin" ? t("admin.roleAdmin") : t("admin.roleOperator")}
+                label={roleLabel(t, op.role)}
               />
-              <button
-                onClick={() => navigate(`/admin/operadores/${op.id}${empresaId ? `?empresaId=${empresaId}` : ""}`)}
-                className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded hover:bg-surface-hover text-text-muted"
-              >
-                <ArrowRight className="h-4 w-4" />
-              </button>
-              <button onClick={() => onEdit(op)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded hover:bg-surface-hover text-text-muted">
-                <Edit3 className="h-4 w-4" />
-              </button>
-              <button onClick={() => onDelete(op.id)} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded hover:bg-red-50 text-red-500">
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </Card.Root>
-      ))}
+            </Card.Header>
+            <Card.Body>
+              <p className="truncate text-sm text-text-secondary">{op.email}</p>
+              <Card.Indicators>
+                <Card.Indicator label={`${t("cliente.title")}`} value={`${op.totalClientes}`} />
+                <Card.Indicator label={`${t("contrato.title")}`} value={`${op.contratosAtivos}`} />
+              </Card.Indicators>
+            </Card.Body>
+            <Card.Actions
+              actions={[
+                {
+                  icon: ArrowRight,
+                  label: t("admin.acessar"),
+                  onClick: () => navigate(`/admin/operadores/${op.id}${empresaId ? `?empresaId=${empresaId}` : ""}`),
+                },
+                {
+                  icon: Edit3,
+                  label: t("admin.editar"),
+                  onClick: () => onEdit(op),
+                  show: !isSelf,
+                },
+                {
+                  icon: Trash2,
+                  label: t("admin.remover"),
+                  onClick: () => onDelete(op.id),
+                  show: !isSelf,
+                  variant: "gray",
+                },
+              ]}
+            />
+          </Card.Root>
+        )
+      })}
     </div>
   )
 }

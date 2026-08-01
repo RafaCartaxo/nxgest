@@ -276,7 +276,9 @@
     "liquidar": "Close Week",
     "liquidarConfirmacao": "Close the current week? Indicators will be reset.",
     "liquidarSucesso": "Week closed.",
-    "erroCarregar": "Error loading Cash data."
+    "erroCarregar": "Error loading Cash data.",
+    "entradas": "Inflows",
+    "saidas": "Outflows"
   },
   "gasto": {
     "title": "Expenses",
@@ -369,7 +371,15 @@
     "tabMeusDados": "My data",
     "operadorDetail": "Operator details",
     "operadorData": "Operation data",
-    "caixaOperador": "Operator cash"
+    "caixaOperador": "Operator cash",
+    "eu": "Me",
+    "ajustarCaixaOperador": "Adjust operator cash base",
+    "modalAdmins": "Administrators",
+    "modalOperadores": "Operators",
+    "modalResultadoDia": "Daily Result",
+    "acessar": "Open",
+    "editar": "Edit",
+    "remover": "Remove"
   },
   "superAdmin": {
     "title": "Companies",

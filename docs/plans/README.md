@@ -33,4 +33,5 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-021-admin-contexto-kpis.md](PLAN-021-admin-contexto-kpis.md) | Painel admin: contexto de empresa, KPIs por seção, Admins × Operadores, login por role, engrenagem na navbar | Concluído |
 | [PLAN-022-admin-kpis-ajuste.md](PLAN-022-admin-kpis-ajuste.md) | Ajuste de KPIs (contratos ativos por estado, tooltip do Resultado do Dia, escopo de nível) + idioma na engrenagem | Concluído |
 | [PLAN-023-ajustes-pos-validacao.md](PLAN-023-ajustes-pos-validacao.md) | Ajustes pós-validação: fix bug da rota, destaque "Vence Hoje", pagos no "Todos" e histórico de atrasos | Concluído |
+| [PLAN-024-admin-organizacao-kpis.md](PLAN-024-admin-organizacao-kpis.md) | Página admin: fix do ajuste de saldo no operador, cards no padrão do sistema, usuário corrente na Equipe, admins no topo e KPIs clicáveis | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Rascunho — Prévia de Pagamento | Em análise |

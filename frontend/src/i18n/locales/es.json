@@ -276,7 +276,9 @@
     "liquidar": "Cerrar Semana",
     "liquidarConfirmacao": "¿Cerrar la semana actual? Los indicadores se reiniciarán.",
     "liquidarSucesso": "Semana cerrada.",
-    "erroCarregar": "Error al cargar datos de Caja."
+    "erroCarregar": "Error al cargar datos de Caja.",
+    "entradas": "Entradas",
+    "saidas": "Salidas"
   },
   "gasto": {
     "title": "Gastos",
@@ -369,7 +371,15 @@
     "tabMeusDados": "Mis datos",
     "operadorDetail": "Detalles del operador",
     "operadorData": "Datos de operación",
-    "caixaOperador": "Caja del operador"
+    "caixaOperador": "Caja del operador",
+    "eu": "Yo",
+    "ajustarCaixaOperador": "Ajustar base de caja del operador",
+    "modalAdmins": "Administradores",
+    "modalOperadores": "Operadores",
+    "modalResultadoDia": "Resultado del Día",
+    "acessar": "Acceder",
+    "editar": "Editar",
+    "remover": "Eliminar"
   },
   "superAdmin": {
     "title": "Empresas",

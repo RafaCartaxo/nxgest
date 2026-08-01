@@ -1402,13 +1402,17 @@ Gestão de operadores e dashboard consolidado. Acesso para administradores (`rol
 
 # GET /api/admin/dashboard
 
-KPIs consolidados da empresa do token (admin) ou agregado/por `?empresaId=` (super admin).
+KPIs consolidados. Comportamento por nível (PLAN-024 / BR-087):
+
+- **Admin self** (sem `?empresaId=`): KPIs de Operação (`totalClientes`, `contratosAtivos`, `recebidoHoje`, `resultadoDoDia`) escopados aos dados do **próprio usuário logado** (`req.userId`), coincidindo com `/clientes`, `/contratos` e o caixa. KPIs de Equipe permanecem por empresa.
+- **Super admin** sem `empresaId`: agregado de todas as empresas.
+- **Com `?empresaId=`** (admin ou super admin): agregado da empresa informada.
 
 ## Query Parameters
 
 | Parâmetro | Tipo | Obrigatório | Descrição |
 |-----------|------|-------------|-----------|
-| empresaId | string | Não | Filtrar por empresa (apenas super_admin) |
+| empresaId | string | Não | Filtrar por empresa (admin visualizando outra empresa precisa de `empresaId`; super admin opcional) |
 
 ## Response 200
 
@@ -1458,3 +1462,4 @@ KPIs consolidados da empresa do token (admin) ou agregado/por `?empresaId=` (sup
 | BR-083 | Card de empresa (super admin) mostra `totalUsuarios` (admin + operator) |
 | BR-084 | Operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste` sem `usuarioId`); `usuarioId` é sempre ignorado para operator |
 | BR-085 | Contratos ativos (KPIs admin/empresa) contam apenas `estado = 'Ativo'`; `Finalizado`/`Cancelado` não entram |
+| BR-087 | Dashboard admin self escopado por `req.userId` nos KPIs de Operação (bate com navegação `/clientes`, `/contratos`); super admin mantém visão agregada de empresa |
