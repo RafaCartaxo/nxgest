@@ -17,9 +17,11 @@ interface KpiCardProps {
   variant: KpiVariant
   onClick?: () => void
   valueClassName?: string
+  tooltip?: string
+  subtitle?: ReactNode
 }
 
-export function KpiCard({ title, value, variant, onClick, valueClassName }: KpiCardProps) {
+export function KpiCard({ title, value, variant, onClick, valueClassName, tooltip, subtitle }: KpiCardProps) {
   const s = variantStyles[variant]
   const Wrapper = onClick ? "button" : "div"
   const clickable = onClick ? `cursor-pointer ${s.hover}` : ""
@@ -28,10 +30,12 @@ export function KpiCard({ title, value, variant, onClick, valueClassName }: KpiC
     <Wrapper
       type={onClick ? "button" : undefined}
       onClick={onClick}
+      title={tooltip}
       className={`rounded-md ${s.bg} p-4 text-left ${clickable}`}
     >
       <p className={`text-xs font-medium uppercase tracking-wider ${s.label}`}>{title}</p>
       <p className={`mt-1 text-2xl font-bold ${valueClassName ?? s.value}`}>{value}</p>
+      {subtitle !== undefined && <p className="mt-0.5 text-xs text-text-muted">{subtitle}</p>}
     </Wrapper>
   )
 }

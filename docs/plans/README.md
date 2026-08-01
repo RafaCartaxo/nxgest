@@ -31,4 +31,5 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-019-multi-tenant.md](PLAN-019-multi-tenant.md) | Multi-Tenant: Super Admin + Empresas | Concluído |
 | [PLAN-020-admin-operador-caixa.md](PLAN-020-admin-operador-caixa.md) | Drill-down Admin → Operador + Caixa Base do Admin + Fix cálculo do Caixa | Concluído |
 | [PLAN-021-admin-contexto-kpis.md](PLAN-021-admin-contexto-kpis.md) | Painel admin: contexto de empresa, KPIs por seção, Admins × Operadores, login por role, engrenagem na navbar | Concluído |
+| [PLAN-022-admin-kpis-ajuste.md](PLAN-022-admin-kpis-ajuste.md) | Ajuste de KPIs (contratos ativos por estado, tooltip do Resultado do Dia, escopo de nível) + idioma na engrenagem | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Rascunho — Prévia de Pagamento | Em análise |

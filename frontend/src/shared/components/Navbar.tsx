@@ -17,17 +17,12 @@ export function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [langOpen, setLangOpen] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
-  const langRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
         setSettingsOpen(false)
-      }
-      if (langRef.current && !langRef.current.contains(e.target as Node)) {
-        setLangOpen(false)
       }
     }
     document.addEventListener("mousedown", handleClick)
@@ -71,32 +66,6 @@ export function Navbar() {
           ))}
         </div>
         <div className="flex-1" />
-        <div ref={langRef} className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => setLangOpen(!langOpen)}
-            className="flex items-center gap-1 px-3 py-3 text-xs font-medium text-text-muted hover:text-text-primary"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            {i18n.language?.startsWith("en") ? "EN" : i18n.language?.startsWith("es") ? "ES" : "PT"}
-          </button>
-          {langOpen && (
-            <div className="absolute right-0 top-full z-50 mt-1 rounded-md border border-border-light bg-surface shadow-lg">
-              {locales.map((loc) => (
-                <button
-                  key={loc.code}
-                  type="button"
-                  onClick={() => { i18n.changeLanguage(loc.code); setLangOpen(false) }}
-                  className={`block w-full px-4 py-2 text-left text-sm hover:bg-surface-hover ${
-                    i18n.language === loc.code ? "bg-primary-light font-medium text-primary" : "text-text-primary"
-                  }`}
-                >
-                  {loc.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
         <div ref={settingsRef} className="relative shrink-0">
           <button
             type="button"
@@ -137,6 +106,25 @@ export function Navbar() {
                 {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-text-muted" /> : <Moon className="h-3.5 w-3.5 text-text-muted" />}
                 {theme === "dark" ? t("nav.temaClaro") : t("nav.temaEscuro")}
               </button>
+              <div className="my-1 border-t border-border-light" />
+              <div className="px-4 py-1 text-xs font-medium uppercase tracking-wider text-text-muted">
+                {t("nav.idioma")}
+              </div>
+              <div className="flex items-center gap-1 px-4 py-2">
+                <Globe className="h-3.5 w-3.5 text-text-muted" />
+                {locales.map((loc) => (
+                  <button
+                    key={loc.code}
+                    type="button"
+                    onClick={() => { i18n.changeLanguage(loc.code); setSettingsOpen(false) }}
+                    className={`flex-1 rounded-md px-2 py-1 text-sm hover:bg-surface-hover ${
+                      i18n.language === loc.code ? "bg-primary-light font-medium text-primary" : "text-text-primary"
+                    }`}
+                  >
+                    {loc.label}
+                  </button>
+                ))}
+              </div>
               <div className="my-1 border-t border-border-light" />
               <button
                 type="button"

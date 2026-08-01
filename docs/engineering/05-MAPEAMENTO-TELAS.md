@@ -46,12 +46,12 @@ App
 │   ├── NavLink: Clientes (/clientes)
 │   ├── NavLink: Contratos (/contratos)
 │   ├── NavLink: Caixa (/caixa)
-│   ├── Language Switcher (PT/EN/ES)
-│   └── Engrenagem (dropdown de configurações):
-│       ├── Administração (/admin) [condicional: role=admin|super_admin]
-│       ├── Empresas (/admin/empresas) [condicional: role=super_admin]
-│       ├── Tema claro/escuro
-│       └── Sair
+│   ├── Engrenagem (dropdown de configurações):
+│   │   ├── Administração (/admin) [condicional: role=admin|super_admin]
+│   │   ├── Empresas (/admin/empresas) [condicional: role=super_admin]
+│   │   ├── Tema claro/escuro
+│   │   ├── Idioma (PT/EN/ES) [PLAN-022: movido da barra pra cá]
+│   │   └── Sair
 │
 ├── [Shared Components]
 │   ├── Button (primary, secondary, danger, ghost)
@@ -82,10 +82,10 @@ App
     │   └── Botão Entrar + feedback de erro
     │
     ├── AdminPage
-    │   ├── Contexto: header <h1> com nome da empresa (ou "Administração") + badge Empresa
+    │   ├── Contexto: header <h1> por nível — admin self: nome do usuário + badge Administrador; super admin (/admin/empresas/:id): nome da empresa + badge Super Admin [PLAN-022]
     │   ├── Redirect: super_admin em /admin → /admin/empresas
     │   ├── Bloco "Equipe": KPIs Admins × Operadores (KpiCard × 2)
-    │   ├── Bloco "Operação": Clientes, Contratos, Resultado do dia (KpiCard × 3)
+    │   ├── Bloco "Operação": Clientes, Contratos, Resultado do dia (KpiCard × 3) — com legenda "de {nome}" (escopo) e tooltip no Resultado do Dia [PLAN-022]
     │   ├── Abas: Equipe (default) / Meus dados (admin)
     │   ├── SectionHeader ("Operadores" + botão Novo)
     │   ├── SearchBar (busca por nome/email)
@@ -785,6 +785,7 @@ Ao implementar uma nova tela, verificar:
 | 30/07/2026 | 1.7 | Dark mode em LoginPage e Admin Panel (tokens CSS); scroll-to-error em todos os formulários (shouldFocusError + setFocus); field-level errors em ContratoNovo/Edit e GastoForm |
 | 31/07/2026 | 1.8 | Adicionada tela 13 (SuperAdminPage); drill-down por empresa no AdminPage; Navbar com link Empresas para super_admin; AuthContext com empresaId/empresaNome |
 | 01/08/2026 | 1.9 | PLAN-021: login roteado por role; AdminPage com contexto de empresa e KPIs em blocos (Equipe/Operação, Admins × Operadores); navbar com engrenagem de configurações; operador volta a ajustar a própria base de caixa |
+| 01/08/2026 | 1.10 | PLAN-022: AdminPage com header por nível (usuário/empresa + badge de role), KPIs de Operação com legenda "de {nome}", Resultado do Dia em módulo com cor/tooltip; idioma movido da barra pra engrenagem |
 
 # Referências
 

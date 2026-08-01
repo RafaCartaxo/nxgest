@@ -1271,6 +1271,8 @@ Lista todas as empresas cadastradas.
 
 Busca uma empresa por id, com totais de usuários, clientes e contratos ativos (PLAN-021 — contexto de empresa no painel admin).
 
+> **Nota (PLAN-022 / BR-085):** `contratosAtivos` conta apenas contratos com `estado = 'Ativo'` (não apenas não-deletados). Contratos `Finalizado` (quitação total) ou `Cancelado` não entram na contagem.
+
 **Auth:** Super Admin (`role = 'super_admin'`)
 
 ## Response 200
@@ -1390,6 +1392,7 @@ KPIs consolidados da empresa do token (admin) ou agregado/por `?empresaId=` (sup
 
 - `totalAdmins`: usuários com `role = 'admin'` (PLAN-021 / BR-082)
 - `totalOperadores`: usuários com `role = 'operator'` (PLAN-021 / BR-082)
+- `contratosAtivos`: contratos com `estado = 'Ativo'` (não apenas não-deletados) — PLAN-022 / BR-085
 - `resultadoDoDia`: entradas − saídas do dia (movimentações financeiras)
 
 ## Possíveis Erros
@@ -1421,3 +1424,4 @@ KPIs consolidados da empresa do token (admin) ou agregado/por `?empresaId=` (sup
 | BR-082 | Dashboard admin com KPIs separados: `totalAdmins` (role `admin`) e `totalOperadores` (role `operator`), agrupados em `Equipe` e `Operação` |
 | BR-083 | Card de empresa (super admin) mostra `totalUsuarios` (admin + operator) |
 | BR-084 | Operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste` sem `usuarioId`); `usuarioId` é sempre ignorado para operator |
+| BR-085 | Contratos ativos (KPIs admin/empresa) contam apenas `estado = 'Ativo'`; `Finalizado`/`Cancelado` não entram |

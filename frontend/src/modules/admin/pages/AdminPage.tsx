@@ -15,6 +15,7 @@ import { listOperadores, getDashboard, createOperador, updateOperador, deleteOpe
 import { getEmpresa, type EmpresaComStats } from "../services/empresa.service.js"
 import { getCaixaStatus, type CaixaStatus } from "../../caixa/services/caixa.service.js"
 import { ApiError } from "../../../api/client.js"
+import { formatCurrency } from "../../../shared/utils/masks.js"
 
 type Tab = "equipe" | "meusDados"
 
@@ -80,7 +81,10 @@ export function AdminPage() {
     return <Navigate to="/admin/empresas" replace />
   }
 
-  const empresaNome = empresa?.nome ?? user?.empresaNome ?? null
+  const empresaNome = empresa?.nome ?? null
+  const tituloHeader = isAdminSelf ? (user?.nome ?? null) : empresaNome
+  const escopoNome = isAdminSelf ? (user?.nome ?? null) : empresaNome
+  const headerBadge = isAdminSelf ? t("admin.roleAdmin") : t("admin.roleSuperAdmin")
 
   const filtered = operadores.filter((op) =>
     op.nome.toLowerCase().includes(search.toLowerCase()) ||
@@ -140,9 +144,9 @@ export function AdminPage() {
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
       <div className="mb-2 flex items-center gap-2">
-        <h1 className="flex-1 text-3xl font-semibold">{empresaNome ?? t("admin.title")}</h1>
-        {empresaNome && (
-          <StatusBadge variant="info" size="sm" label={t("admin.empresaBadge")} />
+        <h1 className="flex-1 text-3xl font-semibold">{tituloHeader ?? t("admin.title")}</h1>
+        {tituloHeader && (
+          <StatusBadge variant="info" size="sm" label={headerBadge} />
         )}
       </div>
 
@@ -163,9 +167,16 @@ export function AdminPage() {
 
           <SectionHeader title={t("admin.secaoOperacao")} />
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <KpiCard title={t("admin.totalClientes")} value={stats.totalClientes.toString()} variant="green" />
-            <KpiCard title={t("admin.contratosAtivos")} value={stats.contratosAtivos.toString()} variant="yellow" />
-            <KpiCard title={t("admin.resultadoDia")} value={`R$ ${stats.resultadoDoDia.toFixed(2)}`} variant="gray" />
+            <KpiCard title={t("admin.totalClientes")} value={stats.totalClientes.toString()} variant="green" subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined} />
+            <KpiCard title={t("admin.contratosAtivos")} value={stats.contratosAtivos.toString()} variant="yellow" subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined} />
+            <KpiCard
+              title={t("admin.resultadoDia")}
+              value={`R$ ${formatCurrency(Math.abs(stats.resultadoDoDia))}`}
+              variant="gray"
+              valueClassName={stats.resultadoDoDia >= 0 ? "text-success-text" : "text-danger-text"}
+              tooltip={t("admin.resultadoDiaTooltip")}
+              subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined}
+            />
           </div>
 
           <SectionHeader

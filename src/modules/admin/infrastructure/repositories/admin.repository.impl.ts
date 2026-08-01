@@ -17,7 +17,7 @@ export class AdminRepository implements IAdminRepository {
     for (const row of rows) {
     const [clientesCount, contratosCount] = await Promise.all([
       db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
-      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
+      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
     ])
       result.push({
         id: row.id,
@@ -44,7 +44,7 @@ export class AdminRepository implements IAdminRepository {
     const row = rows[0]
     const [clientesCount, contratosCount] = await Promise.all([
       db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
-      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
+      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
     ])
     return {
       ...row,
@@ -61,7 +61,7 @@ export class AdminRepository implements IAdminRepository {
     const row = rows[0]
     const [clientesCount, contratosCount] = await Promise.all([
       db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
-      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt))),
+      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
     ])
     return {
       ...row,
@@ -137,8 +137,8 @@ export class AdminRepository implements IAdminRepository {
         ? db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, empresaId)))
         : db.select({ total: count() }).from(clientes).where(isNull(clientes.deletedAt)),
       empresaId
-        ? db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(usuarios.empresaId, empresaId)))
-        : db.select({ total: count() }).from(contratos).where(isNull(contratos.deletedAt)),
+        ? db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), eq(usuarios.empresaId, empresaId)))
+        : db.select({ total: count() }).from(contratos).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
       empresaId
         ? db.select({ total: sum(pagamentos.valor) }).from(pagamentos).innerJoin(usuarios, eq(pagamentos.userId, usuarios.id)).where(and(eq(pagamentos.data, hoje), eq(usuarios.empresaId, empresaId)))
         : db.select({ total: sum(pagamentos.valor) }).from(pagamentos).where(eq(pagamentos.data, hoje)),

@@ -435,6 +435,12 @@ O operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste`). O quer
 
 ---
 
+## BR-085
+
+Contratos "ativos" (KPIs do painel admin e do card de empresa) são contados apenas quando `estado = 'Ativo'`. Contratos `Finalizado` (quitação total) ou `Cancelado` não entram na contagem — o filtro considera o campo `estado`, não apenas `deletedAt IS NULL`.
+
+---
+
 # Histórico
 
 ## BR-029

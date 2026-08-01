@@ -6,6 +6,7 @@
     "caixa": "Caixa",
     "gastos": "Gastos",
     "configuracoes": "Configurações",
+    "idioma": "Idioma",
     "temaClaro": "Tema claro",
     "temaEscuro": "Tema escuro"
   },
@@ -336,6 +337,8 @@
     "totalClientes": "Total de Clientes",
     "contratosAtivos": "Contratos Ativos",
     "resultadoDia": "Resultado do Dia",
+    "resultadoDiaTooltip": "Entradas − saídas de hoje",
+    "de": "de {{nome}}",
     "removerConfirmacao": "Remover operador?",
     "removerConfirmacaoMessage": "Remover este operador? Seus dados permanecerão no sistema.",
     "removerSucesso": "Operador removido.",

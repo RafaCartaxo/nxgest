@@ -6,6 +6,7 @@
     "caixa": "Cash",
     "gastos": "Expenses",
     "configuracoes": "Settings",
+    "idioma": "Language",
     "temaClaro": "Light theme",
     "temaEscuro": "Dark theme"
   },
@@ -336,6 +337,8 @@
     "totalClientes": "Total Clients",
     "contratosAtivos": "Active Contracts",
     "resultadoDia": "Daily Result",
+    "resultadoDiaTooltip": "Income − expenses today",
+    "de": "of {{nome}}",
     "removerConfirmacao": "Remove operator?",
     "removerConfirmacaoMessage": "Remove this operator? Their data will remain in the system.",
     "removerSucesso": "Operator removed.",
