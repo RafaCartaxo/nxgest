@@ -49,16 +49,18 @@ export interface PaginatedResponse<T> {
   }
 }
 
-export async function getCaixaStatus(dataInicio?: string, dataFim?: string): Promise<CaixaStatus> {
+export async function getCaixaStatus(dataInicio?: string, dataFim?: string, usuarioId?: string): Promise<CaixaStatus> {
   const qs = new URLSearchParams()
   if (dataInicio) qs.set("dataInicio", dataInicio)
   if (dataFim) qs.set("dataFim", dataFim)
+  if (usuarioId) qs.set("usuarioId", usuarioId)
   const query = qs.toString()
   return apiRequest<CaixaStatus>("GET", `/caixa${query ? `?${query}` : ""}`)
 }
 
-export async function ajustarCaixaBase(valor: number): Promise<{ caixaBase: number }> {
-  return apiRequest<{ caixaBase: number }>("POST", "/caixa/ajuste", { valor })
+export async function ajustarCaixaBase(valor: number, usuarioId?: string): Promise<{ caixaBase: number }> {
+  const qs = usuarioId ? `?usuarioId=${usuarioId}` : ""
+  return apiRequest<{ caixaBase: number }>("POST", `/caixa/ajuste${qs}`, { valor })
 }
 
 export async function listarMovimentacoes(params?: {
@@ -67,13 +69,14 @@ export async function listarMovimentacoes(params?: {
   origem?: string
   page?: number
   limit?: number
-}): Promise<PaginatedResponse<MovimentacaoItem>> {
+}, usuarioId?: string): Promise<PaginatedResponse<MovimentacaoItem>> {
   const qs = new URLSearchParams()
   if (params?.dataInicio) qs.set("dataInicio", params.dataInicio)
   if (params?.dataFim) qs.set("dataFim", params.dataFim)
   if (params?.origem) qs.set("origem", params.origem)
   if (params?.page) qs.set("page", String(params.page))
   if (params?.limit) qs.set("limit", String(params.limit))
+  if (usuarioId) qs.set("usuarioId", usuarioId)
   const query = qs.toString()
   return apiRequest<PaginatedResponse<MovimentacaoItem>>("GET", `/caixa/movimentacoes${query ? `?${query}` : ""}`)
 }

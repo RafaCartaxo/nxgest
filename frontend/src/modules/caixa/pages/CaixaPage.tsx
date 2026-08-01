@@ -6,6 +6,7 @@ import { getCaixaStatus, ajustarCaixaBase, listarMovimentacoes, liquidarSemana, 
 import { listarPagamentosHoje, listarParcelasHoje, type PagamentoDoDiaItem, type ParcelaHojeCliente } from "../../operacoes/services/operacoes.service.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
 import { ApiError } from "../../../api/client.js"
+import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -26,6 +27,7 @@ export function CaixaPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const feedback = useFeedback()
+  const { user } = useAuth()
 
   const [status, setStatus] = useState<CaixaStatus | null>(null)
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoItem[]>([])
@@ -394,26 +396,28 @@ export function CaixaPage() {
             </div>
           )}
 
-          <div className="mt-8">
-            <SectionHeader title={t("caixa.ajustar")} />
-            <div className="mt-2 flex gap-2">
-              <input
-                type="text"
-                inputMode="decimal"
-                value={ajusteValor}
-                onChange={(e) => setAjusteValor(maskMonetario(e.target.value))}
-                placeholder="R$ 0,00"
-                className="block w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleAjustar}
-                className="flex-shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-              >
-                {t("caixa.ajustarSalvar")}
-              </button>
+          {user?.role !== "operator" && (
+            <div className="mt-8">
+              <SectionHeader title={t("caixa.ajustar")} />
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={ajusteValor}
+                  onChange={(e) => setAjusteValor(maskMonetario(e.target.value))}
+                  placeholder="R$ 0,00"
+                  className="block w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleAjustar}
+                  className="flex-shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
+                >
+                  {t("caixa.ajustarSalvar")}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
         </>
       ) : null}

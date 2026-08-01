@@ -1,21 +1,26 @@
 import type { Request, Response } from "express"
 import { CaixaRepository } from "../../infrastructure/repositories/caixa.repository.impl.js"
+import { AdminRepository } from "../../../admin/infrastructure/repositories/admin.repository.impl.js"
 import { AjustarCaixaBaseUseCase } from "../../application/use-cases/AjustarCaixaBase/AjustarCaixaBaseUseCase.js"
 import { ajustarCaixaBaseSchema } from "../../application/use-cases/AjustarCaixaBase/AjustarCaixaBaseInput.js"
 import { ListarMovimentacoesUseCase } from "../../application/use-cases/ListarMovimentacoes/ListarMovimentacoesUseCase.js"
 import { listarMovimentacoesSchema } from "../../application/use-cases/ListarMovimentacoes/ListarMovimentacoesInput.js"
 import { LiquidarSemanaUseCase } from "../../application/use-cases/LiquidarSemana/LiquidarSemanaUseCase.js"
 import { CaixaNotFoundError, SemanaJaLiquidadaError } from "../../domain/errors/caixa.error.js"
+import { OperadorNaoEncontradoError } from "../../../admin/domain/errors/admin.error.js"
+import { resolveUsuarioAlvo } from "../../../../shared/utils/scope.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
 export class CaixaController {
   private readonly repository: CaixaRepository
+  private readonly adminRepository: AdminRepository
   private readonly ajustarUseCase: AjustarCaixaBaseUseCase
   private readonly listarUseCase: ListarMovimentacoesUseCase
   private readonly liquidarUseCase: LiquidarSemanaUseCase
 
   constructor(repository: CaixaRepository) {
     this.repository = repository
+    this.adminRepository = new AdminRepository()
     this.ajustarUseCase = new AjustarCaixaBaseUseCase(repository)
     this.listarUseCase = new ListarMovimentacoesUseCase(repository)
     this.liquidarUseCase = new LiquidarSemanaUseCase(repository)
@@ -23,7 +28,7 @@ export class CaixaController {
 
   async getStatus(req: Request, res: Response) {
     try {
-      const userId = req.userId!
+      const userId = await resolveUsuarioAlvo(req, this.adminRepository)
       const repository = this.repository
       const caixa = await repository.getCaixaConfig(userId)
 
@@ -79,6 +84,10 @@ export class CaixaController {
         caixaUltimaLiquidacao: ultimaLiquidacao?.saldoFechamento ?? null,
       })
     } catch (error) {
+      if (error instanceof OperadorNaoEncontradoError) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: error.message })
+        return
+      }
       console.error("Erro ao buscar dados do Caixa:", error)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao buscar dados do Caixa." })
     }
@@ -86,7 +95,12 @@ export class CaixaController {
 
   async ajustar(req: Request, res: Response) {
     try {
-      const userId = req.userId!
+      if (req.userRole === "operator") {
+        res.status(403).json({ code: "FORBIDDEN", message: "Operador não pode ajustar o Caixa Base." })
+        return
+      }
+
+      const userId = await resolveUsuarioAlvo(req, this.adminRepository)
       const parsed = ajustarCaixaBaseSchema.safeParse(req.body)
       if (!parsed.success) {
         res.status(422).json({
@@ -100,6 +114,10 @@ export class CaixaController {
       const result = await this.ajustarUseCase.execute(userId, parsed.data)
       res.status(201).json(result)
     } catch (error) {
+      if (error instanceof OperadorNaoEncontradoError) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: error.message })
+        return
+      }
       if (error instanceof CaixaNotFoundError) {
         res.status(404).json({ code: error.code, message: error.message })
         return
@@ -110,7 +128,7 @@ export class CaixaController {
 
   async listMovimentacoes(req: Request, res: Response) {
     try {
-      const userId = req.userId!
+      const userId = await resolveUsuarioAlvo(req, this.adminRepository)
       const parsed = listarMovimentacoesSchema.safeParse(req.query)
       if (!parsed.success) {
         res.status(422).json({
@@ -124,6 +142,10 @@ export class CaixaController {
       const result = await this.listarUseCase.execute(userId, parsed.data)
       res.json(result)
     } catch (error) {
+      if (error instanceof OperadorNaoEncontradoError) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: error.message })
+        return
+      }
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao listar movimentações." })
     }
   }
