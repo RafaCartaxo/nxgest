@@ -139,12 +139,6 @@ export function RotaPage() {
     return () => document.removeEventListener("visibilitychange", handleVisibility)
   }, [fetch])
 
-  useEffect(() => {
-    if (items.length > 0 && indiceAtual >= items.length) {
-      setIndiceAtual(Math.max(0, items.length - 1))
-    }
-  }, [items, indiceAtual])
-
   const pendentes = useMemo(
     () => items.filter((i) => i.resultadoOperacional === ResultadoOperacional.PENDENTE),
     [items],
@@ -159,6 +153,12 @@ export function RotaPage() {
     },
     [pendentes, operadorLat, operadorLng, gpsAtivo],
   )
+
+  useEffect(() => {
+    if (sortedItems.length > 0 && indiceAtual >= sortedItems.length) {
+      setIndiceAtual(Math.max(0, sortedItems.length - 1))
+    }
+  }, [sortedItems, indiceAtual])
 
   useEffect(() => {
     if (!sortedItems.length || initializedRef.current) return
@@ -203,8 +203,8 @@ export function RotaPage() {
       const aindaExiste = items.some((i) => itemKey(i) === anterior)
       if (!aindaExiste) {
         feedback.show({ status: "success", message: t("operacoes.clienteQuitado") })
-        if (indiceAtual >= items.length) {
-          setIndiceAtual(Math.max(0, items.length - 1))
+        if (indiceAtual >= sortedItems.length) {
+          setIndiceAtual(Math.max(0, sortedItems.length - 1))
         }
       }
     }
@@ -464,7 +464,9 @@ export function RotaPage() {
         <div className="rounded-md border border-border-light p-8 text-center text-sm text-text-muted">
           {t("operacoes.nenhumaCobranca")}
         </div>
-      ) : item ? (
+      ) : !item ? (
+        <div className="h-64 animate-pulse rounded-md bg-secondary-light" />
+      ) : (
         <>
           <Carousel
             mode="slide"
@@ -579,7 +581,7 @@ export function RotaPage() {
               </div>
             )}
         </>
-      ) : null}
+      )}
 
       {pagamentoOpen && item && (
         <PagamentoModal

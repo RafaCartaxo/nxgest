@@ -27,13 +27,21 @@ function isOverdue(p: Parcela): boolean {
   return p.estado === "Pendente" && parseDateLocal(p.dataVencimento) < hoje
 }
 
+function isVenceHoje(p: Parcela): boolean {
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  return p.estado === "Pendente" && parseDateLocal(p.dataVencimento).getTime() === hoje.getTime()
+}
+
 function getCardEstilo(p: Parcela): string {
   if (isOverdue(p)) return "bg-danger-light border-danger"
+  if (isVenceHoje(p)) return "bg-info-light border-info"
   return cardEstiloPorEstado[p.estado] || "bg-surface border-border-light"
 }
 
 function getDotEstilo(p: Parcela): string {
   if (isOverdue(p)) return "bg-danger"
+  if (isVenceHoje(p)) return "bg-info"
   return dotEstiloPorEstado[p.estado] || "bg-secondary"
 }
 
@@ -43,14 +51,15 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
     return <p className="text-text-secondary">{t("parcela.nenhumaEncontrada")}</p>
   }
 
-  const pendentes = parcelas.filter((p) => p.estado === "Pendente").length
+  const venceHoje = parcelas.filter((p) => isVenceHoje(p)).length
+  const pendentes = parcelas.filter((p) => p.estado === "Pendente" && !isVenceHoje(p)).length
   const parciais = parcelas.filter((p) => p.estado === "Parcial").length
   const pagas = parcelas.filter((p) => p.estado === "Paga").length
   const vencidas = parcelas.filter((p) => isOverdue(p)).length
 
   return (
     <>
-      {(pagas > 0 || parciais > 0 || pendentes > 0) && (
+      {(pagas > 0 || parciais > 0 || pendentes > 0 || venceHoje > 0) && (
         <div className="mb-2 flex flex-wrap gap-4 text-xs text-text-secondary">
           {pagas > 0 && (
             <span className="flex items-center gap-1">
@@ -68,6 +77,12 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
             <span className="flex items-center gap-1">
               <span className="inline-block h-2 w-2 rounded-full bg-warning" />
               {t("parcela.pendentes")}: {pendentes}
+            </span>
+          )}
+          {venceHoje > 0 && (
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2 w-2 rounded-full bg-info" />
+              {t("parcela.venceHoje")}: {venceHoje}
             </span>
           )}
           {vencidas > 0 && (
@@ -113,6 +128,11 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
                 <span className="text-sm font-medium text-text-secondary">R$</span>{" "}
                 <span className="text-lg font-bold">{formatCurrency(p.valorPrevisto)}</span>
               </p>
+              {isVenceHoje(p) && (
+                <p className="mt-0.5 text-center text-[10px] font-medium text-info-text">
+                  {t("status.venceHoje")}
+                </p>
+              )}
               {isOverdue(p) && (
                 <p className="mt-0.5 text-center text-[10px] font-medium text-danger-text">
                   {t("parcela.vencida")}

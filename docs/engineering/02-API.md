@@ -567,6 +567,7 @@ Permitido apenas quando não há pagamentos registrados.
 |---------|----------|-----------|
 | GET | `/api/operacoes/cobrancas` | Listar cobranças do dia |
 | GET | `/api/operacoes/pagamentos-hoje` | Listar pagamentos do dia |
+| GET | `/api/operacoes/historico-atrasos` | Listar histórico diário de atrasos (snapshots) |
 | POST | `/api/operacoes/visitas` | Registrar visita operacional do dia |
 
 ---
@@ -642,6 +643,38 @@ Lista todos os pagamentos registrados na data atual.
     }
 ]
 ```
+
+---
+
+# GET /api/operacoes/historico-atrasos
+
+Lista o histórico diário de atrasos (snapshots) do operador logado.
+
+## Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Padrão | Descrição |
+|-----------|------|-------------|---------|-----------|
+| dias | number | Não | 30 | Quantos dias de histórico retornar (mais recentes primeiro) |
+
+## Response 200
+
+```json
+[
+    {
+        "data": "2026-07-30",
+        "clientesAtrasados": 8,
+        "contratosAtrasados": 11,
+        "valorAtrasado": 1240.50
+    }
+]
+```
+
+## Comportamento
+
+- Um snapshot é registrado automaticamente (upsert por `userId` + `data`) a cada chamada de `GET /api/operacoes/cobrancas` — **não há job agendado**
+- Apenas parcelas com `dataVencimento` anterior à data atual **e** saldo pendente > 0 contam
+- `clientesAtrasados` e `contratosAtrasados` são contagens distintas (`DISTINCT`)
+- Dias sem chamada de `cobrancas` não geram snapshot (ausência de linha)
 
 ---
 

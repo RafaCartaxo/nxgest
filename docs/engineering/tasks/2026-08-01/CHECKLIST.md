@@ -77,3 +77,45 @@ Permitir que o admin visualize o caixa (KPIs e movimentações) de cada operador
 ## Notas
 
 - Nada foi commitado/pushado nesta sessão (há 17 arquivos pré-existentes pendentes de commit — dotenv/JWT + B1–B5). Aguardando decisão do usuário.
+
+---
+
+# CHECKLIST — Ajustes pós-validação (PLAN-023)
+
+**Plano:** plans/PLAN-023-ajustes-pos-validacao.md
+
+## Fase 1 — Fix da rota (bug tela em branco)
+
+- [x] Clamp do `indiceAtual` via `sortedItems.length` (deps `[sortedItems, indiceAtual]`), useEffect movido após `useMemo`
+- [x] Clamp do useEffect de `currentKey` idem; `aindaExiste` mantém `items.some(...)`
+- [x] Fallback de render `!item → animate-pulse` no lugar de `null`
+
+## Fase 2 — ParcelaList "Vence Hoje"
+
+- [x] `isVenceHoje` (getTime), precedência overdue > vence hoje > estado, contadores sem duplicidade, rótulo `status.venceHoje` + i18n 3 línguas
+
+## Fase 3 — AtendidosPage "Todos" com pagos
+
+- [x] Dedup por `clienteId` contra `pagamentosHoje`; `renderPagamentos()`; sem `CobrancaList` vazio quando só há pagos
+
+## Fase 4 — CobrancaListPage resumo atrasados
+
+- [x] `atrasadosResumo` (clientes distintos + soma) no filtro `atrasado`; banner danger + i18n
+
+## Fase 5 — Snapshot + histórico
+
+- [x] Tabela `snapshots_atraso` (UNIQUE userId+data) + índice; port; repo (COUNT DISTINCT + SUM, upsert ON CONFLICT)
+- [x] Snapshot lazy no `ListarCobrancasDoDia` protegido por try/catch
+- [x] `ListarHistoricoAtrasosUseCase` + handler + `GET /historico-atrasos?dias=`
+- [x] Service + tabela no frontend + i18n
+
+## Fase 6 — Documentação
+
+- [x] PLAN-023, README plans, 02-API (endpoint), 05-MAPEAMENTO (2b/2c), 02-BUSINESS-RULES (BR-086)
+
+## Resultados de verificação
+
+- `npx tsc --noEmit` → OK (backend e frontend)
+- `npm run build` → OK
+- Teste do snapshot em DB temporário: 2/2/150 + upsert idempotente
+- Deploy no VPS → pendente nesta sessão

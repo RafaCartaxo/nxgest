@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { ChevronLeft } from "lucide-react"
-import { listarCobrancasDoDia, listarPagamentosHoje, ResultadoOperacional, type CobrancaDoDiaResult, type CobrancaItem, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
+import { listarCobrancasDoDia, listarPagamentosHoje, listarHistoricoAtrasos, ResultadoOperacional, type CobrancaDoDiaResult, type CobrancaItem, type PagamentoDoDiaItem, type SnapshotAtraso } from "../services/operacoes.service.js"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
 import { sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
+import { formatCurrency } from "../../../shared/utils/masks.js"
+import { formatarData } from "../../../shared/utils/formatarData.js"
 import { CobrancaList } from "../components/CobrancaList.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { SuccessState } from "../../../shared/components/SuccessState/SuccessState.js"
@@ -38,6 +40,8 @@ export function CobrancaListPage() {
   const [error, setError] = useState<string | null>(null)
   const [pagamentosHoje, setPagamentosHoje] = useState<PagamentoDoDiaItem[]>([])
   const [subFiltro, setSubFiltro] = useState("all")
+  const [historico, setHistorico] = useState<SnapshotAtraso[]>([])
+  const [historicoLoading, setHistoricoLoading] = useState(false)
 
   const fetch = useCallback(async () => {
     const { lat: refLat, lng: refLng, gpsAtivo: refGps } = coordsRef.current
@@ -90,6 +94,15 @@ export function CobrancaListPage() {
     return () => off()
   }, [fetch, fetchPagamentos])
 
+  useEffect(() => {
+    if (filter !== "atrasado") return
+    setHistoricoLoading(true)
+    listarHistoricoAtrasos(30)
+      .then(setHistorico)
+      .catch(() => setHistorico([]))
+      .finally(() => setHistoricoLoading(false))
+  }, [filter])
+
   const pendentes = useMemo(
     () => data ? (filter === "atrasado"
       ? data.cobrancas.filter(
@@ -101,6 +114,13 @@ export function CobrancaListPage() {
     ) : [],
     [data, lat, lng, filter, subFiltro],
   )
+
+  const atrasadosResumo = useMemo(() => {
+    if (filter !== "atrasado") return null
+    const clientes = new Set(pendentes.map((i) => i.clienteId)).size
+    const total = pendentes.reduce((s, i) => s + i.totalPendente, 0)
+    return { clientes, total }
+  }, [filter, pendentes])
 
   const completos = useMemo(
     () => data?.cobrancas.filter((i) => i.resultadoOperacional !== ResultadoOperacional.PENDENTE) ?? [],
@@ -163,6 +183,17 @@ export function CobrancaListPage() {
         ))}
       </div>
 
+      {atrasadosResumo && atrasadosResumo.clientes > 0 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border border-danger bg-danger-light px-4 py-3">
+          <span className="text-sm font-medium text-danger-text">
+            {t("operacoes.atrasadosResumo", {
+              clientes: atrasadosResumo.clientes,
+              total: formatCurrency(atrasadosResumo.total),
+            })}
+          </span>
+        </div>
+      )}
+
       {error && (
         <ErrorBanner message={error} onRetry={fetch} className="mb-4" />
       )}
@@ -186,6 +217,48 @@ export function CobrancaListPage() {
           operadorLng={lng}
           onCardClick={handleCardClick}
         />
+      )}
+
+      {filter === "atrasado" && (
+        <div className="mt-6">
+          <h2 className="mb-2 text-xl font-semibold text-text-primary">{t("operacoes.historicoAtrasos")}</h2>
+          {historicoLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-12 animate-pulse rounded-md bg-secondary-light" />
+              ))}
+            </div>
+          ) : historico.length === 0 ? (
+            <p className="rounded-md border border-border-light p-8 text-center text-sm text-text-muted">
+              {t("operacoes.semHistoricoAtrasos")}
+            </p>
+          ) : (
+            <div className="overflow-hidden rounded-md border border-border-light">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border-light bg-surface-secondary text-left text-xs font-medium uppercase tracking-wide text-text-muted">
+                    <th className="px-4 py-2">{t("operacoes.historicoData")}</th>
+                    <th className="px-4 py-2 text-right">{t("operacoes.historicoClientes")}</th>
+                    <th className="px-4 py-2 text-right">{t("operacoes.historicoContratos")}</th>
+                    <th className="px-4 py-2 text-right">{t("operacoes.historicoValor")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historico.map((h) => (
+                    <tr key={h.data} className="border-b border-border-light last:border-b-0">
+                      <td className="px-4 py-2">{formatarData(h.data, t)}</td>
+                      <td className="px-4 py-2 text-right">{h.clientesAtrasados}</td>
+                      <td className="px-4 py-2 text-right">{h.contratosAtrasados}</td>
+                      <td className="px-4 py-2 text-right font-medium text-danger-text">
+                        R$ {formatCurrency(h.valorAtrasado)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
     </div>
   )

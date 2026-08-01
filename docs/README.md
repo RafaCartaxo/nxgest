@@ -15,6 +15,7 @@ Bem-vindo à documentação oficial do sistema de gestão de cobranças em campo
 | [Skills](skills/README.md) | Processos oficiais de desenvolvimento |
 | [Templates](templates/README.md) | Templates para documentação |
 | [Tasks](engineering/tasks/README.md) | Checklists de execução por data |
+| [Atualizações](UPDATES.md) | Registro resumido de melhorias e correções recentes |
 
 ## Como navegar
 

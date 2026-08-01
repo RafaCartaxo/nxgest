@@ -95,6 +95,39 @@ export function AtendidosPage() {
     return completos.filter((i) => i.resultadoOperacional === filtro)
   }, [completos, filtro])
 
+  const completosSemPagos = useMemo(
+    () => {
+      const pagosClientes = new Set(pagamentosHoje.map((p) => p.clienteId))
+      return completos.filter((i) => !pagosClientes.has(i.clienteId))
+    },
+    [completos, pagamentosHoje],
+  )
+
+  function renderPagamentos() {
+    if (pagamentosHoje.length === 0) return null
+    return (
+      <div className="space-y-2">
+        {pagamentosHoje.map((p) => {
+          const clientPayments = pagamentosHoje.filter((pp) => pp.clienteId === p.clienteId)
+          const totalCliente = clientPayments.reduce((s, pp) => s + pp.valor, 0)
+          const isFirst = clientPayments[0] === p
+          if (!isFirst) return null
+          return (
+            <div key={p.clienteId} className="rounded-md border bg-surface p-4">
+              <p className="font-semibold">{p.clienteNome}</p>
+              <p className="mt-1 text-lg font-bold text-success">
+                R$ {formatCurrency(totalCliente)}
+              </p>
+              {clientPayments.length > 1 && (
+                <p className="text-xs text-text-muted">{clientPayments.length} {t("operacoes.parcelas")}</p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-4">
       <div className="mb-6 flex items-center gap-2">
@@ -139,24 +172,22 @@ export function AtendidosPage() {
         pagamentosHoje.length === 0 ? (
           <p className="text-center text-text-muted">{t("operacoes.nenhumaCobranca")}</p>
         ) : (
-          <div className="space-y-2">
-            {pagamentosHoje.map((p) => {
-              const clientPayments = pagamentosHoje.filter((pp) => pp.clienteId === p.clienteId)
-              const totalCliente = clientPayments.reduce((s, pp) => s + pp.valor, 0)
-              const isFirst = clientPayments[0] === p
-              if (!isFirst) return null
-              return (
-                <div key={p.clienteId} className="rounded-md border bg-surface p-4">
-                  <p className="font-semibold">{p.clienteNome}</p>
-                  <p className="mt-1 text-lg font-bold text-success">
-                    R$ {formatCurrency(totalCliente)}
-                  </p>
-                  {clientPayments.length > 1 && (
-                    <p className="text-xs text-text-muted">{clientPayments.length} {t("operacoes.parcelas")}</p>
-                  )}
-                </div>
-              )
-            })}
+          renderPagamentos()
+        )
+      ) : filtro === "all" ? (
+        completosSemPagos.length === 0 && pagamentosHoje.length === 0 ? (
+          <p className="text-center text-text-muted">{t("operacoes.nenhumAtendimento")}</p>
+        ) : (
+          <div className="space-y-4">
+            {completosSemPagos.length > 0 && (
+              <CobrancaList
+                items={completosSemPagos}
+                operadorLat={lat}
+                operadorLng={lng}
+                emptyMessageKey="operacoes.nenhumAtendimento"
+              />
+            )}
+            {renderPagamentos()}
           </div>
         )
       ) : (

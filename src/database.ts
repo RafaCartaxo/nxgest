@@ -140,6 +140,16 @@ export const fechamentosSemanais = sqliteTable("fechamentos_semanais", {
   userId: text("userId"),
 })
 
+export const snapshotsAtraso = sqliteTable("snapshots_atraso", {
+  id: text("id").primaryKey(),
+  userId: text("userId").notNull(),
+  data: text("data").notNull(),
+  clientesAtrasados: integer("clientesAtrasados").notNull(),
+  contratosAtrasados: integer("contratosAtrasados").notNull(),
+  valorAtrasado: real("valorAtrasado").notNull(),
+  createdAt: text("createdAt").notNull(),
+})
+
 export const usuarios = sqliteTable("usuarios", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
@@ -307,6 +317,19 @@ export async function createTables() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_fechamentos_semanais_data ON fechamentos_semanais(dataInicio);
+
+    CREATE TABLE IF NOT EXISTS snapshots_atraso (
+      id TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      data TEXT NOT NULL,
+      clientesAtrasados INTEGER NOT NULL,
+      contratosAtrasados INTEGER NOT NULL,
+      valorAtrasado REAL NOT NULL,
+      createdAt TEXT NOT NULL,
+      UNIQUE (userId, data)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_snapshots_atraso_data ON snapshots_atraso(userId, data DESC);
 
     CREATE TABLE IF NOT EXISTS usuarios (
       id TEXT PRIMARY KEY,

@@ -441,6 +441,12 @@ Contratos "ativos" (KPIs do painel admin e do card de empresa) são contados ape
 
 ---
 
+## BR-086
+
+O histórico diário de atrasos (`GET /api/operacoes/historico-atrasos`) é alimentado por um snapshot registrado automaticamente a cada listagem de cobranças do dia (`GET /api/operacoes/cobrancas`) — um upsert por operador e data. Não há job agendado: se o operador não abriu as cobranças naquele dia, não há snapshot para o dia. Apenas parcelas vencidas (`dataVencimento` anterior à data atual) com saldo pendente > 0 entram na contagem, sempre com clientes e contratos contados de forma distinta (`DISTINCT`).
+
+---
+
 # Histórico
 
 ## BR-029

@@ -109,7 +109,14 @@
     "atendidosHoje": "Atendidos Hoy",
     "todosResultados": "Todos",
     "todosAtendidos": "✓ Todos los {{total}} clientes fueron atendidos hoy.",
-    "verResumo": "Ver resumen →"
+    "verResumo": "Ver resumen →",
+    "atrasadosResumo": "{clientes} cliente(s) en atraso · R$ {total}",
+    "historicoAtrasos": "Historial de atrasos",
+    "semHistoricoAtrasos": "Sin registros de atrasos en los últimos días.",
+    "historicoData": "Fecha",
+    "historicoClientes": "Clientes",
+    "historicoContratos": "Contratos",
+    "historicoValor": "Valor"
   },
   "cliente": {
     "title": "Clientes",
@@ -223,7 +230,8 @@
     "pendentes": "Pendientes",
     "vencidas": "Vencidas",
     "pago": "✓ Pagada",
-    "vencida": "Vencida"
+    "vencida": "Vencida",
+    "venceHoje": "Vence Hoy"
   },
   "pagamento": {
     "title": "Registrar Pago",

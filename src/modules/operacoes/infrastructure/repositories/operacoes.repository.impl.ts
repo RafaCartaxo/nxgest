@@ -8,6 +8,7 @@ import type {
   ParcelaHojeCliente,
   RegistrarVisitaInput,
   RegistrarVisitaOutput,
+  SnapshotAtraso,
 } from "../../application/ports/operacoes.repository.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
@@ -386,6 +387,63 @@ LEFT JOIN (
     }
 
     return Array.from(clientesMap.values())
+  }
+
+  async registrarSnapshotAtraso(userId: string, data?: string): Promise<void> {
+    const hoje = data ?? getLocalDateString(new Date())
+
+    const atrasadoRow = sqlite.prepare(`
+      SELECT
+        COUNT(DISTINCT ct.clienteId) AS clientesAtrasados,
+        COUNT(DISTINCT ct.id) AS contratosAtrasados,
+        COALESCE(SUM(p.saldoPendente), 0) AS valorAtrasado
+      FROM parcelas p
+      JOIN contratos ct ON ct.id = p.contratoId
+      WHERE p.dataVencimento < ?
+        AND p.saldoPendente > 0
+        AND p.deletedAt IS NULL
+        AND ct.deletedAt IS NULL
+        AND ct.userId = ?
+    `).get(hoje, userId) as { clientesAtrasados: number; contratosAtrasados: number; valorAtrasado: number }
+
+    sqlite.prepare(`
+      INSERT INTO snapshots_atraso (id, userId, data, clientesAtrasados, contratosAtrasados, valorAtrasado, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (userId, data) DO UPDATE SET
+        clientesAtrasados = excluded.clientesAtrasados,
+        contratosAtrasados = excluded.contratosAtrasados,
+        valorAtrasado = excluded.valorAtrasado,
+        createdAt = excluded.createdAt
+    `).run(
+      uuidv4(),
+      userId,
+      hoje,
+      atrasadoRow.clientesAtrasados,
+      atrasadoRow.contratosAtrasados,
+      atrasadoRow.valorAtrasado,
+      new Date().toISOString(),
+    )
+  }
+
+  async listarHistoricoAtrasos(userId: string, dias = 30): Promise<SnapshotAtraso[]> {
+    const dataLimite = new Date()
+    dataLimite.setDate(dataLimite.getDate() - (dias - 1))
+    const limiteStr = getLocalDateString(dataLimite)
+
+    const rows = sqlite.prepare(`
+      SELECT
+        data,
+        clientesAtrasados,
+        contratosAtrasados,
+        valorAtrasado
+      FROM snapshots_atraso
+      WHERE userId = ?
+        AND data >= ?
+      ORDER BY data DESC
+      LIMIT ?
+    `).all(userId, limiteStr, dias) as SnapshotAtraso[]
+
+    return rows
   }
 
   async registrarVisita(userId: string, input: RegistrarVisitaInput): Promise<RegistrarVisitaOutput> {

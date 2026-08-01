@@ -109,7 +109,14 @@
     "atendidosHoje": "Attended Today",
     "todosResultados": "All",
     "todosAtendidos": "✓ All {{total}} clients were attended today.",
-    "verResumo": "View summary →"
+    "verResumo": "View summary →",
+    "atrasadosResumo": "{clientes} overdue client(s) · R$ {total}",
+    "historicoAtrasos": "Overdue history",
+    "semHistoricoAtrasos": "No overdue records in recent days.",
+    "historicoData": "Date",
+    "historicoClientes": "Clients",
+    "historicoContratos": "Contracts",
+    "historicoValor": "Amount"
   },
   "cliente": {
     "title": "Clients",
@@ -223,7 +230,8 @@
     "pendentes": "Pending",
     "vencidas": "Overdue",
     "pago": "✓ Paid",
-    "vencida": "Overdue"
+    "vencida": "Overdue",
+    "venceHoje": "Due Today"
   },
   "pagamento": {
     "title": "Register Payment",

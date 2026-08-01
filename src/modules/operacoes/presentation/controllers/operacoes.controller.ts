@@ -4,6 +4,7 @@ import { ListarPagamentosDoDiaUseCase } from "../../application/use-cases/Listar
 import { ListarParcelasHojeUseCase } from "../../application/use-cases/ListarParcelasHoje/ListarParcelasHojeUseCase.js"
 import { ListarParcelasSemanaUseCase } from "../../application/use-cases/ListarParcelasSemana/ListarParcelasSemanaUseCase.js"
 import { RegistrarVisitaUseCase } from "../../application/use-cases/RegistrarVisita/RegistrarVisitaUseCase.js"
+import { ListarHistoricoAtrasosUseCase } from "../../application/use-cases/ListarHistoricoAtrasos/ListarHistoricoAtrasosUseCase.js"
 import type { RegistrarVisitaInput } from "../../application/ports/operacoes.repository.js"
 
 export class OperacoesController {
@@ -13,6 +14,7 @@ export class OperacoesController {
     private listarParcelasHoje: ListarParcelasHojeUseCase,
     private listarParcelasSemana: ListarParcelasSemanaUseCase,
     private registrarVisita: RegistrarVisitaUseCase,
+    private listarHistoricoAtrasos: ListarHistoricoAtrasosUseCase,
   ) {}
 
   async cobrancas(req: Request, res: Response) {
@@ -65,6 +67,18 @@ export class OperacoesController {
     } catch (error) {
       console.error("Erro ao listar parcelas da semana:", error)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno ao listar parcelas da semana." })
+    }
+  }
+
+  async historicoAtrasos(req: Request, res: Response) {
+    try {
+      const userId = req.userId!
+      const dias = req.query.dias ? Number(req.query.dias) : undefined
+      const result = await this.listarHistoricoAtrasos.execute(userId, dias)
+      res.status(200).json(result)
+    } catch (error) {
+      console.error("Erro ao listar histórico de atrasos:", error)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno ao listar histórico de atrasos." })
     }
   }
 

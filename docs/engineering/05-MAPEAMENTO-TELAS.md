@@ -262,6 +262,62 @@ App
 
 ---
 
+## 2b. Cobranças do Dia (Atendidos)
+
+**Arquivo:** `frontend/src/modules/operacoes/pages/AtendidosPage.tsx` · Rota `/atendidos` · Comporta o filtro da lista de cobranças
+
+```
+┌──────────────────────────────────┐
+│ ← Atendidos Hoje     [Todos][+]  │  ← Filtro: all | visitado | naoLocalizado | promessa | PAGOS
+├──────────────────────────────────┤
+│ (filtro all)                     │
+│ ● Cobrança NÃO paga (card)       │  ← CobrancaList (deduplicada: exclui clientes já pagos)
+│ ...                              │
+│ Pagos Hoje (bloco)               │  ← renderPagamentos()
+│ ┌──────────────────────────────┐ │
+│ │ ● Cliente · R$ valor         │ │  ← PagamentoDoDia card
+│ └──────────────────────────────┘ │
+└──────────────────────────────────┘
+```
+
+**Comportamento:**
+
+| Filtro | Resultado |
+|--------|-----------|
+| `all` | Atendimentos não pagos + bloco de pagamentos do dia abaixo. Clientes que já pagaram **não** aparecem duplicados (dedup por `clienteId` contra `pagamentosHoje`) |
+| `PAGOS` | Apenas os pagamentos do dia |
+| demais | Cobranças com aquele `resultadoOperacional` |
+
+---
+
+## 2c. Cobranças do Dia — Histórico de Atrasos
+
+**Arquivo:** `frontend/src/modules/operacoes/pages/CobrancaListPage.tsx` · Rota `/cobrancas` · Filtro `atrasado`
+
+```
+┌──────────────────────────────────┐
+│ ← Atrasados                      │
+├──────────────────────────────────┤
+│ ┌──────────────────────────────┐ │
+│ │ ⚠ N clientes em atraso ·    │ │  ← Resumo (banner danger)
+│ │   R$ TOTAL                   │ │
+│ └──────────────────────────────┘ │
+│ Nome Cliente · R$ · parcelas     │  ← CobrancaCard
+│ ...                              │
+│ Histórico de atrasos (30 dias)   │
+│ Data        Clientes  Contratos  │
+│ 2026-07-30      8        11      │  ← snapshot diário (última coluna: valor)
+└──────────────────────────────────┘
+```
+
+**Comportamento:**
+
+- Banner resumo aparece apenas no filtro `atrasado` — contagem distinta de clientes + soma do `totalPendente`
+- Tabela de histórico vem de `GET /api/operacoes/historico-atrasos?dias=30` (snapshot lazy registrado a cada `GET /cobrancas` — sem job agendado)
+- Linha só existe para dias em que o operador abriu as cobranças (ausência de linha = sem snapshot no dia)
+
+---
+
 ## 3. Lista de Clientes
 
 **Arquivo:** `frontend/src/modules/cliente/pages/ClienteList.tsx`

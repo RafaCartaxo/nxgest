@@ -70,10 +70,19 @@ export interface ParcelaHojeCliente {
   parcelas: ParcelaDoDia[]
 }
 
+export interface SnapshotAtraso {
+  data: string
+  clientesAtrasados: number
+  contratosAtrasados: number
+  valorAtrasado: number
+}
+
 export interface IOperacoesRepository {
   listarCobrancasDoDia(userId: string, operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult>
   listarPagamentosDoDia(userId: string, dataInicio?: string, dataFim?: string): Promise<PagamentoDoDiaItem[]>
   listarParcelasHoje(userId: string): Promise<ParcelaHojeCliente[]>
   listarParcelasSemana(userId: string): Promise<ParcelaHojeCliente[]>
   registrarVisita(userId: string, input: RegistrarVisitaInput): Promise<RegistrarVisitaOutput>
+  registrarSnapshotAtraso(userId: string, data?: string): Promise<void>
+  listarHistoricoAtrasos(userId: string, dias?: number): Promise<SnapshotAtraso[]>
 }
