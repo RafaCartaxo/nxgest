@@ -23,7 +23,7 @@ export interface IAdminRepository {
   findById(id: string, empresaId?: string | null): Promise<OperadorRow | null>
   findByEmail(email: string): Promise<OperadorRow | null>
   create(input: { nome: string; email: string; senhaHash: string; role: "super_admin" | "admin" | "operator"; empresaId: string | null }): Promise<OperadorRow>
-  update(id: string, data: { nome?: string; email?: string; role?: "super_admin" | "admin" | "operator"; senhaHash?: string }, currentUserId: string, empresaId?: string | null): Promise<OperadorRow | null>
+  update(id: string, data: { nome?: string; email?: string; role?: "admin" | "operator"; senhaHash?: string }, currentUserId: string, empresaId?: string | null): Promise<OperadorRow | null>
   softDelete(id: string, currentUserId: string, empresaId?: string | null): Promise<void>
   getDashboardStats(empresaId?: string | null): Promise<AdminDashboardStats>
 }

@@ -20,7 +20,7 @@ export function OperadorForm({ editing, onSubmit, onCancel }: Props) {
   const [nome, setNome] = useState(editing?.nome ?? "")
   const [email, setEmail] = useState(editing?.email ?? "")
   const [senha, setSenha] = useState("")
-  const [role, setRole] = useState<"admin" | "operator">(editing?.role ?? "operator")
+  const [role, setRole] = useState<"admin" | "operator">(editing && editing.role !== "super_admin" ? editing.role : "operator")
   const [errors, setErrors] = useState<FieldErrors>({})
   const [loading, setLoading] = useState(false)
   const nomeRef = useRef<HTMLInputElement>(null)

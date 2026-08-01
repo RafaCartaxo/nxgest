@@ -1,13 +1,13 @@
-import { eq, and, count, isNull, sum } from "drizzle-orm"
+import { eq, and, count, isNull, ne, sum } from "drizzle-orm"
 import { db, usuarios, clientes, contratos, pagamentos, movimentacoesFinanceiras } from "../../../../database.js"
 import type { IAdminRepository, OperadorRow, AdminDashboardStats } from "../../application/ports/admin.repository.js"
 import { v4 as uuid } from "uuid"
-import { NaoPodeAutoModificarError, OperadorNaoEncontradoError } from "../../domain/errors/admin.error.js"
+import { NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, OperadorNaoEncontradoError } from "../../domain/errors/admin.error.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
 export class AdminRepository implements IAdminRepository {
   async findAllOperadores(empresaId?: string | null): Promise<OperadorRow[]> {
-    const conditions = [isNull(usuarios.deletedAt)]
+    const conditions = [isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin")]
     if (empresaId) {
       conditions.push(eq(usuarios.empresaId, empresaId))
     }
@@ -56,7 +56,7 @@ export class AdminRepository implements IAdminRepository {
   }
 
   async findByEmail(email: string): Promise<OperadorRow | null> {
-    const rows = await db.select().from(usuarios).where(and(eq(usuarios.email, email), isNull(usuarios.deletedAt)))
+    const rows = await db.select().from(usuarios).where(eq(usuarios.email, email))
     if (rows.length === 0) return null
     const row = rows[0]
     const [clientesCount, contratosCount] = await Promise.all([
@@ -93,6 +93,9 @@ export class AdminRepository implements IAdminRepository {
 
     const existing = await this.findById(id, empresaId)
     if (!existing) throw new OperadorNaoEncontradoError()
+    if (existing.role === "super_admin") {
+      throw new NaoPodeAlterarSuperAdminError()
+    }
 
     const updateData: Record<string, unknown> = {}
     if (data.nome !== undefined) updateData.nome = data.nome
@@ -112,6 +115,9 @@ export class AdminRepository implements IAdminRepository {
 
     const existing = await this.findById(id, empresaId)
     if (!existing) throw new OperadorNaoEncontradoError()
+    if (existing.role === "super_admin") {
+      throw new NaoPodeAlterarSuperAdminError()
+    }
 
     await db.update(usuarios).set({ deletedAt: new Date().toISOString() }).where(eq(usuarios.id, id))
   }
@@ -121,8 +127,8 @@ export class AdminRepository implements IAdminRepository {
 
     const [totalOps, totalClientesResult, contratosResult, recebidoResult, entradasResult, saidasResult] = await Promise.all([
       empresaId
-        ? db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.empresaId, empresaId)))
-        : db.select({ total: count() }).from(usuarios).where(isNull(usuarios.deletedAt)),
+        ? db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.empresaId, empresaId), ne(usuarios.role, "super_admin")))
+        : db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin"))),
       empresaId
         ? db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, empresaId)))
         : db.select({ total: count() }).from(clientes).where(isNull(clientes.deletedAt)),

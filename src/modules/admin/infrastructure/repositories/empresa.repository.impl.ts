@@ -54,17 +54,17 @@ export class EmpresaRepository implements IEmpresaRepository {
       throw new EmailDuplicadoError()
     }
 
-    return db.transaction(async (tx) => {
+    return db.transaction((tx) => {
       const empresaId = uuid()
       const adminId = uuid()
 
-      await tx.insert(empresas).values({
+      tx.insert(empresas).values({
         id: empresaId,
         nome: input.nome,
         createdAt: new Date().toISOString(),
-      })
+      }).run()
 
-      await tx.insert(usuarios).values({
+      tx.insert(usuarios).values({
         id: adminId,
         nome: input.adminNome,
         email: input.adminEmail,
@@ -72,7 +72,7 @@ export class EmpresaRepository implements IEmpresaRepository {
         role: "admin",
         empresaId: empresaId,
         createdAt: new Date().toISOString(),
-      })
+      }).run()
 
       return {
         empresa: { id: empresaId, nome: input.nome, createdAt: new Date().toISOString(), totalOperadores: 1, totalClientes: 0, contratosAtivos: 0 },

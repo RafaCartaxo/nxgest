@@ -1,5 +1,6 @@
 import type { IAdminRepository } from "../../ports/admin.repository.js"
 import { EmailDuplicadoError } from "../../../../auth/domain/errors/auth.error.js"
+import { NaoPodeAtribuirSuperAdminError } from "../../../domain/errors/admin.error.js"
 
 interface CriarOperadorInput {
   nome: string
@@ -14,7 +15,7 @@ export class CriarOperadorUseCase {
 
   async execute(input: CriarOperadorInput) {
     if (input.role === "super_admin") {
-      throw new Error("Apenas o seed inicial pode criar usuários com role super_admin.")
+      throw new NaoPodeAtribuirSuperAdminError()
     }
     const existente = await this.repo.findByEmail(input.email)
     if (existente) {
