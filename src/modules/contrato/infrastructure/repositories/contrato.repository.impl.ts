@@ -261,11 +261,11 @@ export class ContratoRepository implements IContratoRepository {
     const rows = await this.drizzle
       .select()
       .from(caixaConfig)
-      .where(and(eq(caixaConfig.id, "default"), eq(caixaConfig.userId, userId)))
+      .where(eq(caixaConfig.userId, userId))
       .limit(1)
     if (rows.length === 0) return null
     return {
-      id: rows[0].id,
+      userId: rows[0].userId,
       caixaBase: rows[0].caixaBase,
       updatedAt: rows[0].updatedAt,
     }
@@ -279,7 +279,7 @@ export class ContratoRepository implements IContratoRepository {
         caixaBase: sql`${caixaConfig.caixaBase} + ${valor}`,
         updatedAt: now,
       })
-      .where(and(eq(caixaConfig.id, "default"), eq(caixaConfig.userId, userId)))
+      .where(eq(caixaConfig.userId, userId))
   }
 
   async saveMovimentacaoFinanceira(userId: string, mov: MovimentacaoFinanceira): Promise<void> {

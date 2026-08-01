@@ -1,5 +1,5 @@
 export interface CaixaConfig {
-  id: string
+  userId: string
   caixaBase: number
   updatedAt: string
 }

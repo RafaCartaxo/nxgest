@@ -85,10 +85,9 @@ export const movimentacoesFinanceiras = sqliteTable("movimentacoesFinanceiras", 
 })
 
 export const caixaConfig = sqliteTable("caixa_config", {
-  id: text("id").primaryKey().default("default"),
+  userId: text("userId").primaryKey(),
   caixaBase: real("caixaBase").notNull().default(0),
   updatedAt: text("updatedAt").notNull(),
-  userId: text("userId"),
 })
 
 export const pagamentos = sqliteTable("pagamentos", {
@@ -234,13 +233,10 @@ export async function createTables() {
     );
 
     CREATE TABLE IF NOT EXISTS caixa_config (
-      id TEXT PRIMARY KEY DEFAULT 'default',
+      userId TEXT PRIMARY KEY,
       caixaBase REAL NOT NULL DEFAULT 0,
-      updatedAt TEXT NOT NULL,
-      userId TEXT
+      updatedAt TEXT NOT NULL
     );
-
-    INSERT OR IGNORE INTO caixa_config (id, caixaBase, updatedAt) VALUES ('default', 0, datetime('now'));
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_cpf ON clientes(cpf, userId) WHERE cpf IS NOT NULL AND deletedAt IS NULL;
     CREATE INDEX IF NOT EXISTS idx_movimentacoes_data ON movimentacoesFinanceiras(data);
@@ -384,6 +380,15 @@ export async function createTables() {
     WHERE length(data) > 10
   `)
 
+  // Migracao: remover movimentacoes fantasma do ajuste manual do Caixa Base
+  // O ajuste de Caixa Base nao deve gravar movimentacao (a base ja e contada via
+  // caixaBase). Sem esta limpeza, saldo/lucro ficam dobrados em dados ja criados.
+  // Nao toca no "Ajuste de valor base do contrato" (legitimo, outra descricao).
+  sqlite.exec(`
+    DELETE FROM movimentacoesFinanceiras
+    WHERE origem = 'Ajuste' AND descricao = 'Ajuste manual do Caixa Base'
+  `)
+
   // Migracao: adicionar coluna saldoFechamento em fechamentos_semanais existentes
   try {
     sqlite.exec("ALTER TABLE fechamentos_semanais ADD COLUMN saldoFechamento REAL NOT NULL DEFAULT 0")
@@ -431,6 +436,43 @@ export async function createTables() {
     sqlite.exec("DROP INDEX IF EXISTS idx_clientes_cpf")
     sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_cpf ON clientes(cpf, userId) WHERE cpf IS NOT NULL AND deletedAt IS NULL")
   } catch { /* indice ja atualizado */ }
+
+  // Migracao: caixa_config passa a ter 1 linha por usuario (PK = userId)
+  // Antes: PK id='default' (1 linha global) + userId — operador sem config => 404 no ajuste.
+  // Depois: 1 linha por userId, criada sob demanda via getOrCreateCaixaConfig.
+  // Rebuild (SQLite nao altera PK). Linha orfa (userId NULL) => vira do primeiro
+  // admin/super_admin ativo; sem admin => descartada (getOrCreate recria).
+  try {
+    sqlite.exec("DROP TABLE IF EXISTS caixa_config_new")
+    sqlite.exec("BEGIN IMMEDIATE")
+    sqlite.exec(`
+      CREATE TABLE caixa_config_new (
+        userId TEXT PRIMARY KEY,
+        caixaBase REAL NOT NULL DEFAULT 0,
+        updatedAt TEXT NOT NULL
+      )
+    `)
+    sqlite.exec(`
+      INSERT INTO caixa_config_new (userId, caixaBase, updatedAt)
+      SELECT
+        COALESCE(
+          cc.userId,
+          (SELECT u.id FROM usuarios u WHERE u.role IN ('admin','super_admin') AND u.deletedAt IS NULL LIMIT 1)
+        ),
+        cc.caixaBase,
+        cc.updatedAt
+      FROM caixa_config cc
+      WHERE COALESCE(
+        cc.userId,
+        (SELECT u.id FROM usuarios u WHERE u.role IN ('admin','super_admin') AND u.deletedAt IS NULL LIMIT 1)
+      ) IS NOT NULL
+    `)
+    sqlite.exec("DROP TABLE caixa_config")
+    sqlite.exec("ALTER TABLE caixa_config_new RENAME TO caixa_config")
+    sqlite.exec("COMMIT")
+  } catch {
+    try { sqlite.exec("ROLLBACK") } catch {}
+  }
 
   // Seed: admin default (se ainda nao existir)
   const adminExists = sqlite.prepare("SELECT id FROM usuarios WHERE email = ?").get("admin@cobranca.com")

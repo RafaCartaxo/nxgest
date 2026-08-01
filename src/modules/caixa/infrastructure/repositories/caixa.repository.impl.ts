@@ -9,14 +9,22 @@ export class CaixaRepository implements ICaixaRepository {
     const rows = await db
       .select()
       .from(caixaConfig)
-      .where(and(eq(caixaConfig.id, "default"), eq(caixaConfig.userId, userId)))
+      .where(eq(caixaConfig.userId, userId))
       .limit(1)
     if (rows.length === 0) return null
     return {
-      id: rows[0].id,
+      userId: rows[0].userId,
       caixaBase: rows[0].caixaBase,
       updatedAt: rows[0].updatedAt,
     }
+  }
+
+  async getOrCreateCaixaConfig(userId: string): Promise<CaixaConfig> {
+    const existing = await this.getCaixaConfig(userId)
+    if (existing) return existing
+    const now = new Date().toISOString()
+    await db.insert(caixaConfig).values({ userId, caixaBase: 0, updatedAt: now })
+    return { userId, caixaBase: 0, updatedAt: now }
   }
 
   async updateCaixaBase(userId: string, valor: number): Promise<void> {
@@ -27,7 +35,7 @@ export class CaixaRepository implements ICaixaRepository {
         caixaBase: sql`${caixaConfig.caixaBase} + ${valor}`,
         updatedAt: now,
       })
-      .where(and(eq(caixaConfig.id, "default"), eq(caixaConfig.userId, userId)))
+      .where(eq(caixaConfig.userId, userId))
   }
 
   async saveMovimentacaoFinanceira(userId: string, m: MovimentacaoFinanceira): Promise<void> {

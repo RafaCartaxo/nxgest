@@ -20,6 +20,7 @@ export interface ListMovimentacoesResult {
 
 export interface ICaixaRepository {
   getCaixaConfig(userId: string): Promise<CaixaConfig | null>
+  getOrCreateCaixaConfig(userId: string): Promise<CaixaConfig>
   updateCaixaBase(userId: string, valor: number): Promise<void>
   saveMovimentacaoFinanceira(userId: string, m: MovimentacaoFinanceira): Promise<void>
   listMovimentacoes(userId: string, params: ListMovimentacoesParams): Promise<ListMovimentacoesResult>
