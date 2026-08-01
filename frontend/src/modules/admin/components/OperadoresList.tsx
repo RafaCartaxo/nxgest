@@ -76,7 +76,7 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Prop
                   label: t("admin.remover"),
                   onClick: () => onDelete(op.id),
                   show: !isSelf,
-                  variant: "gray",
+                  variant: "danger",
                 },
               ]}
             />

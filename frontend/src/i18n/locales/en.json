@@ -271,6 +271,8 @@
     "ajustarValor": "New value",
     "ajustarSalvar": "Save Adjustment",
     "ajustarSucesso": "Total Cash adjusted.",
+    "ajustarErro": "Error adjusting cash.",
+    "ajustarValorInvalido": "Enter a value greater than zero.",
     "movimentacoes": "Recent Transactions",
     "nenhumaMovimentacao": "No transactions in this period.",
     "liquidar": "Close Week",

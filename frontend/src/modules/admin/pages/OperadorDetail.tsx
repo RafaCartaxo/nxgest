@@ -49,7 +49,10 @@ export function OperadorDetail() {
   async function handleAjustar() {
     if (!id) return
     const valor = unmaskMonetario(ajusteValor)
-    if (valor <= 0) return
+    if (valor <= 0) {
+      feedback.show({ status: "error", message: t("caixa.ajustarValorInvalido") })
+      return
+    }
     await feedback.run({
       action: async () => {
         await ajustarCaixaBase(valor, id)
@@ -58,7 +61,7 @@ export function OperadorDetail() {
       },
       loading: t("common.saving"),
       success: t("caixa.ajustarSucesso"),
-      error: t("admin.erroCarregar"),
+      error: t("caixa.ajustarErro"),
     })
   }
 

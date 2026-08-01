@@ -134,7 +134,7 @@ interface CardActionsProps {
     icon?: LucideIcon
     label: string
     onClick: () => void
-    variant?: "blue" | "green" | "gray"
+    variant?: "blue" | "green" | "gray" | "warning" | "danger"
     show?: boolean
   }>
   layout?: "horizontal" | "vertical"

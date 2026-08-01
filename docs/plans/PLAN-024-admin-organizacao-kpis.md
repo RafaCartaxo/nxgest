@@ -162,6 +162,14 @@ Fase 1 (backend dashboard por usuário) → Fase 2 (OperadoresList) → Fase 3 (
 - Ajuste de caixa por `?usuarioId=` já validado no PLAN-020 (admin ajusta caixa do operador → 201; `usuarioId` de outra empresa → 404).
 - Deploy no VPS → não executado nesta sessão (a pedido do usuário).
 
+## Correções do code review (01/08/2026)
+
+Ajustes aplicados após a revisão do commit `aceb8a5`:
+
+- **Mensagem de erro do ajuste:** `OperadorDetail` usava `admin.erroCarregar` ("Erro ao carregar dados de administração") para falha no ajuste de caixa. Corrigido para `caixa.ajustarErro` ("Erro ao ajustar caixa.") — nova chave nos 3 idiomas.
+- **Feedback de valor inválido:** `handleAjustar` descartava `valor <= 0` silenciosamente. Agora dispara `feedback.show` com `caixa.ajustarValorInvalido` ("Informe um valor maior que zero.") — nova chave nos 3 idiomas.
+- **Destaque do remover:** o botão Remover do `OperadoresList` usava `variant: "gray"` (perdeu o vermelho de perigo). Adicionada a variante `danger` ao `QuickActions` e ao `Card.Actions` (`text-danger-text`/`hover:bg-danger-light`) e aplicada ao remover.
+
 ---
 
 ## Referências

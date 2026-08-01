@@ -731,6 +731,7 @@ Modal OperadorForm (criação/edição):
 | Status | ✅ `StatusBadge`: admin=info, operator=neutral, Eu=success | |
 | Formulário | ✅ `react-hook-form` + `zod` + `useFeedback().run()` | |
 | Modal | ✅ `ConfirmModal` para remoção de operador; `EquipeModal`/`ResultadoDiaModal` no padrão `PagamentosHojeModal` | |
+| QuickActions | ✅ Variantes `blue`/`green`/`gray`/`warning`/`danger` (vermelho no remover) | PLAN-024 |
 | Estados | ✅ `EstadoTela` (loading/empty/error) na lista | |
 | Restrições | ✅ Admin não remove a si mesmo; não rebaixa o próprio role | BR-069, BR-070 |
 | i18n | ✅ `admin.*` (pt-BR, en, es) | |

@@ -4,7 +4,7 @@ interface QuickAction {
   icon?: LucideIcon
   label: string
   onClick: () => void
-  variant?: "blue" | "green" | "gray" | "warning"
+  variant?: "blue" | "green" | "gray" | "warning" | "danger"
   show?: boolean
 }
 
@@ -20,6 +20,7 @@ const variantStyles = {
   green: { color: "text-success-text", hover: "hover:bg-success-light", bg: "bg-success-light" },
   gray:  { color: "text-text-primary",  hover: "hover:bg-surface-hover", bg: "bg-surface-secondary" },
   warning: { color: "text-warning-text", hover: "hover:bg-warning-light", bg: "bg-warning-light" },
+  danger: { color: "text-danger-text", hover: "hover:bg-danger-light", bg: "bg-danger-light" },
 }
 
 export function QuickActions({ actions, layout = "horizontal", disabled, size = "sm" }: QuickActionsProps) {
