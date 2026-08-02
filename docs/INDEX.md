@@ -16,6 +16,7 @@
 - [03-PRD.md](product/03-PRD.md) — Product Requirements Document
 - [04-ROADMAP.md](product/04-ROADMAP.md) — Roadmap do produto (v2.6, Fases 0-5)
 - [05-CONVENTIONS.md](product/05-CONVENTIONS.md) — Convenções de código e nomenclatura
+- [06-CASOS-DE-USO.md](product/06-CASOS-DE-USO.md) — Casos de uso reais de validação (o que deve acontecer e onde o dado reflete)
 
 ## Engineering
 

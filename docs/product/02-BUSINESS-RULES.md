@@ -688,6 +688,7 @@ O campo `motivo` é **obrigatório** em todo ajuste (validação do schema, `min
 - DOMAIN.md
 - ARCHITECTURE.md
 - CONVENTIONS.md
+- CASOS-DE-USO.md (validação por fluxo — o que deve acontecer e onde reflete)
 - ADR-001
 - PLAN-009-conceito-atendimento.md
 - PLAN-015-autenticacao.md
