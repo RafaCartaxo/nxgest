@@ -227,3 +227,29 @@ Banco em WAL mode (dados vivos no `.db-wal` ~1MB); script copiava só `gestao.db
 
 - [ ] UC-018/019/020/021/022: estados de fim de fluxo na UI (SuccessState, rota concluída, empties)
 - [ ] UC-031: conferência visual do voltar no navegador
+
+---
+
+# Coerência do fim de fluxo + casos ambíguos (UC-034 a UC-038)
+
+**Data:** 02/08/2026
+
+## Unificação do "total de clientes atendidos" (UC-018/034/035/036)
+
+- [x] Helper `frontend/src/modules/operacoes/utils/atendimento.ts`: `totalClientesAtendidos` = clientes distintos (atendidos + pagos, sem duplicar)
+- [x] Aplicado em `RotaPage`, `OperacoesDashboard`, `CobrancaListPage` (as 3 usavam fórmulas divergentes que misturavam itens de contrato com clientes)
+- [x] Cliente atendido E pago conta 1x (UC-034)
+
+## UC-038 — Alinhamento do KPI "a vencer"
+
+- [x] Backend `aVencer` passou de `BETWEEN hoje AND hoje+7` para `> hoje AND <= hoje+7` (exclui hoje, igual ao modal)
+- [x] Validado: KPI 7766.90 == modal 7766.90
+
+## Pontos visuais (UX/DS)
+
+- [x] Empty do `RotaPage` ("nenhuma cobrança") alinhado ao padrão `EstadoTela` (centralizado, `text-text-secondary`)
+- [x] Empty do `AtendidosPage` alinhado ao padrão do CobrancaList
+
+## Novos casos de uso no 06-CASOS-DE-USO.md
+
+- [x] UC-034 (atendido e pago = 1), UC-035 (2 contratos), UC-036 (total consistente entre telas), UC-037 (visitar não sobrescreve), UC-038 (KPI a vencer coerente)

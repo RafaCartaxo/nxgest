@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { ChevronLeft } from "lucide-react"
 import { listarCobrancasDoDia, listarPagamentosHoje, listarHistoricoAtrasos, ResultadoOperacional, type CobrancaDoDiaResult, type CobrancaItem, type PagamentoDoDiaItem, type SnapshotAtraso } from "../services/operacoes.service.js"
+import { totalClientesAtendidos } from "../utils/atendimento.js"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
 import { sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
@@ -122,17 +123,7 @@ export function CobrancaListPage() {
     return { clientes, total }
   }, [filter, pendentes])
 
-  const completos = useMemo(
-    () => data?.cobrancas.filter((i) => i.resultadoOperacional !== ResultadoOperacional.PENDENTE) ?? [],
-    [data],
-  )
-
-  const pagosCount = useMemo(
-    () => new Set(pagamentosHoje.map((p) => p.clienteId)).size,
-    [pagamentosHoje],
-  )
-
-  const totalResolvidos = completos.length + pagosCount
+  const totalResolvidos = totalClientesAtendidos(data?.cobrancas ?? [], pagamentosHoje)
 
   function handleCardClick(item: CobrancaItem) {
     if (filter === "atrasado") {

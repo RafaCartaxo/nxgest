@@ -154,7 +154,7 @@ LEFT JOIN (
       SELECT COALESCE(SUM(p.saldoPendente), 0) AS total
       FROM parcelas p
       JOIN contratos ct ON ct.id = p.contratoId
-      WHERE p.dataVencimento BETWEEN ? AND DATE(?, '+7 days')
+      WHERE p.dataVencimento > ? AND p.dataVencimento <= DATE(?, '+7 days')
         AND p.saldoPendente > 0
         AND p.deletedAt IS NULL
         AND ct.deletedAt IS NULL

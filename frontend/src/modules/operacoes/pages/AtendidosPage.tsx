@@ -170,13 +170,13 @@ export function AtendidosPage() {
         </div>
       ) : filtro === "PAGOS" ? (
         pagamentosHoje.length === 0 ? (
-          <p className="text-center text-text-muted">{t("operacoes.nenhumaCobranca")}</p>
+          <p className="py-8 text-center text-text-secondary">{t("operacoes.nenhumaCobranca")}</p>
         ) : (
           renderPagamentos()
         )
       ) : filtro === "all" ? (
         completosSemPagos.length === 0 && pagamentosHoje.length === 0 ? (
-          <p className="text-center text-text-muted">{t("operacoes.nenhumAtendimento")}</p>
+          <p className="py-8 text-center text-text-secondary">{t("operacoes.nenhumAtendimento")}</p>
         ) : (
           <div className="space-y-4">
             {completosSemPagos.length > 0 && (

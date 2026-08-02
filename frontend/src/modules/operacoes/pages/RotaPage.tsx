@@ -18,6 +18,7 @@ import { RouteProgress } from "../components/RouteProgress.js"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { Carousel } from "../../../shared/components/Carousel/Carousel.js"
 import { SuccessState } from "../../../shared/components/SuccessState/SuccessState.js"
+import { totalClientesAtendidos } from "../utils/atendimento.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { PagamentoModal, type PagamentoSuccessData } from "../../pagamento/components/PagamentoModal.js"
 
@@ -195,6 +196,7 @@ export function RotaPage() {
   const routePromessas = items.filter((i) => i.resultadoOperacional === ResultadoOperacional.PROMESSA).length
   const routeNaoEncontrados = items.filter((i) => i.resultadoOperacional === ResultadoOperacional.NAO_ENCONTRADO).length
   const routePagos = new Set(pagamentosHoje.map((p) => p.clienteId)).size
+  const totalClientesAtendidosHoje = totalClientesAtendidos(items, pagamentosHoje)
 
   useEffect(() => {
     if (!currentKey) return
@@ -456,13 +458,13 @@ export function RotaPage() {
         <div className="h-64 animate-pulse rounded-md bg-secondary-light" />
       ) : sortedItems.length === 0 && (items.length > 0 || routePagos > 0) ? (
         <SuccessState
-          title={t("operacoes.todosAtendidos", { total: items.length + routePagos })}
+          title={t("operacoes.todosAtendidos", { total: totalClientesAtendidosHoje })}
           linkLabel={t("operacoes.verResumo")}
           onLinkClick={() => navigate("/atendidos")}
         />
       ) : sortedItems.length === 0 ? (
-        <div className="rounded-md border border-border-light p-8 text-center text-sm text-text-muted">
-          {t("operacoes.nenhumaCobranca")}
+        <div className="flex flex-col items-center gap-4 p-8 text-center">
+          <p className="text-sm text-text-secondary">{t("operacoes.nenhumaCobranca")}</p>
         </div>
       ) : !item ? (
         <div className="h-64 animate-pulse rounded-md bg-secondary-light" />

@@ -431,6 +431,88 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+### UC-034 — Cliente atendido E pago no mesmo dia
+
+**Ator:** operador
+
+**Ação:** atende um cliente (ex.: visitado) e depois ele paga no mesmo dia.
+
+**O que DEVE acontecer:** no total de "todos os clientes atendidos", esse cliente conta **UMA vez** (atendido + pago = 1 cliente resolvido), não duas.
+
+**Conferências:**
+- [ ] "Todos os N clientes foram atendidos" conta o cliente 1x (não 2x)?
+- [ ] A mesma regra vale em Rota, Dashboard e Lista de cobranças?
+
+**Regras:** BR-048 a BR-051
+
+---
+
+### UC-035 — Cliente com múltiplos contratos
+
+**Ator:** operador
+
+**Ação:** um cliente tem 2 contratos com cobranças pendentes; o operador vê a rota e o total de atendidos.
+
+**O que DEVE acontecer:** a **rota opera por contrato** (cada contrato é uma cobrança, com sua parcela) — cliente com 2 contratos aparece 2x na rota. Mas o total de "clientes atendidos" conta o cliente **uma vez**.
+
+**Conferências:**
+- [ ] Cliente com 2 contratos aparece 2x na rota (2 cobranças, cada uma com sua parcela)?
+- [ ] O total de "clientes atendidos" conta o cliente 1x (não 2x)?
+- [ ] Atender 1 dos contratos não marca o outro como atendido?
+
+**Regras:** BR-048 a BR-051
+
+---
+
+### UC-036 — Total de atendidos consistente entre telas
+
+**Ator:** operador
+
+**Ação:** finaliza a rota e compara o total mostrado em Rota / Dashboard / Lista de cobranças.
+
+**O que DEVE acontecer:** as 3 telas mostram o **mesmo total** (clientes distintos atendidos hoje), sem duplicar atendidos que pagaram.
+
+**Conferências:**
+- [ ] Rota, Dashboard e Lista de cobranças mostram o mesmo número ao finalizar?
+- [ ] O número corresponde a clientes distintos (não itens de contrato)?
+
+**Regras:** BR-048 a BR-051
+
+---
+
+### UC-037 — Visitar e depois pagar não sobrescreve o histórico
+
+**Ator:** operador
+
+**Ação:** marca o cliente como visitado e depois registra pagamento.
+
+**O que DEVE acontecer:** o resultado operacional "Visitado" permanece no histórico (o pagamento não altera o histórico de atendimento).
+
+**Conferências:**
+- [ ] Após pagar, o cliente continua marcado como "Visitado" em Atendidos?
+- [ ] O histórico operacional preserva o tipo `visitado`?
+
+**Regras:** BR-048, BR-049, BR-050
+
+---
+
+### UC-038 — KPI "A vencer" coerente com a lista/modal
+
+**Ator:** operador
+
+**Ação:** confere o KPI "a vencer" no dashboard e o modal que ele abre.
+
+**O que DEVE acontecer:** o KPI e o modal usam a **mesma janela** (parcelas que ainda não venceram, próximos 7 dias excluindo hoje). Parcelas que vencem hoje NÃO entram em "a vencer" (pertencem ao "a receber hoje"/"vence hoje").
+
+**Conferências:**
+- [ ] KPI "a vencer" e modal mostram o mesmo conjunto?
+- [ ] Parcela que vence hoje não aparece em "a vencer"?
+- [ ] Parcela futura (dentro de 7 dias) aparece?
+
+**Regras:** BR-018 a BR-027
+
+---
+
 # ADMIN
 
 ## Equipe e operador

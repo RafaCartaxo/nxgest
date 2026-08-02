@@ -17,6 +17,7 @@ import { PagamentosHojeModal } from "../components/PagamentosHojeModal.js"
 import { ParcelasHojeModal } from "../components/ParcelasHojeModal.js"
 import { GastosPeriodoModal } from "../../caixa/components/GastosPeriodoModal.js"
 import { SuccessState } from "../../../shared/components/SuccessState/SuccessState.js"
+import { totalClientesAtendidos } from "../utils/atendimento.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 
 export function OperacoesDashboard() {
@@ -130,17 +131,7 @@ export function OperacoesDashboard() {
     [sortedCobrancas],
   )
 
-  const pagosCount = useMemo(
-    () => new Set(pagamentosHoje.map((p) => p.clienteId)).size,
-    [pagamentosHoje],
-  )
-
-  const completosCount = useMemo(
-    () => sortedCobrancas.filter((i) => i.resultadoOperacional !== ResultadoOperacional.PENDENTE).length,
-    [sortedCobrancas],
-  )
-
-  const totalResolvidos = completosCount + pagosCount
+  const totalResolvidos = totalClientesAtendidos(sortedCobrancas, pagamentosHoje)
 
   const navigate = useNavigate()
 
