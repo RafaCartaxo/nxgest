@@ -67,6 +67,7 @@ export function ContratoDetail() {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const usuarioId = searchParams.get("usuarioId") || undefined
+  const empresaId = searchParams.get("empresaId") || undefined
   const isAdminContext = !!usuarioId
   const navigate = useNavigate()
   const [contrato, setContrato] = useState<Contrato | null>(null)
@@ -247,7 +248,11 @@ export function ContratoDetail() {
       {cliente && (
         <div className="mb-4 flex items-center gap-2">
           <Link
-            to={contrato ? `/clientes/${contrato.clienteId}` : "/contratos"}
+            to={isAdminContext
+              ? `/admin/operadores/${usuarioId}${empresaId ? `?empresaId=${empresaId}` : ""}`
+              : contrato
+                ? `/clientes/${contrato.clienteId}`
+                : "/contratos"}
             className="text-text-muted hover:text-text-primary"
           >
             <ChevronLeft className="h-5 w-5" />

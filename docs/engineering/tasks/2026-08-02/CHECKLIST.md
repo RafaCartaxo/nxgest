@@ -188,3 +188,42 @@ Banco em WAL mode (dados vivos no `.db-wal` ~1MB); script copiava só `gestao.db
 - [x] **P2**: fix do `Finalizado → Ativo` (saldo pós-reversão) + teste real (quitar + estorno → Ativo)
 - [x] **P3**: `dataQuitacao` limpo quando parcela não fica `Paga`
 - [x] **DS**: lista de contratos do OperadorDetail em `Card.Root list-item` (padrão OperadoresList)
+
+---
+
+# Validação de casos de uso (06-CASOS-DE-USO.md) + correções
+
+**Data:** 02/08/2026
+
+## Base de casos de uso criada
+
+- [x] `docs/product/06-CASOS-DE-USO.md`: 33 casos reais de validação (operador/admin/super admin + fim de fluxo), com reflexos de dados e conferências
+- [x] Linkado nas Referências do `02-BUSINESS-RULES.md` + `docs/INDEX.md`
+
+## Correções de seed encontradas na validação
+
+- [x] **Datas de vencimento**: contratos "vencidos" vencem no futuro (cálculo de `dataInicio` se anulava) → corrigido com `prevBusinessDay` (recua N dias úteis)
+- [x] **Caixa base**: base `rnd(800,3000)` não cobria os empréstimos → saldos negativos. Corrigido: base = total emprestado × 1.15 + margem (saldos positivos)
+
+## Fix do UC-031 (bug do "voltar" no contexto do operador)
+
+- [x] `ContratoDetail.tsx`: em modo admin (`?usuarioId=`), o voltar vai para `/admin/operadores/:usuarioId` (preserva `?empresaId=`) em vez de `/clientes/:id`
+- [x] `OperadorDetail.tsx`: link do contrato propaga `empresaId`
+- [x] Build OK
+
+## Validações via API real (operador gabriel + admin)
+
+- [x] UC-001 Dashboard: KPIs coerentes (clientesParaCobrar bate com PENDENTE; atrasado = vencidas)
+- [x] UC-003 Marcar visitado: 201 + cai `clientesParaCobrar` + PENDENTE na lista
+- [x] UC-006 Pagamento: parcela mais antiga quitada + KPI recebido hoje + movimentação entrada
+- [x] UC-009 Lista de cobranças: só vencidas/vence hoje (0 futuras)
+- [x] UC-010 Atendidos: completos + pagos sem duplicar
+- [x] UC-014 Operador ajustar base/estornar → 403
+- [x] UC-016 Criar contrato: validação caixa (422), parcelas pulam domingo, juros, movimentação saída
+- [x] UC-025 Ajustar base do operador: valor absoluto + auditoria
+- [x] UC-030 Estornar: reversão + movimentação + auditoria + selo
+
+## Pendências de validação (UI manual)
+
+- [ ] UC-018/019/020/021/022: estados de fim de fluxo na UI (SuccessState, rota concluída, empties)
+- [ ] UC-031: conferência visual do voltar no navegador

@@ -43,6 +43,13 @@ function nextBusinessDay(date) {
   return d
 }
 
+// Dia útil anterior (recua 1 dia, pulando domingo)
+function prevBusinessDay(date) {
+  const d = addDays(date, -1)
+  if (d.getDay() === 0) return addDays(d, -1)
+  return d
+}
+
 function calcularDataFinal(dataInicio, qtd) {
   let d = new Date(dataInicio)
   for (let i = 0; i < qtd; i++) d = nextBusinessDay(d)
@@ -222,11 +229,9 @@ for (const o of operadores) {
   stmtUser.run(id, o.nome, o.email, hash, "operator", nowISO, empresaIds[o.empresa])
 }
 
-// Caixa base por operador
-const stmtCaixa = sqlite.prepare("INSERT INTO caixa_config (userId, caixaBase, updatedAt) VALUES (?, ?, ?)")
-for (const id of Object.values(operadorIds)) {
-  stmtCaixa.run(id, rnd(800, 3000), nowISO)
-}
+// Total emprestado por operador (para definir caixa base ao final — cobertura + margem)
+const totalEmprestado = {}
+for (const o of operadores) totalEmprestado[operadorIds[o.email]] = 0
 
 // ---------- Clientes, contratos, pagamentos, movimentações ----------
 const stmtCliente = sqlite.prepare(`
@@ -302,15 +307,15 @@ for (const op of operadores) {
     const qtd = rnd(15, 25)
     const valorBase = rnd(40, 60) * 50 // R$ 2.000 a R$ 3.000
     const valorFinal = Math.round(valorBase * 1.2 * 100) / 100
+    totalEmprestado[opId] += valorBase
 
     // Fraciona os vencidos: alguns recém-criados, outros com atraso/pagamentos
     const fracaoVencida = Math.random()
     const vencidas = Math.max(1, Math.round(qtd * (fracaoVencida < 0.3 ? 0.35 : fracaoVencida)))
-    const diasUteisAntes = vencidas
+    // Recua "vencidas" dias úteis a partir de hoje para que as primeiras
+    // parcelas caiam no passado (atrasadas) e o restante no futuro.
     let dataInicio = new Date(TODAY)
-    for (let i = 0; i < diasUteisAntes; i++) dataInicio = nextBusinessDay(dataInicio)
-    dataInicio = addDays(dataInicio, -diasUteisAntes)
-    for (let i = 0; i < diasUteisAntes; i++) dataInicio = nextBusinessDay(dataInicio)
+    for (let i = 0; i < vencidas; i++) dataInicio = prevBusinessDay(dataInicio)
     const dataInicioStr = dateStr(dataInicio)
 
     const contratoId = randomUUID()
@@ -387,6 +392,16 @@ for (const op of operadores) {
     totalGastos++
     totalMov++
   }
+}
+
+// ---------- Caixa base por operador (cobertura dos empréstimos + margem) ----------
+const stmtCaixa = sqlite.prepare("INSERT INTO caixa_config (userId, caixaBase, updatedAt) VALUES (?, ?, ?)")
+for (const op of operadores) {
+  const opId = operadorIds[op.email]
+  const emprestado = totalEmprestado[opId] || 0
+  // Base cobre o total emprestado com ~15% de margem (caixa realista e positivo)
+  const caixaBase = Math.round((emprestado * 1.15 + rnd(0, 1000)) * 100) / 100
+  stmtCaixa.run(opId, caixaBase, nowISO)
 }
 
 // ---------- Resumo ----------

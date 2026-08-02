@@ -207,7 +207,7 @@ export function OperadorDetail() {
                         {
                           icon: ArrowRight,
                           label: t("admin.acessar"),
-                          onClick: () => navigate(`/contratos/${c.id}?usuarioId=${id}`),
+                          onClick: () => navigate(`/contratos/${c.id}?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`),
                         },
                       ]}
                     />

@@ -584,12 +584,12 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 **O que DEVE acontecer:** volta ao **contexto** de onde veio (o `OperadorDetail`), preservando o escopo do operador.
 
-**Status:** ⚠️ **BUG CONHECIDO** — hoje o "voltar" navega para `/clientes/:id` **sem** `?usuarioId=`, tentando abrir o cliente como o próprio admin → cliente não encontrado / erro de autenticação. Correção planejada: em modo admin, o voltar deve ir para `/admin/operadores/:operadorId` (com `?empresaId=` se presente).
+**Status:** ✅ **Corrigido** — o "voltar" em modo admin agora navega para `/admin/operadores/:usuarioId` (preservando `?empresaId=`), em vez de `/clientes/:id` sem contexto. O link do contrato no `OperadorDetail` também propaga o `empresaId`.
 
 **Conferências (após correção):**
-- [ ] Voltar leva ao `OperadorDetail` do operador (não ao detalhe do cliente)?
-- [ ] O contexto do operador é preservado?
-- [ ] Nenhum erro de cliente não encontrado aparece?
+- [x] Voltar leva ao `OperadorDetail` do operador (não ao detalhe do cliente)?
+- [x] O contexto do operador é preservado?
+- [x] Nenhum erro de cliente não encontrado aparece?
 
 **Regras:** — (navegação)
 
