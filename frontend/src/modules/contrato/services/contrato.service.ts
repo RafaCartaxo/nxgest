@@ -59,7 +59,8 @@ export async function createContrato(
 }
 
 export async function listContratos(
-  params?: ListContratosParams
+  params?: ListContratosParams,
+  usuarioId?: string
 ): Promise<PaginatedResponse<Contrato>> {
   const searchParams = new URLSearchParams()
   if (params?.clienteId) searchParams.set("clienteId", params.clienteId)
@@ -69,6 +70,7 @@ export async function listContratos(
   if (params?.limit) searchParams.set("limit", String(params.limit))
   if (params?.sort) searchParams.set("sort", params.sort)
   if (params?.order) searchParams.set("order", params.order)
+  if (usuarioId) searchParams.set("usuarioId", usuarioId)
   const query = searchParams.toString()
   return apiRequest<PaginatedResponse<Contrato>>(
     "GET",
@@ -76,8 +78,9 @@ export async function listContratos(
   )
 }
 
-export async function getContrato(id: string): Promise<Contrato> {
-  return apiRequest<Contrato>("GET", `/contratos/${id}`)
+export async function getContrato(id: string, usuarioId?: string): Promise<Contrato> {
+  const qs = usuarioId ? `?usuarioId=${usuarioId}` : ""
+  return apiRequest<Contrato>("GET", `/contratos/${id}${qs}`)
 }
 
 export async function updateContrato(

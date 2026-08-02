@@ -71,8 +71,9 @@ export async function listClientes(
   )
 }
 
-export async function getCliente(id: string): Promise<Cliente> {
-  return apiRequest<Cliente>("GET", `/clientes/${id}`)
+export async function getCliente(id: string, usuarioId?: string): Promise<Cliente> {
+  const qs = usuarioId ? `?usuarioId=${usuarioId}` : ""
+  return apiRequest<Cliente>("GET", `/clientes/${id}${qs}`)
 }
 
 export async function updateCliente(

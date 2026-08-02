@@ -13,6 +13,9 @@ import type { IClienteSaldoQuery } from "../../application/ports/cliente-saldo.q
 import { ClienteNotFoundError } from "../../domain/errors/cliente-not-found.error.js"
 import { ClienteHasActiveContractsError } from "../../domain/errors/cliente-has-active-contracts.error.js"
 import { CpfDuplicadoError } from "../../domain/errors/cpf-duplicado.error.js"
+import { AdminRepository } from "../../../admin/infrastructure/repositories/admin.repository.impl.js"
+import { OperadorNaoEncontradoError } from "../../../admin/domain/errors/admin.error.js"
+import { resolveUsuarioAlvo } from "../../../../shared/utils/scope.js"
 
 export class ClienteController {
   private createCliente: CreateClienteUseCase
@@ -20,6 +23,7 @@ export class ClienteController {
   private listClientes: ListClientesUseCase
   private updateCliente: UpdateClienteUseCase
   private deleteCliente: DeleteClienteUseCase
+  private adminRepository: AdminRepository
 
   constructor(
     repository: IClienteRepository,
@@ -31,6 +35,7 @@ export class ClienteController {
     this.listClientes = new ListClientesUseCase(repository)
     this.updateCliente = new UpdateClienteUseCase(repository)
     this.deleteCliente = new DeleteClienteUseCase(repository)
+    this.adminRepository = new AdminRepository()
   }
 
   async create(req: Request, res: Response) {
@@ -92,10 +97,15 @@ export class ClienteController {
 
   async getById(req: Request, res: Response) {
     try {
-      const cliente = await this.findCliente.execute(req.userId!, req.params.id)
+      const userId = await resolveUsuarioAlvo(req, this.adminRepository)
+      const cliente = await this.findCliente.execute(userId, req.params.id)
 
       res.status(200).json(cliente)
     } catch (error) {
+      if (error instanceof OperadorNaoEncontradoError) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: error.message })
+        return
+      }
       if (error instanceof ClienteNotFoundError) {
         res.status(404).json({
           code: error.code,

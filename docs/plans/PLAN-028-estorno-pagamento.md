@@ -1,6 +1,6 @@
 # PLAN-028 — Estorno de Pagamento pelo Admin
 
-**Status:** Planejado
+**Status:** Concluído
 
 **Versão:** 1.0
 
@@ -73,8 +73,9 @@ Esta entrega é a **primeira fatia vertical do P013** (Contexto do Operador) —
 
 ### Fase 2 — Backend: contexto do operador
 
-- `?usuarioId=` (com `resolveUsuarioAlvo`) nas rotas de leitura de **contrato**: `GET /contratos`, `GET /contratos/:id`, `GET /contratos/:id/pagamentos`
-- `OperadorDetail` expõe os contratos do operador (campo novo ou chamada com `?usuarioId=`)
+- `?usuarioId=` (com `resolveUsuarioAlvo`) nas rotas de leitura de **contrato** (`GET /contratos`, `GET /contratos/:id`), **pagamento** (`GET /pagamentos/contrato/:contratoId`) e **cliente** (`GET /clientes/:id`) — somente leitura; `update`/`remove` permanecem `req.userId`
+- `OperadorDetail` expõe os contratos do operador (chamada com `?usuarioId=`)
+- **Executado** em: `contrato.controller.ts`, `pagamento.controller.ts`, `cliente.controller.ts`
 
 ### Fase 3 — Frontend
 
@@ -98,11 +99,13 @@ Esta entrega é a **primeira fatia vertical do P013** (Contexto do Operador) —
 
 ---
 
-## Validação esperada
+## Validação realizada
 
-- [ ] `npm run build` OK
-- [ ] Curl: operator → 403; admin estorna pagamento da empresa → 201
-- [ ] Curl: pagamento já estornado → 422 (duplo estorno)
-- [ ] Parcelas revertidas (estado/saldo/dataQuitacao) e contrato volta a `Ativo` se finalizado
-- [ ] Saldo/lucro reduzidos; movimentação reversa registrada
-- [ ] Registro em `auditoria_estornos` com operador/admin/motivo
+- [x] `npm run build` OK
+- [x] Curl: operator → **403**; admin estorna pagamento da empresa → **201**
+- [x] Curl: pagamento já estornado → **409** (`PAGAMENTO_JA_ESTORNADO`)
+- [x] Parcelas revertidas (estado `Pendente`, saldo restaurado, `dataQuitacao` limpa)
+- [x] Movimentação reversa registrada (`saida`, origem `Cancelamento`, descrição com motivo)
+- [x] Registro em `auditoria_estornos` com operador/admin/motivo
+- [x] Escopo: admin lê contratos/pagamentos do operador via `?usuarioId=`; operador de outra empresa → 404 (`OPERATOR_NOT_FOUND`)
+- [ ] Contrato `Finalizado` → `Ativo` (implementado; seed local não tinha contrato finalizado na empresa do admin para teste real)

@@ -871,6 +871,7 @@ Ao implementar uma nova tela, verificar:
 | 01/08/2026 | 1.11 | PLAN-024: OperadoresList no padrão Card com admins no topo e tag "Eu"; KPIs clicáveis (EquipeModal, navegação, ResultadoDiaModal); OperadorDetail com ajuste de caixa base do operador; dashboard admin self escopado por usuário (BR-087) |
 | 02/08/2026 | 1.12 | PLAN-026: Modal base compartilhado (Escape/backdrop configurável) e modais refatorados; OperadoresList com subseções Administradores/Operadores; auditoria de caixa (P014) |
 | 02/08/2026 | 1.13 | PLAN-027: Histórico de ajustes do Caixa Base no OperadorDetail (admin) e no /caixa (operador) — endpoint GET /api/caixa/auditoria |
+| 02/08/2026 | 1.14 | PLAN-028: Estorno de pagamento no ContratoDetail (modo admin, somente leitura) + contratos do operador no OperadorDetail |
 
 # Referências
 

@@ -17,6 +17,9 @@ export interface PagamentoParcela {
 
 export interface PagamentoComDetalhes extends Pagamento {
   parcelas: PagamentoParcela[]
+  estornadoEm?: string | null
+  estornadoPor?: string | null
+  estornoMotivo?: string | null
 }
 
 export interface ItemPreview {
@@ -51,10 +54,25 @@ export async function previewPagamento(data: {
 }
 
 export async function listPagamentos(
-  contratoId: string
+  contratoId: string,
+  usuarioId?: string
 ): Promise<PagamentoComDetalhes[]> {
+  const qs = usuarioId ? `?usuarioId=${usuarioId}` : ""
   return apiRequest<PagamentoComDetalhes[]>(
     "GET",
-    `/pagamentos/contrato/${contratoId}`
+    `/pagamentos/contrato/${contratoId}${qs}`
+  )
+}
+
+export async function estornarPagamento(
+  pagamentoId: string,
+  motivo: string,
+  usuarioId?: string
+): Promise<{ id: string; data: string; createdAt: string }> {
+  const qs = usuarioId ? `?usuarioId=${usuarioId}` : ""
+  return apiRequest(
+    "POST",
+    `/pagamentos/${pagamentoId}/estornar${qs}`,
+    { motivo }
   )
 }

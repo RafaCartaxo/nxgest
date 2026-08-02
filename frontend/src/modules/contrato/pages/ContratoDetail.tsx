@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useParams, useNavigate, Link } from "react-router-dom"
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom"
 import { getContrato, deleteContrato } from "../services/contrato.service.js"
 import type { Contrato, Parcela } from "../services/contrato.service.js"
-import { ChevronLeft, Share2, MessageCircle } from "lucide-react"
+import { ChevronLeft, Share2, MessageCircle, RotateCcw } from "lucide-react"
 import { ApiError } from "../../../api/client.js"
 import { formatarData } from "../../../shared/utils/formatarData.js"
 import { formatCurrency, unmask } from "../../../shared/utils/masks.js"
@@ -13,10 +13,11 @@ import { ContratoInfo } from "../components/ContratoInfo.js"
 import { ParcelaList } from "../components/ParcelaList.js"
 import { PagamentoModal, type PagamentoSuccessData } from "../../pagamento/components/PagamentoModal.js"
 import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
+import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { getCliente } from "../../cliente/services/cliente.service.js"
 import type { Cliente } from "../../cliente/services/cliente.service.js"
-import { listPagamentos, type PagamentoComDetalhes } from "../../pagamento/services/pagamento.service.js"
+import { listPagamentos, estornarPagamento, type PagamentoComDetalhes } from "../../pagamento/services/pagamento.service.js"
 import { gerarComprovante } from "../../../shared/utils/comprovante.js"
 
 function formatarParcelasTexto(pagasRange: { inicio: number; fim: number } | null): string {
@@ -64,6 +65,9 @@ function canvasToFile(canvas: HTMLCanvasElement): File {
 export function ContratoDetail() {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
+  const usuarioId = searchParams.get("usuarioId") || undefined
+  const isAdminContext = !!usuarioId
   const navigate = useNavigate()
   const [contrato, setContrato] = useState<Contrato | null>(null)
   const [cliente, setCliente] = useState<Cliente | null>(null)
@@ -72,6 +76,8 @@ export function ContratoDetail() {
   const feedback = useFeedback()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pagamentosAnteriores, setPagamentosAnteriores] = useState<PagamentoComDetalhes[]>([])
+  const [estornandoId, setEstornandoId] = useState<string | null>(null)
+  const [estornoMotivo, setEstornoMotivo] = useState("")
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [comprovante, setComprovante] = useState<{
     canvas: HTMLCanvasElement | null
@@ -85,11 +91,11 @@ export function ContratoDetail() {
     setError(null)
     setCliente(null)
     try {
-      const result = await getContrato(id)
+      const result = await getContrato(id, usuarioId)
       setContrato(result)
-      const c = await getCliente(result.clienteId)
+      const c = await getCliente(result.clienteId, usuarioId)
       setCliente(c)
-      listPagamentos(id).then(setPagamentosAnteriores).catch(() => {})
+      listPagamentos(id, usuarioId).then(setPagamentosAnteriores).catch(() => {})
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)
@@ -99,7 +105,7 @@ export function ContratoDetail() {
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, usuarioId, t])
 
   useEffect(() => {
     fetch()
@@ -132,6 +138,26 @@ export function ContratoDetail() {
   }
 
   const [pagandoParcela, setPagandoParcela] = useState<Parcela | null>(null)
+
+  async function handleEstornar() {
+    if (!estornandoId) return
+    const motivo = estornoMotivo.trim()
+    if (!motivo) {
+      feedback.show({ status: "error", message: t("caixa.motivoObrigatorio") })
+      return
+    }
+    await feedback.run({
+      loading: t("common.saving"),
+      success: t("pagamento.estornarSucesso"),
+      error: t("pagamento.estornarErro"),
+      action: async () => {
+        await estornarPagamento(estornandoId, motivo, usuarioId)
+        setEstornandoId(null)
+        setEstornoMotivo("")
+        await fetch()
+      },
+    })
+  }
 
   const temPagamentos =
     contrato?.parcelas?.some((p) => p.valorPago > 0) ?? false
@@ -227,7 +253,7 @@ export function ContratoDetail() {
             <ChevronLeft className="h-5 w-5" />
           </Link>
           <h1 className="flex-1 text-3xl font-semibold">{cliente.nome}</h1>
-          {contrato && !temPagamentos && (
+          {!isAdminContext && contrato && !temPagamentos && (
             <ButtonLink to={`/contratos/${contrato.id}/editar`}>
               {t("common.edit")}
             </ButtonLink>
@@ -252,7 +278,7 @@ export function ContratoDetail() {
               <h3 className="mb-3 text-xl font-semibold">{t("contrato.parcelasLabel")}</h3>
               <ParcelaList
                 parcelas={contrato.parcelas || []}
-                onPagar={setPagandoParcela}
+                onPagar={isAdminContext ? undefined : setPagandoParcela}
               />
             </div>
 
@@ -270,14 +296,34 @@ export function ContratoDetail() {
                         <span className="text-sm font-medium text-text-secondary">R$</span>{" "}
                         <span className="font-semibold">{formatCurrency(p.valor)}</span>
                       </span>
-                      <span className="text-xs text-text-muted">{t("cliente.parcelasCount", { count: p.parcelas.length })}</span>
+                      <div className="flex items-center gap-2">
+                        {p.estornadoEm ? (
+                          <span className="text-xs font-medium text-text-muted">
+                            {t("pagamento.estornado")}
+                          </span>
+                        ) : (
+                          <>
+                            <span className="text-xs text-text-muted">{t("cliente.parcelasCount", { count: p.parcelas.length })}</span>
+                            {isAdminContext && (
+                              <button
+                                type="button"
+                                onClick={() => { setEstornandoId(p.id); setEstornoMotivo("") }}
+                                className="flex items-center gap-1 rounded-md border border-border-light px-2 py-1 text-xs font-medium text-text-secondary hover:bg-surface-hover"
+                              >
+                                <RotateCcw className="h-3 w-3" />
+                                {t("pagamento.estornar")}
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {!temPagamentos && (
+            {!isAdminContext && !temPagamentos && (
               <Button variant="danger" onClick={handleDeleteClick}>
                 {t("common.delete")}
               </Button>
@@ -293,6 +339,29 @@ export function ContratoDetail() {
               onConfirm={handleDeleteConfirm}
               onCancel={() => setConfirmOpen(false)}
             />
+
+            <Modal open={!!estornandoId} onClose={() => setEstornandoId(null)}>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold">{t("pagamento.estornarTitle")}</h3>
+                <p className="mt-2 text-sm text-text-secondary">{t("pagamento.estornarMessage")}</p>
+                <input
+                  type="text"
+                  value={estornoMotivo}
+                  onChange={(e) => setEstornoMotivo(e.target.value)}
+                  placeholder={t("caixa.motivoPlaceholder")}
+                  autoFocus
+                  className="mt-4 w-full rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                />
+                <div className="mt-6 flex gap-3">
+                  <Button variant="secondary" onClick={() => setEstornandoId(null)} className="flex-1">
+                    {t("common.cancel")}
+                  </Button>
+                  <Button variant="danger" onClick={handleEstornar} className="flex-1">
+                    {t("pagamento.estornar")}
+                  </Button>
+                </div>
+              </div>
+            </Modal>
 
             {pagandoParcela && contrato && (
               <PagamentoModal

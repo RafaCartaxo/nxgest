@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, ArrowRight } from "lucide-react"
 import { getOperador, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
+import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -23,6 +24,7 @@ export function OperadorDetail() {
   const [operador, setOperador] = useState<OperadorRow | null>(null)
   const [caixa, setCaixa] = useState<CaixaStatus | null>(null)
   const [auditoria, setAuditoria] = useState<AuditoriaCaixaItem[]>([])
+  const [contratos, setContratos] = useState<Contrato[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ajusteValor, setAjusteValor] = useState("")
@@ -33,14 +35,16 @@ export function OperadorDetail() {
     setLoading(true)
     setError(null)
     try {
-      const [op, cx, aud] = await Promise.all([
+      const [op, cx, aud, ctr] = await Promise.all([
         getOperador(id, empresaId),
         getCaixaStatus(undefined, undefined, id),
         listarAuditoriaCaixa({ limit: 20 }, id),
+        listContratos({ limit: 50 }, id),
       ])
       setOperador(op)
       setCaixa(cx)
       setAuditoria(aud.data)
+      setContratos(ctr.data)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("admin.erroCarregar"))
     } finally {
@@ -175,6 +179,32 @@ export function OperadorDetail() {
                       {new Date(a.createdAt).toLocaleDateString("pt-BR")}
                     </span>
                   </div>
+                ))}
+              </div>
+            )}
+
+            <SectionHeader title={t("admin.contratosOperador")} />
+            {contratos.length === 0 ? (
+              <p className="text-text-secondary">{t("admin.semContratosOperador")}</p>
+            ) : (
+              <div className="mt-2 space-y-1">
+                {contratos.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => navigate(`/contratos/${c.id}?usuarioId=${id}`)}
+                    className="flex w-full items-center justify-between rounded-md border border-border-light bg-surface px-3 py-2 text-left hover:bg-surface-hover"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-text-primary">
+                        {c.clienteNome ?? c.clienteId}
+                      </span>
+                      <span className="text-xs text-text-secondary">
+                        {c.parcelasPagas ?? 0}/{c.quantidadeParcelas} {t("cliente.parcelas")}
+                      </span>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-text-muted" />
+                  </button>
                 ))}
               </div>
             )}

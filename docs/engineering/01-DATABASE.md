@@ -151,6 +151,10 @@ Um Pagamento poderá ser distribuído entre uma ou mais Parcelas.
 
 Todo Pagamento deverá gerar uma Movimentação Financeira.
 
+### Estorno (PLAN-028)
+
+Um pagamento pode ser **estornado por completo** por um admin/super_admin. O registro original **nunca é deletado** (BR-029) — ganha as colunas `estornadoEm`, `estornadoPor`, `estornoMotivo`, e gera uma movimentação reversa (`saida`, origem `Cancelamento`) + registro em `auditoria_estornos` (pagamento, operador, admin, valor, motivo, data).
+
 ---
 
 ## Gasto

@@ -247,6 +247,12 @@
     "parcelaParcial": "Cuota {{num}} → R$ {{saldo}}",
     "saldoExcedente": "Saldo excedente: R$ {{valor}}",
     "erroRegistrar": "Error al registrar pago.",
+    "estornar": "Reversar",
+    "estornarTitle": "Reversar pago",
+    "estornarMessage": "El pago se revertirá por completo (las cuotas vuelven a pendientes) y se registrará en auditoría. Indica el motivo.",
+    "estornarSucesso": "Pago revertido.",
+    "estornarErro": "Error al revertir el pago.",
+    "estornado": "Revertido",
     "validacao": {
       "valorPositivo": "El valor debe ser positivo.",
       "valorExcede": "El valor no puede exceder el saldo deudor."
@@ -383,6 +389,8 @@
     "caixaOperador": "Caja del operador",
     "eu": "Yo",
     "ajustarCaixaOperador": "Ajustar base de caja del operador",
+    "contratosOperador": "Contratos del operador",
+    "semContratosOperador": "No se encontraron contratos para este operador.",
     "adminDaEmpresa": "Administrador de la empresa",
     "modalAdmins": "Administradores",
     "modalOperadores": "Operadores",

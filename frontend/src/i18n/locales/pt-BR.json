@@ -247,6 +247,12 @@
     "parcelaParcial": "Parcela {{num}} → R$ {{saldo}}",
     "saldoExcedente": "Saldo excedente: R$ {{valor}}",
     "erroRegistrar": "Erro ao registrar pagamento.",
+    "estornar": "Estornar",
+    "estornarTitle": "Estornar pagamento",
+    "estornarMessage": "O pagamento será revertido por completo (parcelas voltam a pendentes) e registrado em auditoria. Informe o motivo.",
+    "estornarSucesso": "Pagamento estornado.",
+    "estornarErro": "Erro ao estornar pagamento.",
+    "estornado": "Estornado",
     "validacao": {
       "valorPositivo": "O valor deve ser positivo.",
       "valorExcede": "O valor não pode exceder o saldo devedor."
@@ -383,6 +389,8 @@
     "caixaOperador": "Caixa do operador",
     "eu": "Eu",
     "ajustarCaixaOperador": "Ajustar caixa base do operador",
+    "contratosOperador": "Contratos do operador",
+    "semContratosOperador": "Nenhum contrato encontrado para este operador.",
     "adminDaEmpresa": "Administrador da empresa",
     "modalAdmins": "Administradores",
     "modalOperadores": "Operadores",

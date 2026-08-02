@@ -142,3 +142,43 @@ Banco em WAL mode (dados vivos no `.db-wal` ~1MB); script copiava só `gestao.db
 - [x] Conteúdo validado: 5 usuários, 7 clientes
 - [x] Off-site local abre com dados (5 usuários, 7 clientes)
 - [ ] (pendente) Confirmar próximo backup do cron (00h/12h) também válido
+
+---
+
+# CHECKLIST — Estorno de Pagamento pelo Admin (PLAN-028)
+
+**Data:** 02/08/2026
+
+## Fase 1 — Backend (estorno)
+
+- [x] Schema: colunas `estornadoEm`/`estornadoPor`/`estornoMotivo` em `pagamentos` (ALTER idempotente) + tabela `auditoria_estornos` + índices
+- [x] `EstornarPagamentoUseCase` (transação: reverter parcelas + estado/dataQuitacao + contrato→Ativo + movimentação reversa `Cancelamento` + duplo estorno + auditoria)
+- [x] `pagamento.repository`: `findByIdWithParcelas` + `marcarEstornado` + `saveAuditoriaEstorno`
+- [x] Erros `PagamentoNotFoundError`/`PagamentoJaEstornadoError`
+- [x] `POST /api/pagamentos/:id/estornar` com `adminMiddleware` + `resolveUsuarioAlvo`
+
+## Fase 2 — Escopo `?usuarioId=` (contexto do operador)
+
+- [x] `contrato.controller`: `GET /contratos` e `GET /contratos/:id` com `resolveUsuarioAlvo`
+- [x] `pagamento.controller`: `GET /pagamentos/contrato/:id` com `resolveUsuarioAlvo`
+- [x] `cliente.controller`: `GET /clientes/:id` com `resolveUsuarioAlvo`
+- [x] `update`/`remove` permanecem `req.userId` (somente leitura no contexto)
+
+## Fase 3 — Frontend
+
+- [x] Services: `listContratos`/`getContrato`/`getCliente`/`listPagamentos` com `usuarioId?` + `estornarPagamento`
+- [x] `OperadorDetail`: seção "Contratos do operador" (link → `ContratoDetail?usuarioId=`)
+- [x] `ContratoDetail`: modo admin read-only (sem editar/excluir/pagar) + botão "Estornar" + modal de motivo (base `Modal`)
+- [x] i18n pt-BR/en/es (estorno + contratos do operador)
+
+## Validação (HTTP real)
+
+- [x] `npm run build` OK
+- [x] Estorno sem motivo → 422
+- [x] Estorno com motivo (admin) → 201
+- [x] Duplo estorno → 409
+- [x] Operator → 403
+- [x] Parcela revertida (valorPago 0, saldo restaurado, estado Pendente, dataQuitacao null)
+- [x] Movimentação reversa (`saida`/`Cancelamento`) + pagamento marcado estornado
+- [x] `auditoria_estornos` gravada (pagamentoId, operadorId, adminId, valor, motivo)
+- [x] Escopo: operador de outra empresa → 404

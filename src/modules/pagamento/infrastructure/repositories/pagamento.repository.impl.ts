@@ -1,8 +1,8 @@
 import { eq, and } from "drizzle-orm"
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3"
-import { db, pagamentos, pagamentoParcelas } from "../../../../database.js"
+import { db, pagamentos, pagamentoParcelas, auditoriaEstornos } from "../../../../database.js"
 import type { Pagamento, PagamentoParcela, PagamentoComDetalhes } from "../../domain/pagamento.entity.js"
-import type { IPagamentoRepository } from "../../application/ports/pagamento.repository.js"
+import type { IPagamentoRepository, AuditoriaEstorno } from "../../application/ports/pagamento.repository.js"
 
 type PagamentoRow = typeof pagamentos.$inferSelect
 type PagamentoParcelaRow = typeof pagamentoParcelas.$inferSelect
@@ -65,5 +65,66 @@ export class PagamentoRepository implements IPagamentoRepository {
     }
 
     return result
+  }
+
+  private async carregarParcelas(pagamentoId: string): Promise<PagamentoParcela[]> {
+    const parcelasRows = await this.drizzle
+      .select()
+      .from(pagamentoParcelas)
+      .where(eq(pagamentoParcelas.pagamentoId, pagamentoId))
+    return parcelasRows.map((pr) => ({
+      id: pr.id,
+      pagamentoId: pr.pagamentoId,
+      parcelaId: pr.parcelaId,
+      valor: pr.valor,
+    }))
+  }
+
+  async findByIdWithParcelas(pagamentoId: string, userId: string): Promise<PagamentoComDetalhes | null> {
+    const rows = await this.drizzle
+      .select()
+      .from(pagamentos)
+      .where(and(eq(pagamentos.id, pagamentoId), eq(pagamentos.userId, userId)))
+      .limit(1)
+
+    if (rows.length === 0) return null
+    const row = rows[0]
+    return {
+      id: row.id,
+      contratoId: row.contratoId,
+      valor: row.valor,
+      data: row.data,
+      createdAt: row.createdAt,
+      userId: row.userId,
+      estornadoEm: row.estornadoEm,
+      estornadoPor: row.estornadoPor,
+      estornoMotivo: row.estornoMotivo,
+      parcelas: await this.carregarParcelas(row.id),
+    }
+  }
+
+  async marcarEstornado(pagamentoId: string, adminId: string, motivo: string): Promise<void> {
+    const now = new Date().toISOString()
+    await this.drizzle
+      .update(pagamentos)
+      .set({
+        estornadoEm: now,
+        estornadoPor: adminId,
+        estornoMotivo: motivo,
+      })
+      .where(eq(pagamentos.id, pagamentoId))
+  }
+
+  async saveAuditoriaEstorno(a: AuditoriaEstorno): Promise<void> {
+    await this.drizzle.insert(auditoriaEstornos).values({
+      id: a.id,
+      pagamentoId: a.pagamentoId,
+      operadorId: a.operadorId,
+      adminId: a.adminId,
+      valor: a.valor,
+      motivo: a.motivo,
+      data: a.data,
+      createdAt: a.createdAt,
+    })
   }
 }

@@ -9,10 +9,13 @@ import { updateContratoSchema } from "../../application/use-cases/UpdateContrato
 import { DeleteContratoUseCase } from "../../application/use-cases/DeleteContrato/DeleteContratoUseCase.js"
 import type { IContratoRepository } from "../../application/ports/contrato.repository.js"
 import type { IClienteExistenceQuery } from "../../application/ports/cliente-existence.query.js"
+import { AdminRepository } from "../../../admin/infrastructure/repositories/admin.repository.impl.js"
 import { ContratoNotFoundError } from "../../domain/errors/contrato-not-found.error.js"
 import { ContratoHasPaymentsError } from "../../domain/errors/contrato-has-payments.error.js"
 import { SaldoInsuficienteError } from "../../domain/errors/saldo-insuficiente.error.js"
 import { ClienteNotFoundError } from "../../../../modules/cliente/domain/errors/cliente-not-found.error.js"
+import { OperadorNaoEncontradoError } from "../../../admin/domain/errors/admin.error.js"
+import { resolveUsuarioAlvo } from "../../../../shared/utils/scope.js"
 
 export class ContratoController {
   private createContrato: CreateContratoUseCase
@@ -20,6 +23,7 @@ export class ContratoController {
   private listContratos: ListContratosUseCase
   private updateContrato: UpdateContratoUseCase
   private deleteContrato: DeleteContratoUseCase
+  private adminRepository: AdminRepository
 
   constructor(
     repository: IContratoRepository,
@@ -33,6 +37,7 @@ export class ContratoController {
     this.listContratos = new ListContratosUseCase(repository)
     this.updateContrato = new UpdateContratoUseCase(repository)
     this.deleteContrato = new DeleteContratoUseCase(repository)
+    this.adminRepository = new AdminRepository()
   }
 
   async create(req: Request, res: Response) {
@@ -82,10 +87,14 @@ export class ContratoController {
     }
 
     try {
-      const userId = req.userId!
+      const userId = await resolveUsuarioAlvo(req, this.adminRepository)
       const result = await this.listContratos.execute(userId, parsed.data)
       res.status(200).json({ data: result.data, pagination: result.pagination })
     } catch (error) {
+      if (error instanceof OperadorNaoEncontradoError) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: error.message })
+        return
+      }
       console.error("Erro ao listar contratos:", error)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno ao listar contratos." })
     }
@@ -93,10 +102,14 @@ export class ContratoController {
 
   async getById(req: Request, res: Response) {
     try {
-      const userId = req.userId!
+      const userId = await resolveUsuarioAlvo(req, this.adminRepository)
       const contrato = await this.findContrato.execute(userId, req.params.id)
       res.status(200).json(contrato)
     } catch (error) {
+      if (error instanceof OperadorNaoEncontradoError) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: error.message })
+        return
+      }
       if (error instanceof ContratoNotFoundError) {
         res.status(404).json({ code: error.code, message: error.message })
         return

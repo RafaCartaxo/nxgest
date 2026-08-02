@@ -247,6 +247,12 @@
     "parcelaParcial": "Installment {{num}} → ${{saldo}}",
     "saldoExcedente": "Excess balance: ${{valor}}",
     "erroRegistrar": "Error registering payment.",
+    "estornar": "Reverse",
+    "estornarTitle": "Reverse payment",
+    "estornarMessage": "The payment will be fully reversed (installments return to pending) and recorded in the audit log. Provide a reason.",
+    "estornarSucesso": "Payment reversed.",
+    "estornarErro": "Error reversing payment.",
+    "estornado": "Reversed",
     "validacao": {
       "valorPositivo": "The amount must be positive.",
       "valorExcede": "The amount cannot exceed the outstanding balance."
@@ -384,6 +390,8 @@
     "caixaOperador": "Operator cash",
     "eu": "Me",
     "ajustarCaixaOperador": "Adjust operator cash base",
+    "contratosOperador": "Operator contracts",
+    "semContratosOperador": "No contracts found for this operator.",
     "adminDaEmpresa": "Company administrator",
     "modalAdmins": "Administrators",
     "modalOperadores": "Operators",

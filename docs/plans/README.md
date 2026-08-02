@@ -37,5 +37,5 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-025-regra-exclusiva-ajuste-caixa.md](PLAN-025-regra-exclusiva-ajuste-caixa.md) | Ajuste do Caixa Base exclusivo de admin/super_admin (operador read-only) + contexto de empresa no super admin (admin no card, breadcrumb/voltar) | Concluído |
 | [PLAN-026-auditoria-modais-nomencleatura-admin.md](PLAN-026-auditoria-modais-nomencleatura-admin.md) | Sprint 1 do backlog: Auditoria de Caixa (P014), padronização de modais (P018), nomenclatura admin (P012) | Concluído |
 | [PLAN-027-exibicao-historico-caixa.md](PLAN-027-exibicao-historico-caixa.md) | Exibição do Histórico de Ajustes do Caixa Base (P014) — admin e operador veem data, valores, quem ajustou e motivo | Concluído |
-| [PLAN-028-estorno-pagamento.md](PLAN-028-estorno-pagamento.md) | Estorno de Pagamento pelo Admin (P013 — fatia 1): admin corrige transação errada do operador | Planejado |
+| [PLAN-028-estorno-pagamento.md](PLAN-028-estorno-pagamento.md) | Estorno de Pagamento pelo Admin (P013 — fatia 1): admin corrige transação errada do operador | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Rascunho — Prévia de Pagamento | Em análise |

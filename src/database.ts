@@ -108,6 +108,20 @@ export const pagamentos = sqliteTable("pagamentos", {
   data: text("data").notNull(),
   createdAt: text("createdAt").notNull(),
   userId: text("userId"),
+  estornadoEm: text("estornadoEm"),
+  estornadoPor: text("estornadoPor"),
+  estornoMotivo: text("estornoMotivo"),
+})
+
+export const auditoriaEstornos = sqliteTable("auditoria_estornos", {
+  id: text("id").primaryKey(),
+  pagamentoId: text("pagamentoId").notNull(),
+  operadorId: text("operadorId").notNull(),
+  adminId: text("adminId").notNull(),
+  valor: real("valor").notNull(),
+  motivo: text("motivo").notNull(),
+  data: text("data").notNull(),
+  createdAt: text("createdAt").notNull(),
 })
 
 export const pagamentoParcelas = sqliteTable("pagamento_parcelas", {
@@ -302,6 +316,20 @@ export async function createTables() {
     CREATE INDEX IF NOT EXISTS idx_pagamento_parcelas_pagamento ON pagamento_parcelas(pagamentoId);
     CREATE INDEX IF NOT EXISTS idx_pagamento_parcelas_parcela ON pagamento_parcelas(parcelaId);
 
+    CREATE TABLE IF NOT EXISTS auditoria_estornos (
+      id TEXT PRIMARY KEY,
+      pagamentoId TEXT NOT NULL,
+      operadorId TEXT NOT NULL,
+      adminId TEXT NOT NULL,
+      valor REAL NOT NULL,
+      motivo TEXT NOT NULL,
+      data TEXT NOT NULL,
+      createdAt TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_auditoria_estornos_pagamento ON auditoria_estornos(pagamentoId);
+    CREATE INDEX IF NOT EXISTS idx_auditoria_estornos_operador ON auditoria_estornos(operadorId);
+
     CREATE TABLE IF NOT EXISTS historico_operacional (
       id TEXT PRIMARY KEY,
       clienteId TEXT NOT NULL,
@@ -466,6 +494,11 @@ export async function createTables() {
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioEstado TEXT") } catch { /* ja existe */ }
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioLat REAL") } catch { /* ja existe */ }
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioLng REAL") } catch { /* ja existe */ }
+
+  // Migracao: colunas de estorno de pagamento (PLAN-028)
+  try { sqlite.exec("ALTER TABLE pagamentos ADD COLUMN estornadoEm TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE pagamentos ADD COLUMN estornadoPor TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE pagamentos ADD COLUMN estornoMotivo TEXT") } catch { /* ja existe */ }
 
   // Migracao: adicionar coluna userId nas tabelas operacionais (ignorar se ja existe)
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN userId TEXT") } catch { /* ja existe */ }

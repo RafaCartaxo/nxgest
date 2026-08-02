@@ -556,6 +556,7 @@ Permitido apenas quando não há pagamentos registrados.
 | POST | `/api/pagamentos` | Registrar pagamento |
 | POST | `/api/pagamentos/preview` | Visualizar distribuição do valor antes de confirmar |
 | GET | `/api/pagamentos/contrato/{contratoId}` | Listar pagamentos de um contrato |
+| POST | `/api/pagamentos/{id}/estornar` | Estornar pagamento (somente admin/super_admin) — PLAN-028 |
 
 ---
 
@@ -850,7 +851,10 @@ Lista todos os pagamentos de um contrato com os detalhes de distribuição entre
                 "parcelaId": "d4e5f6a7-...",
                 "valor": 60.00
             }
-        ]
+        ],
+        "estornadoEm": null,
+        "estornadoPor": null,
+        "estornoMotivo": null
     }
 ]
 ```
@@ -861,6 +865,54 @@ Lista todos os pagamentos de um contrato com os detalhes de distribuição entre
 |---------|------|
 | CONTRACT_NOT_FOUND | 404 |
 | INSUFFICIENT_BALANCE | 422 |
+| VALIDATION_ERROR | 422 |
+
+---
+
+# POST /api/pagamentos/{id}/estornar
+
+Estorna **por completo** um pagamento registrado (PLAN-028). Reverte cada parcela (volta `valorPago`/`saldoPendente`/`estado`/`dataQuitacao`), cria movimentação reversa (`saida`, origem `Cancelamento`), marca o pagamento como estornado e grava em `auditoria_estornos`. O contrato volta a `Ativo` se estava `Finalizado` por causa do pagamento. **O pagamento nunca é deletado** (BR-029).
+
+**Escopo:** restrito a `admin`/`super_admin` (`403` para operator). `?usuarioId=` aponta o dono do pagamento (operador): admin valida dentro da própria empresa; super_admin qualquer.
+
+## Request
+
+```json
+{
+    "motivo": "Pagamento registrado por engano"
+}
+```
+
+## Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| usuarioId | string | Não | Dono do pagamento (escopo acima) |
+
+## Validações
+
+| Campo | Obrigatório | Regra |
+|--------|------------|--------|
+| motivo | Sim | Texto não vazio, até 200 caracteres |
+
+## Response 201
+
+```json
+{
+    "id": "c3d4e5f6-...",
+    "data": "2026-08-02",
+    "createdAt": "2026-08-02T16:35:36.414Z"
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| FORBIDDEN | 403 |
+| OPERATOR_NOT_FOUND | 404 |
+| PAGAMENTO_NOT_FOUND | 404 |
+| PAGAMENTO_JA_ESTORNADO | 409 |
 | VALIDATION_ERROR | 422 |
 
 ---
