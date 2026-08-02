@@ -32,6 +32,8 @@ export class EstornarPagamentoUseCase {
         throw new ContratoNotFoundError(pagamento.contratoId)
       }
 
+      let temSaldoPendente = false
+
       for (const rel of pagamento.parcelas) {
         const parcela = contrato.parcelas.find((p) => p.id === rel.parcelaId)
         if (!parcela) continue
@@ -40,21 +42,20 @@ export class EstornarPagamentoUseCase {
         const novoSaldo = Math.round((parcela.saldoPendente + rel.valor) * 100) / 100
         const novoEstado = novoValorPago <= 0 ? "Pendente" as const : novoSaldo > 0 ? "Parcial" as const : "Paga" as const
 
+        if (novoSaldo > 0) temSaldoPendente = true
+
         await repo.updateParcela(operadorId, parcela.id, {
           valorPago: novoValorPago,
           saldoPendente: novoSaldo,
           estado: novoEstado,
-          dataQuitacao: novoValorPago <= 0 ? null : parcela.dataQuitacao,
+          dataQuitacao: novoEstado === "Paga" ? parcela.dataQuitacao : null,
           updatedAt: createdAt,
         })
       }
 
       // Se o contrato foi finalizado por este pagamento e agora tem saldo pendente, volta a Ativo
-      if (contrato.estado === "Finalizado") {
-        const saldoRestante = contrato.parcelas.some((p) => p.saldoPendente > 0)
-        if (saldoRestante) {
-          await repo.update(operadorId, contrato.id, { estado: "Ativo", updatedAt: createdAt })
-        }
+      if (contrato.estado === "Finalizado" && temSaldoPendente) {
+        await repo.update(operadorId, contrato.id, { estado: "Ativo", updatedAt: createdAt })
       }
 
       await this.pagamentoRepo.marcarEstornado(pagamentoId, adminId, input.motivo)

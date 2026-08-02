@@ -182,3 +182,9 @@ Banco em WAL mode (dados vivos no `.db-wal` ~1MB); script copiava só `gestao.db
 - [x] Movimentação reversa (`saida`/`Cancelamento`) + pagamento marcado estornado
 - [x] `auditoria_estornos` gravada (pagamentoId, operadorId, adminId, valor, motivo)
 - [x] Escopo: operador de outra empresa → 404
+
+## Pós-code review (SKILL-005) + Design System
+
+- [x] **P2**: fix do `Finalizado → Ativo` (saldo pós-reversão) + teste real (quitar + estorno → Ativo)
+- [x] **P3**: `dataQuitacao` limpo quando parcela não fica `Paga`
+- [x] **DS**: lista de contratos do OperadorDetail em `Card.Root list-item` (padrão OperadoresList)

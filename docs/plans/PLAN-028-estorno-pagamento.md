@@ -108,4 +108,10 @@ Esta entrega é a **primeira fatia vertical do P013** (Contexto do Operador) —
 - [x] Movimentação reversa registrada (`saida`, origem `Cancelamento`, descrição com motivo)
 - [x] Registro em `auditoria_estornos` com operador/admin/motivo
 - [x] Escopo: admin lê contratos/pagamentos do operador via `?usuarioId=`; operador de outra empresa → 404 (`OPERATOR_NOT_FOUND`)
-- [ ] Contrato `Finalizado` → `Ativo` (implementado; seed local não tinha contrato finalizado na empresa do admin para teste real)
+- [x] Contrato `Finalizado` → `Ativo` (validado com fluxo real: quitar contrato + estorno → Ativo)
+
+## Correções pós-code review (SKILL-005) e design system
+
+- [x] **P2 (bug real)**: `saldoRestante` era calculado sobre o snapshot pré-reversão → contrato `Finalizado` NÃO voltava a `Ativo` ao estornar (ficava finalizado com parcelas pendentes). Corrigido acumulando `temSaldoPendente` no loop de reversão e validado por teste real.
+- [x] **P3 (inconsistência)**: `dataQuitacao` não era limpo quando a parcela reverte para `Parcial`. Agora só mantém `dataQuitacao` se `novoEstado === "Paga"`.
+- [x] **Design system (UX)**: lista de contratos do `OperadorDetail` migrada de `<button>` custom para `Card.Root variant="list-item"` (padrão do sistema, igual `OperadoresList`).

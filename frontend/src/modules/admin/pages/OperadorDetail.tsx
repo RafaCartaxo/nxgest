@@ -10,6 +10,7 @@ import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { Card } from "../../../shared/components/Card/Card.js"
 import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 
@@ -187,24 +188,30 @@ export function OperadorDetail() {
             {contratos.length === 0 ? (
               <p className="text-text-secondary">{t("admin.semContratosOperador")}</p>
             ) : (
-              <div className="mt-2 space-y-1">
+              <div className="mt-2 space-y-3">
                 {contratos.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => navigate(`/contratos/${c.id}?usuarioId=${id}`)}
-                    className="flex w-full items-center justify-between rounded-md border border-border-light bg-surface px-3 py-2 text-left hover:bg-surface-hover"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-text-primary">
+                  <Card.Root key={c.id} variant="list-item">
+                    <Card.Body>
+                      <p className="truncate text-sm font-medium text-text-primary">
                         {c.clienteNome ?? c.clienteId}
-                      </span>
-                      <span className="text-xs text-text-secondary">
-                        {c.parcelasPagas ?? 0}/{c.quantidadeParcelas} {t("cliente.parcelas")}
-                      </span>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-text-muted" />
-                  </button>
+                      </p>
+                      <Card.Indicators>
+                        <Card.Indicator
+                          label={t("cliente.parcelas")}
+                          value={`${c.parcelasPagas ?? 0}/${c.quantidadeParcelas}`}
+                        />
+                      </Card.Indicators>
+                    </Card.Body>
+                    <Card.Actions
+                      actions={[
+                        {
+                          icon: ArrowRight,
+                          label: t("admin.acessar"),
+                          onClick: () => navigate(`/contratos/${c.id}?usuarioId=${id}`),
+                        },
+                      ]}
+                    />
+                  </Card.Root>
                 ))}
               </div>
             )}
