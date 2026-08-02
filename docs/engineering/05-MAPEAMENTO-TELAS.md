@@ -58,6 +58,7 @@ App
 │   ├── ButtonLink (Link + Button styles)
 │   ├── EstadoTela (loading/error/empty wrapper)
 │   ├── ConfirmModal
+│   ├── Modal (base compartilhado — Escape/backdrop configurável, usado pelos modais)
 │   ├── ErrorBoundary (fallback com retry)
 │   ├── StatusBadge (success, warning, danger, info, neutral)
 │   ├── ErrorBanner (message, onRetry?, onDismiss?)
@@ -868,6 +869,8 @@ Ao implementar uma nova tela, verificar:
 | 01/08/2026 | 1.9 | PLAN-021: login roteado por role; AdminPage com contexto de empresa e KPIs em blocos (Equipe/Operação, Admins × Operadores); navbar com engrenagem de configurações; operador volta a ajustar a própria base de caixa |
 | 01/08/2026 | 1.10 | PLAN-022: AdminPage com header por nível (usuário/empresa + badge de role), KPIs de Operação com legenda "de {nome}", Resultado do Dia em módulo com cor/tooltip; idioma movido da barra pra engrenagem |
 | 01/08/2026 | 1.11 | PLAN-024: OperadoresList no padrão Card com admins no topo e tag "Eu"; KPIs clicáveis (EquipeModal, navegação, ResultadoDiaModal); OperadorDetail com ajuste de caixa base do operador; dashboard admin self escopado por usuário (BR-087) |
+| 02/08/2026 | 1.12 | PLAN-026: Modal base compartilhado (Escape/backdrop configurável) e modais refatorados; OperadoresList com subseções Administradores/Operadores; auditoria de caixa (P014) |
+| 02/08/2026 | 1.13 | PLAN-027: Histórico de ajustes do Caixa Base no OperadorDetail (admin) e no /caixa (operador) — endpoint GET /api/caixa/auditoria |
 
 # Referências
 

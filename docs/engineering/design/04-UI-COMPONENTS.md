@@ -426,11 +426,24 @@ Separar visualmente grupos de conteúdo.
 
 # Modal
 
-**Status:** ✅ `PagamentoModal`, `ConfirmModal`, `PagamentosHojeModal`
+**Status:** ✅ `Modal` (base compartilhado) + `PagamentoModal`, `ConfirmModal`, `PagamentosHojeModal`, `EquipeModal`, `ResultadoDiaModal`
 
 ## Objetivo
 
 Executar fluxos secundários.
+
+## Base compartilhado
+
+`shared/components/Modal/Modal.tsx` provê a mecânica uniforme dos modais (PLAN-026):
+
+- `open`, `onClose` — controle de exibição;
+- `backdropClose` (bool) — clicar fora fecha? **Configurável por instância** (preserva a semântica atual de cada tela);
+- `escapeClose` (bool, padrão `true`) — tecla Escape fecha;
+- `maxWidth` — largura do conteúdo (ex.: `max-w-sm`, `max-w-md`);
+- overflow do body oculto enquanto aberto;
+- `role="dialog"` + `aria-modal`.
+
+Os modais de domínio (`PagamentoModal`, `ConfirmModal`, `EquipeModal`, `ResultadoDiaModal`, `OperadorForm`) usam o base.
 
 ---
 

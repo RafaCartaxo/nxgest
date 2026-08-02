@@ -34,4 +34,7 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-022-admin-kpis-ajuste.md](PLAN-022-admin-kpis-ajuste.md) | Ajuste de KPIs (contratos ativos por estado, tooltip do Resultado do Dia, escopo de nível) + idioma na engrenagem | Concluído |
 | [PLAN-023-ajustes-pos-validacao.md](PLAN-023-ajustes-pos-validacao.md) | Ajustes pós-validação: fix bug da rota, destaque "Vence Hoje", pagos no "Todos" e histórico de atrasos | Concluído |
 | [PLAN-024-admin-organizacao-kpis.md](PLAN-024-admin-organizacao-kpis.md) | Página admin: fix do ajuste de saldo no operador, cards no padrão do sistema, usuário corrente na Equipe, admins no topo e KPIs clicáveis | Concluído |
+| [PLAN-025-regra-exclusiva-ajuste-caixa.md](PLAN-025-regra-exclusiva-ajuste-caixa.md) | Ajuste do Caixa Base exclusivo de admin/super_admin (operador read-only) + contexto de empresa no super admin (admin no card, breadcrumb/voltar) | Concluído |
+| [PLAN-026-auditoria-modais-nomencleatura-admin.md](PLAN-026-auditoria-modais-nomencleatura-admin.md) | Sprint 1 do backlog: Auditoria de Caixa (P014), padronização de modais (P018), nomenclatura admin (P012) | Concluído |
+| [PLAN-027-exibicao-historico-caixa.md](PLAN-027-exibicao-historico-caixa.md) | Exibição do Histórico de Ajustes do Caixa Base (P014) — admin e operador veem data, valores, quem ajustou e motivo | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Rascunho — Prévia de Pagamento | Em análise |

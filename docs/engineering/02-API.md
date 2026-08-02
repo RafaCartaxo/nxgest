@@ -884,13 +884,14 @@ Lista todos os pagamentos de um contrato com os detalhes de distribuição entre
 | GET | `/api/caixa` | Status completo do caixa |
 | POST | `/api/caixa/ajuste` | Ajustar Caixa Total |
 | GET | `/api/caixa/movimentacoes` | Listar movimentações financeiras |
+| GET | `/api/caixa/auditoria` | Listar histórico de ajustes do Caixa Base (PLAN-027) |
 | POST | `/api/caixa/liquidar` | Fechar semana |
 
 > **Escopo por usuário (PLAN-020):** `GET /api/caixa`, `POST /api/caixa/ajuste` e `GET /api/caixa/movimentacoes` aceitam o query parameter `usuarioId`, que aponta o caixa-alvo:
 > - **operator:** ignora `usuarioId` — opera sempre sobre o caixa próprio (`req.userId`).
 > - **admin:** valida que `usuarioId` pertence à própria empresa (via `empresaId` do token); inexistente/outra empresa → `404 OPERATOR_NOT_FOUND`.
 > - **super_admin:** valida apenas a existência do usuário; pode apontar caixa de qualquer empresa.
-> - `POST /api/caixa/ajuste` aceita `operator` para o **próprio** caixa (`req.userId`) — o operador ajusta a própria base (BR-084); `?usuarioId=` é sempre ignorado para operator (segurança preservada).
+> - `POST /api/caixa/ajuste` é **restrito a admin/super_admin** (403 para `operator`) — o ajuste do Caixa Base é exclusivo de administradores (BR-079); `?usuarioId=` é sempre ignorado para operator (segurança preservada).
 > - `POST /api/caixa/liquidar` opera sempre sobre o caixa próprio (`req.userId`).
 
 ---
@@ -948,13 +949,14 @@ Retorna o status completo do caixa: base, saldo, indicadores do dia e da semana,
 
 # POST /api/caixa/ajuste
 
-Ajusta o Caixa Total para um novo valor (BR-018). O ajuste **não** gera movimentação financeira — a base é o registro (PLAN-020, correção de dobra no saldo/lucro).
+Ajusta o Caixa Total para um novo valor (BR-018). O ajuste **não** gera movimentação financeira — a base é o registro (PLAN-020, correção de dobra no saldo/lucro). Todo ajuste gera um registro em **auditoria** (BR do PLAN-026): operador-alvo, admin responsável, valor anterior, valor novo, motivo e data/hora.
 
 ## Request
 
 ```json
 {
-    "valor": 22000.00
+    "valor": 22000.00,
+    "motivo": "Reposição de troco do caixa"
 }
 ```
 
@@ -969,12 +971,63 @@ Ajusta o Caixa Total para um novo valor (BR-018). O ajuste **não** gera movimen
 | Campo | Obrigatório | Regra |
 |---------|------------|--------|
 | valor | Sim | Positivo |
+| motivo | Sim | Texto não vazio, até 200 caracteres |
 
 ## Response 201
 
 ```json
 {
     "caixaBase": 22000.00
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| FORBIDDEN | 403 |
+| OPERATOR_NOT_FOUND | 404 |
+| VALIDATION_ERROR | 422 |
+
+---
+
+# GET /api/caixa/auditoria
+
+Lista o histórico de ajustes manuais do Caixa Base (tabela `auditoria_caixa`, BR-088) com paginação. Ordenado por `createdAt` decrescente.
+
+**Escopo (PLAN-027):** mesmo padrão do caixa — `operator` sempre consulta o **próprio** histórico (ignora `?usuarioId=`); `admin` consulta o histórico de um operador da própria empresa via `?usuarioId=`; `super_admin` pode consultar qualquer. Rota **sem** `adminMiddleware` (operador também lê o próprio).
+
+## Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| page | number | Não | Página (padrão 1) |
+| limit | number | Não | Itens por página, máx 100 (padrão 20) |
+| usuarioId | string | Não | Dono do histórico (ver escopo acima) |
+
+## Response 200
+
+```json
+{
+    "data": [
+        {
+            "id": "f6a25914-...",
+            "operadorId": "ace6fe87-...",
+            "adminId": "703cef97-...",
+            "adminNome": "Rafael Cartaxo Borges",
+            "valorAnterior": 2500.00,
+            "valorNovo": 3200.00,
+            "motivo": "Ajuste de demonstração",
+            "data": "2026-08-02",
+            "createdAt": "2026-08-02T14:58:12.314Z"
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "limit": 20,
+        "total": 1,
+        "pages": 1
+    }
 }
 ```
 
@@ -1287,10 +1340,14 @@ Lista todas as empresas cadastradas.
         "createdAt": "2026-07-31T10:00:00.000Z",
         "totalUsuarios": 3,
         "totalClientes": 12,
-        "contratosAtivos": 5
+        "contratosAtivos": 5,
+        "adminNome": "Joao Pedro da Silva",
+        "adminEmail": "pedro.nx@uorak.com"
     }
 ]
 ```
+
+> **Nota (PLAN-025):** `adminNome`/`adminEmail` trazem o primeiro admin ativo (`role = 'admin'`, `deletedAt IS NULL`) da empresa, para contextualizar quem é o administrador na lista e no painel.
 
 ## Possíveis Erros
 
@@ -1317,7 +1374,9 @@ Busca uma empresa por id, com totais de usuários, clientes e contratos ativos (
     "createdAt": "2026-07-31T10:00:00.000Z",
     "totalUsuarios": 3,
     "totalClientes": 12,
-    "contratosAtivos": 5
+    "contratosAtivos": 5,
+    "adminNome": "Joao Pedro da Silva",
+    "adminEmail": "pedro.nx@uorak.com"
 }
 ```
 
@@ -1455,11 +1514,12 @@ KPIs consolidados. Comportamento por nível (PLAN-024 / BR-087):
 | BR-076 | `empresaId` do token determina o escopo de dados do operador |
 | BR-077 | Dashboard de super admin sem `empresaId` retorna agregado de todas as empresas |
 | BR-078 | Admin define o Caixa Base de um operador (`POST /api/caixa/ajuste?usuarioId=`) |
-| BR-079 | ~~Operador não pode ajustar o Caixa Base próprio (403)~~ — **revogado pelo PLAN-021**: operador ajusta a própria base (`req.userId`; `?usuarioId=` ignorado). Ver BR-084 |
+| BR-079 | Operador não pode ajustar o Caixa Base próprio (403). ~~Revogado pelo PLAN-021~~ — **reativado pelo PLAN-025** (regra exclusiva de admin/super_admin) |
 | BR-080 | Admin visualiza os KPIs do caixa de um operador (`GET /api/caixa?usuarioId=`), validado dentro da empresa |
 | BR-081 | Login roteado por perfil: `operator` → `/`, `admin` → `/admin`, `super_admin` → `/admin/empresas`; `/admin` de super_admin redireciona para `/admin/empresas` |
 | BR-082 | Dashboard admin com KPIs separados: `totalAdmins` (role `admin`) e `totalOperadores` (role `operator`), agrupados em `Equipe` e `Operação` |
 | BR-083 | Card de empresa (super admin) mostra `totalUsuarios` (admin + operator) |
-| BR-084 | Operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste` sem `usuarioId`); `usuarioId` é sempre ignorado para operator |
+| BR-084 | ~~Operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste` sem `usuarioId`); `usuarioId` é sempre ignorado para operator~~ — **revogado pelo PLAN-025** (volta à BR-079: operador bloqueado no ajuste) |
 | BR-085 | Contratos ativos (KPIs admin/empresa) contam apenas `estado = 'Ativo'`; `Finalizado`/`Cancelado` não entram |
 | BR-087 | Dashboard admin self escopado por `req.userId` nos KPIs de Operação (bate com navegação `/clientes`, `/contratos`); super admin mantém visão agregada de empresa |
+| BR-088 | Todo ajuste do Caixa Base (`POST /api/caixa/ajuste`) grava registro em `auditoria_caixa` (operador, admin, valor anterior/novo, motivo, data); `motivo` é obrigatório. Histórico consultável via `GET /api/caixa/auditoria` (PLAN-027) |

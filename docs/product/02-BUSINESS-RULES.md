@@ -401,7 +401,7 @@ O admin define o Caixa Base de um operador via `POST /api/caixa/ajuste?usuarioId
 
 ## BR-079
 
-~~Operador não pode ajustar o Caixa Base próprio (403).~~ **Revogado pelo PLAN-021** — ver BR-084.
+O ajuste do Caixa Base (`POST /api/caixa/ajuste`) é **regra exclusiva de `admin`/`super_admin`** — `operator` recebe `403 FORBIDDEN`. O `?usuarioId=` é sempre ignorado para `operator`. **Reativada pelo PLAN-025** (o PLAN-021 havia liberado o operador via BR-084, revogada em seguida).
 
 ---
 
@@ -431,7 +431,7 @@ O card de empresa (super admin) exibe `totalUsuarios`, que soma `admin` + `opera
 
 ## BR-084
 
-O operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste`). O query `?usuarioId=` é sempre ignorado para `operator` — o alvo é o `req.userId` (segurança preservada).
+~~O operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste`). O query `?usuarioId=` é sempre ignorado para `operator` — o alvo é o `req.userId` (segurança preservada).~~ **Revogado pelo PLAN-025** — o operador voltou a ser bloqueado no ajuste (403). Ver BR-079.
 
 ---
 
@@ -670,6 +670,14 @@ No painel admin, quando o administrador acessa o próprio painel (admin self, se
 O super admin (ou um admin visualizando uma empresa via `?empresaId=`) mantém a visão **agregada da empresa**. Nesse modo, os KPIs de Operação não são clicáveis (a navegação por `/clientes` e `/contratos` filtra por `req.userId` e divergiria do agregado).
 
 Os KPIs de Equipe (`totalAdmins`, `totalOperadores`) permanecem sempre por empresa.
+
+---
+
+## BR-088
+
+Todo ajuste manual do Caixa Base (`POST /api/caixa/ajuste`) gera obrigatoriamente um registro na tabela `auditoria_caixa` — independentemente de o alvo ser outro operador ou o próprio admin. O registro armazena: `operadorId` (alvo), `adminId` (responsável autenticado), `valorAnterior`, `valorNovo`, `motivo` e data/hora.
+
+O campo `motivo` é **obrigatório** em todo ajuste (validação do schema, `min(1)`/`max(200)`). Nenhuma alteração manual do Caixa Base ocorre sem histórico.
 
 ---
 

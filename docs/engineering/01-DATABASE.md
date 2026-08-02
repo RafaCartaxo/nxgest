@@ -167,6 +167,35 @@ Seu saldo deverá ser obtido exclusivamente a partir das Movimentações Finance
 
 Todos os seus indicadores deverão ser calculados automaticamente a partir dessas movimentações.
 
+### `caixa_config`
+
+Configuração operacional do caixa por usuário. PK = `userId`.
+
+| Campo | Tipo | Observação |
+|-------|------|------------|
+| `userId` | TEXT PK | Dono do caixa |
+| `caixaBase` | REAL | Base do caixa (registro, não movimentação) |
+| `updatedAt` | TEXT | Última alteração |
+
+### `auditoria_caixa`
+
+Registro de todo ajuste manual do Caixa Base (BR-088, PLAN-026). Tabela **separada** de `movimentacoesFinanceiras` — ajuste de base não gera movimentação (evita dobra de saldo, ver PLAN-020).
+
+| Campo | Tipo | Observação |
+|-------|------|------------|
+| `id` | TEXT PK | UUID |
+| `operadorId` | TEXT | Alvo do ajuste |
+| `adminId` | TEXT | Responsável autenticado (quem ajustou) |
+| `valorAnterior` | REAL | Base antes do ajuste |
+| `valorNovo` | REAL | Base depois do ajuste |
+| `motivo` | TEXT | Obrigatório (≤200) |
+| `data` | TEXT | Data local do ajuste |
+| `createdAt` | TEXT | Timestamp ISO |
+
+Índices: `idx_auditoria_caixa_operador` (operadorId), `idx_auditoria_caixa_data` (data).
+
+**Leitura (PLAN-027):** o histórico é consultado via `GET /api/caixa/auditoria` (paginação, `ORDER BY createdAt DESC`), com `adminNome` resolvido por JOIN com `usuarios`.
+
 ---
 
 # Integridade

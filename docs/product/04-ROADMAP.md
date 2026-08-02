@@ -569,6 +569,18 @@ A autenticação multi-usuário e o painel de administração são implementados
 - `plans/PLAN-017-admin-panel.md` — Plano do painel de administração
 - `foundation/ADR-003-Auth-Autorizacao.md` — Decisão arquitetural do subsistema de auth
 
+#### 5.2c — Evoluções do painel admin (PLAN-020 a PLAN-026)
+
+**Status:** Concluído ✅
+
+- **PLAN-020** — Drill-down Admin → Operador + Caixa por `?usuarioId=` + fix da dobra de saldo/lucro.
+- **PLAN-021/022** — Painel com contexto de empresa, KPIs por seção, login por role, ajustes de KPIs.
+- **PLAN-023/024** — Ajustes pós-validação; página admin no padrão do sistema, usuário corrente na Equipe.
+- **PLAN-025** — Ajuste do Caixa Base **exclusivo de admin** (operador 403); contexto de empresa no super admin.
+- **PLAN-026** — Sprint 1 do backlog: auditoria de caixa (BR-088), `Modal` base compartilhado e nomenclatura Equipe/Administradores/Operadores.
+
+Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019 pendentes).
+
 ### 5.3 Visualização em mapa
 - Integração com Google Maps (já tem `maps.ts`)
 - Pin dos clientes no mapa
