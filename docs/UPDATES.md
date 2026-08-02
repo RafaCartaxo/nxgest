@@ -2,6 +2,15 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 02/08/2026 — Correção do backup de produção (WAL)
+
+**Corrigido (crítico)**
+- **Backups automáticos estavam inúteis** — o banco roda em WAL mode (dados vivos no `.db-wal` ~1MB), e o script copiava só `gestao.db` cru → arquivos de 4KB **vazios** (validado: "no such table: usuarios").
+- **Script corrigido** (`/opt/scripts/backup-nxgestao.sh`): `wal_checkpoint(TRUNCATE)` antes do `cp` + **validação embutida** (`SELECT COUNT(*) FROM usuarios` > 0; backup vazio vira `.invalid`).
+- **Backup pré-deploy**: `scripts/deploy.sh` agora chama o backup **antes** do build — todo deploy gera snapshot do estado anterior.
+- **Cópia off-site corrigida**: `~/.config/nxgestao/backups/backup-offsite-gestao.db` estava vazia (4KB) → substituída pelo backup consistente (241KB, dados reais).
+- Backup validado: `gestao-20260802-115822.db` (236KB, 5 usuários, 7 clientes).
+
 ## 02/08/2026 — Deploy no VPS (PLAN-023 → PLAN-027)
 
 **Deploy do código atual em produção** (`https://nxgestao.duckdns.org`):

@@ -79,9 +79,10 @@ git pull                      # puxa o novo código (senha/token via chave SSH d
 
 O `scripts/deploy.sh`:
 1. Exige `.env` presente (senão aborta)
-2. `docker compose -f docker-compose.prod.yml build app`
-3. `docker compose -f docker-compose.prod.yml up -d`
-4. `docker image prune -f`
+2. **Backup pré-deploy** — chama `/opt/scripts/backup-nxgestao.sh` (snapshot do banco antes do build; se o script estiver ausente, avisa e segue)
+3. `docker compose -f docker-compose.prod.yml build app`
+4. `docker compose -f docker-compose.prod.yml up -d`
+5. `docker image prune -f`
 
 **Dados:** o volume `nxgestao_nxgestao_data` sobrevive a builds e `up`/`down` — o banco não é recriado.
 
@@ -96,6 +97,12 @@ curl -s https://nxgestao.duckdns.org/api/health
 
 ## 5. Backup
 
+### 5.0 — Alerta WAL (causa raiz, corrigido em 02/08/2026)
+
+O banco roda em **WAL mode**: os dados vivos ficam no arquivo `.db-wal` (~1MB) e o `gestao.db` principal pode ter só alguns KB. O script antigo copiava apenas `gestao.db` cru → backups **vazios/incompletos** (arquivos de 4KB sem schema — validado: "no such table: usuarios"). **Correção:** o script faz `wal_checkpoint(TRUNCATE)` (materializa o WAL no arquivo principal) antes do `cp`, e **valida** o backup (`SELECT COUNT(*) FROM usuarios` > 0) antes de mantê-lo.
+
+> **Ao verificar um backup:** abrir e conferir dados (`node -e "const db=require('better-sqlite3')('<arquivo>'); db.prepare('SELECT COUNT(*) FROM usuarios').get()"`). Backup de 4KB = **inválido**.
+
 ### 5.1 — Automático (cron)
 
 | Item | Valor |
@@ -104,6 +111,9 @@ curl -s https://nxgestao.duckdns.org/api/health
 | Cron | `0 */12 * * *` (a cada 12h) |
 | Destino | `/opt/backups/gestao-YYYYMMDD-HHMMSS.db` |
 | Retenção | 14 dias (limpeza automática no script) |
+| Validação | Embutida — backup vazio é renomeado `.invalid` e o script falha |
+
+**Backup pré-deploy:** `scripts/deploy.sh` (no repo) chama o script de backup **antes** do build — cada deploy gera snapshot do estado anterior (ver seção 4).
 
 Script (para referência/recriação):
 
@@ -111,19 +121,42 @@ Script (para referência/recriação):
 #!/usr/bin/env bash
 set -euo pipefail
 STAMP=$(date +%Y%m%d-%H%M%S)
-mkdir -p /opt/backups
-docker exec nxgestao-app-1 cp /data/gestao.db /data/backup-$STAMP.db
-docker cp nxgestao-app-1:/data/backup-$STAMP.db /opt/backups/gestao-$STAMP.db
-docker exec nxgestao-app-1 rm -f /data/backup-$STAMP.db
-find /opt/backups -name 'gestao-*.db' -mtime +14 -delete
+BACKUP_DIR=/opt/backups
+CONTAINER=nxgestao-app-1
+DB_PATH=/data/gestao.db
+TMP_DB=/data/backup-$STAMP.db
+OUT=$BACKUP_DIR/gestao-$STAMP.db
+mkdir -p $BACKUP_DIR
+# 1) Checkpoint WAL (materializa dados do .db-wal no arquivo principal)
+docker exec $CONTAINER node -e "
+  const db = require(\"better-sqlite3\")(\"$DB_PATH\");
+  const r = db.pragma(\"wal_checkpoint(TRUNCATE)\");
+  if (r && r[0] && r[0].busy !== 0) { process.exit(2); }
+  db.close();" || { echo "ERRO: checkpoint WAL falhou"; exit 1; }
+# 2) Copiar (consistente) + validar dentro do container
+docker exec $CONTAINER cp $DB_PATH $TMP_DB
+if docker exec $CONTAINER node -e "
+  const db = require(\"better-sqlite3\")(\"$TMP_DB\");
+  const r = db.prepare(\"SELECT COUNT(*) c FROM usuarios\").get();
+  db.close(); process.exit((r && r.c > 0) ? 0 : 3);"; then
+  echo "Backup válido"
+else
+  docker exec $CONTAINER rm -f $TMP_DB; echo "ERRO: backup inválido" >&2; exit 1
+fi
+docker cp $CONTAINER:$TMP_DB $OUT
+docker exec $CONTAINER rm -f $TMP_DB
+find $BACKUP_DIR -name "gestao-*.db" -mtime +14 -delete
+ls -lh $BACKUP_DIR | tail -4
 ```
 
 ### 5.2 — Cópia off-site (manual, recomendado ao menos semanal)
 
 ```bash
-scp root@172.245.152.223:/opt/backups/gestao-<DATA>.db .
+scp root@172.245.152.223:/opt/backups/gestao-<DATA>.db ~/.config/nxgestao/backups/backup-offsite-gestao.db
 ```
 
+> **Corrigido em 02/08/2026:** a cópia off-site anterior estava **vazia** (4KB, gerada do `gestao.db` cru sem WAL). Substituída pelo backup consistente (`gestao-20260802-115822.db`, 241KB, 5 usuários). O `scp` deve sempre baixar um backup **válido** de `/opt/backups/` (nunca o `gestao.db` cru do volume).
+>
 > Se o VPS for perdido por completo (falha de hardware/provedor), a cópia off-site é a única via de recuperação.
 
 ### 5.3 — Restauração

@@ -116,4 +116,29 @@ Executar o primeiro sprint do backlog de refinamentos: auditoria de caixa (P014)
 - [x] `plans/README.md`: entrada PLAN-028
 
 ### Pendência registrada
-- [ ] Corrigir script de backup automático do VPS para incluir WAL/checkpoint (backups de 4KB são incompletos)
+- [x] Corrigir script de backup automático do VPS para incluir WAL/checkpoint (backups de 4KB são incompletos) — **concluído**
+
+---
+
+# CHECKLIST — Correção do backup de produção (WAL)
+
+**Data:** 02/08/2026
+
+## Problema
+
+Banco em WAL mode (dados vivos no `.db-wal` ~1MB); script copiava só `gestao.db` cru → backups de 4KB **vazios** (validado: "no such table: usuarios"). Cópia off-site local também vazia.
+
+## Fases
+
+- [x] `/opt/scripts/backup-nxgestao.sh` corrigido: `wal_checkpoint(TRUNCATE)` + `cp` + validação embutida (`SELECT COUNT(*) FROM usuarios` > 0; inválido → `.invalid`)
+- [x] `scripts/deploy.sh`: backup pré-deploy antes do build (chama `/opt/scripts/backup-nxgestao.sh` se existir)
+- [x] Cópia off-site substituída pelo backup consistente (241KB, 5 usuários, 7 clientes)
+- [x] `06-PRODUCAO.md`: seção 5.0 (alerta WAL), script corrigido, off-site atualizado, deploy pré-backup
+- [x] `UPDATES.md`: entrada da correção
+
+## Validação
+
+- [x] Rodar script 1x → `gestao-20260802-115822.db` (236KB, "Backup válido (usuarios > 0)")
+- [x] Conteúdo validado: 5 usuários, 7 clientes
+- [x] Off-site local abre com dados (5 usuários, 7 clientes)
+- [ ] (pendente) Confirmar próximo backup do cron (00h/12h) também válido
