@@ -253,3 +253,20 @@ Banco em WAL mode (dados vivos no `.db-wal` ~1MB); script copiava só `gestao.db
 ## Novos casos de uso no 06-CASOS-DE-USO.md
 
 - [x] UC-034 (atendido e pago = 1), UC-035 (2 contratos), UC-036 (total consistente entre telas), UC-037 (visitar não sobrescreve), UC-038 (KPI a vencer coerente)
+
+---
+
+# Estorno visível nas movimentações (rastreio do estorno)
+
+**Data:** 02/08/2026
+
+## Problema
+- O estorno criava movimentação `origem: "Cancelamento"` com `origemId = pagamentoId`, mas o SQL de `clienteNome` resolvia `Cancelamento` por `contratoId` → cliente ficava `null` e a UI mostrava só "Cancelamento" cru, sem descrição. Parecia que o estorno "não tinha acontecido".
+
+## Correção
+- [x] `caixa.repository.impl.ts`: `Cancelamento` agora resolve cliente via **pagamentoId** (COALESCE: estorno → pagamento→contrato→cliente; senão contrato→cliente)
+- [x] `CaixaPage.tsx`: badge "Estorno" (origem Cancelamento) + exibição da `descricao` (motivo) na linha da movimentação
+- [x] i18n `caixa.estornoLabel` (pt/en/es) + fix de chave `movimentacoes` duplicada no en.json
+
+## Validação
+- [x] Estorno → movimentação aparece com: origem Cancelamento, cliente ("Carlos Carvalho"), descricao ("Estorno do pagamento - R$ 115.00 (Pagamento duplicado)")

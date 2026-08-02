@@ -648,7 +648,7 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 **Conferências:**
 - [ ] Parcelas revertidas (estado/saldo/dataQuitacao)?
 - [ ] Contrato `Finalizado` volta a `Ativo`?
-- [ ] Movimentação reversa registrada?
+- [ ] Movimentação reversa registrada **e visível** (origem Cancelamento + badge "Estorno" + descrição com motivo + nome do cliente)?
 - [ ] Selo "Estornado" aparece no pagamento?
 - [ ] Auditoria de estorno gravada (quem/quando/motivo)?
 - [ ] **Duplo estorno bloqueado** (409)?

@@ -419,6 +419,11 @@ export function CaixaPage() {
                   {m.tipo === "entrada" ? "+" : "-"} R$ {formatCurrency(m.valor)}
                 </span>
                 <span className="text-xs text-text-secondary">{m.origem}</span>
+                {m.origem === "Cancelamento" && (
+                  <span className="rounded bg-warning/20 px-1.5 py-0.5 text-xs font-medium text-warning">
+                    {t("caixa.estornoLabel")}
+                  </span>
+                )}
                 {m.origem === "Gasto" && m.categoria && (
                   <span className="text-xs text-text-muted">
                     {CATEGORIA_ICONES[m.categoria] ?? "📋"} {m.categoria}
@@ -426,6 +431,9 @@ export function CaixaPage() {
                 )}
                 {m.clienteNome && (
                   <span className="text-xs text-text-muted">{m.clienteNome}</span>
+                )}
+                {m.descricao && (
+                  <span className="truncate text-xs text-text-muted">{m.descricao}</span>
                 )}
               </div>
                   <span className="text-xs text-text-muted">

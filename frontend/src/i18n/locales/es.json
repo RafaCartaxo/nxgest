@@ -287,6 +287,7 @@
     "ajustePor": "por",
     "movimentacoes": "Movimientos Recientes",
     "nenhumaMovimentacao": "Sin movimientos en el período.",
+    "estornoLabel": "Reembolso",
     "liquidar": "Cerrar Semana",
     "liquidarConfirmacao": "¿Cerrar la semana actual? Los indicadores se reiniciarán.",
     "liquidarSucesso": "Semana cerrada.",

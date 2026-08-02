@@ -127,7 +127,17 @@ export class CaixaRepository implements ICaixaRepository {
       SELECT
         m.id, m.tipo, m.valor, m.origem, m.origemId, m.descricao, m.data, m.createdAt,
         CASE
-          WHEN m.origem IN ('Contrato', 'Cancelamento', 'Ajuste') THEN
+          WHEN m.origem = 'Cancelamento' THEN
+            COALESCE(
+              (SELECT cl.nome FROM clientes cl
+               JOIN contratos ct ON ct.clienteId = cl.id
+               JOIN pagamentos pg ON pg.contratoId = ct.id
+               WHERE pg.id = m.origemId),
+              (SELECT cl.nome FROM clientes cl
+               JOIN contratos ct ON ct.clienteId = cl.id
+               WHERE ct.id = m.origemId)
+            )
+          WHEN m.origem IN ('Contrato', 'Ajuste') THEN
             (SELECT cl.nome FROM clientes cl
              JOIN contratos ct ON ct.clienteId = cl.id
              WHERE ct.id = m.origemId)
