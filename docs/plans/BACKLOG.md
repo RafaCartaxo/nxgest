@@ -90,6 +90,8 @@ Evitando utilizar "Operadores" como nome genérico para todos.
 
 ## P013 — Contexto do Operador
 
+> **Fatia 1 em planejamento** — Estorno de Pagamento pelo Admin (PLAN-028): corrige o caso de uso "corrigir pagamentos registrados incorretamente". Admin vê os contratos do operador no `OperadorDetail` e estorna um pagamento (modal de motivo + auditoria dedicada). Demais casos de uso (consultar clientes/contratos/pagamentos completos, caixa) seguem pendentes.
+
 ### Objetivo
 
 Permitir que um administrador consiga acessar o contexto operacional de qualquer operador da equipe sem necessidade de trocar de login.

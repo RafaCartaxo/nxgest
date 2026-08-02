@@ -91,3 +91,29 @@ Executar o primeiro sprint do backlog de refinamentos: auditoria de caixa (P014)
 - [x] Admin lê histórico do operador via `?usuarioId=` → registros corretos
 - [x] Operador lê o próprio → só os próprios
 - [x] Forgery: operador com `?usuarioId=` de outro → continua vendo só o próprio
+
+---
+
+# CHECKLIST — Deploy no VPS (PLAN-023 → PLAN-027) + PLAN-028
+
+**Data:** 02/08/2026
+
+## Deploy do código atual em produção
+
+- [x] `.gitignore`: `*.db.backup-*` (backups do banco fora do repo)
+- [x] Commits separados por plano (PLAN-025/026/027 + docs + seed/vite)
+- [x] `git push origin main` → `dc435dc`
+- [x] Backup manual pré-deploy (checkpoint + backup consistente, 204KB) — **gap**: backups automáticos estavam incompletos (só WAL-less `gestao.db`, 4KB)
+- [x] VPS: `git pull` + `./scripts/deploy.sh`
+- [x] Health `{"status":"ok","db":"connected"}`
+- [x] Migração: tabela `auditoria_caixa` criada em prod; dados preservados (5 usuários, 1 empresa)
+- [x] Login admin real OK + `GET /api/caixa/auditoria` → 200 + frontend novo
+
+## PLAN-028 (planejamento)
+
+- [x] `docs/plans/PLAN-028-estorno-pagamento.md` (fases, decisões, níveis de acesso, impacto no caixa)
+- [x] `BACKLOG.md`: P013 com nota da fatia 1 em planejamento
+- [x] `plans/README.md`: entrada PLAN-028
+
+### Pendência registrada
+- [ ] Corrigir script de backup automático do VPS para incluir WAL/checkpoint (backups de 4KB são incompletos)

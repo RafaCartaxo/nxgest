@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 02/08/2026 — Deploy no VPS (PLAN-023 → PLAN-027)
+
+**Deploy do código atual em produção** (`https://nxgestao.duckdns.org`):
+- Produção passou de PLAN-022 para o topo local (PLAN-023/024/025/026/027) — commit `dc435dc`.
+- Migração aplicada no boot: tabela `auditoria_caixa` criada; dados reais preservados (5 usuários, 1 empresa).
+- **Gap encontrado e corrigido**: os backups automáticos copiavam só `gestao.db` (4096 bytes, WAL não incluído) — **incompletos**. Feito checkpoint + backup manual correto (`/opt/backups/gestao-manual-20260802-112054.db`, 204KB). Ajuste do script de backup é pendência.
+- Validado: health OK, login admin OK, `GET /api/caixa/auditoria` 200, frontend novo servido.
+
 ## 02/08/2026 — PLAN-027 · Histórico de ajustes do Caixa Base
 
 **Adicionado**
