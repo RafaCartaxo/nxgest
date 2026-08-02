@@ -47,6 +47,18 @@ npm start                # produção local (Node serve API + frontend estático
 npm test                 # vitest
 ```
 
+## Diagnóstico de ambiente — checar antes de culpar o código
+
+Bug reportado "em produção" nem sempre é bug de código. Antes de investigar, **confirmar o que está de fato rodando e qual resposta a API real devolve**:
+
+- `ps aux | grep -E "node|vite|tsx"` e `ss -tlnp | grep -E "3000|5173"` — ver PIDs, **hora de início** e qual binário cada porta serve.
+- Um processo `node dist/main.js` carrega o `dist` **no boot**: se o processo foi iniciado **antes** de um `npm run build`, ele segue servindo o build antigo mesmo com o `dist` atualizado no disco. Reiniciar o processo é parte da correção.
+- Frontend `vite` (dev) serve código fonte via HMR; backend `node dist/main.js` serve o build compilado. **Misturar os dois = shape divergente** entre o que o frontend espera e o que o backend devolve (ex.: campo novo no frontend, build antigo sem ele no backend).
+- Para ver o shape real da resposta, chamar a API direto (curl com token) e comparar com a interface TypeScript do frontend.
+- O backend **local** e o **VPS** podem estar em versões diferentes — confirmar qual o usuário está vendo (URL/porta) antes de fechar diagnóstico.
+
+**Precedente (2026-08-01):** "bug" `stats.totalAdmins is undefined` em qualquer admin. Causa: backend local `node dist/main.js` rodando desde 12:38 com `dist` de 2026-07-31 (sem `totalAdmins`), enquanto o frontend Vite servia o código atual (que espera `totalAdmins`). Produção (VPS, deploy PLAN-022) estava normal. Correção: rebuild + reiniciar o processo do backend.
+
 ## Convenções
 
 - Backend em Clean Architecture: `src/modules/<modulo>/{domain,application,infrastructure,presentation}`

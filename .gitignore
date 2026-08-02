@@ -3,6 +3,7 @@ dist/
 *.db
 *.db-shm
 *.db-wal
+*.db.backup-*
 *.log
 *.err
 .env
