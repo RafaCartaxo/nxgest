@@ -8,4 +8,6 @@ export interface EmpresaComStats extends Empresa {
   totalUsuarios: number
   totalClientes: number
   contratosAtivos: number
+  adminNome?: string | null
+  adminEmail?: string | null
 }

@@ -13,10 +13,11 @@ export class EmpresaRepository implements IEmpresaRepository {
     const rows = await db.select().from(empresas).orderBy(empresas.createdAt)
     return Promise.all(
       rows.map(async (row) => {
-        const [totalOps, totalClientesResult, contratosResult] = await Promise.all([
+        const [totalOps, totalClientesResult, contratosResult, adminResult] = await Promise.all([
           db.select({ total: count() }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), isNull(usuarios.deletedAt))),
           db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, row.id))),
           db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), eq(usuarios.empresaId, row.id))),
+          db.select({ nome: usuarios.nome, email: usuarios.email }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), eq(usuarios.role, "admin"), isNull(usuarios.deletedAt))).orderBy(usuarios.createdAt).limit(1),
         ])
         return {
           id: row.id,
@@ -25,6 +26,8 @@ export class EmpresaRepository implements IEmpresaRepository {
           totalUsuarios: totalOps[0].total,
           totalClientes: totalClientesResult[0].total,
           contratosAtivos: contratosResult[0].total,
+          adminNome: adminResult[0]?.nome ?? null,
+          adminEmail: adminResult[0]?.email ?? null,
         }
       })
     )
@@ -33,10 +36,11 @@ export class EmpresaRepository implements IEmpresaRepository {
   async findById(id: string): Promise<EmpresaComStats | null> {
     const [row] = await db.select().from(empresas).where(eq(empresas.id, id)).limit(1)
     if (!row) return null
-    const [totalOps, totalClientesResult, contratosResult] = await Promise.all([
+    const [totalOps, totalClientesResult, contratosResult, adminResult] = await Promise.all([
       db.select({ total: count() }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), isNull(usuarios.deletedAt))),
       db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, row.id))),
       db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), eq(usuarios.empresaId, row.id))),
+      db.select({ nome: usuarios.nome, email: usuarios.email }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), eq(usuarios.role, "admin"), isNull(usuarios.deletedAt))).orderBy(usuarios.createdAt).limit(1),
     ])
     return {
       id: row.id,
@@ -45,6 +49,8 @@ export class EmpresaRepository implements IEmpresaRepository {
       totalUsuarios: totalOps[0].total,
       totalClientes: totalClientesResult[0].total,
       contratosAtivos: contratosResult[0].total,
+      adminNome: adminResult[0]?.nome ?? null,
+      adminEmail: adminResult[0]?.email ?? null,
     }
   }
 
