@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { X } from "lucide-react"
 import { formatCurrency } from "../../../shared/utils/masks.js"
+import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { listarMovimentacoes, type MovimentacaoItem } from "../../caixa/services/caixa.service.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 
@@ -14,24 +15,6 @@ export function ResultadoDiaModal({ open, onClose }: ResultadoDiaModalProps) {
   const { t } = useTranslation()
   const [items, setItems] = useState<MovimentacaoItem[]>([])
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!open) return
-    document.documentElement.style.overflow = "hidden"
-    document.body.style.overflow = "hidden"
-    return () => {
-      document.documentElement.style.overflow = ""
-      document.body.style.overflow = ""
-    }
-  }, [open])
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose()
-    }
-    if (open) document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [open, onClose])
 
   useEffect(() => {
     if (!open) return
@@ -52,14 +35,13 @@ export function ResultadoDiaModal({ open, onClose }: ResultadoDiaModalProps) {
   const resultado = totalEntradas - totalSaidas
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-md rounded-md bg-surface shadow-lg">
-        <div className="flex items-center justify-between border-b border-border-light px-4 py-3">
-          <h3 className="text-lg font-semibold">{t("admin.modalResultadoDia")}</h3>
-          <button type="button" onClick={onClose} className="text-text-muted hover:text-text-primary">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Modal open={open} onClose={onClose} maxWidth="max-w-md">
+      <div className="flex items-center justify-between border-b border-border-light px-4 py-3">
+        <h3 className="text-lg font-semibold">{t("admin.modalResultadoDia")}</h3>
+        <button type="button" onClick={onClose} className="text-text-muted hover:text-text-primary">
+          <X className="h-5 w-5" />
+        </button>
+      </div>
         <div className="max-h-80 overflow-y-auto p-4">
           {loading ? (
             <div className="space-y-3 py-4">
@@ -103,7 +85,6 @@ export function ResultadoDiaModal({ open, onClose }: ResultadoDiaModalProps) {
             </>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

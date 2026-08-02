@@ -21,6 +21,10 @@ function roleLabel(t: (k: string) => string, role: OperadorRow["role"]): string 
   return t("admin.roleOperator")
 }
 
+function isAdminRole(role: OperadorRow["role"]): boolean {
+  return role === "super_admin" || role === "admin"
+}
+
 export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -32,57 +36,72 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Prop
     return a.nome.localeCompare(b.nome)
   })
 
+  const admins = sorted.filter((op) => isAdminRole(op.role))
+  const operators = sorted.filter((op) => !isAdminRole(op.role))
+
+  type RowDef = { label: string; items: OperadorRow[] }
+  const groups: RowDef[] = []
+  if (admins.length > 0) groups.push({ label: t("admin.secaoAdministradores"), items: admins })
+  if (operators.length > 0) groups.push({ label: t("admin.operadores"), items: operators })
+
   if (sorted.length === 0) {
     return <p className="text-center text-text-secondary py-8">{t("common.empty")}</p>
   }
 
   return (
-    <div className="space-y-3">
-      {sorted.map((op) => {
-        const isSelf = user?.id === op.id
-        return (
-          <Card.Root key={op.id} variant="list-item">
-            <Card.Header className="flex-wrap">
-              <span className="min-w-0 flex-1 truncate text-base font-semibold">{op.nome}</span>
-              {isSelf && <StatusBadge variant="success" size="sm" label={t("admin.eu")} />}
-              <StatusBadge
-                variant={op.role === "operator" ? "neutral" : "info"}
-                size="sm"
-                label={roleLabel(t, op.role)}
-              />
-            </Card.Header>
-            <Card.Body>
-              <p className="truncate text-sm text-text-secondary">{op.email}</p>
-              <Card.Indicators>
-                <Card.Indicator label={`${t("cliente.title")}`} value={`${op.totalClientes}`} />
-                <Card.Indicator label={`${t("contrato.title")}`} value={`${op.contratosAtivos}`} />
-              </Card.Indicators>
-            </Card.Body>
-            <Card.Actions
-              actions={[
-                {
-                  icon: ArrowRight,
-                  label: t("admin.acessar"),
-                  onClick: () => navigate(`/admin/operadores/${op.id}${empresaId ? `?empresaId=${empresaId}` : ""}`),
-                },
-                {
-                  icon: Edit3,
-                  label: t("admin.editar"),
-                  onClick: () => onEdit(op),
-                  show: !isSelf,
-                },
-                {
-                  icon: Trash2,
-                  label: t("admin.remover"),
-                  onClick: () => onDelete(op.id),
-                  show: !isSelf,
-                  variant: "danger",
-                },
-              ]}
-            />
-          </Card.Root>
-        )
-      })}
+    <div className="space-y-4">
+      {groups.map((group) => (
+        <div key={group.label}>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">{group.label}</p>
+          <div className="space-y-3">
+            {group.items.map((op) => {
+              const isSelf = user?.id === op.id
+              return (
+                <Card.Root key={op.id} variant="list-item">
+                  <Card.Header className="flex-wrap">
+                    <span className="min-w-0 flex-1 truncate text-base font-semibold">{op.nome}</span>
+                    {isSelf && <StatusBadge variant="success" size="sm" label={t("admin.eu")} />}
+                    <StatusBadge
+                      variant={op.role === "operator" ? "neutral" : "info"}
+                      size="sm"
+                      label={roleLabel(t, op.role)}
+                    />
+                  </Card.Header>
+                  <Card.Body>
+                    <p className="truncate text-sm text-text-secondary">{op.email}</p>
+                    <Card.Indicators>
+                      <Card.Indicator label={`${t("cliente.title")}`} value={`${op.totalClientes}`} />
+                      <Card.Indicator label={`${t("contrato.title")}`} value={`${op.contratosAtivos}`} />
+                    </Card.Indicators>
+                  </Card.Body>
+                  <Card.Actions
+                    actions={[
+                      {
+                        icon: ArrowRight,
+                        label: t("admin.acessar"),
+                        onClick: () => navigate(`/admin/operadores/${op.id}${empresaId ? `?empresaId=${empresaId}` : ""}`),
+                      },
+                      {
+                        icon: Edit3,
+                        label: t("admin.editar"),
+                        onClick: () => onEdit(op),
+                        show: !isSelf,
+                      },
+                      {
+                        icon: Trash2,
+                        label: t("admin.remover"),
+                        onClick: () => onDelete(op.id),
+                        show: !isSelf,
+                        variant: "danger",
+                      },
+                    ]}
+                  />
+                </Card.Root>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

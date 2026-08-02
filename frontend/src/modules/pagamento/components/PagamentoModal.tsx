@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { createPagamento, previewPagamento, type PreviewDistribuicao } from "../services/pagamento.service.js"
 import { ApiError } from "../../../api/client.js"
 import { Button } from "../../../shared/components/Button.js"
+import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { formatCurrency, maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
 
 export interface PagamentoSuccessData {
@@ -37,23 +38,6 @@ export function PagamentoModal({
   const [carregandoPreview, setCarregandoPreview] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const previewRef = useRef<PreviewDistribuicao | null>(null)
-
-  useEffect(() => {
-    document.documentElement.style.overflow = "hidden"
-    document.body.style.overflow = "hidden"
-    return () => {
-      document.documentElement.style.overflow = ""
-      document.body.style.overflow = ""
-    }
-  }, [])
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose()
-    }
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [onClose])
 
   const valor = unmaskMonetario(rawValor)
 
@@ -123,9 +107,8 @@ export function PagamentoModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-black/40" onClick={onClose}>
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="mx-auto w-full max-w-sm rounded-md bg-surface p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+    <Modal open onClose={onClose} backdropClose>
+      <div className="p-6">
         <h3 className="text-xl font-semibold">{t("pagamento.title")}</h3>
 
         {parcelaLabel && (
@@ -230,7 +213,6 @@ export function PagamentoModal({
           </div>
         </form>
       </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

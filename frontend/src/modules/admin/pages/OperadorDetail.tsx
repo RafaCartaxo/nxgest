@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { ChevronLeft } from "lucide-react"
 import { getOperador, type OperadorRow } from "../services/admin.service.js"
-import { getCaixaStatus, ajustarCaixaBase, type CaixaStatus } from "../../caixa/services/caixa.service.js"
+import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -22,21 +22,25 @@ export function OperadorDetail() {
 
   const [operador, setOperador] = useState<OperadorRow | null>(null)
   const [caixa, setCaixa] = useState<CaixaStatus | null>(null)
+  const [auditoria, setAuditoria] = useState<AuditoriaCaixaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ajusteValor, setAjusteValor] = useState("")
+  const [ajusteMotivo, setAjusteMotivo] = useState("")
 
   const fetch = useCallback(async () => {
     if (!id) return
     setLoading(true)
     setError(null)
     try {
-      const [op, cx] = await Promise.all([
+      const [op, cx, aud] = await Promise.all([
         getOperador(id, empresaId),
         getCaixaStatus(undefined, undefined, id),
+        listarAuditoriaCaixa({ limit: 20 }, id),
       ])
       setOperador(op)
       setCaixa(cx)
+      setAuditoria(aud.data)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("admin.erroCarregar"))
     } finally {
@@ -49,14 +53,20 @@ export function OperadorDetail() {
   async function handleAjustar() {
     if (!id) return
     const valor = unmaskMonetario(ajusteValor)
+    const motivo = ajusteMotivo.trim()
     if (valor <= 0) {
       feedback.show({ status: "error", message: t("caixa.ajustarValorInvalido") })
       return
     }
+    if (!motivo) {
+      feedback.show({ status: "error", message: t("caixa.motivoObrigatorio") })
+      return
+    }
     await feedback.run({
       action: async () => {
-        await ajustarCaixaBase(valor, id)
+        await ajustarCaixaBase(valor, motivo, id)
         setAjusteValor("")
+        setAjusteMotivo("")
         await fetch()
       },
       loading: t("common.saving"),
@@ -126,16 +136,50 @@ export function OperadorDetail() {
                 placeholder="R$ 0,00"
                 className="block w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
               />
-              <button
-                type="button"
-                onClick={handleAjustar}
-                className="flex-shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-              >
-                {t("caixa.ajustarSalvar")}
-              </button>
-            </div>
-          </>
-        )}
+<button
+                  type="button"
+                  onClick={handleAjustar}
+                  className="flex-shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
+                >
+                  {t("caixa.ajustarSalvar")}
+                </button>
+              </div>
+              <input
+                type="text"
+                value={ajusteMotivo}
+                onChange={(e) => setAjusteMotivo(e.target.value)}
+                placeholder={t("caixa.motivoPlaceholder")}
+                className="mt-2 block w-full rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+              />
+
+            <SectionHeader title={t("caixa.historicoAjustes")} />
+            {auditoria.length === 0 ? (
+              <p className="text-text-secondary">{t("caixa.ajusteSemRegistros")}</p>
+            ) : (
+              <div className="mt-2 space-y-1">
+                {auditoria.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between rounded-md border border-border-light bg-surface px-3 py-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-text-primary">
+                        R$ {a.valorAnterior.toFixed(2)} → R$ {a.valorNovo.toFixed(2)}
+                      </span>
+                      <span className="text-xs text-text-secondary">
+                        {a.adminNome ? `${t("caixa.ajustePor")} ${a.adminNome}` : ""}
+                      </span>
+                      <span className="text-xs text-text-muted">{a.motivo}</span>
+                    </div>
+                    <span className="text-xs text-text-muted">
+                      {new Date(a.createdAt).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            </>
+          )}
       </EstadoTela>
     </div>
   )

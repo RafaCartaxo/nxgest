@@ -1,6 +1,6 @@
-import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "./Button.js"
+import { Modal } from "./Modal/Modal.js"
 
 interface ConfirmModalProps {
   open: boolean
@@ -25,33 +25,9 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   const { t } = useTranslation()
 
-  useEffect(() => {
-    if (!open) return
-
-    document.documentElement.style.overflow = "hidden"
-    document.body.style.overflow = "hidden"
-
-    return () => {
-      document.documentElement.style.overflow = ""
-      document.body.style.overflow = ""
-    }
-  }, [open])
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onCancel()
-    }
-    if (open) {
-      document.addEventListener("keydown", handleKeyDown)
-    }
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [open, onCancel])
-
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-sm rounded-md bg-surface p-6 shadow-lg">
+    <Modal open={open} onClose={onCancel}>
+      <div className="p-6">
         <h3 className="text-xl font-semibold">{title}</h3>
         <p className="mt-2 text-sm text-text-secondary">{message}</p>
 
@@ -72,6 +48,6 @@ export function ConfirmModal({
           </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

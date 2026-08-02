@@ -39,6 +39,18 @@ export interface FechamentoSemanal {
   createdAt: string
 }
 
+export interface AuditoriaCaixaItem {
+  id: string
+  operadorId: string
+  adminId: string
+  adminNome: string | null
+  valorAnterior: number
+  valorNovo: number
+  motivo: string
+  data: string
+  createdAt: string
+}
+
 export interface PaginatedResponse<T> {
   data: T[]
   pagination: {
@@ -58,9 +70,9 @@ export async function getCaixaStatus(dataInicio?: string, dataFim?: string, usua
   return apiRequest<CaixaStatus>("GET", `/caixa${query ? `?${query}` : ""}`)
 }
 
-export async function ajustarCaixaBase(valor: number, usuarioId?: string): Promise<{ caixaBase: number }> {
+export async function ajustarCaixaBase(valor: number, motivo: string, usuarioId?: string): Promise<{ caixaBase: number }> {
   const qs = usuarioId ? `?usuarioId=${usuarioId}` : ""
-  return apiRequest<{ caixaBase: number }>("POST", `/caixa/ajuste${qs}`, { valor })
+  return apiRequest<{ caixaBase: number }>("POST", `/caixa/ajuste${qs}`, { valor, motivo })
 }
 
 export async function listarMovimentacoes(params?: {
@@ -83,4 +95,16 @@ export async function listarMovimentacoes(params?: {
 
 export async function liquidarSemana(): Promise<FechamentoSemanal> {
   return apiRequest<FechamentoSemanal>("POST", "/caixa/liquidar")
+}
+
+export async function listarAuditoriaCaixa(params?: {
+  page?: number
+  limit?: number
+}, usuarioId?: string): Promise<PaginatedResponse<AuditoriaCaixaItem>> {
+  const qs = new URLSearchParams()
+  if (params?.page) qs.set("page", String(params.page))
+  if (params?.limit) qs.set("limit", String(params.limit))
+  if (usuarioId) qs.set("usuarioId", usuarioId)
+  const query = qs.toString()
+  return apiRequest<PaginatedResponse<AuditoriaCaixaItem>>("GET", `/caixa/auditoria${query ? `?${query}` : ""}`)
 }

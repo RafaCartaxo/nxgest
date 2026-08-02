@@ -273,6 +273,13 @@
     "ajustarSucesso": "Total Cash adjusted.",
     "ajustarErro": "Error adjusting cash.",
     "ajustarValorInvalido": "Enter a value greater than zero.",
+    "motivoObrigatorio": "Provide a reason for the adjustment.",
+    "motivoPlaceholder": "Adjustment reason",
+    "ajustarMotivoPlaceholder": "Adjustment reason",
+    "historicoAjustes": "Adjustment history",
+    "ajusteSemRegistros": "No adjustments recorded.",
+    "ajustePor": "by",
+    "movimentacoes": "Recent Transactions",
     "movimentacoes": "Recent Transactions",
     "nenhumaMovimentacao": "No transactions in this period.",
     "liquidar": "Close Week",
@@ -344,6 +351,7 @@
     "totalOperadores": "Operators",
     "totalAdmins": "Admins",
     "secaoEquipe": "Team",
+    "secaoAdministradores": "Administrators",
     "secaoOperacao": "Operations",
     "empresaBadge": "Company",
     "totalClientes": "Total Clients",
@@ -376,6 +384,7 @@
     "caixaOperador": "Operator cash",
     "eu": "Me",
     "ajustarCaixaOperador": "Adjust operator cash base",
+    "adminDaEmpresa": "Company administrator",
     "modalAdmins": "Administrators",
     "modalOperadores": "Operators",
     "modalResultadoDia": "Daily Result",
@@ -411,6 +420,8 @@
       "adminSenhaObrigatoria": "Administrator password is required."
     },
     "navEmpresas": "Companies",
+    "admin": "Administrator",
+    "voltar": "Back to companies",
     "emptyMessage": "No companies registered."
   }
 }

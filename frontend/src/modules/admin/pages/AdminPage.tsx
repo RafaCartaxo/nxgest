@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams, Navigate, useNavigate } from "react-router-dom"
+import { ChevronLeft } from "lucide-react"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -8,6 +9,7 @@ import { SearchBar } from "../../../shared/components/SearchBar/SearchBar.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
+import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { OperadoresList } from "../components/OperadoresList.js"
 import { OperadorForm } from "../components/OperadorForm.js"
@@ -149,11 +151,30 @@ export function AdminPage() {
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
       <div className="mb-2 flex flex-wrap items-center gap-2">
+        {empresaId && (
+          <button
+            type="button"
+            onClick={() => navigate("/admin/empresas")}
+            title={t("superAdmin.voltar")}
+            className="text-text-muted hover:text-text-primary"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
         <h1 className="min-w-0 flex-1 text-3xl font-semibold">{tituloHeader ?? t("admin.title")}</h1>
         {tituloHeader && (
           <StatusBadge variant="info" size="sm" label={headerBadge} />
         )}
       </div>
+
+      {empresaId && empresa?.adminNome && (
+        <div className="mb-4 rounded-md bg-surface-secondary px-3 py-2 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-text-secondary">{t("admin.adminDaEmpresa")}:</span>
+            <span className="font-medium text-text-primary">{empresa.adminNome}</span>
+          </div>
+        </div>
+      )}
 
       {isAdminSelf && (
         <div className="flex gap-1 rounded-md bg-surface-secondary p-1">
@@ -191,15 +212,13 @@ export function AdminPage() {
           />
 
           {(formOpen || editingOp) && (
-            <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/30" onClick={() => { setFormOpen(false); setEditingOp(null) }}>
-              <div className="bg-surface rounded-lg shadow-xl max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <Modal open onClose={() => { setFormOpen(false); setEditingOp(null) }} maxWidth="max-w-md">
                 <OperadorForm
                   editing={editingOp}
                   onSubmit={editingOp ? handleUpdate : handleCreate}
                   onCancel={() => { setFormOpen(false); setEditingOp(null) }}
                 />
-              </div>
-            </div>
+            </Modal>
           )}
 
           <SearchBar

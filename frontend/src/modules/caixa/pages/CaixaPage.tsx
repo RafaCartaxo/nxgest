@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { getCaixaStatus, ajustarCaixaBase, listarMovimentacoes, liquidarSemana, type CaixaStatus, type MovimentacaoItem } from "../services/caixa.service.js"
+import { getCaixaStatus, ajustarCaixaBase, listarMovimentacoes, listarAuditoriaCaixa, liquidarSemana, type CaixaStatus, type MovimentacaoItem, type AuditoriaCaixaItem } from "../services/caixa.service.js"
+import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { listarPagamentosHoje, listarParcelasHoje, type PagamentoDoDiaItem, type ParcelaHojeCliente } from "../../operacoes/services/operacoes.service.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
 import { ApiError } from "../../../api/client.js"
@@ -26,12 +27,17 @@ export function CaixaPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const feedback = useFeedback()
+  const { user } = useAuth()
+
+  const canAdjust = user?.role === "admin" || user?.role === "super_admin"
 
   const [status, setStatus] = useState<CaixaStatus | null>(null)
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoItem[]>([])
+  const [auditoria, setAuditoria] = useState<AuditoriaCaixaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ajusteValor, setAjusteValor] = useState("")
+  const [ajusteMotivo, setAjusteMotivo] = useState("")
   const [liquidarModalOpen, setLiquidarModalOpen] = useState(false)
 
   const [parcelasHoje, setParcelasHoje] = useState<ParcelaHojeCliente[]>([])
@@ -82,12 +88,14 @@ export function CaixaPage() {
     setError(null)
     try {
       const { dataInicio, dataFim } = calcularSemana(offset ?? 0)
-      const [s, m] = await Promise.all([
+      const [s, m, aud] = await Promise.all([
         getCaixaStatus(dataInicio, dataFim),
         listarMovimentacoes({ limit: 20 }),
+        listarAuditoriaCaixa({ limit: 20 }),
       ])
       setStatus(s)
       setMovimentacoes(m.data)
+      setAuditoria(aud.data)
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)
@@ -157,14 +165,20 @@ export function CaixaPage() {
 
   async function handleAjustar() {
     const valor = unmaskMonetario(ajusteValor)
+    const motivo = ajusteMotivo.trim()
     if (valor <= 0) return
+    if (!motivo) {
+      feedback.show({ status: "error", message: t("caixa.motivoObrigatorio") })
+      return
+    }
     await feedback.run({
       loading: t("common.saving"),
       success: t("caixa.ajustarSucesso"),
       error: t("caixa.erroCarregar"),
       action: async () => {
-        await ajustarCaixaBase(valor)
+        await ajustarCaixaBase(valor, motivo)
         setAjusteValor("")
+        setAjusteMotivo("")
         await fetch()
       },
     })
@@ -361,6 +375,34 @@ export function CaixaPage() {
             </Button>
           </div>
 
+          <SectionHeader title={t("caixa.historicoAjustes")} />
+
+          {auditoria.length === 0 ? (
+            <p className="mt-2 text-text-secondary">{t("caixa.ajusteSemRegistros")}</p>
+          ) : (
+            <div className="mt-2 space-y-1">
+              {auditoria.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center justify-between rounded-md border border-border-light bg-surface px-3 py-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-text-primary">
+                      R$ {a.valorAnterior.toFixed(2)} → R$ {a.valorNovo.toFixed(2)}
+                    </span>
+                    <span className="text-xs text-text-secondary">
+                      {a.adminNome ? `${t("caixa.ajustePor")} ${a.adminNome}` : ""}
+                    </span>
+                    <span className="text-xs text-text-muted">{a.motivo}</span>
+                  </div>
+                  <span className="text-xs text-text-muted">
+                    {new Date(a.createdAt).toLocaleDateString("pt-BR")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <SectionHeader title={t("caixa.movimentacoes")} />
 
           {movimentacoes.length === 0 ? (
@@ -394,9 +436,10 @@ export function CaixaPage() {
             </div>
           )}
 
-          <div className="mt-8">
-            <SectionHeader title={t("caixa.ajustar")} />
-            <div className="mt-2 flex gap-2">
+          {canAdjust && (
+            <div className="mt-8">
+              <SectionHeader title={t("caixa.ajustar")} />
+              <div className="mt-2 flex gap-2">
                 <input
                   type="text"
                   inputMode="decimal"
@@ -413,7 +456,15 @@ export function CaixaPage() {
                   {t("caixa.ajustarSalvar")}
                 </button>
               </div>
+              <input
+                type="text"
+                value={ajusteMotivo}
+                onChange={(e) => setAjusteMotivo(e.target.value)}
+                placeholder={t("caixa.ajustarMotivoPlaceholder")}
+                className="mt-2 block w-full rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+              />
             </div>
+          )}
 
         </>
       ) : null}

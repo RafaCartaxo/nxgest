@@ -273,6 +273,12 @@
     "ajustarSucesso": "Caixa Total atualizado.",
     "ajustarErro": "Erro ao ajustar caixa.",
     "ajustarValorInvalido": "Informe um valor maior que zero.",
+    "motivoObrigatorio": "Informe o motivo do ajuste.",
+    "motivoPlaceholder": "Motivo do ajuste",
+    "ajustarMotivoPlaceholder": "Motivo do ajuste",
+    "historicoAjustes": "Histórico de ajustes",
+    "ajusteSemRegistros": "Nenhum ajuste registrado.",
+    "ajustePor": "por",
     "movimentacoes": "Movimentações Recentes",
     "nenhumaMovimentacao": "Nenhuma movimentação no período.",
     "liquidar": "Fechar Semana",
@@ -343,6 +349,7 @@
     "roleSuperAdmin": "Super Admin",
     "totalOperadores": "Operadores",
     "totalAdmins": "Admins",
+    "secaoAdministradores": "Administradores",
     "secaoEquipe": "Equipe",
     "secaoOperacao": "Operação",
     "empresaBadge": "Empresa",
@@ -376,6 +383,7 @@
     "caixaOperador": "Caixa do operador",
     "eu": "Eu",
     "ajustarCaixaOperador": "Ajustar caixa base do operador",
+    "adminDaEmpresa": "Administrador da empresa",
     "modalAdmins": "Administradores",
     "modalOperadores": "Operadores",
     "modalResultadoDia": "Resultado do Dia",
@@ -411,6 +419,8 @@
       "adminSenhaObrigatoria": "Informe a senha do administrador."
     },
     "navEmpresas": "Empresas",
+    "admin": "Administrador",
+    "voltar": "Voltar para empresas",
     "emptyMessage": "Nenhuma empresa cadastrada."
   }
 }
