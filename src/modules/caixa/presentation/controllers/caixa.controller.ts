@@ -5,6 +5,8 @@ import { AjustarCaixaBaseUseCase } from "../../application/use-cases/AjustarCaix
 import { ajustarCaixaBaseSchema } from "../../application/use-cases/AjustarCaixaBase/AjustarCaixaBaseInput.js"
 import { ListarMovimentacoesUseCase } from "../../application/use-cases/ListarMovimentacoes/ListarMovimentacoesUseCase.js"
 import { listarMovimentacoesSchema } from "../../application/use-cases/ListarMovimentacoes/ListarMovimentacoesInput.js"
+import { ListarAuditoriaCaixaUseCase } from "../../application/use-cases/ListarAuditoriaCaixa/ListarAuditoriaCaixaUseCase.js"
+import { listarAuditoriaCaixaSchema } from "../../application/use-cases/ListarAuditoriaCaixa/ListarAuditoriaCaixaInput.js"
 import { LiquidarSemanaUseCase } from "../../application/use-cases/LiquidarSemana/LiquidarSemanaUseCase.js"
 import { CaixaNotFoundError, SemanaJaLiquidadaError } from "../../domain/errors/caixa.error.js"
 import { OperadorNaoEncontradoError } from "../../../admin/domain/errors/admin.error.js"
@@ -16,6 +18,7 @@ export class CaixaController {
   private readonly adminRepository: AdminRepository
   private readonly ajustarUseCase: AjustarCaixaBaseUseCase
   private readonly listarUseCase: ListarMovimentacoesUseCase
+  private readonly listarAuditoriaUseCase: ListarAuditoriaCaixaUseCase
   private readonly liquidarUseCase: LiquidarSemanaUseCase
 
   constructor(repository: CaixaRepository) {
@@ -23,6 +26,7 @@ export class CaixaController {
     this.adminRepository = new AdminRepository()
     this.ajustarUseCase = new AjustarCaixaBaseUseCase(repository)
     this.listarUseCase = new ListarMovimentacoesUseCase(repository)
+    this.listarAuditoriaUseCase = new ListarAuditoriaCaixaUseCase(repository)
     this.liquidarUseCase = new LiquidarSemanaUseCase(repository)
   }
 
@@ -95,7 +99,8 @@ export class CaixaController {
 
   async ajustar(req: Request, res: Response) {
     try {
-      const userId = await resolveUsuarioAlvo(req, this.adminRepository)
+      const operadorId = await resolveUsuarioAlvo(req, this.adminRepository)
+      const adminId = req.userId!
       const parsed = ajustarCaixaBaseSchema.safeParse(req.body)
       if (!parsed.success) {
         res.status(422).json({
@@ -106,7 +111,7 @@ export class CaixaController {
         return
       }
 
-      const result = await this.ajustarUseCase.execute(userId, parsed.data)
+      const result = await this.ajustarUseCase.execute(adminId, operadorId, parsed.data)
       res.status(201).json(result)
     } catch (error) {
       if (error instanceof OperadorNaoEncontradoError) {
@@ -142,6 +147,30 @@ export class CaixaController {
         return
       }
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao listar movimentações." })
+    }
+  }
+
+  async listAuditoria(req: Request, res: Response) {
+    try {
+      const operadorId = await resolveUsuarioAlvo(req, this.adminRepository)
+      const parsed = listarAuditoriaCaixaSchema.safeParse(req.query)
+      if (!parsed.success) {
+        res.status(422).json({
+          code: "VALIDATION_ERROR",
+          message: "Dados inválidos.",
+          details: parsed.error.errors.map((e) => ({ field: e.path.join("."), message: e.message })),
+        })
+        return
+      }
+
+      const result = await this.listarAuditoriaUseCase.execute(operadorId, parsed.data)
+      res.json(result)
+    } catch (error) {
+      if (error instanceof OperadorNaoEncontradoError) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: error.message })
+        return
+      }
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao listar histórico de ajustes." })
     }
   }
 

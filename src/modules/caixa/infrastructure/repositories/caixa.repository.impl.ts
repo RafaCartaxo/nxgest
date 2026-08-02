@@ -1,7 +1,7 @@
 import { eq, and, gte, lte, sql, count, sum, desc, isNull } from "drizzle-orm"
-import { db, sqlite, movimentacoesFinanceiras, caixaConfig, fechamentosSemanais, contratos, pagamentos } from "../../../../database.js"
+import { db, sqlite, movimentacoesFinanceiras, caixaConfig, fechamentosSemanais, auditoriaCaixa, contratos, pagamentos, usuarios } from "../../../../database.js"
 import type { CaixaConfig, MovimentacaoFinanceira, FechamentoSemanal } from "../../domain/caixa.entity.js"
-import type { ICaixaRepository, ListMovimentacoesParams, ListMovimentacoesResult } from "../../application/ports/caixa.repository.js"
+import type { ICaixaRepository, ListMovimentacoesParams, ListMovimentacoesResult, AuditoriaCaixa, ListarAuditoriaCaixaResult } from "../../application/ports/caixa.repository.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
 export class CaixaRepository implements ICaixaRepository {
@@ -36,6 +36,51 @@ export class CaixaRepository implements ICaixaRepository {
         updatedAt: now,
       })
       .where(eq(caixaConfig.userId, userId))
+  }
+
+  async saveAuditoriaCaixa(a: AuditoriaCaixa): Promise<void> {
+    await db.insert(auditoriaCaixa).values({
+      id: a.id,
+      operadorId: a.operadorId,
+      adminId: a.adminId,
+      valorAnterior: a.valorAnterior,
+      valorNovo: a.valorNovo,
+      motivo: a.motivo,
+      data: a.data,
+      createdAt: a.createdAt,
+    })
+  }
+
+  async listAuditoriaCaixa(operadorId: string, params: { page?: number; limit?: number }): Promise<ListarAuditoriaCaixaResult> {
+    const page = params.page ?? 1
+    const limit = params.limit ?? 20
+    const offset = (page - 1) * limit
+
+    const data = sqlite.prepare(`
+      SELECT
+        a.id, a.operadorId, a.adminId, a.valorAnterior, a.valorNovo, a.motivo, a.data, a.createdAt,
+        u.nome AS adminNome
+      FROM auditoria_caixa a
+      LEFT JOIN usuarios u ON u.id = a.adminId
+      WHERE a.operadorId = ?
+      ORDER BY a.createdAt DESC
+      LIMIT ? OFFSET ?
+    `).all(operadorId, limit, offset) as (AuditoriaCaixa & { adminNome: string | null })[]
+
+    const countRow = sqlite.prepare(`
+      SELECT COUNT(*) AS total FROM auditoria_caixa a WHERE a.operadorId = ?
+    `).get(operadorId) as { total: number }
+
+    const total = countRow.total
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    }
   }
 
   async saveMovimentacaoFinanceira(userId: string, m: MovimentacaoFinanceira): Promise<void> {

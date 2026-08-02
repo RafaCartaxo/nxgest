@@ -90,6 +90,17 @@ export const caixaConfig = sqliteTable("caixa_config", {
   updatedAt: text("updatedAt").notNull(),
 })
 
+export const auditoriaCaixa = sqliteTable("auditoria_caixa", {
+  id: text("id").primaryKey(),
+  operadorId: text("operadorId").notNull(),
+  adminId: text("adminId").notNull(),
+  valorAnterior: real("valorAnterior").notNull(),
+  valorNovo: real("valorNovo").notNull(),
+  motivo: text("motivo").notNull(),
+  data: text("data").notNull(),
+  createdAt: text("createdAt").notNull(),
+})
+
 export const pagamentos = sqliteTable("pagamentos", {
   id: text("id").primaryKey(),
   contratoId: text("contratoId").notNull(),
@@ -247,6 +258,20 @@ export async function createTables() {
       caixaBase REAL NOT NULL DEFAULT 0,
       updatedAt TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS auditoria_caixa (
+      id TEXT PRIMARY KEY,
+      operadorId TEXT NOT NULL,
+      adminId TEXT NOT NULL,
+      valorAnterior REAL NOT NULL,
+      valorNovo REAL NOT NULL,
+      motivo TEXT NOT NULL,
+      data TEXT NOT NULL,
+      createdAt TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_auditoria_caixa_operador ON auditoria_caixa(operadorId);
+    CREATE INDEX IF NOT EXISTS idx_auditoria_caixa_data ON auditoria_caixa(data);
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_cpf ON clientes(cpf, userId) WHERE cpf IS NOT NULL AND deletedAt IS NULL;
     CREATE INDEX IF NOT EXISTS idx_movimentacoes_data ON movimentacoesFinanceiras(data);
@@ -529,8 +554,11 @@ export async function createTables() {
   }
 
   // Seed: empresa "Desenvolvimento" + backfill do admin existente
+  // Só cria quando o banco não tem nenhuma empresa ainda (dev/reset). Se já há
+  // empresas (ex.: seed-demo), não cria a "Desenvolvimento" fantasma a cada boot.
   const devEmpresaRow = sqlite.prepare("SELECT id FROM empresas WHERE nome = ?").get("Desenvolvimento") as { id: string } | undefined
-  if (!devEmpresaRow) {
+  const totalEmpresas = (sqlite.prepare("SELECT COUNT(*) AS total FROM empresas").get() as { total: number }).total
+  if (!devEmpresaRow && totalEmpresas === 0) {
     const devEmpresaId = randomUUID()
     sqlite.prepare(
       "INSERT OR IGNORE INTO empresas (id, nome, createdAt) VALUES (?, ?, datetime('now'))"

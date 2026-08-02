@@ -1,5 +1,30 @@
 import type { CaixaConfig, MovimentacaoFinanceira, FechamentoSemanal } from "../../domain/caixa.entity.js"
 
+export interface AuditoriaCaixa {
+  id: string
+  operadorId: string
+  adminId: string
+  valorAnterior: number
+  valorNovo: number
+  motivo: string
+  data: string
+  createdAt: string
+}
+
+export interface AuditoriaCaixaItem extends AuditoriaCaixa {
+  adminNome: string | null
+}
+
+export interface ListarAuditoriaCaixaResult {
+  data: AuditoriaCaixaItem[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    pages: number
+  }
+}
+
 export interface ListMovimentacoesParams {
   dataInicio?: string
   dataFim?: string
@@ -34,4 +59,6 @@ export interface ICaixaRepository {
   getLucro(userId: string): Promise<number>
   saveFechamentoSemanal(userId: string, f: FechamentoSemanal): Promise<void>
   findFechamentoPorPeriodo(userId: string, dataInicio: string, dataFim: string): Promise<FechamentoSemanal | null>
+  saveAuditoriaCaixa(a: AuditoriaCaixa): Promise<void>
+  listAuditoriaCaixa(operadorId: string, params: { page?: number; limit?: number }): Promise<ListarAuditoriaCaixaResult>
 }
