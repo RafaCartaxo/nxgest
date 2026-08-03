@@ -19,6 +19,25 @@ export interface AdminDashboardStats {
   resultadoDoDia: number
 }
 
+export interface EquipeItem {
+  id: string
+  nome: string
+  email: string
+  role: "admin" | "operator"
+  totalClientes: number
+  contratosAtivos: number
+  recebidoHoje: number
+}
+
+export interface EquipeResult {
+  operadores: EquipeItem[]
+  totais: {
+    totalClientes: number
+    contratosAtivos: number
+    recebidoHoje: number
+  }
+}
+
 export interface IAdminRepository {
   findAllOperadores(empresaId?: string | null): Promise<OperadorRow[]>
   findById(id: string, empresaId?: string | null): Promise<OperadorRow | null>
@@ -27,4 +46,5 @@ export interface IAdminRepository {
   update(id: string, data: { nome?: string; email?: string; role?: "admin" | "operator"; senhaHash?: string }, currentUserId: string, empresaId?: string | null): Promise<OperadorRow | null>
   softDelete(id: string, currentUserId: string, empresaId?: string | null): Promise<void>
   getDashboardStats(empresaId?: string | null, userId?: string | null): Promise<AdminDashboardStats>
+  listEquipe(empresaId: string | null): Promise<EquipeItem[]>
 }

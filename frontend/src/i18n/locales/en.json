@@ -331,6 +331,7 @@
     "FORBIDDEN": "Administrator access required.",
     "EMAIL_DUPLICATED": "Email already registered.",
     "OPERATOR_NOT_FOUND": "Operator not found.",
+    "INVALID_CURRENT_PASSWORD": "Current password is incorrect.",
     "INTERNAL_ERROR": "Internal server error. Please try again."
   },
   "auth": {
@@ -340,7 +341,21 @@
     "entrar": "Sign In",
     "sair": "Sign Out",
     "erroLogin": "Invalid email or password.",
-    "tokenExpirado": "Session expired. Please sign in again."
+    "tokenExpirado": "Session expired. Please sign in again.",
+    "mostrarSenha": "Show password",
+    "ocultarSenha": "Hide password"
+  },
+  "perfil": {
+    "title": "My profile",
+    "trocarSenha": "Change password",
+    "senhaAtual": "Current password",
+    "novaSenha": "New password",
+    "confirmarSenha": "Confirm new password",
+    "senhaAtualObrigatoria": "Enter your current password.",
+    "senhaCurta": "New password must be at least 6 characters.",
+    "senhasDiferem": "Passwords do not match.",
+    "senhaAlteradaSucesso": "Password changed successfully.",
+    "erroAlterarSenha": "Error changing password."
   },
   "admin": {
     "title": "Administration",
@@ -364,6 +379,12 @@
     "contratosAtivos": "Active Contracts",
     "resultadoDia": "Daily Result",
     "resultadoDiaTooltip": "Income − expenses today",
+    "recebidoHoje": "Received today",
+    "daEquipe": "of the team · {{n}} operators",
+    "contribuicaoClientes": "Clients per operator",
+    "contribuicaoContratos": "Active contracts per operator",
+    "contribuicaoRecebido": "Received today per operator",
+    "contribuicaoTotal": "Total",
     "de": "of {{nome}}",
     "removerConfirmacao": "Remove operator?",
     "removerConfirmacaoMessage": "Remove this operator? Their data will remain in the system.",

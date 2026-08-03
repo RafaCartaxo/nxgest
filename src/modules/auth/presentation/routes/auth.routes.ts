@@ -10,7 +10,7 @@ const controller = new AuthController(repository)
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: Number(process.env.LOGIN_RATE_LIMIT_MAX ?? 10),
   message: { code: "RATE_LIMIT", message: "Muitas tentativas. Tente novamente em 15 minutos." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -18,5 +18,6 @@ const loginLimiter = rateLimit({
 
 router.post("/login", loginLimiter, controller.login)
 router.get("/me", authMiddleware, controller.me)
+router.patch("/senha", authMiddleware, controller.alterarSenha)
 
 export { router as authRoutes }

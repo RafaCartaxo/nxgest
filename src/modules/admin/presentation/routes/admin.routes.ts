@@ -15,5 +15,6 @@ router.post("/operadores", controller.create)
 router.patch("/operadores/:id", controller.update)
 router.delete("/operadores/:id", controller.remove)
 router.get("/dashboard", controller.dashboard)
+router.get("/equipe", controller.equipe)
 
 export { router as adminRoutes }

@@ -97,6 +97,11 @@ export class OperacoesController {
         return
       }
 
+      if (tipo === "promessa" && !dataPromessa) {
+        res.status(422).json({ code: "VALIDATION_ERROR", message: "dataPromessa é obrigatória quando tipo é promessa." })
+        return
+      }
+
       const input: RegistrarVisitaInput = {
         clienteId,
         contratoId,

@@ -20,6 +20,23 @@ export interface AdminDashboardStats {
   resultadoDoDia: number
 }
 
+export interface EquipeItem {
+  id: string
+  nome: string
+  email: string
+  role: "admin" | "operator"
+  totalClientes: number
+  contratosAtivos: number
+  recebidoHoje: number
+}
+
+export interface EquipeResult {
+  operadores: EquipeItem[]
+  totais: { totalClientes: number; contratosAtivos: number; recebidoHoje: number }
+}
+
+export type ContribuicaoMetric = "clientes" | "contratos" | "recebido"
+
 export async function listOperadores(empresaId?: string): Promise<OperadorRow[]> {
   const params = empresaId ? `?empresaId=${empresaId}` : ""
   return apiRequest<OperadorRow[]>(`GET`, `/admin/operadores${params}`)
@@ -49,4 +66,9 @@ export async function deleteOperador(id: string, empresaId?: string): Promise<vo
 export async function getDashboard(empresaId?: string): Promise<AdminDashboardStats> {
   const params = empresaId ? `?empresaId=${empresaId}` : ""
   return apiRequest<AdminDashboardStats>("GET", `/admin/dashboard${params}`)
+}
+
+export async function getEquipe(empresaId?: string): Promise<EquipeResult> {
+  const params = empresaId ? `?empresaId=${empresaId}` : ""
+  return apiRequest<EquipeResult>("GET", `/admin/equipe${params}`)
 }

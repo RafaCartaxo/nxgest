@@ -2,6 +2,7 @@ import type { Request, Response } from "express"
 import bcrypt from "bcryptjs"
 import type { IAdminRepository } from "../../application/ports/admin.repository.js"
 import { ListOperadoresUseCase } from "../../application/use-cases/ListOperadores/ListOperadoresUseCase.js"
+import { ListarEquipeUseCase } from "../../application/use-cases/ListarEquipe/ListarEquipeUseCase.js"
 import { CriarOperadorUseCase } from "../../application/use-cases/CriarOperador/CriarOperadorUseCase.js"
 import { EditarOperadorUseCase } from "../../application/use-cases/EditarOperador/EditarOperadorUseCase.js"
 import { RemoverOperadorUseCase } from "../../application/use-cases/RemoverOperador/RemoverOperadorUseCase.js"
@@ -11,6 +12,7 @@ import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth
 export class AdminController {
   private repository: IAdminRepository
   private listUseCase: ListOperadoresUseCase
+  private listarEquipeUseCase: ListarEquipeUseCase
   private criarUseCase: CriarOperadorUseCase
   private editarUseCase: EditarOperadorUseCase
   private removerUseCase: RemoverOperadorUseCase
@@ -19,6 +21,7 @@ export class AdminController {
   constructor(repository: IAdminRepository) {
     this.repository = repository
     this.listUseCase = new ListOperadoresUseCase(repository)
+    this.listarEquipeUseCase = new ListarEquipeUseCase(repository)
     this.criarUseCase = new CriarOperadorUseCase(repository)
     this.editarUseCase = new EditarOperadorUseCase(repository)
     this.removerUseCase = new RemoverOperadorUseCase(repository)
@@ -74,6 +77,10 @@ export class AdminController {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Role deve ser 'admin' ou 'operator'." })
         return
       }
+      if (typeof senha !== "string" || senha.length < 6) {
+        res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
+        return
+      }
       const senhaHash = await bcrypt.hash(senha, 10)
       const operador = await this.criarUseCase.execute({ nome, email, senhaHash, role, empresaId: targetEmpresaId })
       res.status(201).json(operador)
@@ -98,6 +105,10 @@ export class AdminController {
       const { nome, email, role, senha } = req.body
       if (role !== undefined && role !== "admin" && role !== "operator") {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Role deve ser 'admin' ou 'operator'." })
+        return
+      }
+      if (senha !== undefined && (typeof senha !== "string" || senha.length < 6)) {
+        res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
         return
       }
       const data: { nome?: string; email?: string; role?: "admin" | "operator"; senhaHash?: string } = {}
@@ -153,6 +164,28 @@ export class AdminController {
     } catch (err) {
       console.error("Erro ao carregar dashboard admin:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao carregar dashboard." })
+    }
+  }
+
+  equipe = async (req: Request, res: Response) => {
+    try {
+      let targetEmpresaId: string
+      if (req.userRole === "super_admin") {
+        const q = req.query.empresaId as string | undefined
+        if (!q) {
+          res.status(400).json({ code: "VALIDATION_ERROR", message: "Informe a empresa (empresaId)." })
+          return
+        }
+        targetEmpresaId = q
+      } else {
+        targetEmpresaId = req.empresaId!
+      }
+
+      const result = await this.listarEquipeUseCase.execute(targetEmpresaId)
+      res.json(result)
+    } catch (err) {
+      console.error("Erro ao carregar equipe:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao carregar equipe." })
     }
   }
 }

@@ -331,6 +331,7 @@
     "FORBIDDEN": "Acceso restringido a administradores.",
     "EMAIL_DUPLICATED": "Correo ya registrado.",
     "OPERATOR_NOT_FOUND": "Operador no encontrado.",
+    "INVALID_CURRENT_PASSWORD": "Contraseña actual incorrecta.",
     "INTERNAL_ERROR": "Error interno del servidor. Intente de nuevo."
   },
   "auth": {
@@ -340,7 +341,21 @@
     "entrar": "Entrar",
     "sair": "Salir",
     "erroLogin": "Correo o contraseña inválidos.",
-    "tokenExpirado": "Sesión expirada. Inicie sesión nuevamente."
+    "tokenExpirado": "Sesión expirada. Inicie sesión nuevamente.",
+    "mostrarSenha": "Mostrar contraseña",
+    "ocultarSenha": "Ocultar contraseña"
+  },
+  "perfil": {
+    "title": "Mis datos",
+    "trocarSenha": "Cambiar contraseña",
+    "senhaAtual": "Contraseña actual",
+    "novaSenha": "Nueva contraseña",
+    "confirmarSenha": "Confirmar nueva contraseña",
+    "senhaAtualObrigatoria": "Ingrese su contraseña actual.",
+    "senhaCurta": "La nueva contraseña debe tener al menos 6 caracteres.",
+    "senhasDiferem": "Las contraseñas no coinciden.",
+    "senhaAlteradaSucesso": "Contraseña cambiada correctamente.",
+    "erroAlterarSenha": "Error al cambiar la contraseña."
   },
   "admin": {
     "title": "Administración",
@@ -364,6 +379,12 @@
     "contratosAtivos": "Contratos Activos",
     "resultadoDia": "Resultado del Día",
     "resultadoDiaTooltip": "Entradas − salidas de hoy",
+    "recebidoHoje": "Recibido hoy",
+    "daEquipe": "del equipo · {{n}} operadores",
+    "contribuicaoClientes": "Clientes por operador",
+    "contribuicaoContratos": "Contratos activos por operador",
+    "contribuicaoRecebido": "Recibido hoy por operador",
+    "contribuicaoTotal": "Total",
     "de": "de {{nome}}",
     "removerConfirmacao": "¿Eliminar operador?",
     "removerConfirmacaoMessage": "¿Eliminar este operador? Sus datos permanecerán en el sistema.",

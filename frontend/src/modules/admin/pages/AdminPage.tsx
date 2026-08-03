@@ -10,12 +10,13 @@ import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
+import { Button } from "../../../shared/components/Button.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { OperadoresList } from "../components/OperadoresList.js"
 import { OperadorForm } from "../components/OperadorForm.js"
 import { EquipeModal } from "../components/EquipeModal.js"
-import { ResultadoDiaModal } from "../components/ResultadoDiaModal.js"
-import { listOperadores, getDashboard, createOperador, updateOperador, deleteOperador, type OperadorRow } from "../services/admin.service.js"
+import { ContribuicaoModal } from "../components/ContribuicaoModal.js"
+import { listOperadores, getDashboard, getEquipe, createOperador, updateOperador, deleteOperador, type OperadorRow, type EquipeResult, type ContribuicaoMetric } from "../services/admin.service.js"
 import { getEmpresa, type EmpresaComStats } from "../services/empresa.service.js"
 import { getCaixaStatus, type CaixaStatus } from "../../caixa/services/caixa.service.js"
 import { ApiError } from "../../../api/client.js"
@@ -35,7 +36,8 @@ export function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const [stats, setStats] = useState({ totalAdmins: 0, totalOperadores: 0, totalClientes: 0, contratosAtivos: 0, recebidoHoje: 0, resultadoDoDia: 0 })
+  const [stats, setStats] = useState({ totalAdmins: 0, totalOperadores: 0 })
+  const [equipe, setEquipe] = useState<EquipeResult | null>(null)
   const [empresa, setEmpresa] = useState<EmpresaComStats | null>(null)
   const [meuCaixa, setMeuCaixa] = useState<CaixaStatus | null>(null)
   const [meuCaixaError, setMeuCaixaError] = useState(false)
@@ -43,7 +45,7 @@ export function AdminPage() {
   const [editingOp, setEditingOp] = useState<OperadorRow | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [equipeModal, setEquipeModal] = useState<"admin" | "operator" | null>(null)
-  const [resultadoDiaOpen, setResultadoDiaOpen] = useState(false)
+  const [contribuicaoMetric, setContribuicaoMetric] = useState<ContribuicaoMetric | null>(null)
 
   const isAdminSelf = user?.role === "admin" && !empresaId
 
@@ -51,9 +53,10 @@ export function AdminPage() {
     setLoading(true)
     setError(null)
     try {
-      const [ops, dash] = await Promise.all([listOperadores(empresaId), getDashboard(empresaId)])
+      const [ops, dash, eq] = await Promise.all([listOperadores(empresaId), getDashboard(empresaId), getEquipe(empresaId)])
       setOperadores(ops)
-      setStats(dash)
+      setStats({ totalAdmins: dash.totalAdmins, totalOperadores: dash.totalOperadores })
+      setEquipe(eq)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("admin.erroCarregar"))
     } finally {
@@ -90,8 +93,8 @@ export function AdminPage() {
 
   const empresaNome = empresa?.nome ?? null
   const tituloHeader = isAdminSelf ? (user?.nome ?? null) : empresaNome
-  const escopoNome = isAdminSelf ? (user?.nome ?? null) : empresaNome
   const headerBadge = isAdminSelf ? t("admin.roleAdmin") : t("admin.roleSuperAdmin")
+  const daEquipe = equipe ? t("admin.daEquipe", { n: equipe.operadores.length }) : undefined
 
   const filtered = operadores.filter((op) =>
     op.nome.toLowerCase().includes(search.toLowerCase()) ||
@@ -193,16 +196,14 @@ export function AdminPage() {
 
           <SectionHeader title={t("admin.secaoOperacao")} />
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <KpiCard title={t("admin.totalClientes")} value={stats.totalClientes.toString()} variant="green" subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined} onClick={isAdminSelf ? () => navigate("/clientes") : undefined} />
-            <KpiCard title={t("admin.contratosAtivos")} value={stats.contratosAtivos.toString()} variant="yellow" subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined} onClick={isAdminSelf ? () => navigate("/contratos") : undefined} />
+            <KpiCard title={t("admin.totalClientes")} value={(equipe?.totais.totalClientes ?? 0).toString()} variant="green" subtitle={daEquipe} onClick={() => setContribuicaoMetric("clientes")} />
+            <KpiCard title={t("admin.contratosAtivos")} value={(equipe?.totais.contratosAtivos ?? 0).toString()} variant="yellow" subtitle={daEquipe} onClick={() => setContribuicaoMetric("contratos")} />
             <KpiCard
-              title={t("admin.resultadoDia")}
-              value={`R$ ${formatCurrency(Math.abs(stats.resultadoDoDia))}`}
+              title={t("admin.recebidoHoje")}
+              value={`R$ ${formatCurrency(equipe?.totais.recebidoHoje ?? 0)}`}
               variant="gray"
-              valueClassName={stats.resultadoDoDia >= 0 ? "text-success-text" : "text-danger-text"}
-              tooltip={t("admin.resultadoDiaTooltip")}
-              subtitle={escopoNome ? t("admin.de", { nome: escopoNome }) : undefined}
-              onClick={isAdminSelf ? () => setResultadoDiaOpen(true) : undefined}
+              subtitle={daEquipe}
+              onClick={() => setContribuicaoMetric("recebido")}
             />
           </div>
 
@@ -264,6 +265,11 @@ export function AdminPage() {
               <KpiCard title={t("caixa.cobradoHoje")} value={`R$ ${meuCaixa.recebidoHoje.toFixed(2)}`} variant="green" />
             </div>
           )}
+          <div className="mt-6">
+            <Button type="button" variant="secondary" className="w-full" onClick={() => navigate("/perfil")}>
+              {t("perfil.title")}
+            </Button>
+          </div>
         </EstadoTela>
       )}
 
@@ -271,11 +277,15 @@ export function AdminPage() {
         open={equipeModal !== null}
         role={equipeModal ?? "admin"}
         operadores={operadores}
+        empresaId={empresaId}
         onClose={() => setEquipeModal(null)}
       />
-      <ResultadoDiaModal
-        open={resultadoDiaOpen}
-        onClose={() => setResultadoDiaOpen(false)}
+      <ContribuicaoModal
+        open={contribuicaoMetric !== null}
+        metric={contribuicaoMetric ?? "clientes"}
+        equipe={equipe}
+        empresaId={empresaId}
+        onClose={() => setContribuicaoMetric(null)}
       />
 
       <ConfirmModal

@@ -28,3 +28,7 @@ export async function login(email: string, senha: string): Promise<LoginResponse
 export async function getMe(): Promise<MeResponse> {
   return apiRequest<MeResponse>("GET", "/auth/me")
 }
+
+export async function alterarSenha(senhaAtual: string, novaSenha: string): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>("PATCH", "/auth/senha", { senhaAtual, novaSenha })
+}

@@ -32,4 +32,8 @@ export class AuthRepository implements IAuthRepository {
     })
     return { id, nome: input.nome, email: input.email, senhaHash: input.senhaHash, role: input.role, empresaId: input.empresaId ?? null, createdAt: new Date().toISOString(), deletedAt: null }
   }
+
+  async updateSenha(id: string, senhaHash: string): Promise<void> {
+    await db.update(usuarios).set({ senhaHash }).where(eq(usuarios.id, id))
+  }
 }

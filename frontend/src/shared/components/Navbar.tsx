@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Globe, Sun, Moon, Shield, Building, Settings, LogOut } from "lucide-react"
+import { Globe, Sun, Moon, Settings, LogOut, User } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useTheme } from "../theme/useTheme.js"
 import { useAuth } from "../auth/AuthContext.js"
@@ -43,6 +43,8 @@ export function Navbar() {
     { to: "/contratos", label: t("nav.contratos") },
     { to: "/caixa", label: t("nav.caixa") },
   ]
+  if (isAdmin) links.push({ to: "/admin", label: t("admin.title") })
+  if (isSuperAdmin) links.push({ to: "/admin/empresas", label: t("superAdmin.navEmpresas") })
 
   return (
     <nav className="sticky top-0 z-40 border-b border-border-light bg-surface">
@@ -77,26 +79,14 @@ export function Navbar() {
           </button>
           {settingsOpen && (
             <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-md border border-border-light bg-surface py-1 shadow-lg">
-              {isAdmin && (
-                <NavLink
-                  to="/admin"
-                  onClick={() => setSettingsOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-surface-hover"
-                >
-                  <Shield className="h-3.5 w-3.5 text-text-muted" />
-                  {t("admin.title")}
-                </NavLink>
-              )}
-              {isSuperAdmin && (
-                <NavLink
-                  to="/admin/empresas"
-                  onClick={() => setSettingsOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-surface-hover"
-                >
-                  <Building className="h-3.5 w-3.5 text-text-muted" />
-                  {t("superAdmin.navEmpresas")}
-                </NavLink>
-              )}
+              <NavLink
+                to="/perfil"
+                onClick={() => setSettingsOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-surface-hover"
+              >
+                <User className="h-3.5 w-3.5 text-text-muted" />
+                {t("perfil.title")}
+              </NavLink>
               <div className="my-1 border-t border-border-light" />
               <button
                 type="button"

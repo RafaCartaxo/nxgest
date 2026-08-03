@@ -1,6 +1,6 @@
 import { eq, and, count, isNull, ne, sum } from "drizzle-orm"
 import { db, usuarios, clientes, contratos, pagamentos, movimentacoesFinanceiras } from "../../../../database.js"
-import type { IAdminRepository, OperadorRow, AdminDashboardStats } from "../../application/ports/admin.repository.js"
+import type { IAdminRepository, OperadorRow, AdminDashboardStats, EquipeItem } from "../../application/ports/admin.repository.js"
 import { v4 as uuid } from "uuid"
 import { NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, OperadorNaoEncontradoError } from "../../domain/errors/admin.error.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
@@ -181,5 +181,45 @@ export class AdminRepository implements IAdminRepository {
       recebidoHoje: Number(recebidoResult[0].total) || 0,
       resultadoDoDia: entradasValor - saidasValor,
     }
+  }
+
+  async listEquipe(empresaId: string | null): Promise<EquipeItem[]> {
+    const hoje = getLocalDateString(new Date())
+
+    const conditions = [isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin")]
+    if (empresaId) {
+      conditions.push(eq(usuarios.empresaId, empresaId))
+    }
+    const rows = await db.select().from(usuarios).where(and(...conditions))
+
+    // recebidoHoje por usuário (uma query agrupada)
+    const userIds = rows.map((r) => r.id).filter((id): id is string => id !== null)
+    const recebidoMap = new Map<string, number>()
+    if (userIds.length > 0) {
+      const recebido = await db
+        .select({ userId: pagamentos.userId, total: sum(pagamentos.valor) })
+        .from(pagamentos)
+        .where(and(eq(pagamentos.data, hoje), ...userIds.map((id) => eq(pagamentos.userId, id))))
+        .groupBy(pagamentos.userId)
+      for (const r of recebido) if (r.userId) recebidoMap.set(r.userId, Number(r.total) || 0)
+    }
+
+    const result: EquipeItem[] = []
+    for (const row of rows) {
+      const [clientesCount, contratosCount] = await Promise.all([
+        db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
+        db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
+      ])
+      result.push({
+        id: row.id,
+        nome: row.nome,
+        email: row.email,
+        role: row.role as "admin" | "operator",
+        totalClientes: clientesCount[0].total,
+        contratosAtivos: contratosCount[0].total,
+        recebidoHoje: recebidoMap.get(row.id) ?? 0,
+      })
+    }
+    return result
   }
 }

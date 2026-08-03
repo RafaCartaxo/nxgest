@@ -18,3 +18,10 @@ export class UsuarioNaoEncontradoError extends Error {
     this.name = "UsuarioNaoEncontradoError"
   }
 }
+
+export class SenhaAtualIncorretaError extends Error {
+  constructor() {
+    super("Senha atual incorreta.")
+    this.name = "SenhaAtualIncorretaError"
+  }
+}

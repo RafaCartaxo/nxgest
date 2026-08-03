@@ -6,6 +6,7 @@ import { AuthProvider } from "./shared/auth/AuthContext.js"
 import { ProtectedRoute } from "./shared/auth/ProtectedRoute.js"
 import { AdminRoute } from "./shared/auth/AdminRoute.js"
 import { LoginPage } from "./modules/auth/pages/LoginPage.js"
+import { PerfilPage } from "./modules/auth/pages/PerfilPage.js"
 import { OperacoesDashboard } from "./modules/operacoes/pages/OperacoesDashboard.js"
 import { CobrancaListPage } from "./modules/operacoes/pages/CobrancaListPage.js"
 import { AtendidosPage } from "./modules/operacoes/pages/AtendidosPage.js"
@@ -51,6 +52,7 @@ export function App() {
                   <Route path="/contratos/:id/editar" element={<ContratoEdit />} />
                   <Route path="/caixa" element={<CaixaPage />} />
                   <Route path="/gastos" element={<GastoPage />} />
+                   <Route path="/perfil" element={<PerfilPage />} />
                    <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
                    <Route path="/admin/operadores/:id" element={<AdminRoute><OperadorDetail /></AdminRoute>} />
                    <Route path="/admin/empresas" element={<AdminRoute><SuperAdminPage /></AdminRoute>} />
