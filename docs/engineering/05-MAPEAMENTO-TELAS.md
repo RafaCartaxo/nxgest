@@ -2,7 +2,7 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.18
+**Versão:** 1.19
 
 **Última atualização:** 03/08/2026
 
@@ -49,13 +49,14 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 
 ```
 App
-├── Navbar (sticky top, sempre visível)
-│   ├── NavLink: Central (/)
-│   ├── NavLink: Clientes (/clientes)
-│   ├── NavLink: Contratos (/contratos)
-│   ├── NavLink: Caixa (/caixa)
-│   ├── NavLink: Administração (/admin) [condicional: role=admin|super_admin] [PLAN-030]
-│   ├── NavLink: Empresas (/admin/empresas) [condicional: role=super_admin] [PLAN-030]
+├── Navbar (sticky top, sempre visível) — conteúdo por perfil (PLAN-031)
+│   ├── [operator/admin] NavLink: Central (/)
+│   ├── [operator/admin] NavLink: Clientes (/clientes) [módulo clientes]
+│   ├── [operator/admin] NavLink: Contratos (/contratos) [módulo contratos]
+│   ├── [operator/admin] NavLink: Caixa (/caixa) [módulo caixa]
+│   ├── [admin] NavLink: Administração (/admin) [PLAN-030]
+│   ├── [super_admin] NavLink: Empresas (/admin/empresas) [PLAN-030]
+│   │      — super admin NÃO vê as páginas operacionais (sem dados próprios)
 │   ├── Engrenagem (dropdown de configurações):
 │   │   ├── Meus dados (/perfil) [PLAN-029]
 │   │   ├── Temas (5 paletas + claro/escuro) [PLAN-031]
@@ -1122,6 +1123,7 @@ Modal ModulosModal (ação "Configurar"):
 | 03/08/2026 | 1.16 | PLAN-029: tela Perfil (Meus dados) §18 + toggle mostrar/ocultar senha no login (§11) — troca de senha por todos os perfis |
 | 03/08/2026 | 1.17 | PLAN-030: KPIs de Operação do admin com **totais da equipe** (BR-091) + `ContribuicaoModal` por operador; `EquipeModal` com stats e navegação ao operador; navbar com links "Administração"/"Empresas" visíveis |
 | 03/08/2026 | 1.18 | PLAN-031: 5 temas por usuário com gradientes (engrenagem); módulos por empresa (whitelabel, BR-092/093) com `RequireModule`/navbar/entradas; Super Admin redesenhado (banner gradiente + `ModulosModal` + `EmpresaForm` no Modal base) |
+| 03/08/2026 | 1.19 | Navbar por perfil: operator/admin veem as operacionais (module-gated); admin + Administração; super_admin vê só Empresas (sem páginas vazias). UCs 061-063 |
 
 # Referências
 

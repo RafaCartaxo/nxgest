@@ -1126,6 +1126,64 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+### UC-061 — Landing por perfil
+
+**Ator:** operador / admin / super_admin
+
+**Ação:** faz login.
+
+**O que DEVE acontecer:** cada perfil cai na 1ª tela que faz sentido (BR-081):
+- `operator` → `/` (Central de Operações — operações do dia);
+- `admin` → `/admin` (painel da equipe — "check da manhã"); Central a 1 clique na Navbar;
+- `super_admin` → `/admin/empresas` (gestão de empresas).
+
+**Conferências:**
+- [ ] Operator cai na Central com as operações do dia?
+- [ ] Admin cai no painel (Equipe/Operação) e consegue navegar pra Central?
+- [ ] Super admin cai em Empresas?
+
+**Regras:** BR-081
+
+---
+
+### UC-062 — Navbar por perfil
+
+**Ator:** operador / admin / super_admin
+
+**Ação:** observa a Navbar após o login.
+
+**O que DEVE acontecer:** conteúdo e ordem por perfil:
+- **operator** — Central · Clientes · Contratos · Caixa (module-gated — BR-093);
+- **admin** — mesma base + **Administração** (no fim: operação primeiro, gestão depois);
+- **super_admin** — **apenas Empresas** (sem páginas operacionais próprias).
+
+**Conferências:**
+- [ ] Operator não vê Administração/Empresas?
+- [ ] Admin vê Administração (e não Empresas)?
+- [ ] Super admin vê só Empresas (sem Central/Clientes/Contratos/Caixa vazios)?
+- [ ] Ordem: operacional antes da gestão?
+
+**Regras:** BR-081, BR-093
+
+---
+
+### UC-063 — Super admin sem páginas operacionais vazias
+
+**Ator:** super_admin
+
+**Ação:** loga e navega pela Navbar.
+
+**O que DEVE acontecer:** o super admin **não** tem dados operacionais próprios (empresaId null) — portanto **não vê** Central/Clientes/Contratos/Caixa na Navbar, evitando telas vazias sem sentido. Acesso operacional é feito via drill-down por empresa (`/admin/empresas/:id`).
+
+**Conferências:**
+- [ ] Super admin não vê os links operacionais?
+- [ ] Acesso às operações de uma empresa é via "Empresas → Acessar"?
+- [ ] Tentar abrir `/clientes` diretamente como super → tela vazia/redirect coerente (sem quebra)?
+
+**Regras:** BR-081
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)
