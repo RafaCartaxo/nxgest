@@ -54,6 +54,13 @@
 
 - [x] `npm run audit:styles` → limpo (98 arquivos)
 - [x] `npm run build` → OK (tsc + vite build)
+- [x] `npm run docs:audit` → limpo (20 rotas front / 20 telas mapeadas)
+- [x] **Deploy em produção** (`https://nxgestao.duckdns.org`, commit `dce7ca0`):
+  - [x] `git pull` + `./scripts/deploy.sh` no VPS → imagem reconstruída, `nxgestao-app-1` recriado
+  - [x] Backup pré-deploy validado ("Backup válido (usuarios > 0)") — `gestao-20260803-182652.db`
+  - [x] `/api/health` → `{"status":"ok","db":"connected"}`
+  - [x] Homepage HTTP 200 servindo bundle novo (`index-r5-ZNT9R.js`)
+  - [x] Nota: o deploy levou junto o trabalho de **PLAN-033/034** (atraso), que ainda não estava no VPS
 
 ### Validações manuais de UI (pendentes — UCs 073–078)
 
