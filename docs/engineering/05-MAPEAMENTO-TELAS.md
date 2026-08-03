@@ -21,7 +21,7 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 1 | Central de Operações | `/` | operacoes | Dashboard |
 | 2 | Rota de Cobrança | `/rota` | operacoes | Operação |
 | 2b | Atendidos Hoje | `/atendidos` | operacoes | Lista |
-| 2c | Cobranças do Dia (Atrasos) | `/cobrancas` | operacoes | Lista |
+| 2c | Cobranças (Pendentes do Dia / Saldo em Atraso) | `/cobrancas` | operacoes | Lista |
 | 3 | Lista de Clientes | `/clientes` | cliente | Lista |
 | 4 | Novo Cliente | `/clientes/novo` | cliente | Formulário |
 | 5 | Detalhe do Cliente | `/clientes/:id` | cliente | Detalhe |
@@ -215,8 +215,8 @@ App
 ---
 
 # Mapeamento por Tela
-
 ## 1. Central de Operações (Dashboard)
+**Header:** PageHeader — banner em gradiente + ícone `LayoutDashboard` + título + subtítulo (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/operacoes/pages/OperacoesDashboard.tsx`
 
@@ -270,7 +270,9 @@ App
 
 ---
 
+---
 ## 2. Rota de Cobrança
+**Header:** PageHeader — banner em gradiente + ícone `Route` + título + subtítulo; status GPS e fechamento no header (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/operacoes/pages/RotaPage.tsx`
 
@@ -314,7 +316,9 @@ App
 
 ---
 
-## 2b. Cobranças do Dia (Atendidos)
+---
+## 2b. Atendidos Hoje
+**Header:** PageHeader — banner em gradiente + ícone `CheckCircle2` + título + subtítulo (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/operacoes/pages/AtendidosPage.tsx` · Rota `/atendidos` · Comporta o filtro da lista de cobranças
 
@@ -342,7 +346,9 @@ App
 
 ---
 
-## 2c. Cobranças do Dia — Atrasados
+---
+## 2c. Cobranças (Pendentes do Dia / Saldo em Atraso)
+**Header:** PageHeader — banner em gradiente + ícone `ClipboardList` + título dinâmico (Pendentes do Dia / Saldo em Atraso) + subtítulo (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/operacoes/pages/CobrancaListPage.tsx` · Rota `/cobrancas` · Filtro `atrasado`
 
@@ -367,7 +373,9 @@ App
 
 ---
 
+---
 ## 3. Lista de Clientes
+**Header:** PageHeader — banner em gradiente + ícone `Users` + título + subtítulo; ação "Novo Cliente" no header (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/cliente/pages/ClienteList.tsx`
 
@@ -400,7 +408,9 @@ App
 
 ---
 
+---
 ## 4. Novo Cliente / 6. Editar Cliente
+**Header:** compacto — voltar + título + ação (PLAN-035).
 
 **Arquivos:** `frontend/src/modules/cliente/pages/ClienteNovo.tsx`, `ClienteEdit.tsx`
 
@@ -439,7 +449,9 @@ App
 
 ---
 
+---
 ## 5. Detalhe do Cliente
+**Header:** compacto — voltar + título + ação (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/cliente/pages/ClienteDetail.tsx`
 
@@ -489,7 +501,9 @@ App
 
 ---
 
+---
 ## 7. Lista de Contratos
+**Header:** PageHeader — banner em gradiente + ícone `FileText` + título + subtítulo; ação "Novo Contrato" no header (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/contrato/pages/ContratoList.tsx`
 
@@ -528,7 +542,9 @@ App
 
 ---
 
+---
 ## 8. Novo Contrato
+**Header:** compacto — voltar + título + ação (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/contrato/pages/ContratoNovo.tsx`
 
@@ -568,7 +584,9 @@ App
 
 ---
 
+---
 ## 9. Detalhe do Contrato
+**Header:** compacto — voltar + título + ação (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/contrato/pages/ContratoDetail.tsx`
 
@@ -615,7 +633,9 @@ App
 
 ---
 
+---
 ## 10. Editar Contrato
+**Header:** compacto — voltar + título + ação (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/contrato/pages/ContratoEdit.tsx`
 
@@ -663,7 +683,9 @@ App
 
 ---
 
+---
 ## 11. Login
+**Header:** formulário centralizado (fora do padrão de tela interna).
 
 **Arquivo:** `frontend/src/modules/auth/pages/LoginPage.tsx`
 
@@ -698,47 +720,9 @@ App
 
 ---
 
-## 18. Perfil (Meus dados)
-
-**Arquivo:** `frontend/src/modules/auth/pages/PerfilPage.tsx` · Rota `/perfil` · Acessível a **todos os perfis** (PLAN-029)
-
-**Estrutura Visual:**
-```
-┌──────────────────────────────────┐
-│ ← Meus dados                     │  ← Header
-├──────────────────────────────────┤
-│ ┌──────────────────────────────┐ │
-│ │ Nome do Usuário    [Operador]│ │  ← Card + StatusBadge de role
-│ │ usuario@empresa.com          │ │
-│ └──────────────────────────────┘ │
-│                                  │
-│ Trocar senha (h2)                │
-│ Senha atual *     [___________]  │
-│ Nova senha *      [___________]  │
-│ Confirmar senha*  [___________]  │
-│                                  │
-│ [Salvar]                         │
-└──────────────────────────────────┘
-```
-
-**Aderência ao Design System:**
-
-| Regra | Status | Observação |
-|-------|--------|------------|
-| Header | ✅ `< Back Título` | |
-| Cards | ✅ `border p-4` sem sombra | |
-| Inputs | ✅ Padrão com focus ring + erro `text-red-500` | |
-| Feedback | ✅ `useFeedback().run()` no salvamento | |
-| Acessibilidade | ✅ `autoComplete` (current/new-password) | |
-| i18n | ✅ `perfil.*` (pt-BR, en, es) | |
-
-**Comportamento:**
-- Troca de senha via `PATCH /api/auth/senha` (BR-089/090): valida a senha atual (422 se incorreta, sem deslogar), exige nova ≥ 6 caracteres e diferente da atual; sessão atual permanece válida após a troca.
-- Acesso pelo menu da engrenagem do Navbar; para o admin, também a partir da aba "Meus dados" do painel (`/admin`).
-
 ---
-
-## 12. Administração
+## 12. Administração (14 — contexto de empresa)
+**Header:** PageHeader — banner em gradiente + ícone `Settings` + título dinâmico (empresa/nome) + subtítulo; badge de papel; voltar quando dentro de empresa (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/admin/pages/AdminPage.tsx`
 
@@ -835,7 +819,112 @@ Modal OperadorForm (criação/edição):
 
 ---
 
-## 14. Caixa
+---
+## 13. Super Admin — Gestão de Empresas
+**Header:** PageHeader — banner em gradiente + ícone `Building2` + título + subtítulo; ação "Nova Empresa" no header (PLAN-035).
+
+ **Arquivo:** `frontend/src/modules/admin/pages/SuperAdminPage.tsx`
+
+**Rota:** `/admin/empresas` (acesso restrito a `role = super_admin`)
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────┐
+│ [Banner em gradiente: título +   │  ← bg-gradient-accent (PLAN-031)
+│  "Gerencie empresas, acessos e   │
+│  módulos" + ícone Building2]     │
+├──────────────────────────────────┤
+│ ┌────────┬────────┬────────┐    │
+│ │Empresas│Opers   │Clientes│    │  ← KpiCard × 3 (super admin)
+│ │   2    │   5    │   45   │    │
+│ └────────┴────────┴────────┘    │
+│                                  │
+│ Empresas               + Nova   │  ← SectionHeader
+│ ┌──────────────────────────────┐ │
+│ │ Desenvolvimento              │ │  ← Card.Root list-item
+│ │ 3 operadores · 12 clientes  │ │     Card.Body: stats
+│ │ 8 contratos ativos          │ │
+│ │             [Configurar][→] │ │     Card.Actions: modulos + drill-down
+│ └──────────────────────────────┘ │
+│                                  │
+│ [+ Nova Empresa]  ← Modal base  │  ← EmpresaForm (Modal, não backdrop cru)
+└──────────────────────────────────┘
+
+Modal ModulosModal (ação "Configurar"):
+┌──────────────────────────────────┐
+│ Módulos — <Empresa>              │
+├──────────────────────────────────┤
+│ Ative/desative módulos da        │
+│ empresa (whitelabel, BR-092)     │
+│ [✓ Clientes] [✓ Contratos]       │  ← toggles; dependências desabilitadas
+│ [✓ Caixa]   [✗ Gastos (desabil.)]│     (gastos requer caixa)
+│ [✓ Rota] [✓ Cobranças] [✓ Atend.]│
+│                                  │
+│ [Cancelar]  [Salvar]             │  ← PATCH /modulos
+└──────────────────────────────────┘
+```
+
+**Comportamento:**
+- Lista todas as empresas com KPIs (totalUsuarios, totalClientes, contratosAtivos) + `modulos` via JOIN com usuários/clientes/contratos
+- "Acessar" navega para `/admin/empresas/:id` (AdminPage filtrado por empresa, com contexto do nome da empresa)
+- "Configurar" abre o `ModulosModal` (7 módulos, dependências validadas — `gastos⇒caixa`, `rota/cobrancas/atendidos⇒contratos`) e salva via `PATCH /api/admin/empresas/:id/modulos`
+- "+ Nova Empresa" abre `EmpresaForm` no **Modal base** (cria empresa + admin inicial em transação atômica)
+- KPIs globais somam stats de todas as empresas
+
+---
+
+---
+## 15. Detalhe do Operador
+**Header:** compacto — voltar + título + ação (PLAN-035).
+
+**Arquivo:** `frontend/src/modules/admin/pages/OperadorDetail.tsx` · Rota `/admin/operadores/:id`
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────┐
+│ ← Nome do Operador      [Role]   │  ← Header + StatusBadge (admin=info, operator=neutral)
+├──────────────────────────────────┤
+│ E-mail: op@empresa.com           │
+│                                  │
+│ Dados do operador (h2)           │
+│ ┌──────────┬──────────┐         │
+│ │ Clientes │ Contr.Atv│         │  ← KpiCard totalClientes / contratosAtivos
+│ └──────────┴──────────┘         │
+│                                  │
+│ Caixa do operador (h2)           │
+│ ┌──────┬──────┬──────┬──────┐   │
+│ │Caixa │Saldo │Lucro │...   │   │  ← KpiCard caixa (via ?usuarioId=)
+│ └──────┴──────┴──────┴──────┘   │
+│                                  │
+│ Ajustar caixa base (h2)          │
+│ [R$ valor] [Ajustar]  [motivo]   │  ← grava no operador-alvo (BR-078/088)
+│                                  │
+│ Histórico de ajustes (h2)         │
+│                                  │
+│ Contratos do operador (h2)        │
+│ Cliente · N/N parcelas  [→]      │  ← Card.Root list-item → /contratos/:id?usuarioId=
+└──────────────────────────────────┘
+```
+
+**Aderência ao Design System:**
+
+| Regra | Status | Observação |
+|-------|--------|------------|
+| Header | ✅ `< Back Nome [badge]` | |
+| KPI cards | ✅ `KpiCard` | |
+| Contratos | ✅ `Card.Root` list-item com `Card.Actions` | |
+| EstadoTela | ✅ Loading/Error/Empty | |
+| Feedback | ✅ `useFeedback()` no ajuste | |
+
+**Comportamento:**
+- Ajuste de caixa grava no operador-alvo via `?usuarioId=` (BR-078), com `motivo` obrigatório e auditoria (BR-088).
+- Contratos abrem em **modo admin somente leitura** (`/contratos/:id?usuarioId=&empresaId=`) — sem editar/excluir/pagar; única ação é **Estornar** pagamento (P013 fatia 1, PLAN-028).
+
+---
+
+---
+## 16. Caixa
+**Header:** PageHeader — banner em gradiente + ícone `Wallet` + título + subtítulo; ação "Fechar Semana" no header (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/caixa/pages/CaixaPage.tsx` · Rota `/caixa`
 
@@ -894,7 +983,9 @@ Modal OperadorForm (criação/edição):
 
 ---
 
-## 15. Gastos
+---
+## 17. Gastos
+**Header:** PageHeader — banner em gradiente + ícone `Receipt` + título + subtítulo (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/gasto/pages/GastoPage.tsx` · Rota `/gastos`
 
@@ -931,34 +1022,28 @@ Modal OperadorForm (criação/edição):
 
 ---
 
-## 16. Detalhe do Operador
+---
+## 18. Perfil (Meus dados)
+**Header:** compacto — voltar + título + ação (PLAN-035).
 
-**Arquivo:** `frontend/src/modules/admin/pages/OperadorDetail.tsx` · Rota `/admin/operadores/:id`
+**Arquivo:** `frontend/src/modules/auth/pages/PerfilPage.tsx` · Rota `/perfil` · Acessível a **todos os perfis** (PLAN-029)
 
 **Estrutura Visual:**
 ```
 ┌──────────────────────────────────┐
-│ ← Nome do Operador      [Role]   │  ← Header + StatusBadge (admin=info, operator=neutral)
+│ ← Meus dados                     │  ← Header
 ├──────────────────────────────────┤
-│ E-mail: op@empresa.com           │
+│ ┌──────────────────────────────┐ │
+│ │ Nome do Usuário    [Operador]│ │  ← Card + StatusBadge de role
+│ │ usuario@empresa.com          │ │
+│ └──────────────────────────────┘ │
 │                                  │
-│ Dados do operador (h2)           │
-│ ┌──────────┬──────────┐         │
-│ │ Clientes │ Contr.Atv│         │  ← KpiCard totalClientes / contratosAtivos
-│ └──────────┴──────────┘         │
+│ Trocar senha (h2)                │
+│ Senha atual *     [___________]  │
+│ Nova senha *      [___________]  │
+│ Confirmar senha*  [___________]  │
 │                                  │
-│ Caixa do operador (h2)           │
-│ ┌──────┬──────┬──────┬──────┐   │
-│ │Caixa │Saldo │Lucro │...   │   │  ← KpiCard caixa (via ?usuarioId=)
-│ └──────┴──────┴──────┴──────┘   │
-│                                  │
-│ Ajustar caixa base (h2)          │
-│ [R$ valor] [Ajustar]  [motivo]   │  ← grava no operador-alvo (BR-078/088)
-│                                  │
-│ Histórico de ajustes (h2)         │
-│                                  │
-│ Contratos do operador (h2)        │
-│ Cliente · N/N parcelas  [→]      │  ← Card.Root list-item → /contratos/:id?usuarioId=
+│ [Salvar]                         │
 └──────────────────────────────────┘
 ```
 
@@ -966,15 +1051,16 @@ Modal OperadorForm (criação/edição):
 
 | Regra | Status | Observação |
 |-------|--------|------------|
-| Header | ✅ `< Back Nome [badge]` | |
-| KPI cards | ✅ `KpiCard` | |
-| Contratos | ✅ `Card.Root` list-item com `Card.Actions` | |
-| EstadoTela | ✅ Loading/Error/Empty | |
-| Feedback | ✅ `useFeedback()` no ajuste | |
+| Header | ✅ `< Back Título` | |
+| Cards | ✅ `border p-4` sem sombra | |
+| Inputs | ✅ Padrão com focus ring + erro `text-red-500` | |
+| Feedback | ✅ `useFeedback().run()` no salvamento | |
+| Acessibilidade | ✅ `autoComplete` (current/new-password) | |
+| i18n | ✅ `perfil.*` (pt-BR, en, es) | |
 
 **Comportamento:**
-- Ajuste de caixa grava no operador-alvo via `?usuarioId=` (BR-078), com `motivo` obrigatório e auditoria (BR-088).
-- Contratos abrem em **modo admin somente leitura** (`/contratos/:id?usuarioId=&empresaId=`) — sem editar/excluir/pagar; única ação é **Estornar** pagamento (P013 fatia 1, PLAN-028).
+- Troca de senha via `PATCH /api/auth/senha` (BR-089/090): valida a senha atual (422 se incorreta, sem deslogar), exige nova ≥ 6 caracteres e diferente da atual; sessão atual permanece válida após a troca.
+- Acesso pelo menu da engrenagem do Navbar; para o admin, também a partir da aba "Meus dados" do painel (`/admin`).
 
 ---
 
@@ -1036,73 +1122,22 @@ Escala 8px: `4, 8, 16, 24, 32, 40, 48`
 
 Ao implementar uma nova tela, verificar:
 
-- [ ] Header segue padrão `< Back Título [Ação]`
+- [ ] Header segue o tipo da tela (PLAN-035): **landing** → `PageHeader` (banner gradiente + ícone + título + subtítulo + ação branca `variant="onDark"`); **novo/editar/detalhe/settings** → compacto `< Back Título [Ação]`
 - [ ] Inputs usam `rounded-md border px-3 py-2 text-base`
-- [ ] Focus visível com `focus:ring-2 focus:ring-blue-500`
-- [ ] Cores usam apenas tokens da paleta (sem `emerald`, `purple`, `amber`)
+- [ ] Focus usa `focus:ring-2 focus:ring-primary focus:border-primary` (nunca azul fixo)
+- [ ] Cores usam **apenas tokens** — `primary` (brand) e `danger/success/warning` (semânticos); proibido cor fixa da paleta (checado por `npm run audit:styles`)
 - [ ] Tipografia segue escala definida
 - [ ] Espaçamento usa múltiplos de 8 (evitar `gap-3`)
 - [ ] Estados tratados: Loading, Error, Empty, Sucesso
 - [ ] Ícones apenas do Lucide React
 - [ ] Labels sem `:` no final
-- [ ] Cards clicáveis usam `hover:border-blue-300`
+- [ ] Cards clicáveis usam `hover:border-primary`
 - [ ] Botões usam componente `Button` compartilhado (nunca `<button>` inline)
 - [ ] Strings via `t()` do i18n, nunca hardcoded
 - [ ] Valores financeiros usam `formatCurrency()`
 - [ ] Busca textual segue padrão `Search icon + pl-10`
 - [ ] Layout `max-w-2xl mx-auto p-4`
-
-## 13. Super Admin — Gestão de Empresas
-
- **Arquivo:** `frontend/src/modules/admin/pages/SuperAdminPage.tsx`
-
-**Rota:** `/admin/empresas` (acesso restrito a `role = super_admin`)
-
-**Estrutura Visual:**
-```
-┌──────────────────────────────────┐
-│ [Banner em gradiente: título +   │  ← bg-gradient-accent (PLAN-031)
-│  "Gerencie empresas, acessos e   │
-│  módulos" + ícone Building2]     │
-├──────────────────────────────────┤
-│ ┌────────┬────────┬────────┐    │
-│ │Empresas│Opers   │Clientes│    │  ← KpiCard × 3 (super admin)
-│ │   2    │   5    │   45   │    │
-│ └────────┴────────┴────────┘    │
-│                                  │
-│ Empresas               + Nova   │  ← SectionHeader
-│ ┌──────────────────────────────┐ │
-│ │ Desenvolvimento              │ │  ← Card.Root list-item
-│ │ 3 operadores · 12 clientes  │ │     Card.Body: stats
-│ │ 8 contratos ativos          │ │
-│ │             [Configurar][→] │ │     Card.Actions: modulos + drill-down
-│ └──────────────────────────────┘ │
-│                                  │
-│ [+ Nova Empresa]  ← Modal base  │  ← EmpresaForm (Modal, não backdrop cru)
-└──────────────────────────────────┘
-
-Modal ModulosModal (ação "Configurar"):
-┌──────────────────────────────────┐
-│ Módulos — <Empresa>              │
-├──────────────────────────────────┤
-│ Ative/desative módulos da        │
-│ empresa (whitelabel, BR-092)     │
-│ [✓ Clientes] [✓ Contratos]       │  ← toggles; dependências desabilitadas
-│ [✓ Caixa]   [✗ Gastos (desabil.)]│     (gastos requer caixa)
-│ [✓ Rota] [✓ Cobranças] [✓ Atend.]│
-│                                  │
-│ [Cancelar]  [Salvar]             │  ← PATCH /modulos
-└──────────────────────────────────┘
-```
-
-**Comportamento:**
-- Lista todas as empresas com KPIs (totalUsuarios, totalClientes, contratosAtivos) + `modulos` via JOIN com usuários/clientes/contratos
-- "Acessar" navega para `/admin/empresas/:id` (AdminPage filtrado por empresa, com contexto do nome da empresa)
-- "Configurar" abre o `ModulosModal` (7 módulos, dependências validadas — `gastos⇒caixa`, `rota/cobrancas/atendidos⇒contratos`) e salva via `PATCH /api/admin/empresas/:id/modulos`
-- "+ Nova Empresa" abre `EmpresaForm` no **Modal base** (cria empresa + admin inicial em transação atômica)
-- KPIs globais somam stats de todas as empresas
-
----
+- [ ] Registro: adicionar a tela na **tabela da Visão Geral** (rota + número sequencial) e na seção correspondente do Mapeamento por Tela
 
 # Histórico de Correções
 

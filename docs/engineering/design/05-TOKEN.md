@@ -117,8 +117,11 @@ O tema é **100% dirigido por CSS variables** (`--color-*`, mapeadas no Tailwind
 | Token | Uso | Tailwind |
 |-------|-----|----------|
 | `--gradient-page` | Fundo ambiente da página (body) | `.bg-gradient-page` |
-| `--gradient-accent` | Acentos (botão primário "brand", navbar ativo) | `.bg-gradient-accent` |
+| `--gradient-accent` | Acentos (botão primário "brand", navbar ativo, **banner de header dos módulos**) | `.bg-gradient-accent` |
 | `--gradient-text` | Texto em gradiente (títulos) | `.text-gradient` |
+
+> **Foco de input (PLAN-035):** usar `focus:ring-primary` / `focus:border-primary` — o anel segue a paleta, não azul fixo.
+> **Cores fixas da paleta são proibidas** em `frontend/src` — ver `02-DESIGN-SYSTEM.md` (checado por `npm run audit:styles`).
 
 ## Paletas (temas)
 

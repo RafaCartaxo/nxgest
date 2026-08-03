@@ -42,4 +42,7 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-030-admin-visao-equipe.md](PLAN-030-admin-visao-equipe.md) | Admin: visão da equipe — KPIs de Operação agregados (BR-091), `GET /api/admin/equipe`, `ContribuicaoModal`, navbar com Administração/Empresas visíveis | Concluído |
 | [PLAN-031-temas-modulos-whitelabel.md](PLAN-031-temas-modulos-whitelabel.md) | Temas & gradientes (5 por usuário) + Super Admin whitelabel: módulos por empresa (BR-092/093), `PATCH /modulos`, gating de UI | Concluído |
 | [PLAN-032-papeis-hierarquicos-socio.md](PLAN-032-papeis-hierarquicos-socio.md) | Papéis hierárquicos: papel `socio` (escopo por subárvore), `usuarios.chefeId`, sócio cria operador do grupo (BR-094/095) | Concluído |
+| [PLAN-033-atrasos-cliente-historico.md](PLAN-033-atrasos-cliente-historico.md) | Situação financeira do cliente: atraso, vence hoje e lucro previsto no detalhe + histórico de atrasos (BR-096/097/098) | Concluído |
+| [PLAN-034-atraso-card-contrato.md](PLAN-034-atraso-card-contrato.md) | Atraso no card do contrato (lista): linha de atraso "N parcelas · R$ Y · D dias" (BR-099) | Concluído |
+| [PLAN-035-temas-componentes-e-hero-headers.md](PLAN-035-temas-componentes-e-hero-headers.md) | Temas nos componentes (fim das cores fixas da paleta) + hero header nos módulos (`PageHeader`) + guarda `audit:styles` | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Rascunho — Prévia de Pagamento | Em análise |

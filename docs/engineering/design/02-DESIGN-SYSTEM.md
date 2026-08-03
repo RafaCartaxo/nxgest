@@ -450,3 +450,34 @@ Mudanças que aumentem complexidade visual deverão ser evitadas.
 > **Regra de ouro:** as cores seguem apenas a paleta semântica (tokens), sem `emerald/purple/amber`.
 >
 > **Exceção deliberada:** os **accent gradients** (`.bg-gradient-accent`, `.bg-gradient-page`, `.text-gradient`) são a única exceção — cada tema define os gradientes próprios (`--gradient-*`). Aplicar com moderação: fundo ambiente, botão primário ("brand"), navbar ativo e destaques — nunca "glitter" por tudo.
+
+---
+
+# Cores fixas da paleta são proibidas (PLAN-035)
+
+> **Regra:** nenhuma classe Tailwind da paleta fixa (`bg-*/text-*/border-*/ring-*/focus:ring-*/focus:border-*` com `blue/red/green/yellow/gray/indigo/...`) pode existir em `frontend/src`. Tudo passa pelos tokens do tema:
+>
+> | Uso | Token |
+> |-----|-------|
+> | Brand (foco, links, hover de card, dots, spinner, toast de loading/info, navbar) | `primary` |
+> | Erro/validação/asterisco obrigatório | `danger` / `danger-text` |
+> | Sucesso / valores positivos | `success` / `success-text` |
+> | Alerta / avisos | `warning` / `warning-text` |
+> | Neutro / dot gray | `text-muted` / `surface-secondary` |
+>
+> - `primary` e gradientes **variam** por paleta; as cores semânticas (`danger`/`success`/`warning`) são **fixas** entre paletas.
+> - Foco de input usa `focus:ring-primary` / `focus:border-primary` (não azul fixo).
+> - O invariante é checado por `npm run audit:styles` (falha se surgir cor fixa) — rodar após qualquer mudança visual.
+
+---
+
+# Header de página (PLAN-035)
+
+Duas formas de header, por tipo de tela:
+
+| Tipo de tela | Padrão |
+|--------------|--------|
+| **Landing de módulo** (Central, Clientes, Contratos, Caixa, Gastos, Cobranças, Rota, Atendidos, Administração, Empresas) | `PageHeader` — banner `bg-gradient-accent` com ícone (`LucideIcon`), título, subtítulo, ação opcional (botão branco `variant="onDark"`) e voltar opcional (chevron translúcido). Segue o gradiente do tema e o modo escuro. |
+| **Novo/editar/detalhe/settings** (ClienteNovo, ContratoEdit, OperadorDetail, Perfil, Login) | Header compacto — `< Back Título [Ação]` (`max-w-2xl`). |
+
+Regras do banner: texto branco legível nos 2 modos × 5 paletas; ação como `Button variant="onDark"`; não usar o banner em páginas de fluxo (formulário/detalhe) para não competir com a navegação de voltar.

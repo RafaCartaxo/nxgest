@@ -2,6 +2,18 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 03/08/2026 — PLAN-035 · Temas em componentes + Hero headers nos módulos
+
+**Adicionado**
+- **Tema agora "pega" em todos os componentes** — eliminadas ~150 classes fixas da paleta (`blue/red/green/yellow/gray-*`) que contornavam os tokens do PLAN-031: foco de input (`focus:ring/border-primary`), links, hover de cards, dots de status, spinners de loading, toasts do `FeedbackOverlay` e botão danger passaram a usar os tokens. O que é brand segue a paleta; o que é semântico (`danger/success/warning`) permanece fixo.
+- **Header hero nos módulos** — novo componente `PageHeader` (banner em gradiente + ícone + título + subtítulo + ação + voltar), replicando o padrão do Super Admin nas landings: Central, Clientes, Contratos, Caixa, Gastos, Cobranças, Rota, Atendidos, Administração e Empresas. Ações principais (Novo Cliente/Contrato, Fechar Semana, Ver na Rota, Nova Empresa) no header como botão branco (`Button variant="onDark"`). Páginas de novo/editar/detalhe mantêm o header compacto.
+- **i18n** — subtítulos novos nas 3 línguas (PT/EN/ES).
+- **Guarda de regressão** — `npm run audit:styles` falha se surgir cor fixa da paleta em `frontend/src`.
+- **Registro corrigido** — `05-MAPEAMENTO-TELAS.md` reordenado e renumerado (seções alinhadas à tabela Visão Geral; rótulo de `/cobrancas` corrigido) + "Checklist para Novas Telas" atualizado com as novas convenções.
+- **Validação** — UCs 073–078 em `06-CASOS-DE-USO.md` (tema em componentes, hero operador/gestão, i18n, contraste, regressão).
+
+Referência: [PLAN-035](plans/PLAN-035-temas-componentes-e-hero-headers.md)
+
 ## 03/08/2026 — PLAN-034 · Atraso no card do contrato (lista)
 
 **Adicionado**

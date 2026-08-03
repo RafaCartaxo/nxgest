@@ -1357,6 +1357,115 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+# TEMA EM COMPONENTES E HERO HEADERS (PLAN-035)
+
+### UC-073 — Tema aplicado em componentes (focos/links/bordas/dots/toasts)
+
+**Ator:** qualquer usuário logado
+
+**Ação:** na engrenagem, alterna o tema (ex.: default → ocean) e navega por telas com formulários, listas, cards e toasts.
+
+**O que DEVE acontecer:** os componentes usam tokens — o que é "brand" (foco de input, links, hover de cards, dots, spinner de loading, toasts de loading/info) segue o **primary** do tema; o que é semântico (erro de validação, asterisco de obrigatório, valores negativos, toasts de sucesso/erro, botão danger) usa `danger`/`success`/`warning` — **fixos** entre paletas.
+
+**Conferências:**
+- [ ] Foco de campo em qualquer formulário segue a cor primária do tema (não azul fixo)?
+- [ ] Links/actions (Ver contratos, Usar local atual, SectionHeader) seguem o primary?
+- [ ] Hover de cards/listas (list-item, modais, parcelas) segue o primary?
+- [ ] Dots de status do card e toasts do `FeedbackOverlay` usam tokens?
+- [ ] Entre `default` × `ocean`, o que muda = primary + gradientes; vermelho/verde/amarelo permanecem (semânticos)?
+- [ ] `npm run audit:styles` sai limpo?
+
+**Regras:** — (UX/DS)
+
+---
+
+### UC-074 — Hero header nas telas do operador
+
+**Ator:** operador
+
+**Ação:** navega por Central, Clientes, Contratos, Caixa, Gastos, Cobranças, Rota e Atendidos.
+
+**O que DEVE acontecer:** cada landing exibe o banner em gradiente (`bg-gradient-accent`) com ícone, título e subtítulo; a ação principal (Novo Cliente/Novo Contrato, Fechar Semana, Ver na Rota) aparece como botão branco no header; em telas estreitas o header não quebra.
+
+**Conferências:**
+- [ ] As 8 telas do operador mostram banner (ícone + título + subtítulo)?
+- [ ] O banner segue o gradiente do tema ativo e o modo escuro?
+- [ ] As ações no header (novo/fechar/ver na rota) funcionam?
+- [ ] Em mobile, título/ícone/ação não quebram e o alvo de toque segue confortável?
+
+**Regras:** — (UX/DS)
+
+---
+
+### UC-075 — Hero header na gestão (admin/super admin)
+
+**Ator:** admin / super_admin
+
+**Ação:** navega por Administração (`/admin`), Empresas (`/admin/empresas`) e dentro de uma empresa (`/admin/empresas/:id`).
+
+**O que DEVE acontecer:** banner com ícone + título + subtítulo; badge de papel legível no header; quando dentro de empresa, o "voltar" no banner retorna à lista; título dinâmico (empresa/nome do admin) correto; super admin mantém o banner de Empresas com a ação "Nova Empresa".
+
+**Conferências:**
+- [ ] Admin vê o banner em Administração com o badge de papel?
+- [ ] Dentro de `/admin/empresas/:id`, o voltar retorna à lista de empresas?
+- [ ] Título dinâmico (empresa ou nome do admin) correto nos dois contextos?
+- [ ] Super admin tem "Nova Empresa" no header do banner?
+- [ ] Badge legível sobre o gradiente (claro e escuro)?
+
+**Regras:** — (UX/DS)
+
+---
+
+### UC-076 — Hero header e i18n
+
+**Ator:** usuário que alterna o idioma (PT/EN/ES)
+
+**Ação:** troca o idioma na engrenagem e visita as 10 landings com banner.
+
+**O que DEVE acontecer:** títulos e subtítulos traduzidos; nenhuma chave crua (ex.: `operacoes.subtitle`) aparece no header.
+
+**Conferências:**
+- [ ] Subtítulos das 10 landings traduzidos nos 3 idiomas?
+- [ ] Nenhum texto de chave i18n vazando no header?
+
+**Regras:** — (UX/DS)
+
+---
+
+### UC-077 — Contraste e legibilidade do banner (claro × escuro × temas)
+
+**Ator:** qualquer usuário logado
+
+**Ação:** alterna claro/escuro em cada tema (default, aurora, ocean, grape, sunset) nas landings com banner.
+
+**O que DEVE acontecer:** título e subtítulo em branco legíveis sobre o gradiente nos 2 modos × 5 paletas; elementos interativos do header (voltar/ação) com contraste mínimo.
+
+**Conferências:**
+- [ ] Texto do banner legível em todas as combinações tema × modo?
+- [ ] Botão de ação (branco) e voltar (translúcido) visíveis sem depender do hover?
+- [ ] Ícone do módulo visível sobre o gradiente?
+
+**Regras:** — (UX/DS)
+
+---
+
+### UC-078 — Regressão: páginas fora do escopo do hero
+
+**Ator:** operador / admin
+
+**Ação:** abre páginas de novo/editar/detalhe (ClienteNovo, ClienteEdit, ClienteDetail, ContratoNovo, ContratoEdit, ContratoDetail, OperadorDetail, Perfil, Login).
+
+**O que DEVE acontecer:** o header compacto (voltar + título + ação) continua funcionando e sem quebra — a refatoração para o `PageHeader` não afetou essas telas.
+
+**Conferências:**
+- [ ] Headers compactos intactos nessas páginas?
+- [ ] Navegação de voltar funciona em cada uma?
+- [ ] Nenhuma regressão visual nas telas fora do escopo?
+
+**Regras:** — (UX/DS)
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)
