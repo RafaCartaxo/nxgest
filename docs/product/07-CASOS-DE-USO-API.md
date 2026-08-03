@@ -458,6 +458,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### API-CT-031 — Lista do contrato
 **Dado** contrato com 2 pagamentos (um estornado) → **Então** 200 com os 2, o estornado com o selo/flag.
+**Dado** pagamento estornado → **Então** a listagem retorna `estornadoEm` preenchido + `estornoMotivo` (coerência pós-estorno — fix 03/08, `findByContratoId`).
 
 ---
 

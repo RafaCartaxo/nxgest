@@ -257,7 +257,8 @@
     "validacao": {
       "valorPositivo": "O valor deve ser positivo.",
       "valorExcede": "O valor não pode exceder o saldo devedor."
-    }
+    },
+    "estornadoMotivo": "Motivo: {{motivo}}"
   },
   "caixa": {
     "title": "Caixa",

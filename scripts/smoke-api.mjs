@@ -438,6 +438,14 @@ async function main() {
     expect(r, 200, "movimentações pós estorno")
     if (!r.data.data.some((m) => m.origem === "Cancelamento")) throw new Error("sem movimentação de Cancelamento após estorno")
   })
+  await t("EST-C1", "Estornado: GET /pagamentos/contrato retorna estornadoEm + motivo", async () => {
+    const r = await req("GET", `/api/pagamentos/contrato/${contratoId}`, { token: opToken })
+    expect(r, 200, "pagamentos pós estorno")
+    const p = r.data.find((x) => x.id === pagamentoId)
+    if (!p) throw new Error("pagamento não listado")
+    if (!p.estornadoEm) throw new Error("estornadoEm ausente na listagem")
+    if (!p.estornoMotivo) throw new Error("estornoMotivo ausente na listagem")
+  })
   await t("PAG-034", "Duplo estorno (409)", async () => {
     const r = await req("POST", `/api/pagamentos/${pagamentoId}/estornar`, { token: adminToken, body: { motivo: "de novo" }, query: { usuarioId: gabrielId } })
     expect(r, 409, "duplo estorno")

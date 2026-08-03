@@ -55,6 +55,9 @@ export class PagamentoRepository implements IPagamentoRepository {
         valor: row.valor,
         data: row.data,
         createdAt: row.createdAt,
+        estornadoEm: row.estornadoEm,
+        estornadoPor: row.estornadoPor,
+        estornoMotivo: row.estornoMotivo,
         parcelas: parcelasRows.map((pr) => ({
           id: pr.id,
           pagamentoId: pr.pagamentoId,

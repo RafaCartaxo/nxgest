@@ -257,7 +257,8 @@
     "validacao": {
       "valorPositivo": "The amount must be positive.",
       "valorExcede": "The amount cannot exceed the outstanding balance."
-    }
+    },
+    "estornadoMotivo": "Reason: {{motivo}}"
   },
   "caixa": {
     "title": "Cash",

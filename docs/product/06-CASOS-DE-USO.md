@@ -692,7 +692,8 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 - [ ] Parcelas revertidas (estado/saldo/dataQuitacao)?
 - [ ] Contrato `Finalizado` volta a `Ativo`?
 - [ ] Movimentação reversa registrada **e visível** (origem Cancelamento + badge "Estorno" + descrição com motivo + nome do cliente)?
-- [ ] Selo "Estornado" aparece no pagamento?
+- [ ] **Pagamento estornado fica riscado** (valor `line-through`) + badge "Estornado" + motivo visível no detalhe do contrato (modo admin e operador)?
+- [ ] Botão "Estornar" some do pagamento estornado (duplo estorno só por chamada direta → 409)?
 - [ ] Auditoria de estorno gravada (quem/quando/motivo)?
 - [ ] **Duplo estorno bloqueado** (409)?
 - [ ] Operador tentando estornar → 403?

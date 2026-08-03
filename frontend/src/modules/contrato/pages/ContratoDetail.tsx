@@ -297,15 +297,22 @@ export function ContratoDetail() {
                       className="flex items-center justify-between rounded-md border p-3 text-sm"
                     >
                       <span className="text-text-secondary">{formatarData(p.data, t)}</span>
-                      <span>
+                      <span className={p.estornadoEm ? "line-through opacity-60" : ""}>
                         <span className="text-sm font-medium text-text-secondary">R$</span>{" "}
                         <span className="font-semibold">{formatCurrency(p.valor)}</span>
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-end gap-1">
                         {p.estornadoEm ? (
-                          <span className="text-xs font-medium text-text-muted">
-                            {t("pagamento.estornado")}
-                          </span>
+                          <>
+                            <span className="rounded bg-warning-light px-1.5 py-0.5 text-xs font-medium text-warning">
+                              {t("pagamento.estornado")}
+                            </span>
+                            {p.estornoMotivo && (
+                              <span className="text-xs text-text-muted">
+                                {t("pagamento.estornadoMotivo", { motivo: p.estornoMotivo })}
+                              </span>
+                            )}
+                          </>
                         ) : (
                           <>
                             <span className="text-xs text-text-muted">{t("cliente.parcelasCount", { count: p.parcelas.length })}</span>
