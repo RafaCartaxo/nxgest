@@ -177,9 +177,16 @@ async function main() {
     const r = await req("GET", "/api/clientes", { token: opToken })
     expect(r, 200, "listar clientes")
   })
-  await t("CLI-011", "GET /clientes/:id (200)", async () => {
+  await t("CLI-011", "GET /clientes/:id (200 + situação financeira)", async () => {
     const r = await req("GET", `/api/clientes/${clienteId}`, { token: opToken })
     expect(r, 200, "detalhe cliente")
+    const c = r.data
+    for (const f of ["saldoDevedor", "valorEmAtraso", "parcelasEmAtraso", "diasEmAtraso", "valorVenceHoje", "lucroPrevisto"]) {
+      if (typeof c[f] !== "number") throw new Error(`cliente detalhe: campo ${f} ausente/não-numérico (BR-096/098)`)
+    }
+    if (c.ultimoPagamento != null && (typeof c.ultimoPagamento.data !== "string" || typeof c.ultimoPagamento.valor !== "number")) {
+      throw new Error("cliente detalhe: ultimoPagamento com shape inválido (BR-097)")
+    }
   })
   await t("CLI-013", "PATCH /clientes/:id (200)", async () => {
     const r = await req("PATCH", `/api/clientes/${clienteId}`, { token: opToken, body: { nome: "Cliente Smoke Editado" } })
@@ -259,9 +266,14 @@ async function main() {
     const r = await req("POST", "/api/contratos", { token: opToken, body: { clienteId: "00000000-0000-4000-8000-000000000000", valorBase: 100, percentualJuros: 20, quantidadeParcelas: 1, dataInicio: "2026-08-04" } })
     expect(r, 404, "cliente inexistente")
   })
-  await t("CTR-010", "GET /contratos (200)", async () => {
+  await t("CTR-010", "GET /contratos (200 + situação de atraso)", async () => {
     const r = await req("GET", "/api/contratos", { token: opToken })
     expect(r, 200, "listar contratos")
+    for (const c of r.data?.data ?? []) {
+      for (const f of ["saldoPendente", "parcelasPagas", "emAtraso", "parcelasEmAtraso", "diasEmAtraso"]) {
+        if (typeof c[f] !== "number") throw new Error(`contrato lista: campo ${f} ausente/não-numérico (BR-099)`)
+      }
+    }
   })
   await t("CTR-011", "GET /contratos/:id (200, parcelas sem domingo)", async () => {
     const r = await req("GET", `/api/contratos/${contratoId}`, { token: opToken })

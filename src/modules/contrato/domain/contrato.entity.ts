@@ -26,6 +26,9 @@ export interface Contrato {
   updatedAt: string
   deletedAt?: string | null
   parcelasPagas?: number
+  emAtraso?: number
+  parcelasEmAtraso?: number
+  diasEmAtraso?: number
 }
 
 export interface Parcela {

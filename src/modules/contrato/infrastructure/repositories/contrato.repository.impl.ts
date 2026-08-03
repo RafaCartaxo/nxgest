@@ -3,6 +3,7 @@ import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3"
 import { db, sqlite, contratos, parcelas, movimentacoesFinanceiras, caixaConfig, pagamentos, clientes } from "../../../../database.js"
 import type { Contrato, Parcela, ContratoComParcelas, MovimentacaoFinanceira, CaixaConfig } from "../../domain/contrato.entity.js"
 import type { IContratoRepository, FindAllParams, FindAllResult } from "../../application/ports/contrato.repository.js"
+import { getLocalDateString, parseDateLocal } from "../../../../shared/utils/parseDateLocal.js"
 
 type ContratoRow = typeof contratos.$inferSelect
 type ParcelaRow = typeof parcelas.$inferSelect
@@ -158,27 +159,44 @@ export class ContratoRepository implements IContratoRepository {
       .offset(offset)
 
     const contratoIds = rows.map((r) => r.contrato.id)
+    const hoje = getLocalDateString(new Date())
     const sums = contratoIds.length > 0
       ? await this.drizzle
           .select({
             contratoId: parcelas.contratoId,
             total: sql<number>`COALESCE(SUM(parcelas.saldoPendente), 0)`,
             pagas: sql<number>`COALESCE(SUM(CASE WHEN ${parcelas.estado} = 'Paga' THEN 1 ELSE 0 END), 0)`,
+            emAtraso: sql<number>`COALESCE(SUM(CASE WHEN ${parcelas.dataVencimento} < ${hoje} AND ${parcelas.saldoPendente} > 0 THEN ${parcelas.saldoPendente} ELSE 0 END), 0)`,
+            parcelasEmAtraso: sql<number>`COALESCE(SUM(CASE WHEN ${parcelas.dataVencimento} < ${hoje} AND ${parcelas.saldoPendente} > 0 THEN 1 ELSE 0 END), 0)`,
+            maisAntigaAtraso: sql<string | null>`MIN(CASE WHEN ${parcelas.dataVencimento} < ${hoje} AND ${parcelas.saldoPendente} > 0 THEN ${parcelas.dataVencimento} END)`,
           })
           .from(parcelas)
           .where(and(inArray(parcelas.contratoId, contratoIds), isNull(parcelas.deletedAt)))
           .groupBy(parcelas.contratoId)
       : []
 
-    const sumMap = new Map(sums.map((s) => [s.contratoId, { total: s.total, pagas: s.pagas }]))
+    const sumMap = new Map(sums.map((s) => [s.contratoId, { total: s.total, pagas: s.pagas, emAtraso: s.emAtraso, parcelasEmAtraso: s.parcelasEmAtraso, maisAntigaAtraso: s.maisAntigaAtraso }]))
 
     return {
-      data: rows.map((r) => ({
-        ...rowToContrato(r.contrato),
-        clienteNome: r.clienteNome ?? undefined,
-        saldoPendente: sumMap.get(r.contrato.id)?.total ?? r.contrato.valorFinal,
-        parcelasPagas: sumMap.get(r.contrato.id)?.pagas ?? 0,
-      })),
+      data: rows.map((r) => {
+        const sum = sumMap.get(r.contrato.id)
+        const diasEmAtraso =
+          sum?.maisAntigaAtraso != null
+            ? Math.round(
+                (parseDateLocal(hoje).getTime() - parseDateLocal(sum.maisAntigaAtraso).getTime()) /
+                  86_400_000
+              )
+            : 0
+        return {
+          ...rowToContrato(r.contrato),
+          clienteNome: r.clienteNome ?? undefined,
+          saldoPendente: sum?.total ?? r.contrato.valorFinal,
+          parcelasPagas: sum?.pagas ?? 0,
+          emAtraso: Math.round((sum?.emAtraso ?? 0) * 100) / 100,
+          parcelasEmAtraso: sum?.parcelasEmAtraso ?? 0,
+          diasEmAtraso,
+        }
+      }),
       pagination: {
         page: params.page,
         limit: params.limit,

@@ -53,6 +53,20 @@ function ContratoCard({ contrato: c, variant }: ContratoCardProps) {
             label={c.estado === "Finalizado" ? t("status.finalizado") : c.estado === "Ativo" ? t("status.ativo") : c.estado}
           />
         </div>
+        {(c.parcelasEmAtraso ?? 0) > 0 && (
+          <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-danger-text">
+            <span className="inline-block h-2 w-2 rounded-full bg-danger" />
+            {t("contrato.emAtrasoDetalhe", {
+              parcelas: c.parcelasEmAtraso,
+              valor: formatCurrency(c.emAtraso ?? 0),
+            })}
+            {(c.diasEmAtraso ?? 0) > 0 && (
+              <span className="text-danger-text/70">
+                · {t("contrato.diasEmAtraso", { dias: c.diasEmAtraso })}
+              </span>
+            )}
+          </p>
+        )}
       </Card.Root>
     )
   }

@@ -10,6 +10,7 @@ import { DeleteClienteUseCase } from "../../application/use-cases/DeleteCliente/
 import type { IClienteRepository } from "../../application/ports/cliente.repository.js"
 import type { IContratoCountQuery } from "../../application/ports/contrato-count.query.js"
 import type { IClienteSaldoQuery } from "../../application/ports/cliente-saldo.query.js"
+import type { IClienteFinanceiroQuery } from "../../application/ports/cliente-financeiro.query.js"
 import { ClienteNotFoundError } from "../../domain/errors/cliente-not-found.error.js"
 import { ClienteHasActiveContractsError } from "../../domain/errors/cliente-has-active-contracts.error.js"
 import { CpfDuplicadoError } from "../../domain/errors/cpf-duplicado.error.js"
@@ -28,10 +29,11 @@ export class ClienteController {
   constructor(
     repository: IClienteRepository,
     contratoCountQuery?: IContratoCountQuery,
-    clienteSaldoQuery?: IClienteSaldoQuery
+    clienteSaldoQuery?: IClienteSaldoQuery,
+    clienteFinanceiroQuery?: IClienteFinanceiroQuery
   ) {
     this.createCliente = new CreateClienteUseCase(repository)
-    this.findCliente = new FindClienteUseCase(repository, contratoCountQuery, clienteSaldoQuery)
+    this.findCliente = new FindClienteUseCase(repository, contratoCountQuery, clienteSaldoQuery, clienteFinanceiroQuery)
     this.listClientes = new ListClientesUseCase(repository)
     this.updateCliente = new UpdateClienteUseCase(repository)
     this.deleteCliente = new DeleteClienteUseCase(repository)

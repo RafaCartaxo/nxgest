@@ -102,17 +102,3 @@ export interface RegistrarVisitaInput {
 export async function registrarVisita(input: RegistrarVisitaInput): Promise<void> {
   await apiRequest("POST", "/operacoes/visitas", input)
 }
-
-export interface SnapshotAtraso {
-  data: string
-  clientesAtrasados: number
-  contratosAtrasados: number
-  valorAtrasado: number
-}
-
-export async function listarHistoricoAtrasos(dias?: number): Promise<SnapshotAtraso[]> {
-  const params = new URLSearchParams()
-  if (dias) params.set("dias", String(dias))
-  const qs = params.toString()
-  return apiRequest<SnapshotAtraso[]>("GET", `/operacoes/historico-atrasos${qs ? `?${qs}` : ""}`)
-}

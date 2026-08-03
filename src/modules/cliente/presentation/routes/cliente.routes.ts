@@ -3,12 +3,14 @@ import { ClienteController } from "../controllers/cliente.controller.js"
 import { ClienteRepository } from "../../infrastructure/repositories/cliente.repository.impl.js"
 import { ContratoCountQuery } from "../../infrastructure/queries/contrato-count.query.impl.js"
 import { ClienteSaldoQuery } from "../../infrastructure/queries/cliente-saldo.query.impl.js"
+import { ClienteFinanceiroQuery } from "../../infrastructure/queries/cliente-financeiro.query.impl.js"
 
 const router = Router()
 const repository = new ClienteRepository()
 const contratoCountQuery = new ContratoCountQuery()
 const clienteSaldoQuery = new ClienteSaldoQuery()
-const controller = new ClienteController(repository, contratoCountQuery, clienteSaldoQuery)
+const clienteFinanceiroQuery = new ClienteFinanceiroQuery()
+const controller = new ClienteController(repository, contratoCountQuery, clienteSaldoQuery, clienteFinanceiroQuery)
 
 router.post("/", controller.create.bind(controller))
 router.get("/", controller.list.bind(controller))

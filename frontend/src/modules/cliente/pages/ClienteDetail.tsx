@@ -11,7 +11,7 @@ import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { ButtonLink } from "../../../shared/components/Button.js"
 import { QuickActions } from "../../../shared/components/QuickActions/QuickActions.js"
 import { ClienteInfo } from "../components/ClienteInfo.js"
-import { SaldoInfo } from "../components/SaldoInfo.js"
+import { SituacaoFinanceira } from "../components/SituacaoFinanceira.js"
 import { unmask, formatCurrency } from "../../../shared/utils/masks.js"
 import { buildMapsUrl } from "../../../shared/utils/maps.js"
 
@@ -133,7 +133,7 @@ export function ClienteDetail() {
                 </Card.Body>
               </Card.Root>
             )}
-            <SaldoInfo saldoDevedor={cliente.saldoDevedor ?? 0} />
+            <SituacaoFinanceira cliente={cliente} />
           </div>
         )}
       </EstadoTela>

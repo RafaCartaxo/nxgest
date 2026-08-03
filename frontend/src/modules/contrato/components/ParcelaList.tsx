@@ -21,10 +21,10 @@ const dotEstiloPorEstado: Record<string, string> = {
   Paga: "bg-success",
 }
 
-function isOverdue(p: Parcela): boolean {
+function isVencida(p: Parcela): boolean {
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)
-  return p.estado === "Pendente" && parseDateLocal(p.dataVencimento) < hoje
+  return (p.estado === "Pendente" || p.estado === "Parcial") && parseDateLocal(p.dataVencimento) < hoje
 }
 
 function isVenceHoje(p: Parcela): boolean {
@@ -34,13 +34,13 @@ function isVenceHoje(p: Parcela): boolean {
 }
 
 function getCardEstilo(p: Parcela): string {
-  if (isOverdue(p)) return "bg-danger-light border-danger"
+  if (isVencida(p)) return "bg-danger-light border-danger"
   if (isVenceHoje(p)) return "bg-info-light border-info"
   return cardEstiloPorEstado[p.estado] || "bg-surface border-border-light"
 }
 
 function getDotEstilo(p: Parcela): string {
-  if (isOverdue(p)) return "bg-danger"
+  if (isVencida(p)) return "bg-danger"
   if (isVenceHoje(p)) return "bg-info"
   return dotEstiloPorEstado[p.estado] || "bg-secondary"
 }
@@ -52,10 +52,10 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
   }
 
   const venceHoje = parcelas.filter((p) => isVenceHoje(p)).length
-  const pendentes = parcelas.filter((p) => p.estado === "Pendente" && !isVenceHoje(p)).length
-  const parciais = parcelas.filter((p) => p.estado === "Parcial").length
+  const pendentes = parcelas.filter((p) => p.estado === "Pendente" && !isVencida(p) && !isVenceHoje(p)).length
+  const parciais = parcelas.filter((p) => p.estado === "Parcial" && !isVencida(p)).length
   const pagas = parcelas.filter((p) => p.estado === "Paga").length
-  const vencidas = parcelas.filter((p) => isOverdue(p)).length
+  const vencidas = parcelas.filter((p) => isVencida(p)).length
 
   return (
     <>
@@ -118,10 +118,17 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
               {t("parcela.pago")}
             </p>
           ) : p.estado === "Parcial" ? (
-            <p className="mt-1 text-center">
-              <span className="text-sm font-medium text-text-secondary">R$</span>{" "}
-              <span className="text-base font-bold">{formatCurrency(p.saldoPendente)}</span>
-            </p>
+            <>
+              <p className="mt-1 text-center">
+                <span className="text-sm font-medium text-text-secondary">R$</span>{" "}
+                <span className="text-base font-bold">{formatCurrency(p.saldoPendente)}</span>
+              </p>
+              {isVencida(p) && (
+                <p className="mt-0.5 text-center text-[10px] font-medium text-danger-text">
+                  {t("parcela.vencida")}
+                </p>
+              )}
+            </>
           ) : (
             <>
               <p className="mt-1 text-center">
@@ -133,7 +140,7 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
                   {t("status.venceHoje")}
                 </p>
               )}
-              {isOverdue(p) && (
+              {isVencida(p) && (
                 <p className="mt-0.5 text-center text-[10px] font-medium text-danger-text">
                   {t("parcela.vencida")}
                 </p>

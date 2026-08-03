@@ -115,6 +115,8 @@ export function PagamentoModal({
           <p className="mt-1 text-sm font-medium text-text-primary">{parcelaLabel}</p>
         )}
 
+        <p className="mt-1 text-xs text-text-muted">{t("pagamento.infoAplicacao")}</p>
+
         <p className="mt-1 text-2xl font-bold">
           R$ {formatCurrency(Math.max(0, saldoDevedor - valor))}
         </p>

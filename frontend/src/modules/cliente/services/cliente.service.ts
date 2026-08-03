@@ -25,6 +25,12 @@ export interface Cliente {
   localizacaoComercio?: { lat: number; lng: number } | null
   totalContratos?: number
   saldoDevedor?: number
+  valorEmAtraso?: number
+  parcelasEmAtraso?: number
+  diasEmAtraso?: number
+  valorVenceHoje?: number
+  ultimoPagamento?: { data: string; valor: number } | null
+  lucroPrevisto?: number
   createdAt: string
   updatedAt: string
 }

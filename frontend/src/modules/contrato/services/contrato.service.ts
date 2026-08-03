@@ -28,6 +28,9 @@ export interface Contrato {
   parcelas?: Parcela[]
   saldoPendente?: number
   parcelasPagas?: number
+  emAtraso?: number
+  parcelasEmAtraso?: number
+  diasEmAtraso?: number
   createdAt: string
   updatedAt: string
 }
