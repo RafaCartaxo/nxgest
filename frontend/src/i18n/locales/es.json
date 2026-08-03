@@ -111,7 +111,7 @@
     "todosResultados": "Todos",
     "todosAtendidos": "✓ Todos los {{total}} clientes fueron atendidos hoy.",
     "verResumo": "Ver resumen →",
-    "atrasadosResumo": "{clientes} cliente(s) en atraso · R$ {total}",
+    "atrasadosResumo": "{{clientes}} cliente(s) en atraso · R$ {{total}}",
     "historicoAtrasos": "Historial de atrasos",
     "semHistoricoAtrasos": "Sin registros de atrasos en los últimos días.",
     "historicoData": "Fecha",

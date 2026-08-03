@@ -111,7 +111,7 @@
     "todosResultados": "All",
     "todosAtendidos": "✓ All {{total}} clients were attended today.",
     "verResumo": "View summary →",
-    "atrasadosResumo": "{clientes} overdue client(s) · R$ {total}",
+    "atrasadosResumo": "{{clientes}} overdue client(s) · R$ {{total}}",
     "historicoAtrasos": "Overdue history",
     "semHistoricoAtrasos": "No overdue records in recent days.",
     "historicoData": "Date",
