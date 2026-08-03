@@ -8,7 +8,8 @@
     "configuracoes": "Configurações",
     "idioma": "Idioma",
     "temaClaro": "Tema claro",
-    "temaEscuro": "Tema escuro"
+    "temaEscuro": "Tema escuro",
+    "temas": "Temas"
   },
   "common": {
     "empty": "Nenhum dado encontrado.",
@@ -451,6 +452,31 @@
     "navEmpresas": "Empresas",
     "admin": "Administrador",
     "voltar": "Voltar para empresas",
-    "emptyMessage": "Nenhuma empresa cadastrada."
+    "emptyMessage": "Nenhuma empresa cadastrada.",
+    "subtitle": "Gerencie as empresas, acessos e módulos de cada cliente",
+    "configurar": "Configurar",
+    "modulosTitle": "Módulos — {{empresa}}",
+    "modulosHint": "Ative ou desative módulos para esta empresa. Cada cliente vê apenas o que está ativo.",
+    "modulosAtivo": "Ativo",
+    "modulosInativo": "Inativo",
+    "modulosDependencia": "Requer outro módulo",
+    "modulosSalvo": "Módulos atualizados.",
+    "erroModulos": "Erro ao atualizar módulos."
+  },
+  "theme": {
+    "default": "Azul",
+    "aurora": "Aurora",
+    "ocean": "Oceano",
+    "grape": "Uva",
+    "sunset": "Pôr do sol"
+  },
+  "modules": {
+    "clientes": "Clientes",
+    "contratos": "Contratos",
+    "caixa": "Caixa",
+    "gastos": "Gastos",
+    "rota": "Rota de cobrança",
+    "cobrancas": "Cobranças",
+    "atendidos": "Atendidos"
   }
 }

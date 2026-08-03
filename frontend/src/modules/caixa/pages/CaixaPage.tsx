@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { getCaixaStatus, ajustarCaixaBase, listarMovimentacoes, listarAuditoriaCaixa, liquidarSemana, type CaixaStatus, type MovimentacaoItem, type AuditoriaCaixaItem } from "../services/caixa.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
+import { hasModule } from "../../../shared/modules/modules.js"
 import { listarPagamentosHoje, listarParcelasHoje, type PagamentoDoDiaItem, type ParcelaHojeCliente } from "../../operacoes/services/operacoes.service.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
 import { ApiError } from "../../../api/client.js"
@@ -30,6 +31,7 @@ export function CaixaPage() {
   const { user } = useAuth()
 
   const canAdjust = user?.role === "admin" || user?.role === "super_admin"
+  const gastosAtivo = hasModule(user?.modulos, "gastos")
 
   const [status, setStatus] = useState<CaixaStatus | null>(null)
   const [movimentacoes, setMovimentacoes] = useState<MovimentacaoItem[]>([])
@@ -310,12 +312,14 @@ export function CaixaPage() {
               value={`R$ ${formatCurrency(status.vendasSemana)}`}
               onClick={handleVendasSemanaClick}
             />
-            <KpiCard
-              variant="yellow"
-              title={t("caixa.gastosSemana")}
-              value={`R$ ${formatCurrency(status.gastosSemana)}`}
-              onClick={handleGastosSemanaClick}
-            />
+            {gastosAtivo && (
+              <KpiCard
+                variant="yellow"
+                title={t("caixa.gastosSemana")}
+                value={`R$ ${formatCurrency(status.gastosSemana)}`}
+                onClick={handleGastosSemanaClick}
+              />
+            )}
             <KpiCard
               variant="gray"
               title={t("caixa.resultadoSemana")}
@@ -367,12 +371,14 @@ export function CaixaPage() {
       {!loading && status ? (
         <>
           <div className="mt-8">
-            <Button
-              onClick={() => navigate("/gastos")}
-              className="w-full"
-            >
-              {t("gasto.registrar")}
-            </Button>
+            {gastosAtivo && (
+              <Button
+                onClick={() => navigate("/gastos")}
+                className="w-full"
+              >
+                {t("gasto.registrar")}
+              </Button>
+            )}
           </div>
 
           <SectionHeader title={t("caixa.historicoAjustes")} />
@@ -503,14 +509,16 @@ export function CaixaPage() {
         loading={contratosSemanaLoading}
         onClose={() => setContratosSemanaModalOpen(false)}
       />
-      <GastosPeriodoModal
-        open={gastosPeriodoModalOpen}
-        items={gastosPeriodo}
-        dataInicio={calcularSemana(semanaOffset).dataInicio}
-        dataFim={calcularSemana(semanaOffset).dataFim}
-        loading={gastosPeriodoLoading}
-        onClose={() => setGastosPeriodoModalOpen(false)}
-      />
+      {gastosAtivo && (
+        <GastosPeriodoModal
+          open={gastosPeriodoModalOpen}
+          items={gastosPeriodo}
+          dataInicio={calcularSemana(semanaOffset).dataInicio}
+          dataFim={calcularSemana(semanaOffset).dataFim}
+          loading={gastosPeriodoLoading}
+          onClose={() => setGastosPeriodoModalOpen(false)}
+        />
+      )}
 
       <ConfirmModal
         open={liquidarModalOpen}

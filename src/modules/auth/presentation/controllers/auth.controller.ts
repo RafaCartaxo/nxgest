@@ -1,6 +1,7 @@
 import type { Request, Response } from "express"
 import { eq } from "drizzle-orm"
 import { db, empresas } from "../../../../database.js"
+import { parseModulos } from "../../../admin/domain/modules.js"
 import type { IAuthRepository } from "../../application/ports/auth.repository.js"
 import { LoginUseCase } from "../../application/use-cases/Login/LoginUseCase.js"
 import { AlterarSenhaUseCase } from "../../application/use-cases/AlterarSenha/AlterarSenhaUseCase.js"
@@ -17,6 +18,17 @@ export class AuthController {
     this.alterarSenhaUseCase = new AlterarSenhaUseCase(repository)
   }
 
+  private async enriquecer(usuario: { empresaId: string | null }): Promise<{ empresaNome: string | null; modulos: string[] | null }> {
+    if (!usuario.empresaId) {
+      return { empresaNome: null, modulos: null }
+    }
+    const [empresaRow] = await db.select().from(empresas).where(eq(empresas.id, usuario.empresaId)).limit(1)
+    return {
+      empresaNome: empresaRow?.nome ?? null,
+      modulos: parseModulos(empresaRow?.modulos ?? null),
+    }
+  }
+
   login = async (req: Request, res: Response) => {
     try {
       const { email, senha } = req.body
@@ -27,7 +39,8 @@ export class AuthController {
       }
 
       const result = await this.loginUseCase.execute({ email, senha })
-      res.json(result)
+      const { empresaNome, modulos } = await this.enriquecer(result.usuario)
+      res.json({ ...result, usuario: { ...result.usuario, empresaNome, modulos } })
     } catch (err) {
       if (err instanceof CredenciaisInvalidasError) {
         res.status(401).json({ code: "INVALID_CREDENTIALS", message: err.message })
@@ -51,11 +64,7 @@ export class AuthController {
         return
       }
 
-      let empresaNome: string | null = null
-      if (usuario.empresaId) {
-        const [empresaRow] = await db.select().from(empresas).where(eq(empresas.id, usuario.empresaId)).limit(1)
-        empresaNome = empresaRow?.nome ?? null
-      }
+      const { empresaNome, modulos } = await this.enriquecer(usuario)
 
       res.json({
         id: usuario.id,
@@ -64,6 +73,7 @@ export class AuthController {
         role: usuario.role,
         empresaId: usuario.empresaId,
         empresaNome,
+        modulos,
       })
     } catch (err) {
       console.error("Erro no me:", err)

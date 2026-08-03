@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { listarCobrancasDoDia, listarPagamentosHoje, listarParcelasHoje, listarParcelasSemana, ResultadoOperacional, type CobrancaDoDiaResult, type PagamentoDoDiaItem, type CobrancaItem, type ParcelaHojeCliente } from "../services/operacoes.service.js"
 import { listGastos, type GastoItem } from "../../gasto/services/gasto.service.js"
+import { useAuth } from "../../../shared/auth/AuthContext.js"
+import { hasModule } from "../../../shared/modules/modules.js"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
 import { calcularDistancia, sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
@@ -22,6 +24,12 @@ import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 
 export function OperacoesDashboard() {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const modulos = user?.modulos
+  const gastosAtivo = hasModule(modulos, "gastos")
+  const rotaAtivo = hasModule(modulos, "rota")
+  const cobrancasAtivo = hasModule(modulos, "cobrancas")
+  const atendidosAtivo = hasModule(modulos, "atendidos")
   const [data, setData] = useState<CobrancaDoDiaResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -221,46 +229,53 @@ export function OperacoesDashboard() {
             atrasado={data.indicadores.atrasado}
             aVencer={data.indicadores.aVencer}
             gastosHoje={gastosHoje}
+            hideGastos={!gastosAtivo}
             onRecebidoClick={() => {
               setPagamentosHojeLoading(true)
               setPagamentosModalOpen(true)
               fetchPagamentos().finally(() => setPagamentosHojeLoading(false))
             }}
             onAReceberClick={handleAReceberClick}
-            onPendentesClick={() => navigate("/cobrancas")}
-            onAtrasadoClick={() => navigate("/cobrancas?filter=atrasado")}
+            onPendentesClick={cobrancasAtivo ? () => navigate("/cobrancas") : undefined}
+            onAtrasadoClick={cobrancasAtivo ? () => navigate("/cobrancas?filter=atrasado") : undefined}
             onAVencerClick={handleAVencerClick}
-            onGastosClick={handleGastosHojeClick}
+            onGastosClick={gastosAtivo ? handleGastosHojeClick : undefined}
           />
-          <RotaCobrancaSection
-            totalClientes={new Set(itemsOrdenados.map((i) => i.clienteId)).size}
-            distanciaTotal={Math.round(distanciaTotal * 10) / 10}
-          />
+          {rotaAtivo && (
+            <RotaCobrancaSection
+              totalClientes={new Set(itemsOrdenados.map((i) => i.clienteId)).size}
+              distanciaTotal={Math.round(distanciaTotal * 10) / 10}
+            />
+          )}
           {itemsOrdenados.length > 0 || totalResolvidos > 0 ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-text-primary">{t("operacoes.cobrancasDoDia")}</h2>
                 <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/atendidos")}
-                    className="text-sm font-medium text-text-secondary hover:text-text-primary hover:underline"
-                  >
-                    {t("operacoes.atendidosHoje")}
-                    {totalResolvidos > 0 && (
-                      <span className="ml-1 rounded-full bg-surface-hover px-1.5 py-0.5 text-xs">
-                        {totalResolvidos}
-                      </span>
-                    )}
-                    →
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/cobrancas")}
-                    className="text-sm font-medium text-primary hover:underline"
-                  >
-                    {t("operacoes.verPendentes")}
-                  </button>
+                  {atendidosAtivo && (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/atendidos")}
+                      className="text-sm font-medium text-text-secondary hover:text-text-primary hover:underline"
+                    >
+                      {t("operacoes.atendidosHoje")}
+                      {totalResolvidos > 0 && (
+                        <span className="ml-1 rounded-full bg-surface-hover px-1.5 py-0.5 text-xs">
+                          {totalResolvidos}
+                        </span>
+                      )}
+                      →
+                    </button>
+                  )}
+                  {cobrancasAtivo && (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/cobrancas")}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      {t("operacoes.verPendentes")}
+                    </button>
+                  )}
                 </div>
               </div>
               {itemsOrdenados.length > 0 ? (

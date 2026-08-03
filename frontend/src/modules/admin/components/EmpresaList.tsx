@@ -1,15 +1,16 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, SlidersHorizontal } from "lucide-react"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import type { EmpresaComStats } from "../services/empresa.service.js"
 
 interface EmpresaListProps {
   empresas: EmpresaComStats[]
+  onConfigurar: (empresa: EmpresaComStats) => void
 }
 
-export function EmpresaList({ empresas }: EmpresaListProps) {
+export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -37,11 +38,18 @@ export function EmpresaList({ empresas }: EmpresaListProps) {
             </Card.Indicators>
           </Card.Body>
           <Card.Actions
-            actions={[{
-              icon: ArrowRight,
-              label: t("superAdmin.acessar"),
-              onClick: () => navigate(`/admin/empresas/${empresa.id}`),
-            }]}
+            actions={[
+              {
+                icon: SlidersHorizontal,
+                label: t("superAdmin.configurar"),
+                onClick: () => onConfigurar(empresa),
+              },
+              {
+                icon: ArrowRight,
+                label: t("superAdmin.acessar"),
+                onClick: () => navigate(`/admin/empresas/${empresa.id}`),
+              },
+            ]}
           />
         </Card.Root>
       ))}

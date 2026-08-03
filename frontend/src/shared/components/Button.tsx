@@ -4,7 +4,7 @@ import { Link, type LinkProps } from "react-router-dom"
 type Variant = "primary" | "secondary" | "danger" | "ghost"
 
 const variantStyles: Record<Variant, string> = {
-  primary: "bg-blue-600 text-white hover:bg-blue-700",
+  primary: "bg-primary bg-gradient-accent text-white hover:bg-primary-hover",
   secondary: "border border-border text-text-primary hover:bg-surface-hover",
   danger: "bg-red-600 text-white hover:bg-red-700",
   ghost: "text-primary hover:underline",

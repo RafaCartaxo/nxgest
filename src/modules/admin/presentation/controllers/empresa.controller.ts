@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs"
 import type { IEmpresaRepository } from "../../application/ports/empresa.repository.js"
 import { ListarEmpresasUseCase } from "../../application/use-cases/ListarEmpresas/ListarEmpresasUseCase.js"
 import { CriarEmpresaUseCase } from "../../application/use-cases/CriarEmpresa/CriarEmpresaUseCase.js"
+import { validateModulos } from "../../domain/modules.js"
 import { EmailDuplicadoError } from "../../../auth/domain/errors/auth.error.js"
 import { EmpresaNaoEncontradaError } from "../../domain/errors/empresa.error.js"
 
@@ -58,6 +59,26 @@ export class EmpresaController {
       }
       console.error("Erro ao criar empresa:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao criar empresa." })
+    }
+  }
+
+  updateModulos = async (req: Request, res: Response) => {
+    const { modulos } = req.body ?? {}
+    const valid = validateModulos(modulos)
+    if (!valid.ok) {
+      res.status(422).json({ code: "VALIDATION_ERROR", message: valid.message })
+      return
+    }
+    try {
+      const result = await this.repository.updateModulos(req.params.id, valid.value)
+      if (!result) {
+        res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
+        return
+      }
+      res.json(result)
+    } catch (err) {
+      console.error("Erro ao atualizar módulos:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao atualizar módulos da empresa." })
     }
   }
 }

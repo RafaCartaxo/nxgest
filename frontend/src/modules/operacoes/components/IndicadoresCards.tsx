@@ -10,6 +10,7 @@ interface IndicadoresCardsProps {
   atrasado: number
   aVencer: number
   gastosHoje?: number
+  hideGastos?: boolean
   onRecebidoClick?: () => void
   onAReceberClick?: () => void
   onPendentesClick?: () => void
@@ -26,6 +27,7 @@ export function IndicadoresCards({
   atrasado,
   aVencer,
   gastosHoje,
+  hideGastos = false,
   onRecebidoClick,
   onAReceberClick,
   onPendentesClick,
@@ -72,12 +74,14 @@ export function IndicadoresCards({
         value={`R$ ${formatCurrency(aVencer)}`}
         onClick={onAVencerClick}
       />
-      <KpiCard
-        variant="gray"
-        title={t("gasto.totalHoje")}
-        value={`R$ ${formatCurrency(gastosHoje ?? 0)}`}
-        onClick={onGastosClick}
-      />
+      {!hideGastos && (
+        <KpiCard
+          variant="gray"
+          title={t("gasto.totalHoje")}
+          value={`R$ ${formatCurrency(gastosHoje ?? 0)}`}
+          onClick={onGastosClick}
+        />
+      )}
     </div>
   )
 }

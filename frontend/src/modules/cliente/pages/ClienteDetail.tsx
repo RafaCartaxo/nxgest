@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next"
 import { ChevronLeft, ChevronRight, Navigation, MessageCircle, Phone } from "lucide-react"
 import { useParams, Link } from "react-router-dom"
 import { getCliente, type Cliente } from "../services/cliente.service.js"
+import { useAuth } from "../../../shared/auth/AuthContext.js"
+import { hasModule } from "../../../shared/modules/modules.js"
 import { ApiError } from "../../../api/client.js"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
@@ -16,6 +18,8 @@ import { buildMapsUrl } from "../../../shared/utils/maps.js"
 export function ClienteDetail() {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
+  const contratosAtivo = hasModule(user?.modulos, "contratos")
   const [cliente, setCliente] = useState<Cliente | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -103,30 +107,32 @@ export function ClienteDetail() {
                 { icon: Phone,         label: t("operacoes.ligar"),    onClick: () => handleLigar(cliente),    variant: "blue" },
               ]}
             />
-            <Card.Root variant="detail">
-              <Card.Header>
-                <Card.Title className="text-lg font-semibold">{t("cliente.contratos")}</Card.Title>
-              </Card.Header>
-              <Card.Body>
-                <p className="text-3xl font-bold text-center">
-                  {cliente.totalContratos ?? 0}
-                </p>
-                <div className="mt-3 flex justify-center gap-2">
-                  <Link
-                    to={`/contratos?clienteId=${cliente.id}`}
-                    className="inline-flex items-center gap-0.5 text-sm font-medium text-blue-600 hover:underline"
-                  >
-                    {t("cliente.verContratos")} <ChevronRight className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    to={`/contratos/novo?clienteId=${cliente.id}`}
-                    className="inline-flex items-center gap-0.5 text-sm font-medium text-blue-600 hover:underline"
-                  >
-                    {t("cliente.novoContrato")} <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </Card.Body>
-            </Card.Root>
+            {contratosAtivo && (
+              <Card.Root variant="detail">
+                <Card.Header>
+                  <Card.Title className="text-lg font-semibold">{t("cliente.contratos")}</Card.Title>
+                </Card.Header>
+                <Card.Body>
+                  <p className="text-3xl font-bold text-center">
+                    {cliente.totalContratos ?? 0}
+                  </p>
+                  <div className="mt-3 flex justify-center gap-2">
+                    <Link
+                      to={`/contratos?clienteId=${cliente.id}`}
+                      className="inline-flex items-center gap-0.5 text-sm font-medium text-blue-600 hover:underline"
+                    >
+                      {t("cliente.verContratos")} <ChevronRight className="h-4 w-4" />
+                    </Link>
+                    <Link
+                      to={`/contratos/novo?clienteId=${cliente.id}`}
+                      className="inline-flex items-center gap-0.5 text-sm font-medium text-blue-600 hover:underline"
+                    >
+                      {t("cliente.novoContrato")} <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </Card.Body>
+              </Card.Root>
+            )}
             <SaldoInfo saldoDevedor={cliente.saldoDevedor ?? 0} />
           </div>
         )}

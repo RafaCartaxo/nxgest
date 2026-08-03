@@ -8,7 +8,8 @@
     "configuracoes": "Settings",
     "idioma": "Language",
     "temaClaro": "Light theme",
-    "temaEscuro": "Dark theme"
+    "temaEscuro": "Dark theme",
+    "temas": "Themes"
   },
   "common": {
     "empty": "No data found.",
@@ -451,6 +452,31 @@
     "navEmpresas": "Companies",
     "admin": "Administrator",
     "voltar": "Back to companies",
-    "emptyMessage": "No companies registered."
+    "emptyMessage": "No companies registered.",
+    "subtitle": "Manage companies, access and modules of each client",
+    "configurar": "Configure",
+    "modulosTitle": "Modules — {{empresa}}",
+    "modulosHint": "Enable or disable modules for this company. Each client sees only what is active.",
+    "modulosAtivo": "Active",
+    "modulosInativo": "Inactive",
+    "modulosDependencia": "Requires another module",
+    "modulosSalvo": "Modules updated.",
+    "erroModulos": "Error updating modules."
+  },
+  "theme": {
+    "default": "Blue",
+    "aurora": "Aurora",
+    "ocean": "Ocean",
+    "grape": "Grape",
+    "sunset": "Sunset"
+  },
+  "modules": {
+    "clientes": "Clients",
+    "contratos": "Contracts",
+    "caixa": "Cash box",
+    "gastos": "Expenses",
+    "rota": "Collection route",
+    "cobrancas": "Collections",
+    "atendidos": "Attended"
   }
 }

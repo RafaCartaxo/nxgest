@@ -5,6 +5,7 @@ import { FeedbackProvider } from "./shared/feedback/FeedbackProvider.js"
 import { AuthProvider } from "./shared/auth/AuthContext.js"
 import { ProtectedRoute } from "./shared/auth/ProtectedRoute.js"
 import { AdminRoute } from "./shared/auth/AdminRoute.js"
+import { RequireModule } from "./shared/auth/RequireModule.js"
 import { LoginPage } from "./modules/auth/pages/LoginPage.js"
 import { PerfilPage } from "./modules/auth/pages/PerfilPage.js"
 import { OperacoesDashboard } from "./modules/operacoes/pages/OperacoesDashboard.js"
@@ -39,19 +40,19 @@ export function App() {
               <ErrorBoundary>
                 <Routes>
                   <Route path="/" element={<OperacoesDashboard />} />
-                  <Route path="/rota" element={<RotaPage />} />
-                  <Route path="/cobrancas" element={<CobrancaListPage />} />
-                  <Route path="/atendidos" element={<AtendidosPage />} />
-                  <Route path="/clientes" element={<ClienteList />} />
-                  <Route path="/clientes/novo" element={<ClienteNovo />} />
-                  <Route path="/clientes/:id" element={<ClienteDetail />} />
-                  <Route path="/clientes/:id/editar" element={<ClienteEdit />} />
-                  <Route path="/contratos" element={<ContratoList />} />
-                  <Route path="/contratos/novo" element={<ContratoNovo />} />
-                  <Route path="/contratos/:id" element={<ContratoDetail />} />
-                  <Route path="/contratos/:id/editar" element={<ContratoEdit />} />
-                  <Route path="/caixa" element={<CaixaPage />} />
-                  <Route path="/gastos" element={<GastoPage />} />
+                  <Route path="/rota" element={<RequireModule mod="rota"><RotaPage /></RequireModule>} />
+                  <Route path="/cobrancas" element={<RequireModule mod="cobrancas"><CobrancaListPage /></RequireModule>} />
+                  <Route path="/atendidos" element={<RequireModule mod="atendidos"><AtendidosPage /></RequireModule>} />
+                  <Route path="/clientes" element={<RequireModule mod="clientes"><ClienteList /></RequireModule>} />
+                  <Route path="/clientes/novo" element={<RequireModule mod="clientes"><ClienteNovo /></RequireModule>} />
+                  <Route path="/clientes/:id" element={<RequireModule mod="clientes"><ClienteDetail /></RequireModule>} />
+                  <Route path="/clientes/:id/editar" element={<RequireModule mod="clientes"><ClienteEdit /></RequireModule>} />
+                  <Route path="/contratos" element={<RequireModule mod="contratos"><ContratoList /></RequireModule>} />
+                  <Route path="/contratos/novo" element={<RequireModule mod="contratos"><ContratoNovo /></RequireModule>} />
+                  <Route path="/contratos/:id" element={<RequireModule mod="contratos"><ContratoDetail /></RequireModule>} />
+                  <Route path="/contratos/:id/editar" element={<RequireModule mod="contratos"><ContratoEdit /></RequireModule>} />
+                  <Route path="/caixa" element={<RequireModule mod="caixa"><CaixaPage /></RequireModule>} />
+                  <Route path="/gastos" element={<RequireModule mod="gastos"><GastoPage /></RequireModule>} />
                    <Route path="/perfil" element={<PerfilPage />} />
                    <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
                    <Route path="/admin/operadores/:id" element={<AdminRoute><OperadorDetail /></AdminRoute>} />

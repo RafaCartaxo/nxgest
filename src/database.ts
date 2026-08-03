@@ -190,6 +190,7 @@ export const empresas = sqliteTable("empresas", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
   createdAt: text("createdAt").notNull(),
+  modulos: text("modulos"),
 })
 
 export async function createTables() {
@@ -398,10 +399,17 @@ export async function createTables() {
     CREATE TABLE IF NOT EXISTS empresas (
       id TEXT PRIMARY KEY,
       nome TEXT NOT NULL,
-      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]'
     );
 
   `)
+
+  // Migração incremental (PLAN-031): coluna `modulos` em empresas já existentes.
+  const empresaCols = sqlite.pragma("table_info(empresas)") as unknown as { name: string }[]
+  if (!empresaCols.some((c) => c.name === "modulos")) {
+    sqlite.exec(`ALTER TABLE empresas ADD COLUMN modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]'`)
+  }
 
   // Migracao: adicionar coluna empresaId em bancos existentes (ignorar se ja existe)
   try { sqlite.exec("ALTER TABLE usuarios ADD COLUMN empresaId TEXT") } catch { /* ja existe */ }

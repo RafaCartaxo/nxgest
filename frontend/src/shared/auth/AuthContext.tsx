@@ -8,6 +8,7 @@ export interface AuthUser {
   role: "super_admin" | "admin" | "operator"
   empresaId?: string | null
   empresaNome?: string | null
+  modulos?: string[] | null
 }
 
 interface AuthContextType {
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     getMe()
       .then((me) => {
-        setUser({ id: me.id, nome: me.nome, email: me.email, role: me.role, empresaId: me.empresaId, empresaNome: me.empresaNome })
+        setUser({ id: me.id, nome: me.nome, email: me.email, role: me.role, empresaId: me.empresaId, empresaNome: me.empresaNome, modulos: me.modulos ?? null })
       })
       .catch(() => {
         localStorage.removeItem(TOKEN_KEY)
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response: LoginResponse = await loginService(email, senha)
     localStorage.setItem(TOKEN_KEY, response.token)
     setToken(response.token)
-    setUser(response.usuario)
+    setUser({ ...response.usuario, modulos: response.usuario.modulos ?? null })
     return response
   }, [])
 

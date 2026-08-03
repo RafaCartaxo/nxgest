@@ -9,6 +9,7 @@ export interface LoginResponse {
     role: "super_admin" | "admin" | "operator"
     empresaId?: string | null
     empresaNome?: string | null
+    modulos?: string[] | null
   }
 }
 
@@ -19,6 +20,7 @@ export interface MeResponse {
   role: "super_admin" | "admin" | "operator"
   empresaId?: string | null
   empresaNome?: string | null
+  modulos?: string[] | null
 }
 
 export async function login(email: string, senha: string): Promise<LoginResponse> {
