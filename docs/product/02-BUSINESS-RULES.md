@@ -283,17 +283,24 @@ O acesso ao sistema é restrito a operadores autenticados. Nenhuma operação po
 
 ## BR-056
 
-Os dados são isolados por operador.
+Os dados são isolados por nível hierárquico (PLAN-032):
 
-Um operador autenticado visualiza e manipula exclusivamente seus próprios registros — clientes, contratos, pagamentos, gastos, caixa e histórico operacional. Nenhum operador poderá acessar dados de outro operador em hipótese alguma.
+- **operator** — visualiza e manipula exclusivamente os próprios registros (clientes, contratos, pagamentos, gastos, caixa, histórico operacional).
+- **socio** — visualiza/manipula os registros da própria subárvore: os dele + os operadores sob ele (via `chefeId`).
+- **admin** — todos os registros da sua empresa.
+- **super_admin** — todas as empresas.
+
+Nenhum perfil acessa dados fora do seu nível. A subárvore é definida por `usuarios.chefeId` (o "chefe").
 
 ---
 
 ## BR-057
 
-Apenas o administrador do sistema pode criar novos operadores.
+O **admin** cria `operator`, `socio` e `admin` da sua empresa (atribuindo o `chefeId`).
 
-O registro de novos operadores é realizado exclusivamente por um operador com permissão de administrador, através de endpoint protegido.
+O **socio** cria **apenas `operator`** do próprio grupo (com `chefeId` = ele mesmo). `operator` não cria ninguém.
+
+O registro é realizado exclusivamente por quem tem permissão, através de endpoint protegido.
 
 ---
 
@@ -314,7 +321,8 @@ Todo usuário do sistema possui um papel (`role`): `super_admin`, `admin` ou `op
 O papel determina o nível de acesso:
 
 - **super_admin** — Acesso irrestrito a todas as empresas e dados. Gerencia empresas (criar, listar). Pode fazer drill-down em qualquer empresa.
-- **admin** — Acesso a todos os dados da sua empresa. Gerencia operadores da sua empresa.
+- **admin** — Acesso a todos os dados da sua empresa. Gerencia operadores e sócios da sua empresa.
+- **socio** — Acesso à subárvore dele (ele + operadores sob ele). Mesmas funções do admin, em escopo menor (PLAN-032).
 - **operator** — Acesso restrito aos próprios dados dentro da sua empresa.
 
 ---
@@ -413,7 +421,7 @@ O admin visualiza os KPIs do caixa de um operador via `GET /api/caixa?usuarioId=
 
 ## BR-081
 
-Login roteado por perfil: `operator` → `/`, `admin` → `/admin`, `super_admin` → `/admin/empresas`. O `/admin` para `super_admin` redireciona para `/admin/empresas` (não tem empresa própria para gerenciar).
+Login roteado por perfil: `operator` → `/`, `admin` → `/admin`, `socio` → `/admin` (painel escopado à subárvore), `super_admin` → `/admin/empresas`. O `/admin` para `super_admin` redireciona para `/admin/empresas` (não tem empresa própria para gerenciar).
 
 ---
 
@@ -737,6 +745,22 @@ Após a alteração da própria senha, o **token JWT atual permanece válido** (
 - O novo hash passa a valer para os próximos logins.
 - Tokens já emitidos (até expiração de 7 dias — BR-058) continuam aceitos.
 - > **Decisão a validar na implementação (PLAN-029):** se a política futura exigir revogação de sessões, será necessária uma tabela/lista de tokens revogados — fora do escopo atual.
+
+---
+
+## BR-094
+
+Hierarquia de papéis por empresa (PLAN-032): cada usuário possui um **chefe** (`usuarios.chefeId`), exceto o `admin` (topo da empresa, responde apenas ao `super_admin`).
+
+- `operator` → chefe = um `socio` ou um `admin` da mesma empresa;
+- `socio` → chefe = um `admin` da mesma empresa;
+- `admin` → sem chefe (`chefeId` nulo = sob o admin da empresa);
+- A **subárvore** de um usuário é ele + os descendentes via `chefeId` (recursivo). O escopo de dados (equipe, dashboard, `?usuarioId=`, KPIs) de cada perfil segue a subárvore: `operator` = próprio · `socio` = subárvore · `admin` = empresa.
+- Validações de chefe: mesma empresa, não-self, sem ciclo; `socio` só tem `operator` como subordinado direto.
+
+## BR-095
+
+O `socio` pode **criar operadores do próprio grupo** (`role = operator`, `chefeId` = ele). Não pode criar `socio` nem `admin` (isso é do `admin` da empresa). O `admin` cria `operator` (chefe = admin ou um sócio), `socio` (chefe = admin) e `admin`.
 
 ---
 

@@ -1089,6 +1089,25 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+# ADMIN — HIERARQUIA DE PAPÉIS (PLAN-032)
+
+### API-CT-098 — Criar sócio (admin)
+**Dado** admin → **Quando** `POST /api/admin/operadores` com `role: "socio"` → **Então** 201 com `chefeId` = admin. `login`/`me` do sócio retornam `role: "socio"` + `chefeId`.
+
+### API-CT-099 — Sócio cria operador do grupo
+**Dado** sócio → **Quando** `POST /api/admin/operadores` com `role: "operator"` → **Então** 201 com `chefeId` = o sócio. **Dado** `role: "admin"`/`"socio"` → **Então** 403.
+
+### API-CT-100 — Escopo da equipe por nível
+**Dado** sócio → `GET /api/admin/equipe` retorna **apenas a subárvore** (ele + operadores com `chefeId` = ele), não a empresa toda. Admin → empresa inteira. Operator → 403.
+
+### API-CT-101 — Acesso fora da subárvore
+**Dado** sócio consultando `GET /api/admin/operadores/:id` ou `?usuarioId=` de operador fora da subárvore → **Então** 404.
+
+### API-CT-102 — Chefe inválido
+**Dado** `chefeId` de outra empresa, auto-chefe ou ciclo → **Então** 422. Chefe de `socio` que não é `admin` → 422.
+
+---
+
 # Referências
 
 - `engineering/02-API.md` — contrato completo (request/response JSON, validações, erros)

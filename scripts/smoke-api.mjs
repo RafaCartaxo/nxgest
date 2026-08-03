@@ -560,6 +560,47 @@ async function main() {
     const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: adminToken, body: { modulos: [] } })
     expect(r, 403, "admin sem permissão")
   })
+
+  // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------
+  let socioId, socioEmail, socioOpId, socioToken
+  await t("SC-001", "Admin cria sócio (201, chefe = admin)", async () => {
+    const email = `socio.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Sócio Smoke", email, senha: SENHA, role: "socio" } })
+    expect(r, 201, "criar sócio")
+    socioId = r.data.id
+    socioEmail = email
+    if (r.data.chefeId !== adminLogin.data.usuario.id) throw new Error("chefeId do sócio não é o admin")
+  })
+  await t("SC-002", "Login do sócio (role socio + chefeId)", async () => {
+    const r = await req("POST", "/api/auth/login", { body: { email: socioEmail, senha: SENHA } })
+    expect(r, 200, "login sócio")
+    socioToken = r.data.token
+    if (r.data.usuario.role !== "socio") throw new Error("role não é socio")
+    if (r.data.usuario.chefeId !== adminLogin.data.usuario.id) throw new Error("chefeId errado no login")
+  })
+  await t("SC-003", "Sócio cria operador do grupo (201, chefe = sócio)", async () => {
+    const r = await req("POST", "/api/admin/operadores", { token: socioToken, body: { nome: "Op do Sócio", email: `opsocio.${Date.now()}@uorak.com`, senha: SENHA, role: "operator" } })
+    expect(r, 201, "sócio cria operador")
+    socioOpId = r.data.id
+    if (r.data.chefeId !== socioId) throw new Error("chefeId do operador não é o sócio")
+  })
+  await t("SC-004", "Sócio cria admin/socio (403)", async () => {
+    const a = await req("POST", "/api/admin/operadores", { token: socioToken, body: { nome: "X", email: `x.${Date.now()}@uorak.com`, senha: SENHA, role: "admin" } })
+    expect(a, 403, "sócio cria admin")
+    const b = await req("POST", "/api/admin/operadores", { token: socioToken, body: { nome: "Y", email: `y.${Date.now()}@uorak.com`, senha: SENHA, role: "socio" } })
+    expect(b, 403, "sócio cria socio")
+  })
+  await t("SC-005", "Sócio vê equipe da subárvore (não a empresa toda)", async () => {
+    const r = await req("GET", "/api/admin/equipe", { token: socioToken })
+    expect(r, 200, "equipe do sócio")
+    const ids = r.data.operadores.map((o) => o.id)
+    if (!ids.includes(socioId) || !ids.includes(socioOpId)) throw new Error("subárvore incompleta")
+    if (ids.includes(gabrielId)) throw new Error("sócio viu operador fora da subárvore")
+  })
+  await t("SC-006", "Sócio acessa operador fora da subárvore (404)", async () => {
+    const r = await req("GET", `/api/admin/operadores/${gabrielId}`, { token: socioToken })
+    expect(r, 404, "operador fora da subárvore")
+  })
   await t("EMP-074", "Admin email duplicado (409)", async () => {
     const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: "Duplicada", adminNome: "X", adminEmail: "admin@cobranca.com", adminSenha: SENHA } })
     expect(r, 409, "email admin duplicado")

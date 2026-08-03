@@ -1185,6 +1185,114 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+# HIERARQUIA DE PAPÉIS (PLAN-032)
+
+### UC-064 — Sócio acessa o painel escopado
+
+**Ator:** socio
+
+**Ação:** faz login (cai em `/admin`) e vê a equipe/KPIs.
+
+**O que DEVE acontecer:** o painel é o mesmo do admin, **escopado à subárvore** do sócio (ele + operadores com `chefeId` = ele): equipe, KPIs (clientes/contratos/recebido hoje) e `ContribuicaoModal` mostram só os do grupo.
+
+**Conferências:**
+- [ ] Login do sócio cai no painel (`/admin`)?
+- [ ] Equipe mostra só o grupo do sócio (não a empresa toda)?
+- [ ] KPIs e contribuição = subárvore (não inclui operador de outro sócio)?
+
+**Regras:** BR-081, BR-094
+
+---
+
+### UC-065 — Sócio cria operador do grupo
+
+**Ator:** socio
+
+**Ação:** no painel, clica em "Novo Operador", preenche nome/email/senha.
+
+**O que DEVE acontecer:** o formulário está travado em `operator` (sem role select); o chefe é o próprio sócio (sem campo); salvar cria o operador com `chefeId` = sócio.
+
+**Conferências:**
+- [ ] Sócio não consegue escolher `socio`/`admin` no form?
+- [ ] Operador criado fica sob o sócio (subárvore)?
+- [ ] Tentar criar `admin`/`socio` via API como sócio → 403/422?
+
+**Regras:** BR-095, BR-057
+
+---
+
+### UC-066 — Admin cria sócio e associa operador a um sócio
+
+**Ator:** admin
+
+**Ação:** no painel, cria um `socio` (chefe = admin) e/ou cria um `operator` escolhendo o chefe (admin ou um sócio).
+
+**O que DEVE acontecer:** o select de role inclui `socio`; o campo "Chefe (gestor)" lista admins + sócios da empresa; salvar associa o `chefeId` correto.
+
+**Conferências:**
+- [ ] Admin cria `socio` com chefe = admin?
+- [ ] Admin cria `operator` e escolhe o sócio chefe?
+- [ ] Chefe de outra empresa bloqueado (422)?
+
+**Regras:** BR-094, BR-095
+
+---
+
+### UC-067 — Escopo de dados por nível (recebido hoje / equipe / KPIs)
+
+**Ator:** operator / socio / admin
+
+**Ação:** compara o "recebido hoje" e a equipe entre os níveis.
+
+**O que DEVE acontecer:** operator = só o dele · socio = subárvore (ele + operadores) · admin = empresa inteira.
+
+**Conferências:**
+- [ ] Recebido hoje do sócio = Σ do grupo (não da empresa toda)?
+- [ ] Recebido hoje do operator = só o dele?
+- [ ] Admin mantém a empresa inteira?
+
+**Regras:** BR-056, BR-094
+
+---
+
+### UC-068 — Sócio gerencia o grupo (ajuste/estorno/editar/remover)
+
+**Ator:** socio
+
+**Ação:** no `OperadorDetail` de um operador do grupo, ajusta o caixa; estorna pagamento; edita/remove o operador.
+
+**O que DEVE acontecer:** tudo restrito à subárvore — sócio não gerencia operador de outro sócio (404/403).
+
+**Conferências:**
+- [ ] Ajuste de caixa de operador do grupo funciona?
+- [ ] Estorno de pagamento do grupo funciona?
+- [ ] Operador fora da subárvore → 404/403?
+
+**Regras:** BR-094
+
+---
+
+### UC-069 — Bloqueios hierárquicos
+
+**Ator:** socio / admin
+
+**Ação:** tenta operações fora do nível.
+
+**O que DEVE acontecer:**
+- sócio cria `socio`/`admin` → bloqueado;
+- chefe de outra empresa ou auto-chefe → 422;
+- ciclo (A chefe de B, B chefe de A) → bloqueado;
+- sócio acessa operador fora da subárvore → 404.
+
+**Conferências:**
+- [ ] Sócio criando `admin`/`socio` → 403/422?
+- [ ] Auto-chefe/ciclo → 422?
+- [ ] `?usuarioId=` fora da subárvore → 404?
+
+**Regras:** BR-094, BR-095
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)

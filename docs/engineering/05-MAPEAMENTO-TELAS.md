@@ -2,7 +2,7 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.19
+**Versão:** 1.20
 
 **Última atualização:** 03/08/2026
 
@@ -50,11 +50,11 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 ```
 App
 ├── Navbar (sticky top, sempre visível) — conteúdo por perfil (PLAN-031)
-│   ├── [operator/admin] NavLink: Central (/)
-│   ├── [operator/admin] NavLink: Clientes (/clientes) [módulo clientes]
-│   ├── [operator/admin] NavLink: Contratos (/contratos) [módulo contratos]
-│   ├── [operator/admin] NavLink: Caixa (/caixa) [módulo caixa]
-│   ├── [admin] NavLink: Administração (/admin) [PLAN-030]
+│   ├── [operator/socio/admin] NavLink: Central (/)
+│   ├── [operator/socio/admin] NavLink: Clientes (/clientes) [módulo clientes]
+│   ├── [operator/socio/admin] NavLink: Contratos (/contratos) [módulo contratos]
+│   ├── [operator/socio/admin] NavLink: Caixa (/caixa) [módulo caixa]
+│   ├── [socio/admin] NavLink: Administração (/admin) — sócio = painel escopado à subárvore (PLAN-032)
 │   ├── [super_admin] NavLink: Empresas (/admin/empresas) [PLAN-030]
 │   │      — super admin NÃO vê as páginas operacionais (sem dados próprios)
 │   ├── Engrenagem (dropdown de configurações):
@@ -1124,6 +1124,7 @@ Modal ModulosModal (ação "Configurar"):
 | 03/08/2026 | 1.17 | PLAN-030: KPIs de Operação do admin com **totais da equipe** (BR-091) + `ContribuicaoModal` por operador; `EquipeModal` com stats e navegação ao operador; navbar com links "Administração"/"Empresas" visíveis |
 | 03/08/2026 | 1.18 | PLAN-031: 5 temas por usuário com gradientes (engrenagem); módulos por empresa (whitelabel, BR-092/093) com `RequireModule`/navbar/entradas; Super Admin redesenhado (banner gradiente + `ModulosModal` + `EmpresaForm` no Modal base) |
 | 03/08/2026 | 1.19 | Navbar por perfil: operator/admin veem as operacionais (module-gated); admin + Administração; super_admin vê só Empresas (sem páginas vazias). UCs 061-063 |
+| 03/08/2026 | 1.20 | PLAN-032: papel `socio` (painel escopado à subárvore); navbar inclui sócio nas operacionais + Administração. UCs 064-069 |
 
 # Referências
 
