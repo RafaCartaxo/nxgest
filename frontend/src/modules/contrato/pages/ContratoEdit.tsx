@@ -133,7 +133,7 @@ export function ContratoEdit() {
           <h1 className="flex-1 text-3xl font-semibold">{t("contrato.editar")}</h1>
         </div>
         <div className="rounded-md border border-warning bg-warning-light p-6 text-center">
-          <p className="font-medium text-yellow-800">
+          <p className="font-medium text-warning-text">
             {t("contrato.bloqueioEdicao")}
           </p>
         </div>
@@ -163,7 +163,7 @@ export function ContratoEdit() {
 
             <div>
               <label className="block text-sm font-medium">
-                {t("contrato.valorEmprestado")} <span className="text-red-500">*</span>
+                {t("contrato.valorEmprestado")} <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
@@ -173,16 +173,16 @@ export function ContratoEdit() {
                   form.setValue("valorBase", e.target.value.replace(/\D/g, ""))
                   form.clearErrors("valorBase")
                 }}
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="0,00"
               />
-              {errors.valorBase?.message && <p className="mt-1 text-xs text-red-500">{errors.valorBase.message}</p>}
+              {errors.valorBase?.message && <p className="mt-1 text-xs text-danger">{errors.valorBase.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium">
-                  {t("contrato.juros")} <span className="text-red-500">*</span>
+                  {t("contrato.juros")} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -192,15 +192,15 @@ export function ContratoEdit() {
                     form.setValue("percentualJuros", e.target.value.replace(/[^0-9.,]/g, ""))
                     form.clearErrors("percentualJuros")
                   }}
-                  className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="20"
                 />
-                {errors.percentualJuros?.message && <p className="mt-1 text-xs text-red-500">{errors.percentualJuros.message}</p>}
+                {errors.percentualJuros?.message && <p className="mt-1 text-xs text-danger">{errors.percentualJuros.message}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium">
-                  {t("contrato.quantidadeParcelas")} <span className="text-red-500">*</span>
+                  {t("contrato.quantidadeParcelas")} <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -210,16 +210,16 @@ export function ContratoEdit() {
                     form.setValue("quantidadeParcelas", e.target.value.replace(/\D/g, ""))
                     form.clearErrors("quantidadeParcelas")
                   }}
-                  className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="12"
                 />
-                {errors.quantidadeParcelas?.message && <p className="mt-1 text-xs text-red-500">{errors.quantidadeParcelas.message}</p>}
+                {errors.quantidadeParcelas?.message && <p className="mt-1 text-xs text-danger">{errors.quantidadeParcelas.message}</p>}
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium">
-                {t("contrato.dataInicio")} <span className="text-red-500">*</span>
+                {t("contrato.dataInicio")} <span className="text-danger">*</span>
               </label>
               <div className="mt-1 overflow-hidden rounded-md border border-border">
                 <input
@@ -228,13 +228,13 @@ export function ContratoEdit() {
                   className="block w-full border-0 px-3 py-2 text-base  "
                 />
               </div>
-              {errors.dataInicio?.message && <p className="mt-1 text-xs text-red-500">{errors.dataInicio.message}</p>}
+              {errors.dataInicio?.message && <p className="mt-1 text-xs text-danger">{errors.dataInicio.message}</p>}
             </div>
 
             {valorBaseNum > 0 && (
               <div className="rounded-md bg-surface-secondary p-4 text-center">
                 <p className="text-sm text-text-secondary">{t("contrato.totalAReceber")}</p>
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-2xl font-bold text-primary">
                   R$ {formatCurrency(valorFinal)}
                 </p>
                 {parseInt(quantidadeParcelas) > 0 && (

@@ -6,6 +6,8 @@ import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
+import { Button } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { EmpresaList } from "../components/EmpresaList.js"
 import { EmpresaForm } from "../components/EmpresaForm.js"
 import { ModulosModal } from "../components/ModulosModal.js"
@@ -68,15 +70,12 @@ export function SuperAdminPage() {
 
   return (
     <div className="mx-auto max-w-4xl p-4 space-y-4">
-      <div className="rounded-lg bg-gradient-accent px-5 py-6 text-white shadow-sm">
-        <div className="flex items-center gap-3">
-          <Building2 className="h-8 w-8 opacity-90" />
-          <div>
-            <h1 className="text-2xl font-bold">{t("superAdmin.title")}</h1>
-            <p className="mt-0.5 text-sm text-white/80">{t("superAdmin.subtitle")}</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={Building2}
+        title={t("superAdmin.title")}
+        subtitle={t("superAdmin.subtitle")}
+        action={!formOpen ? <Button variant="onDark" onClick={() => setFormOpen(true)}>{t("superAdmin.novaEmpresa")}</Button> : undefined}
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <KpiCard title={t("superAdmin.totalEmpresas")} value={empresas.length.toString()} variant="blue" />
@@ -84,10 +83,7 @@ export function SuperAdminPage() {
         <KpiCard title={t("superAdmin.totalClientes")} value={totalClientes.toString()} variant="yellow" />
       </div>
 
-      <SectionHeader
-        title={t("superAdmin.empresas")}
-        action={!formOpen ? { label: t("superAdmin.novaEmpresa"), onClick: () => setFormOpen(true) } : undefined}
-      />
+      <SectionHeader title={t("superAdmin.empresas")} />
 
       {formOpen && (
         <Modal open onClose={() => setFormOpen(false)} maxWidth="max-w-md">

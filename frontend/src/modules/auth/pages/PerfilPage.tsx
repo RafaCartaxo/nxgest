@@ -82,9 +82,9 @@ export function PerfilPage() {
             value={senhaAtual}
             onChange={(e) => setSenhaAtual(e.target.value)}
             autoComplete="current-password"
-            className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${erros.senhaAtual ? "border-red-300" : "border-border"}`}
+            className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary ${erros.senhaAtual ? "border-danger" : "border-border"}`}
           />
-          {erros.senhaAtual && <p className="text-red-500 text-xs mt-1">{erros.senhaAtual}</p>}
+          {erros.senhaAtual && <p className="text-danger text-xs mt-1">{erros.senhaAtual}</p>}
         </div>
 
         <div>
@@ -94,9 +94,9 @@ export function PerfilPage() {
             value={novaSenha}
             onChange={(e) => setNovaSenha(e.target.value)}
             autoComplete="new-password"
-            className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${erros.novaSenha ? "border-red-300" : "border-border"}`}
+            className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary ${erros.novaSenha ? "border-danger" : "border-border"}`}
           />
-          {erros.novaSenha && <p className="text-red-500 text-xs mt-1">{erros.novaSenha}</p>}
+          {erros.novaSenha && <p className="text-danger text-xs mt-1">{erros.novaSenha}</p>}
         </div>
 
         <div>
@@ -106,9 +106,9 @@ export function PerfilPage() {
             value={confirmarSenha}
             onChange={(e) => setConfirmarSenha(e.target.value)}
             autoComplete="new-password"
-            className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${erros.confirmarSenha ? "border-red-300" : "border-border"}`}
+            className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary ${erros.confirmarSenha ? "border-danger" : "border-border"}`}
           />
-          {erros.confirmarSenha && <p className="text-red-500 text-xs mt-1">{erros.confirmarSenha}</p>}
+          {erros.confirmarSenha && <p className="text-danger text-xs mt-1">{erros.confirmarSenha}</p>}
         </div>
 
         <div className="flex gap-2 justify-end pt-2">

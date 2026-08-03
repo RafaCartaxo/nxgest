@@ -119,13 +119,13 @@ export function ClienteDetail() {
                   <div className="mt-3 flex justify-center gap-2">
                     <Link
                       to={`/contratos?clienteId=${cliente.id}`}
-                      className="inline-flex items-center gap-0.5 text-sm font-medium text-blue-600 hover:underline"
+                      className="inline-flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
                     >
                       {t("cliente.verContratos")} <ChevronRight className="h-4 w-4" />
                     </Link>
                     <Link
                       to={`/contratos/novo?clienteId=${cliente.id}`}
-                      className="inline-flex items-center gap-0.5 text-sm font-medium text-blue-600 hover:underline"
+                      className="inline-flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
                     >
                       {t("cliente.novoContrato")} <ChevronRight className="h-4 w-4" />
                     </Link>

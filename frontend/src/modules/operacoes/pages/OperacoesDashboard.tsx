@@ -21,6 +21,8 @@ import { GastosPeriodoModal } from "../../caixa/components/GastosPeriodoModal.js
 import { SuccessState } from "../../../shared/components/SuccessState/SuccessState.js"
 import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
+import { LayoutDashboard } from "lucide-react"
 
 export function OperacoesDashboard() {
   const { t } = useTranslation()
@@ -211,7 +213,7 @@ export function OperacoesDashboard() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <h1 className="mb-6 text-3xl font-semibold">{t("operacoes.title")}</h1>
+      <PageHeader icon={LayoutDashboard} title={t("operacoes.title")} subtitle={t("operacoes.subtitle")} />
 
       {error && (
         <ErrorBanner message={error} onRetry={fetch} className="mb-4" />

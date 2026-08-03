@@ -83,9 +83,9 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
           ref={nomeRef}
           value={nome}
           onChange={(e) => setNome(e.target.value)}
-          className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.nome ? "border-red-300" : "border-border"}`}
+          className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary ${errors.nome ? "border-danger" : "border-border"}`}
         />
-        {errors.nome && <p className="text-red-500 text-xs mt-1">{errors.nome}</p>}
+        {errors.nome && <p className="text-danger text-xs mt-1">{errors.nome}</p>}
       </div>
 
       <div>
@@ -95,9 +95,9 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.email ? "border-red-300" : "border-border"}`}
+          className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary ${errors.email ? "border-danger" : "border-border"}`}
         />
-        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+        {errors.email && <p className="text-danger text-xs mt-1">{errors.email}</p>}
       </div>
 
       <div>
@@ -108,9 +108,9 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
           placeholder={editing ? t("admin.senhaOpcional") : ""}
-          className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.senha ? "border-red-300" : "border-border"}`}
+          className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary ${errors.senha ? "border-danger" : "border-border"}`}
         />
-        {errors.senha && <p className="text-red-500 text-xs mt-1">{errors.senha}</p>}
+        {errors.senha && <p className="text-danger text-xs mt-1">{errors.senha}</p>}
       </div>
 
       <div>

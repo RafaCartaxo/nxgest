@@ -7,7 +7,7 @@ import { StatusBadge } from "../StatusBadge/StatusBadge.js"
 type CardVariant = "list-item" | "detail" | "collection"
 
 const rootStyles: Record<CardVariant, string> = {
-  "list-item":  "block rounded-md border border-border-light bg-surface p-4 transition hover:border-blue-300",
+  "list-item":  "block rounded-md border border-border-light bg-surface p-4 transition hover:border-primary",
   "detail":     "rounded-md border bg-surface p-4",
   "collection": "overflow-hidden rounded-md border border-border-light bg-surface",
 }
@@ -77,11 +77,11 @@ interface CardDotProps {
 }
 
 const dotColors: Record<string, string> = {
-  red: "bg-red-500",
-  blue: "bg-blue-500",
-  green: "bg-green-500",
-  yellow: "bg-yellow-500",
-  gray: "bg-gray-400",
+  red: "bg-danger",
+  blue: "bg-primary",
+  green: "bg-success",
+  yellow: "bg-warning",
+  gray: "bg-text-muted",
 }
 
 const dotSizes: Record<string, string> = {

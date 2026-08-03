@@ -38,7 +38,7 @@ export function EstadoTela({
   if (error) {
     return (
       <div className="flex flex-col items-center gap-4 p-8 text-center">
-        <p className="text-red-600 font-medium">{error}</p>
+        <p className="text-danger font-medium">{error}</p>
         {onRetry && (
           <Button onClick={onRetry}>
             {t("common.retry")}

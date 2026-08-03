@@ -52,7 +52,7 @@ export function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary"
               required
               autoComplete="email"
             />
@@ -65,7 +65,7 @@ export function LoginPage() {
                 type={mostrarSenha ? "text" : "password"}
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                className="w-full rounded-md border border-border px-3 py-2 pr-10 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-md border border-border px-3 py-2 pr-10 text-base focus:ring-2 focus:ring-primary focus:border-primary"
                 required
                 autoComplete="current-password"
               />

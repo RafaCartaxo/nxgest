@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { listContratos as listContratosApi } from "../services/contrato.service.js"
 import type { Contrato } from "../services/contrato.service.js"
 import { listClientes } from "../../cliente/services/cliente.service.js"
 import type { Cliente } from "../../cliente/services/cliente.service.js"
-import { ChevronLeft, ChevronDown, X } from "lucide-react"
+import { ChevronDown, X, FileText } from "lucide-react"
 import { ContratoCard } from "../components/ContratoCard.js"
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { Button, ButtonLink } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 
 export function ContratoList() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [contratos, setContratos] = useState<Contrato[]>([])
   const [clientes, setClientes] = useState<Cliente[]>([])
@@ -112,18 +114,13 @@ export function ContratoList() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <Link
-          to={temFiltroCliente ? `/clientes/${clienteId}` : "/clientes"}
-          className="text-text-muted hover:text-text-primary"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="flex-1 text-3xl font-semibold">{t("contrato.title")}</h1>
-        <ButtonLink to={`/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}`}>
-          {t("contrato.novo")}
-        </ButtonLink>
-      </div>
+      <PageHeader
+        icon={FileText}
+        title={t("contrato.title")}
+        subtitle={t("contrato.subtitle")}
+        back={{ onClick: () => navigate(temFiltroCliente ? `/clientes/${clienteId}` : "/clientes"), title: t("nav.clientes") }}
+        action={<ButtonLink to={`/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}`} variant="onDark">{t("contrato.novo")}</ButtonLink>}
+      />
 
       <div className="mb-4 flex items-center gap-2">
         <div ref={dropdownRef} className="relative flex-1">

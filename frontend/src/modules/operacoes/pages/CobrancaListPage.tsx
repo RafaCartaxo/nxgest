@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { ChevronLeft } from "lucide-react"
+import { ClipboardList } from "lucide-react"
 import { listarCobrancasDoDia, listarPagamentosHoje, ResultadoOperacional, type CobrancaDoDiaResult, type CobrancaItem, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
 import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { eventBus } from "../../../shared/events/eventBus.js"
@@ -11,6 +11,8 @@ import { formatCurrency } from "../../../shared/utils/masks.js"
 import { CobrancaList } from "../components/CobrancaList.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { SuccessState } from "../../../shared/components/SuccessState/SuccessState.js"
+import { Button } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 
 const filtrosResultado = [
   { key: "all", labelKey: "operacoes.todosResultados" },
@@ -162,25 +164,15 @@ export function CobrancaListPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="text-text-muted hover:text-text-primary"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h1 className="flex-1 text-3xl font-semibold">{filter === "atrasado" ? t("operacoes.atrasado") : t("operacoes.cobrancasDoDia")}</h1>
-        {!(pendentes.length === 0 && totalResolvidos > 0) && (
-          <button
-            type="button"
-            onClick={() => navigate("/rota")}
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            {t("operacoes.verNaRota")} →
-          </button>
-        )}
-      </div>
+      <PageHeader
+        icon={ClipboardList}
+        title={filter === "atrasado" ? t("operacoes.atrasado") : t("operacoes.cobrancasDoDia")}
+        subtitle={t("operacoes.subtitleCobrancas")}
+        back={{ onClick: () => navigate(-1), title: t("common.back") }}
+        action={!(pendentes.length === 0 && totalResolvidos > 0) ? (
+          <Button variant="onDark" onClick={() => navigate("/rota")}>{t("operacoes.verNaRota")} →</Button>
+        ) : undefined}
+      />
 
       <div className="mb-4 flex gap-2 overflow-x-auto">
         {filtrosAtivos.map((f) => (

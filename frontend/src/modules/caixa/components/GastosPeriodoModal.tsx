@@ -74,7 +74,7 @@ export function GastosPeriodoModal({ open, items, dataInicio, dataFim, loading, 
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{CATEGORIA_ICONES[gasto.categoria] ?? "📋"}</span>
                         <span className="text-sm font-medium">{gasto.categoria}</span>
-                        <span className="text-sm font-semibold text-red-700">
+                        <span className="text-sm font-semibold text-danger-text">
                           R$ {formatCurrency(gasto.valor)}
                         </span>
                       </div>

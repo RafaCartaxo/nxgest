@@ -138,7 +138,7 @@ export function PagamentoModal({
           />
 
           {erro && (
-            <p className="mt-2 text-sm text-red-600">{erro}</p>
+            <p className="mt-2 text-sm text-danger">{erro}</p>
           )}
 
           {(preview || carregandoPreview || valor > 0) ? (
@@ -180,7 +180,7 @@ export function PagamentoModal({
                   })()}
 
                   {preview.saldoExcedente > 0 && (
-                    <p className="pt-1 text-sm font-medium text-amber-600">
+                    <p className="pt-1 text-sm font-medium text-warning">
                       {t("pagamento.saldoExcedente", { valor: formatCurrency(preview.saldoExcedente) })}
                     </p>
                   )}

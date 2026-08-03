@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams, Navigate, useNavigate } from "react-router-dom"
-import { ChevronLeft } from "lucide-react"
+import { Settings } from "lucide-react"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { SearchBar } from "../../../shared/components/SearchBar/SearchBar.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { Button } from "../../../shared/components/Button.js"
@@ -153,22 +154,13 @@ export function AdminPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        {empresaId && (
-          <button
-            type="button"
-            onClick={() => navigate("/admin/empresas")}
-            title={t("superAdmin.voltar")}
-            className="text-text-muted hover:text-text-primary"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-        )}
-        <h1 className="min-w-0 flex-1 text-3xl font-semibold">{tituloHeader ?? t("admin.title")}</h1>
-        {tituloHeader && (
-          <StatusBadge variant="info" size="sm" label={headerBadge} />
-        )}
-      </div>
+      <PageHeader
+        icon={Settings}
+        title={tituloHeader ?? t("admin.title")}
+        subtitle={t("admin.subtitle")}
+        back={empresaId ? { onClick: () => navigate("/admin/empresas"), title: t("superAdmin.voltar") } : undefined}
+        action={tituloHeader ? <StatusBadge variant="info" size="sm" label={headerBadge} /> : undefined}
+      />
 
       {empresaId && empresa?.adminNome && (
         <div className="mb-4 rounded-md bg-surface-secondary px-3 py-2 text-sm">

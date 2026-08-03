@@ -141,25 +141,25 @@ export function ClienteNovo() {
         <SectionHeader title={t("cliente.dadosCliente")} />
 
         <div>
-          <label className="block text-sm font-medium">{t("cliente.nome")} <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium">{t("cliente.nome")} <span className="text-danger">*</span></label>
           <input
             {...form.register("nome")}
             autoFocus
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          {errors.nome?.message && <p className="mt-1 text-xs text-red-500">{errors.nome.message}</p>}
+          {errors.nome?.message && <p className="mt-1 text-xs text-danger">{errors.nome.message}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium">{t("cliente.telefone")} <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium">{t("cliente.telefone")} <span className="text-danger">*</span></label>
           <input
             value={form.watch("telefone")}
             onChange={(e) => { form.setValue("telefone", maskPhone(e.target.value)); form.clearErrors("telefone") }}
             type="tel"
             placeholder={t("cliente.telefonePlaceholder")}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          {errors.telefone?.message && <p className="mt-1 text-xs text-red-500">{errors.telefone.message}</p>}
+          {errors.telefone?.message && <p className="mt-1 text-xs text-danger">{errors.telefone.message}</p>}
         </div>
 
         <div>
@@ -169,19 +169,19 @@ export function ClienteNovo() {
             onChange={(e) => { form.setValue("cpf", maskCpf(e.target.value)); form.clearErrors("cpf") }}
             inputMode="numeric"
             placeholder={t("cliente.cpfPlaceholder")}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          {errors.cpf?.message && <p className="mt-1 text-xs text-red-500">{errors.cpf.message}</p>}
+          {errors.cpf?.message && <p className="mt-1 text-xs text-danger">{errors.cpf.message}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium">{t("cliente.comercio")} <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium">{t("cliente.comercio")} <span className="text-danger">*</span></label>
           <input
             {...form.register("comercio")}
             placeholder={t("cliente.comercioPlaceholder")}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          {errors.comercio?.message && <p className="mt-1 text-xs text-red-500">{errors.comercio.message}</p>}
+          {errors.comercio?.message && <p className="mt-1 text-xs text-danger">{errors.comercio.message}</p>}
         </div>
 
         <div>
@@ -191,9 +191,9 @@ export function ClienteNovo() {
             onChange={(e) => { form.setValue("telefoneComercio", maskPhone(e.target.value)); form.clearErrors("telefoneComercio") }}
             type="tel"
             placeholder={t("cliente.telefonePlaceholder")}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          {errors.telefoneComercio?.message && <p className="mt-1 text-xs text-red-500">{errors.telefoneComercio.message}</p>}
+          {errors.telefoneComercio?.message && <p className="mt-1 text-xs text-danger">{errors.telefoneComercio.message}</p>}
         </div>
 
         <SectionHeader title={t("cliente.enderecoComercio")} />
@@ -253,27 +253,27 @@ export function ClienteNovo() {
             <div className="mt-4 grid grid-cols-3 gap-4">
               <div className="col-span-2">
                 <label className="block text-sm font-medium">{t("cliente.logradouro")}</label>
-                <input {...form.register("comercioLogradouro")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input {...form.register("comercioLogradouro")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
               </div>
               <div>
                 <label className="block text-sm font-medium">{t("cliente.numero")}</label>
-                <input {...form.register("comercioNumero")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input {...form.register("comercioNumero")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
               </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium">{t("cliente.bairro")}</label>
-                <input {...form.register("comercioBairro")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input {...form.register("comercioBairro")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
               </div>
               <div className="col-span-2">
                 <label className="block text-sm font-medium">{t("cliente.cidade")}</label>
-                <input {...form.register("comercioCidade")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input {...form.register("comercioCidade")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
               </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-4">
               <div className="col-span-2">
                 <label className="block text-sm font-medium">{t("cliente.uf")}</label>
-                <input {...form.register("comercioEstado")} maxLength={2} placeholder={t("cliente.ufPlaceholder")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input {...form.register("comercioEstado")} maxLength={2} placeholder={t("cliente.ufPlaceholder")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
               </div>
             </div>
           </>
@@ -282,7 +282,7 @@ export function ClienteNovo() {
           <button
             type="button"
             onClick={() => setComercioExpandido(true)}
-            className="mt-2 text-sm text-blue-600 hover:underline"
+            className="mt-2 text-sm text-primary hover:underline"
           >
             {t("cliente.expandirEndereco")}
           </button>
@@ -292,12 +292,12 @@ export function ClienteNovo() {
 
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2">
-            <label className="block text-sm font-medium">{t("cliente.logradouro")} <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium">{t("cliente.logradouro")} <span className="text-danger">*</span></label>
             <input
               {...form.register("logradouro")}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            {errors.logradouro?.message && <p className="mt-1 text-xs text-red-500">{errors.logradouro.message}</p>}
+            {errors.logradouro?.message && <p className="mt-1 text-xs text-danger">{errors.logradouro.message}</p>}
           </div>
 
           <div>
@@ -305,7 +305,7 @@ export function ClienteNovo() {
             <input
               {...form.register("numero")}
               inputMode="numeric"
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
         </div>
@@ -315,7 +315,7 @@ export function ClienteNovo() {
             <label className="block text-sm font-medium">{t("cliente.bairro")}</label>
             <input
               {...form.register("bairro")}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -324,7 +324,7 @@ export function ClienteNovo() {
             <input
               {...form.register("complemento")}
               placeholder={t("cliente.complementoPlaceholder")}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
         </div>
@@ -335,9 +335,9 @@ export function ClienteNovo() {
             <input
               {...form.register("cidade")}
               onChange={(e) => { form.setValue("cidade", e.target.value); form.clearErrors("cidade") }}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            {errors.cidade?.message && <p className="mt-1 text-xs text-red-500">{errors.cidade.message}</p>}
+            {errors.cidade?.message && <p className="mt-1 text-xs text-danger">{errors.cidade.message}</p>}
           </div>
 
           <div>
@@ -347,9 +347,9 @@ export function ClienteNovo() {
               onChange={(e) => { form.setValue("estado", e.target.value.toUpperCase().slice(0, 2)); form.clearErrors("estado") }}
               maxLength={2}
               placeholder={t("cliente.ufPlaceholder")}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   uppercase focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   uppercase focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            {errors.estado?.message && <p className="mt-1 text-xs text-red-500">{errors.estado.message}</p>}
+            {errors.estado?.message && <p className="mt-1 text-xs text-danger">{errors.estado.message}</p>}
           </div>
         </div>
 

@@ -49,6 +49,10 @@
   },
   "operacoes": {
     "title": "Centro de Operaciones",
+    "subtitle": "Sigue los cobros del día y el resultado de las operaciones",
+    "subtitleCobrancas": "Cola de cobros pendientes y vencidos del día",
+    "subtitleRota": "Orden de visita y navegación a los clientes",
+    "subtitleAtendidos": "Resumen de los atendidos de hoy",
     "error": "Error al cargar el Centro de Operaciones.",
     "aReceberHoje": "Por Cobrar Hoy",
     "recebidoHoje": "Cobrado Hoy",
@@ -117,6 +121,7 @@
   },
   "cliente": {
     "title": "Clientes",
+    "subtitle": "Registro, direcciones y situación financiera de los clientes",
     "novo": "Nuevo Cliente",
     "editar": "Editar Cliente",
     "erroCarregar": "Error al cargar clientes.",
@@ -176,6 +181,7 @@
   },
   "contrato": {
     "title": "Contratos",
+    "subtitle": "Condiciones, cuotas y situación de los contratos",
     "novo": "Nuevo Contrato",
     "editar": "Editar Contrato",
     "erroCarregar": "Error al cargar contratos.",
@@ -263,6 +269,7 @@
   },
   "caixa": {
     "title": "Caja",
+    "subtitle": "Control de caja, movimientos y cierre semanal",
     "caixaBase": "Base de Caja",
     "saldoAtual": "Saldo Actual",
     "lucro": "Ganancia",
@@ -300,6 +307,7 @@
   },
   "gasto": {
     "title": "Gastos",
+    "subtitle": "Registro y seguimiento de los gastos del día",
     "novo": "Nuevo Gasto",
     "valor": "Valor",
     "categoria": "Categoría",
@@ -362,6 +370,7 @@
   },
   "admin": {
     "title": "Administración",
+    "subtitle": "Equipo, operadores e indicadores de la empresa",
     "operadores": "Operadores",
     "novoOperador": "Nuevo Operador",
     "editarOperador": "Editar Operador",

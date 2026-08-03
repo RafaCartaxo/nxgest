@@ -43,7 +43,7 @@ export function EquipeModal({ open, role, operadores, empresaId, onClose }: Equi
                 key={op.id}
                 type="button"
                 onClick={() => navigate(`/admin/operadores/${op.id}${empresaId ? `?empresaId=${empresaId}` : ""}`)}
-                className="flex w-full items-center justify-between gap-3 rounded-md border border-border-light bg-surface p-3 text-left hover:border-blue-300"
+                className="flex w-full items-center justify-between gap-3 rounded-md border border-border-light bg-surface p-3 text-left hover:border-primary"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

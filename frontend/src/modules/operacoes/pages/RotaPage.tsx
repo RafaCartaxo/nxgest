@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
-import { ChevronLeft, Navigation, MessageCircle, Phone, FileText, X, Share2, UserCheck, MapPinOff, CalendarClock, MapPin } from "lucide-react"
+import { Navigation, MessageCircle, Phone, FileText, X, Share2, UserCheck, MapPinOff, CalendarClock, MapPin, Route } from "lucide-react"
 import { listarCobrancasDoDia, listarPagamentosHoje, registrarVisita, ResultadoOperacional, type CobrancaItem, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
 import { ApiError } from "../../../api/client.js"
 import { calcularDistancia, sortByDistance, sortByDistanceOnly, useWatchPosition } from "../../../shared/utils/distance.js"
@@ -21,6 +21,7 @@ import { SuccessState } from "../../../shared/components/SuccessState/SuccessSta
 import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { PagamentoModal, type PagamentoSuccessData } from "../../pagamento/components/PagamentoModal.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 
 function formatarParcelasTexto(pagasRange: { inicio: number; fim: number } | null): string {
   if (!pagasRange) return ""
@@ -426,30 +427,29 @@ export function RotaPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="text-text-muted hover:text-text-primary"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h1 className="flex-1 text-3xl font-semibold">{t("operacoes.rotaCobranca")}</h1>
-        <div className="flex items-center gap-2">
-          <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${gpsAtivo ? "bg-success-light text-success-text" : "bg-secondary-light text-secondary"}`}>
-            <MapPin className="h-3 w-3" />
-            {"GPS"}
-          </span>
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="rounded-md p-2 text-text-muted hover:bg-secondary-light hover:text-text-primary"
-            title={t("operacoes.rotaCobranca")}
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        icon={Route}
+        title={t("operacoes.rotaCobranca")}
+        subtitle={t("operacoes.subtitleRota")}
+        back={{ onClick: () => navigate("/"), title: t("nav.central") }}
+        action={
+          <div className="flex items-center gap-2">
+            <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${gpsAtivo ? "bg-white/25 text-white" : "bg-white/10 text-white/80"}`}>
+              <MapPin className="h-3 w-3" />
+              {"GPS"}
+            </span>
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="rounded-md p-2 text-white/80 hover:bg-white/20 hover:text-white"
+              title={t("operacoes.rotaCobranca")}
+              aria-label={t("operacoes.rotaCobranca")}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        }
+      />
 
       {!gpsAtivo && items.length > 0 && (
         <div className="mb-4 rounded-md border border-border-light bg-surface-secondary px-3 py-2 text-xs text-text-secondary">
@@ -569,7 +569,7 @@ export function RotaPage() {
                     type="date"
                     value={dataPromessa}
                     onChange={(e) => setDataPromessa(e.target.value)}
-                    className="mb-4 w-full appearance-none rounded-md border border-border px-3 py-3 text-base focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mb-4 w-full appearance-none rounded-md border border-border px-3 py-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   <div className="flex gap-4">
                     <Button

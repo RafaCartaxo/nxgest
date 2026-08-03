@@ -1,13 +1,14 @@
 import { type ButtonHTMLAttributes } from "react"
 import { Link, type LinkProps } from "react-router-dom"
 
-type Variant = "primary" | "secondary" | "danger" | "ghost"
+type Variant = "primary" | "secondary" | "danger" | "ghost" | "onDark"
 
 const variantStyles: Record<Variant, string> = {
   primary: "bg-primary bg-gradient-accent text-white hover:bg-primary-hover",
   secondary: "border border-border text-text-primary hover:bg-surface-hover",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+  danger: "bg-danger text-white hover:bg-danger-hover",
   ghost: "text-primary hover:underline",
+  onDark: "bg-white text-primary hover:bg-white/90",
 }
 
 const base =

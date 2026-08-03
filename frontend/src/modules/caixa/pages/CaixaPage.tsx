@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Wallet } from "lucide-react"
 import { getCaixaStatus, ajustarCaixaBase, listarMovimentacoes, listarAuditoriaCaixa, liquidarSemana, type CaixaStatus, type MovimentacaoItem, type AuditoriaCaixaItem } from "../services/caixa.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { hasModule } from "../../../shared/modules/modules.js"
@@ -19,6 +19,7 @@ import { PagamentosPeriodoModal } from "../../operacoes/components/PagamentosPer
 import { ContratosSemanaModal } from "../components/ContratosSemanaModal.js"
 import { maskMonetario, unmaskMonetario, formatCurrency } from "../../../shared/utils/masks.js"
 import { Button } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { GastosPeriodoModal } from "../components/GastosPeriodoModal.js"
 import { listGastos, type GastoItem } from "../../gasto/services/gasto.service.js"
 import { CATEGORIA_ICONES } from "../../gasto/schemas/gasto.schema.js"
@@ -201,23 +202,13 @@ export function CaixaPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="text-text-muted hover:text-text-primary"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h1 className="flex-1 text-3xl font-semibold">{t("caixa.title")}</h1>
-        <button
-          type="button"
-          onClick={() => setLiquidarModalOpen(true)}
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          {t("caixa.liquidar")} <ChevronRight className="inline h-4 w-4" />
-        </button>
-      </div>
+      <PageHeader
+        icon={Wallet}
+        title={t("caixa.title")}
+        subtitle={t("caixa.subtitle")}
+        back={{ onClick: () => navigate(-1), title: t("common.back") }}
+        action={<Button variant="onDark" onClick={() => setLiquidarModalOpen(true)}>{t("caixa.liquidar")}</Button>}
+      />
 
       {error && (
         <ErrorBanner message={error} onRetry={fetch} className="mb-4" />
@@ -421,7 +412,7 @@ export function CaixaPage() {
                   className="flex items-center justify-between rounded-md border border-border-light bg-surface px-3 py-2"
                 >
               <div className="flex items-center gap-3">
-                <span className={`text-sm font-medium ${m.tipo === "entrada" ? "text-green-700" : "text-red-700"}`}>
+                <span className={`text-sm font-medium ${m.tipo === "entrada" ? "text-success-text" : "text-danger-text"}`}>
                   {m.tipo === "entrada" ? "+" : "-"} R$ {formatCurrency(m.valor)}
                 </span>
                 <span className="text-xs text-text-secondary">{m.origem}</span>

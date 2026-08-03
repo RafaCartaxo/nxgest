@@ -15,7 +15,7 @@ export function GastoList({ items, totalPeriodo, onDelete }: GastoListProps) {
   return (
     <div className="mt-4">
       <p className="mb-2 text-sm text-text-secondary">
-        {t("gasto.totalPeriodo")}: <span className="font-semibold text-red-700">R$ {formatCurrency(totalPeriodo)}</span>
+        {t("gasto.totalPeriodo")}: <span className="font-semibold text-danger-text">R$ {formatCurrency(totalPeriodo)}</span>
       </p>
 
       {items.length === 0 ? (
@@ -31,7 +31,7 @@ export function GastoList({ items, totalPeriodo, onDelete }: GastoListProps) {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{CATEGORIA_ICONES[gasto.categoria] ?? "📋"}</span>
                   <span className="text-sm font-medium">{gasto.categoria}</span>
-                  <span className="text-sm font-semibold text-red-700">
+                  <span className="text-sm font-semibold text-danger-text">
                     R$ {formatCurrency(gasto.valor)}
                   </span>
                 </div>
@@ -45,7 +45,7 @@ export function GastoList({ items, totalPeriodo, onDelete }: GastoListProps) {
               <button
                 type="button"
                 onClick={() => onDelete(gasto.id)}
-                className="ml-3 flex-shrink-0 rounded p-1 text-text-muted hover:bg-surface-hover hover:text-red-600"
+                className="ml-3 flex-shrink-0 rounded p-1 text-text-muted hover:bg-surface-hover hover:text-danger"
               >
                 ✕
               </button>

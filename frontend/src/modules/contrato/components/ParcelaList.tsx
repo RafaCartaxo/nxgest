@@ -99,7 +99,7 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
           type="button"
           key={p.id}
           onClick={() => p.estado !== "Paga" && onPagar?.(p)}
-          className={`group flex min-w-0 flex-col overflow-hidden rounded-md border p-3 transition hover:border-blue-300 ${
+          className={`group flex min-w-0 flex-col overflow-hidden rounded-md border p-3 transition hover:border-primary ${
             getCardEstilo(p)
           } ${
             p.estado !== "Paga" ? "cursor-pointer" : "cursor-default"

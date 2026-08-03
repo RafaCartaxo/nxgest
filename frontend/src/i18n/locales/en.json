@@ -49,6 +49,10 @@
   },
   "operacoes": {
     "title": "Operations Center",
+    "subtitle": "Follow today's collections and operations results",
+    "subtitleCobrancas": "Queue of today's pending and overdue collections",
+    "subtitleRota": "Visit order and navigation to clients",
+    "subtitleAtendidos": "Summary of today's attended clients",
     "error": "Error loading Operations Center.",
     "aReceberHoje": "Expected Today",
     "recebidoHoje": "Collected Today",
@@ -117,6 +121,7 @@
   },
   "cliente": {
     "title": "Clients",
+    "subtitle": "Client registration, addresses and financial status",
     "novo": "New Client",
     "editar": "Edit Client",
     "erroCarregar": "Error loading clients.",
@@ -176,6 +181,7 @@
   },
   "contrato": {
     "title": "Contracts",
+    "subtitle": "Terms, installments and contract status",
     "novo": "New Contract",
     "editar": "Edit Contract",
     "erroCarregar": "Error loading contracts.",
@@ -263,6 +269,7 @@
   },
   "caixa": {
     "title": "Cash",
+    "subtitle": "Cash control, movements and weekly closing",
     "caixaBase": "Cash Base",
     "saldoAtual": "Current Balance",
     "lucro": "Profit",
@@ -300,6 +307,7 @@
   },
   "gasto": {
     "title": "Expenses",
+    "subtitle": "Record and track the day's expenses",
     "novo": "New Expense",
     "valor": "Amount",
     "categoria": "Category",
@@ -362,6 +370,7 @@
   },
   "admin": {
     "title": "Administration",
+    "subtitle": "Team, operators and company indicators",
     "operadores": "Operators",
     "novoOperador": "New Operator",
     "editarOperador": "Edit Operator",

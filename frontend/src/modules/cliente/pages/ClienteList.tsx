@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { ChevronLeft } from "lucide-react"
+import { Users } from "lucide-react"
 import { SearchBar } from "../../../shared/components/SearchBar/SearchBar.js"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { ClienteCard } from "../components/ClienteCard.js"
 import {
   listClientes,
@@ -11,10 +11,12 @@ import {
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { ButtonLink } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 
 
 export function ClienteList() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -53,15 +55,13 @@ export function ClienteList() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <Link to="/" className="text-text-muted hover:text-text-primary">
-              <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="flex-1 text-3xl font-semibold">{t("cliente.title")}</h1>
-        <ButtonLink to="/clientes/novo">
-          {t("cliente.novo")}
-        </ButtonLink>
-      </div>
+      <PageHeader
+        icon={Users}
+        title={t("cliente.title")}
+        subtitle={t("cliente.subtitle")}
+        back={{ onClick: () => navigate("/"), title: t("nav.central") }}
+        action={<ButtonLink to="/clientes/novo" variant="onDark">{t("cliente.novo")}</ButtonLink>}
+      />
 
       <div className="mb-4">
         <SearchBar

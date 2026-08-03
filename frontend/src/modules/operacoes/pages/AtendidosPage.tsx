@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { ChevronLeft } from "lucide-react"
+import { CheckCircle2 } from "lucide-react"
 import { listarCobrancasDoDia, listarPagamentosHoje, ResultadoOperacional, type CobrancaDoDiaResult, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
@@ -10,6 +10,7 @@ import { formatCurrency } from "../../../shared/utils/masks.js"
 import { resumoAtendidos } from "../utils/atendimento.js"
 import { CobrancaList } from "../components/CobrancaList.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 
 type Filtro = "all" | "VISITADO" | "NAO_ENCONTRADO" | "PROMESSA" | "PAGOS"
 
@@ -143,16 +144,12 @@ export function AtendidosPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="text-text-muted hover:text-text-primary"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h1 className="flex-1 text-3xl font-semibold">{t("operacoes.atendidosHoje")}</h1>
-      </div>
+      <PageHeader
+        icon={CheckCircle2}
+        title={t("operacoes.atendidosHoje")}
+        subtitle={t("operacoes.subtitleAtendidos")}
+        back={{ onClick: () => navigate(-1), title: t("common.back") }}
+      />
 
       <div className="mb-4 flex gap-2 overflow-x-auto">
         {filtros.map((f) => (

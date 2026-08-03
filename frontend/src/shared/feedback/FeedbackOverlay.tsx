@@ -8,11 +8,11 @@ interface FeedbackOverlayProps {
 }
 
 const statusConfig: Record<Exclude<FeedbackStatus, "hidden">, { bg: string; icon: typeof Loader2; text: string }> = {
-  loading: { bg: "bg-blue-600", icon: Loader2, text: "text-white" },
-  success: { bg: "bg-green-600", icon: CheckCircle2, text: "text-white" },
-  error:   { bg: "bg-red-600", icon: AlertCircle, text: "text-white" },
-  warning: { bg: "bg-yellow-500", icon: AlertTriangle, text: "text-white" },
-  info:    { bg: "bg-blue-500", icon: Info, text: "text-white" },
+  loading: { bg: "bg-primary", icon: Loader2, text: "text-white" },
+  success: { bg: "bg-success", icon: CheckCircle2, text: "text-white" },
+  error:   { bg: "bg-danger", icon: AlertCircle, text: "text-white" },
+  warning: { bg: "bg-warning", icon: AlertTriangle, text: "text-white" },
+  info:    { bg: "bg-info", icon: Info, text: "text-white" },
 }
 
 export function FeedbackOverlay({ status, message }: FeedbackOverlayProps) {

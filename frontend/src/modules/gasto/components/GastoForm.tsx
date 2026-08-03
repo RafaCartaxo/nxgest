@@ -95,7 +95,7 @@ export function GastoForm({ onSuccess }: GastoFormProps) {
           className="block w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
         />
         {errors.valor?.message && (
-          <p className="mt-1 text-xs text-red-500">{errors.valor.message}</p>
+          <p className="mt-1 text-xs text-danger">{errors.valor.message}</p>
         )}
       </div>
 
@@ -116,7 +116,7 @@ export function GastoForm({ onSuccess }: GastoFormProps) {
           <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
         </div>
         {errors.categoria?.message && (
-          <p className="mt-1 text-xs text-red-500">{errors.categoria.message}</p>
+          <p className="mt-1 text-xs text-danger">{errors.categoria.message}</p>
         )}
       </div>
 

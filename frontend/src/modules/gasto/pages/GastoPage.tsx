@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { ChevronLeft } from "lucide-react"
+import { Receipt } from "lucide-react"
 import { listGastos } from "../services/gasto.service.js"
 import { ApiError } from "../../../api/client.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -9,6 +9,7 @@ import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { GastoForm } from "../components/GastoForm.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 
 export function GastoPage() {
   const { t } = useTranslation()
@@ -41,16 +42,12 @@ export function GastoPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="text-text-muted hover:text-text-primary"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h1 className="flex-1 text-3xl font-semibold">{t("gasto.title")}</h1>
-      </div>
+      <PageHeader
+        icon={Receipt}
+        title={t("gasto.title")}
+        subtitle={t("gasto.subtitle")}
+        back={{ onClick: () => navigate(-1), title: t("common.back") }}
+      />
 
       {error && (
         <ErrorBanner message={error} onRetry={fetch} className="mb-4" />

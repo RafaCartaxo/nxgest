@@ -23,19 +23,19 @@ export function EmpresaForm({ onSubmit, onCancel }: EmpresaFormProps) {
     <form onSubmit={handleSubmit} className="p-4 space-y-4">
       <div>
         <label className="block text-sm font-medium text-text-primary mb-1">{t("superAdmin.nomeEmpresa")}</label>
-        <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+        <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary" required />
       </div>
       <div>
         <label className="block text-sm font-medium text-text-primary mb-1">{t("superAdmin.adminNome")}</label>
-        <input type="text" value={adminNome} onChange={(e) => setAdminNome(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+        <input type="text" value={adminNome} onChange={(e) => setAdminNome(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary" required />
       </div>
       <div>
         <label className="block text-sm font-medium text-text-primary mb-1">{t("superAdmin.adminEmail")}</label>
-        <input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+        <input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary" required />
       </div>
       <div>
         <label className="block text-sm font-medium text-text-primary mb-1">{t("superAdmin.adminSenha")}</label>
-        <input type="password" value={adminSenha} onChange={(e) => setAdminSenha(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required minLength={6} />
+        <input type="password" value={adminSenha} onChange={(e) => setAdminSenha(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary" required minLength={6} />
       </div>
       <div className="flex gap-2 justify-end">
         <Button type="button" onClick={onCancel}>{t("common.cancel")}</Button>
