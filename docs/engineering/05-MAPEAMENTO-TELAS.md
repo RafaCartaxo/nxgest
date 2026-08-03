@@ -2,7 +2,7 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.20
+**Versão:** 1.22
 
 **Última atualização:** 03/08/2026
 
@@ -134,8 +134,7 @@ App
     ├── CobrancaListPage
     │   ├── Header (voltar, título)
     │   ├── Banner resumo de atrasados (filtro `atrasado`)
-    │   ├── CobrancaCard por cliente
-    │   └── Histórico de atrasos (30 dias)
+    │   └── CobrancaCard por cliente
     │
     ├── ClienteList
     │   ├── Header (voltar, título, Novo Cliente)
@@ -343,7 +342,7 @@ App
 
 ---
 
-## 2c. Cobranças do Dia — Histórico de Atrasos
+## 2c. Cobranças do Dia — Atrasados
 
 **Arquivo:** `frontend/src/modules/operacoes/pages/CobrancaListPage.tsx` · Rota `/cobrancas` · Filtro `atrasado`
 
@@ -357,17 +356,14 @@ App
 │ └──────────────────────────────┘ │
 │ Nome Cliente · R$ · parcelas     │  ← CobrancaCard
 │ ...                              │
-│ Histórico de atrasos (30 dias)   │
-│ Data        Clientes  Contratos  │
-│ 2026-07-30      8        11      │  ← snapshot diário (última coluna: valor)
 └──────────────────────────────────┘
 ```
 
 **Comportamento:**
 
-- Banner resumo aparece apenas no filtro `atrasado` — contagem distinta de clientes + soma do `totalPendente`
-- Tabela de histórico vem de `GET /api/operacoes/historico-atrasos?dias=30` (snapshot lazy registrado a cada `GET /cobrancas` — sem job agendado)
-- Linha só existe para dias em que o operador abriu as cobranças (ausência de linha = sem snapshot no dia)
+- Banner resumo aparece apenas no filtro `atrasado` — contagem distinta de clientes + soma do `totalPendente` (ao vivo, de `GET /api/operacoes/cobrancas`)
+- Cliente em atraso clicável → abre o contrato (`/contratos/:id`)
+- > **Decisão (PLAN-033, 03/08):** o bloco "Histórico de atrasos" (snapshots `snapshots_atraso` + gráfico de evolução) foi **removido** — dependia de snapshot diário gravado só ao abrir as Cobranças (dado esparso, sem job agendado) e duplicava o banner ao vivo sem utilidade. O endpoint `GET /api/operacoes/historico-atrasos` e o registro do snapshot permanecem no backend (API-UC-022).
 
 ---
 
@@ -468,10 +464,15 @@ App
 │ └──────────────────────────────┘ │
 │                                  │
 │ ┌──────────────────────────────┐ │
-│ │ Situação Financeira (h3)     │ │  ← SaldoInfo
-│ │ R$ VALOR                     │ │
-│ │ Em Aberto                    │ │
-│ │ R$ VALOR                     │ │
+│ │ Situação Financeira          │ │  ← SituacaoFinanceira (grade 2×2 KpiCard)
+│ │ ┌──────────────┬────────────┐│ │
+│ │ │Saldo Devedor │ Em atraso  ││ │  · danger: R$ em atraso
+│ │ │R$ VALOR      │ R$ VALOR   ││ │  · subtitle "N parcelas · D dias"
+│ │ ├──────────────┼────────────┤│ │
+│ │ │Vence hoje    │ Lucro prev.││ │  · info + green (P015)
+│ │ │R$ VALOR      │ R$ VALOR   ││ │
+│ │ └──────────────┴────────────┘│ │
+│ │ Último pagamento: dd/mm · R$ │ │  ← linha discreta (se houver)
 │ └──────────────────────────────┘ │
 └──────────────────────────────────┘
 ```
@@ -505,6 +506,7 @@ App
 │ │ Saldo: R$ X      Total: R$ Y│ │
 │ │ Parcela 1/20 • Início → Fim │ │
 │ │                     [Ativo]  │ │
+│ │ ● 4 parcelas em atraso·R$240 │ │  ← linha danger (BR-099), só se atraso
 │ └──────────────────────────────┘ │
 │ ...                              │
 │                                  │
@@ -607,7 +609,7 @@ App
 |-------|--------|------------|
 | Header | ✅ `< Back NomeCliente [Editar]` | |
 | ContratoInfo | ✅ Grid 2 colunas, estados semânticos | |
-| ParcelaList | ✅ Cores por estado (Verde=Paga, Azul=Parcial, Amarelo=Pendente, Vermelho=Vencida) | |
+| ParcelaList | ✅ Cores por estado (Verde=Paga, Azul=Parcial, Azul=Vence hoje, Amarelo=Pendente futuro, Vermelho=Vencida — inclui Parcial com vencimento passado) | |
 | Modais | ✅ PagamentoModal + ConfirmModal com padrão DS | |
 | Feedback | ✅ FeedbackOverlay (barra fixa superior z-50) | |
 
@@ -1125,6 +1127,8 @@ Modal ModulosModal (ação "Configurar"):
 | 03/08/2026 | 1.18 | PLAN-031: 5 temas por usuário com gradientes (engrenagem); módulos por empresa (whitelabel, BR-092/093) com `RequireModule`/navbar/entradas; Super Admin redesenhado (banner gradiente + `ModulosModal` + `EmpresaForm` no Modal base) |
 | 03/08/2026 | 1.19 | Navbar por perfil: operator/admin veem as operacionais (module-gated); admin + Administração; super_admin vê só Empresas (sem páginas vazias). UCs 061-063 |
 | 03/08/2026 | 1.20 | PLAN-032: papel `socio` (painel escopado à subárvore); navbar inclui sócio nas operacionais + Administração. UCs 064-069 |
+| 03/08/2026 | 1.21 | PLAN-033: ClienteDetail com **Situação Financeira** (grade 2×2: Saldo Devedor · Em atraso · Vence hoje · Lucro previsto + Último pagamento, BR-096..098). View de atrasados mantém banner + lista; bloco "Histórico de atrasos" (snapshot/evolução) **removido** por decisão (dado esparso). UC-071 |
+| 03/08/2026 | 1.22 | PLAN-034: `ContratoCard` (list-item) mostra **linha de atraso** ("N parcelas em atraso · R$ Y · D dias", BR-099) quando o contrato tem parcelas vencidas. UC-072 |
 
 # Referências
 

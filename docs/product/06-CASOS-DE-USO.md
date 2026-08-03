@@ -158,6 +158,7 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 **Conferências:**
 - [ ] Parcela mostra estado `Parcial` (e não `Paga`)?
 - [ ] Saldo restante aparece na parcela?
+- [ ] Parcela `Parcial` com vencimento no passado aparece como **Vencida** (vermelha), e não como "vence hoje"?
 - [ ] KPI recebido hoje e movimentação refletem o valor pago?
 
 **Regras:** BR-044, BR-047
@@ -1313,6 +1314,46 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 - [ ] Banner de atrasados detalha pendente/visitado/não encontrado/promessa?
 
 **Regras:** BR-048 a BR-051
+
+---
+
+### UC-071 — Situação de atraso do cliente
+
+**Ator:** operador / admin (via `?usuarioId=`)
+
+**Ação:** abre o detalhe do cliente (`/clientes/:id`).
+
+**O que DEVE acontecer:** o bloco "Situação Financeira" mostra, em grade 2×2 de KPI:
+- **Saldo Devedor** (vermelho se > 0);
+- **Em atraso** (vermelho): `R$ valorEmAtraso` com subtítulo "N parcelas · D dias" (dias do vencimento mais antigo em aberto);
+- **Vence hoje** (azul/info): `R$ valorVenceHoje`;
+- **Lucro Previsto** (verde): `R$ lucroPrevisto` (P015, BR-098).
+- Abaixo da grade, uma linha discreta **"Último pagamento: dd/mm · R$ X"** quando houver (BR-097).
+
+**Conferências:**
+- [ ] Valores coerentes com as parcelas do cliente (soma de `saldoPendente` vencidas)?
+- [ ] Parcela `Parcial` vencida entra no atraso?
+- [ ] Cliente sem atraso mostra `R$ 0` em "Em atraso" e sem subtítulo?
+- [ ] Último pagamento ignora estornados e mostra o mais recente?
+
+**Regras:** BR-096, BR-097, BR-098
+
+---
+
+### UC-072 — Atraso no card do contrato (lista)
+
+**Ator:** operador / admin
+
+**Ação:** abre a lista de contratos (`/contratos`).
+
+**O que DEVE acontecer:** o card do contrato (`ContratoCard` list-item) mostra, além do resumo atual (valor emprestado, juros, saldo devedor, total a receber, parcelas, datas e estado), uma **linha vermelha de atraso** quando há parcelas vencidas: "N parcelas em atraso · R$ Y · D dias" (estilo danger com pontinho), coerente com o destaque vermelho das parcelas vencidas no detalhe do contrato.
+
+**Conferências:**
+- [ ] Card sem atraso não mostra a linha vermelha?
+- [ ] N/valor/dias batem com as parcelas vencidas do contrato (BR-099)?
+- [ ] Parcela `Parcial` vencida conta?
+
+**Regras:** BR-099
 
 ---
 

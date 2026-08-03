@@ -312,10 +312,22 @@ Obtém um cliente.
         "...": "Location"
     },
     "totalContratos": 2,
+    "saldoDevedor": 500,
+    "valorEmAtraso": 300,
+    "parcelasEmAtraso": 3,
+    "diasEmAtraso": 9,
+    "valorVenceHoje": 100,
+    "ultimoPagamento": {
+        "data": "2026-07-24",
+        "valor": 100
+    },
+    "lucroPrevisto": 410,
     "createdAt": "2026-06-27T10:00:00.000Z",
     "updatedAt": "2026-06-27T10:00:00.000Z"
 }
 ```
+
+> **Campos financeiros (PLAN-033 / BR-096..098):** `valorEmAtraso`, `parcelasEmAtraso` e `diasEmAtraso` descrevem parcelas vencidas (inclui `Parcial` com vencimento passado); `valorVenceHoje` = parcelas com vencimento hoje; `ultimoPagamento` = pagamento mais recente **não estornado** (ordenação `data DESC, createdAt DESC`); `lucroPrevisto` = Σ(`valorFinal − valorBase`) dos contratos **Ativos**. Quando não há dado, `ultimoPagamento` é `null` e os demais são `0`.
 
 ---
 
@@ -456,6 +468,10 @@ Lista contratos com paginação.
             "dataFinal": "2026-07-08",
             "estado": "Ativo",
             "saldoPendente": 600.00,
+            "parcelasPagas": 0,
+            "emAtraso": 240.00,
+            "parcelasEmAtraso": 4,
+            "diasEmAtraso": 6,
             "createdAt": "2026-06-28T10:00:00.000Z",
             "updatedAt": "2026-06-28T10:00:00.000Z"
         }
@@ -468,6 +484,8 @@ Lista contratos com paginação.
     }
 }
 ```
+
+> **Situação de atraso por contrato (PLAN-034 / BR-099):** `emAtraso` = Σ `saldoPendente` de parcelas com `dataVencimento < hoje`; `parcelasEmAtraso` = quantidade dessas parcelas; `diasEmAtraso` = dias desde o vencimento mais antigo em aberto (0 se nenhuma). Parcelas `Parcial` vencidas contam. Quando não há atraso, os três são `0`.
 
 ---
 

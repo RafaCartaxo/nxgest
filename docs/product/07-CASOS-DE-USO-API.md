@@ -57,11 +57,11 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 | 3 | `GET /api/auth/me` | API-UC-003 | 005-006, 087 |
 | 4 | `POST /api/clientes` | API-UC-004 | 007-009 |
 | 5 | `GET /api/clientes` | API-UC-005 | 010 |
-| 6 | `GET /api/clientes/:id` | API-UC-006 | 011-012 |
+| 6 | `GET /api/clientes/:id` | API-UC-006 | 011-012, 103-104 |
 | 7 | `PATCH /api/clientes/:id` | API-UC-007 | 013-014 |
 | 8 | `DELETE /api/clientes/:id` | API-UC-008 | 015-016 |
 | 9 | `POST /api/contratos` | API-UC-009 | 017-019 |
-| 10 | `GET /api/contratos` | API-UC-010 | 020 |
+| 10 | `GET /api/contratos` | API-UC-010 | 020, 105 |
 | 11 | `GET /api/contratos/:id` | API-UC-011 | 021-022 |
 | 12 | `PATCH /api/contratos/:id` | API-UC-012 | 023-024 |
 | 13 | `DELETE /api/contratos/:id` | API-UC-013 | 025-026 |
@@ -217,19 +217,29 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Endpoint:** `GET /api/clientes/:id` · **Auth:** Bearer
 
-**Response 200:** cliente com saldo devedor agregado
+**Response 200:** cliente com saldo devedor agregado + situação financeira (PLAN-033)
 
 **Coerência:**
 - [ ] `saldoDevedor` = Σ saldo pendente das parcelas dos contratos não deletados?
+- [ ] `valorEmAtraso`/`parcelasEmAtraso`/`diasEmAtraso` coerentes com parcelas vencidas (inclui `Parcial`)? (BR-096)
+- [ ] `valorVenceHoje` = Σ parcelas com vencimento hoje? (BR-096)
+- [ ] `ultimoPagamento` ignora estornados e é o mais recente por `data`? (BR-097)
+- [ ] `lucroPrevisto` = Σ(`valorFinal − valorBase`) dos contratos `Ativo`? (BR-098)
 - [ ] Cliente de outro operador → 404 (não expõe existência)?
 
-**Regras:** BR-056 · **Postman:** `Clientes > Detalhe`
+**Regras:** BR-056, BR-096, BR-097, BR-098 · **Postman:** `Clientes > Detalhe`
 
 ### API-CT-011 — Detalhe ok
 **Dado** cliente próprio → **Quando** `GET /api/clientes/:id` → **Então** 200 com saldo coerente com os contratos.
 
 ### API-CT-012 — Detalhe de outro operador
 **Dado** id de cliente de outro operador → **Quando** `GET /api/clientes/:id` → **Então** 404.
+
+### API-CT-103 — Campos financeiros no detalhe
+**Dado** cliente com parcelas vencidas + vencendo hoje + pagamentos → **Quando** `GET /api/clientes/:id` → **Então** 200 com `valorEmAtraso`, `parcelasEmAtraso`, `diasEmAtraso`, `valorVenceHoje`, `ultimoPagamento { data, valor }` e `lucroPrevisto` coerentes com as parcelas/contratos (BR-096..098).
+
+### API-CT-104 — Parcial vencida e lucro (Finalizado fora)
+**Dado** cliente com parcela `Parcial` vencida e contrato `Finalizado` → **Quando** `GET /api/clientes/:id` → **Então** a parcela `Parcial` vencida conta no atraso e o contrato `Finalizado` não entra no `lucroPrevisto`.
 
 ---
 
@@ -312,16 +322,20 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Query:** `clienteId?`, `status?`, paginação
 
-**Response 200:** contratos do operador com parcelas pagas/pendentes
+**Response 200:** contratos do operador com parcelas pagas/pendentes + situação de atraso
 
 **Coerência:**
 - [ ] Só contratos do operador logado (BR-056)?
 - [ ] `estado` coerente (Ativo/Finalizado/Cancelado)?
+- [ ] `emAtraso`/`parcelasEmAtraso`/`diasEmAtraso` coerentes com as parcelas vencidas do contrato (BR-099)?
 
-**Regras:** BR-056 · **Postman:** `Contratos > Listar`
+**Regras:** BR-056, BR-099 · **Postman:** `Contratos > Listar`
 
 ### API-CT-020 — Lista escopada
 **Dado** contratos de mais de um operador → **Quando** `GET /api/contratos` → **Então** retorna apenas os do `req.userId`.
+
+### API-CT-105 — Lista de contratos retorna atraso
+**Dado** contrato com parcelas vencidas (inclui `Parcial`) e `Finalizado` → **Quando** `GET /api/contratos` → **Então** 200 com `emAtraso` = Σ saldo pendente vencido, `parcelasEmAtraso` = quantidade e `diasEmAtraso` ≥ 1; contrato sem atraso → os três `0` (BR-099).
 
 ---
 
@@ -1111,7 +1125,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 # Referências
 
 - `engineering/02-API.md` — contrato completo (request/response JSON, validações, erros)
-- `06-CASOS-DE-USO.md` — casos de uso por fluxo de tela (UC-001..052)
+- `06-CASOS-DE-USO.md` — casos de uso por fluxo de tela (UC-001..072)
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)
 - `api-collection.json` — collection Postman executável (espelho desta base)
 - `skills/SKILL-009-documentation-sync.md` — matriz de propagação (mudou endpoint → atualize este doc + collection + 02-API)

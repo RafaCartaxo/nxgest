@@ -2,6 +2,33 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 03/08/2026 — PLAN-034 · Atraso no card do contrato (lista)
+
+**Adicionado**
+- `GET /api/contratos` devolve por contrato `emAtraso` (Σ saldo vencido), `parcelasEmAtraso` e `diasEmAtraso` (BR-099) — estendendo o agregado que já calculava `saldoPendente`/`parcelasPagas`.
+- `ContratoCard` (list-item) mostra a linha vermelha **"N parcelas em atraso · R$ Y · D dias"** (pontinho danger) quando há parcelas vencidas.
+- UC-072 · API-CT-105 · mapeamento v1.22.
+- A **lista de clientes** permanece enxuta — espaço reservado para a futura **foto do cliente**.
+
+Referência: [PLAN-034](plans/PLAN-034-atraso-card-contrato.md)
+
+## 03/08/2026 — PLAN-033 · Situação Financeira do cliente (P015)
+
+**Adicionado**
+- `GET /api/clientes/:id` devolve a **situação financeira** do cliente: `valorEmAtraso`, `parcelasEmAtraso`, `diasEmAtraso`, `valorVenceHoje`, `ultimoPagamento` (não estornado) e `lucroPrevisto` (BR-096..098).
+- **ClienteDetail** com grade 2×2 de KPIs (`SituacaoFinanceira`): Saldo Devedor · Em atraso · Vence hoje · Lucro previsto + linha "Último pagamento". `SaldoInfo` removido.
+- **P015 concluído** (lucro previsto) — BACKLOG marcado.
+- **Removido**: o bloco "Histórico de atrasos" da view de atrasados (gráfico de evolução + tabela de `snapshots_atraso`) — o snapshot só era gravado ao abrir as Cobranças (sem job diário) → dado esparso; o dado ao vivo (banner) e o detalhe do cliente cobrem a necessidade. O endpoint `historico-atrasos` permanece no backend (API-UC-022).
+- UC-071 · API-CT-103/104 · mapeamento v1.21.
+
+Referência: [PLAN-033](plans/PLAN-033-atrasos-cliente-historico.md)
+
+## 03/08/2026 — Correção: parcela `Parcial` vencida na ParcelaList
+
+**Corrigido**
+- `ParcelaList` só marcava como **Vencida** (vermelha) parcelas `Pendente` — uma parcela **`Parcial` com vencimento passado** aparecia **azul** (como "vence hoje"), confundindo o estado. Agora **qualquer** parcela com saldo pendente e vencimento no passado fica vermelha/"Vencida" (inclusive `Parcial`), e os contadores não contam as vencidas como "pendentes".
+- `PagamentoModal` passou a exibir a regra de distribuição ("Aplicado das parcelas mais antigas para as mais recentes", BR-044) que já existia na i18n mas não era renderizada.
+
 ## 03/08/2026 — UX: estorno visível + terminologia "Atendidos × Visitados" + i18n
 
 **Corrigido**

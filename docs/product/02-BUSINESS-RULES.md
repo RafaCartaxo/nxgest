@@ -764,6 +764,33 @@ O `socio` pode **criar operadores do próprio grupo** (`role = operator`, `chefe
 
 ---
 
+# Cliente — Situação de Atraso (PLAN-033)
+
+## BR-096
+
+O detalhe do cliente expõe sua **situação de atraso**, calculada sobre os contratos **Ativos** (não deletados) do usuário:
+
+- `valorEmAtraso` = soma do `saldoPendente` das parcelas com `dataVencimento` anterior a hoje;
+- `parcelasEmAtraso` = quantidade dessas parcelas;
+- `diasEmAtraso` = dias entre o vencimento mais antigo em aberto (`MIN(dataVencimento)` do critério acima) e hoje — 0 quando não há atraso;
+- `valorVenceHoje` = soma do `saldoPendente` das parcelas com `dataVencimento` igual a hoje.
+
+Parcelas `Parcial` com vencimento passado **contam** para o atraso (possuem `saldoPendente > 0`). O cálculo é escopado por `userId` (o mesmo escopo do restante das telas).
+
+## BR-097
+
+O **último pagamento** do cliente (`ultimoPagamento`) é o pagamento mais recente não estornado (`estornadoEm IS NULL`), obtido por `JOIN` do contrato, ordenado por **`data DESC, createdAt DESC`** — a ordenação apenas por `createdAt` é ambígua quando pagamentos são gravados em lote (ex.: seed), e a ordem por `data` (data de negócio) reflete o pagamento mais recente de fato.
+
+## BR-098
+
+O **lucro previsto** do cliente é a soma de `(valorFinal − valorBase)` dos contratos **Ativos** (não deletados). Contratos **Finalizados** ficam fora — o lucro deles já foi realizado.
+
+## BR-099
+
+A **lista de contratos** (`GET /api/contratos`) expõe, por contrato, a situação de atraso com os mesmos critérios da BR-096 **escopados ao contrato**: `emAtraso` (Σ `saldoPendente` de parcelas com `dataVencimento < hoje`), `parcelasEmAtraso` (quantidade dessas parcelas) e `diasEmAtraso` (dias desde o vencimento mais antigo em aberto do contrato — 0 se nenhuma). Parcelas `Parcial` vencidas contam.
+
+---
+
 # Referências
 
 - NORTH-STAR.md

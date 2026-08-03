@@ -133,6 +133,8 @@ Nenhuma alteração manual deverá ocorrer sem histórico.
 
 ## P015 — Indicadores Financeiros do Cliente
 
+> **Concluído** (PLAN-033): além do `saldoDevedor`, o detalhe do cliente exibe **lucro previsto** (`lucroPrevisto` = Σ(`valorFinal − valorBase`) dos contratos Ativos — BR-098), junto da situação de atraso (BR-096/097). Fonte: `GET /api/clientes/:id`.
+
 ### Situação atual
 
 Hoje o cliente apresenta:
