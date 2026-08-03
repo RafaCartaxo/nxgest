@@ -167,6 +167,10 @@ const endpoints = [
       body: { nome: "Empresa Exemplo", adminNome: "João Admin", adminEmail: "admin@empresa.com", adminSenha: "senhaSegura123" },
       description: "API-UC-040 · 201 empresa+admin atômico · 409 e-mail duplicado",
     }),
+    req("Módulos", "PATCH", "/api/admin/empresas/{{empresaId}}/modulos", {
+      body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] },
+      description: "API-UC-043 · 200 · 422 dependência (gastos requer caixa) · 403 não-super",
+    }),
   ]),
 ]
 

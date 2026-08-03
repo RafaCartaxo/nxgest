@@ -442,3 +442,11 @@ Mudanças que aumentem complexidade visual deverão ser evitadas.
 - PROJECT.md
 - UX.md
 - FRONTEND.md
+
+---
+
+# Gradientes (exceção deliberada — PLAN-031)
+
+> **Regra de ouro:** as cores seguem apenas a paleta semântica (tokens), sem `emerald/purple/amber`.
+>
+> **Exceção deliberada:** os **accent gradients** (`.bg-gradient-accent`, `.bg-gradient-page`, `.text-gradient`) são a única exceção — cada tema define os gradientes próprios (`--gradient-*`). Aplicar com moderação: fundo ambiente, botão primário ("brand"), navbar ativo e destaques — nunca "glitter" por tudo.

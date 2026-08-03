@@ -107,3 +107,27 @@ gerenciada pelo `ThemeProvider` (`shared/theme/`).
 |-------|-------|----------|
 | `shadow-card` | `0 1px 3px 0 rgb(0 0 0 / 0.1)` | `shadow-sm` |
 | `shadow-dropdown` | `0 10px 15px -3px rgb(0 0 0 / 0.1)` | `shadow-lg` |
+
+---
+
+# Temas e Gradientes (PLAN-031)
+
+O tema é **100% dirigido por CSS variables** (`--color-*`, mapeadas no Tailwind). Cada tema é um bloco `[data-theme="<id>"]` (light) + `[data-theme="<id>"].dark` no `index.css`.
+
+| Token | Uso | Tailwind |
+|-------|-----|----------|
+| `--gradient-page` | Fundo ambiente da página (body) | `.bg-gradient-page` |
+| `--gradient-accent` | Acentos (botão primário "brand", navbar ativo) | `.bg-gradient-accent` |
+| `--gradient-text` | Texto em gradiente (títulos) | `.text-gradient` |
+
+## Paletas (temas)
+
+| Tema | Primary | Gradiente |
+|------|---------|-----------|
+| `default` | azul `#2563EB` | azul → violeta |
+| `aurora` | violeta `#7C3AED` | índigo → violeta → rosa |
+| `ocean` | teal `#0D9488` | azul → teal |
+| `grape` | violeta `#6D28D9` | violeta → fúcsia |
+| `sunset` | laranja `#EA580C` | laranja → rosa |
+
+> **Seam de whitelabel:** o tema vem da preferência do usuário (localStorage). No futuro, `empresa.tema` aplica a paleta do cliente a todos os usuários do tenant (Fase 5.10).

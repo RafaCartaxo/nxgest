@@ -1019,6 +1019,113 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+# WHITELABEL E TEMAS (PLAN-031)
+
+### UC-055 — Super admin combina módulos da empresa
+
+**Ator:** super_admin
+
+**Ação:** em `/admin/empresas`, abre "Configurar" de uma empresa e alterna os módulos (clientes, contratos, caixa, gastos, rota, cobrancas, atendidos).
+
+**O que DEVE acontecer:** toggles refletem o estado atual (todos on por padrão); dependências bloqueadas com aviso (gastos requer caixa; rota/cobrancas/atendidos requerem contratos); salvar → PATCH → 200 e card atualiza.
+
+**Conferências:**
+- [ ] Toggles mostram o estado atual (todos on por padrão)?
+- [ ] Ligar `gastos` com `caixa` off → bloqueado com aviso?
+- [ ] Salvar persiste e o card/badge reflete?
+- [ ] `central` não aparece (sempre on)?
+
+**Regras:** BR-092, BR-093
+
+---
+
+### UC-056 — Usuário vê apenas as superfícies dos módulos ativos
+
+**Ator:** operador/admin da empresa com módulos parciais
+
+**Ação:** loga na empresa.
+
+**O que DEVE acontecer:** Navbar mostra só os módulos ativos; rota de módulo off → redireciona para `/`; entradas do Central (rota, pendentes, atendidos, gastos) ocultas; blocos de dados em outras telas ocultos (gastos no Caixa, contratos no ClienteDetail).
+
+**Conferências:**
+- [ ] Navbar sem links de módulo off?
+- [ ] Acessar rota de módulo off → `/`?
+- [ ] Central sem as entradas dos módulos off?
+- [ ] Caixa sem blocos de gastos quando `gastos` off?
+- [ ] ClienteDetail sem card de contratos quando `contratos` off?
+
+**Regras:** BR-093
+
+---
+
+### UC-057 — Usuário escolhe o tema
+
+**Ator:** qualquer usuário logado
+
+**Ação:** engrenagem → seletor de tema (default/aurora/ocean/grape/sunset) + claro/escuro.
+
+**O que DEVE acontecer:** aplica `data-theme` + dark em toda a app (CSS vars); persiste por usuário (localStorage); gradientes coerentes com o tema.
+
+**Conferências:**
+- [ ] Seletor com os 5 temas (swatches)?
+- [ ] Aplica globalmente (fundo, botões, navbar)?
+- [ ] Persiste entre sessões?
+- [ ] Light/dark funcionam em cada tema?
+
+**Regras:** — (UX/DS)
+
+---
+
+### UC-058 — Tenant com subconjunto de módulos (ex.: só clientes)
+
+**Ator:** super_admin + usuário da empresa
+
+**Ação:** empresa configurada só com `clientes`; usuário loga.
+
+**O que DEVE acontecer:** a empresa opera só clientes — Central se adapta (sem rota/pendentes/atendidos/gastos); cadastro/edição de cliente funciona; contratos/caixa/rota ocultos e com rota bloqueada.
+
+**Conferências:**
+- [ ] Login cai na Central (sempre on) e ela se adapta?
+- [ ] Só as telas de clientes acessíveis?
+- [ ] Cadastro de cliente OK; contrato/caixa/rota bloqueados?
+
+**Regras:** BR-093
+
+---
+
+### UC-059 — Dependência gastos ⇒ caixa
+
+**Ator:** super_admin
+
+**Ação:** ativa `gastos` numa empresa com `caixa` desativado.
+
+**O que DEVE acontecer:** toggle bloqueado + aviso ("gastos requer caixa"); com `caixa` ativo, permite.
+
+**Conferências:**
+- [ ] Bloqueado quando `caixa` off?
+- [ ] Aviso claro?
+- [ ] Libera quando `caixa` on?
+
+**Regras:** BR-092
+
+---
+
+### UC-060 — Mudança de módulos com sessão ativa
+
+**Ator:** super_admin + usuário logado
+
+**Ação:** super admin altera módulos da empresa durante uma sessão ativa do usuário.
+
+**O que DEVE acontecer:** o usuário reflete a mudança apenas no próximo carregamento (novo `/me`); a sessão atual não quebra nem mostra estado inconsistente.
+
+**Conferências:**
+- [ ] Sessão atual segue sem erro?
+- [ ] Após refresh, os novos módulos valem?
+
+**Regras:** BR-093
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)

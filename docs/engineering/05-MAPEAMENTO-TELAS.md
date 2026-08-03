@@ -2,7 +2,7 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.17
+**Versão:** 1.18
 
 **Última atualização:** 03/08/2026
 
@@ -58,7 +58,7 @@ App
 │   ├── NavLink: Empresas (/admin/empresas) [condicional: role=super_admin] [PLAN-030]
 │   ├── Engrenagem (dropdown de configurações):
 │   │   ├── Meus dados (/perfil) [PLAN-029]
-│   │   ├── Tema claro/escuro
+│   │   ├── Temas (5 paletas + claro/escuro) [PLAN-031]
 │   │   ├── Idioma (PT/EN/ES)
 │   │   └── Sair
 │
@@ -1051,14 +1051,16 @@ Ao implementar uma nova tela, verificar:
 
 ## 13. Super Admin — Gestão de Empresas
 
-**Arquivo:** `frontend/src/modules/admin/pages/SuperAdminPage.tsx`
+ **Arquivo:** `frontend/src/modules/admin/pages/SuperAdminPage.tsx`
 
 **Rota:** `/admin/empresas` (acesso restrito a `role = super_admin`)
 
 **Estrutura Visual:**
 ```
 ┌──────────────────────────────────┐
-│ ← Super Admin                    │
+│ [Banner em gradiente: título +   │  ← bg-gradient-accent (PLAN-031)
+│  "Gerencie empresas, acessos e   │
+│  módulos" + ícone Building2]     │
 ├──────────────────────────────────┤
 │ ┌────────┬────────┬────────┐    │
 │ │Empresas│Opers   │Clientes│    │  ← KpiCard × 3 (super admin)
@@ -1068,25 +1070,33 @@ Ao implementar uma nova tela, verificar:
 │ Empresas               + Nova   │  ← SectionHeader
 │ ┌──────────────────────────────┐ │
 │ │ Desenvolvimento              │ │  ← Card.Root list-item
-│ │ 3 operadores · 12 clientes  │ │     Card.Header: nome
-│ │ 8 contratos ativos          │ │     Card.Body: stats
-│ │                    [Acessar] │ │     Card.Actions: drill-down
-│ └──────────────────────────────┘ │
-│ ┌──────────────────────────────┐ │
-│ │ Vendas Corp                  │ │
-│ │ 1 operador · 5 clientes     │ │
-│ │ 3 contratos ativos          │ │
-│ │                    [Acessar] │ │
+│ │ 3 operadores · 12 clientes  │ │     Card.Body: stats
+│ │ 8 contratos ativos          │ │
+│ │             [Configurar][→] │ │     Card.Actions: modulos + drill-down
 │ └──────────────────────────────┘ │
 │                                  │
-│ [+ Nova Empresa]  ← modal      │  ← EmpresaForm
+│ [+ Nova Empresa]  ← Modal base  │  ← EmpresaForm (Modal, não backdrop cru)
+└──────────────────────────────────┘
+
+Modal ModulosModal (ação "Configurar"):
+┌──────────────────────────────────┐
+│ Módulos — <Empresa>              │
+├──────────────────────────────────┤
+│ Ative/desative módulos da        │
+│ empresa (whitelabel, BR-092)     │
+│ [✓ Clientes] [✓ Contratos]       │  ← toggles; dependências desabilitadas
+│ [✓ Caixa]   [✗ Gastos (desabil.)]│     (gastos requer caixa)
+│ [✓ Rota] [✓ Cobranças] [✓ Atend.]│
+│                                  │
+│ [Cancelar]  [Salvar]             │  ← PATCH /modulos
 └──────────────────────────────────┘
 ```
 
 **Comportamento:**
-- Lista todas as empresas com KPIs (totalUsuarios, totalClientes, contratosAtivos) via JOIN com usuários/clientes/contratos
+- Lista todas as empresas com KPIs (totalUsuarios, totalClientes, contratosAtivos) + `modulos` via JOIN com usuários/clientes/contratos
 - "Acessar" navega para `/admin/empresas/:id` (AdminPage filtrado por empresa, com contexto do nome da empresa)
-- "+ Nova Empresa" abre modal com EmpresaForm (cria empresa + admin inicial em transação atômica)
+- "Configurar" abre o `ModulosModal` (7 módulos, dependências validadas — `gastos⇒caixa`, `rota/cobrancas/atendidos⇒contratos`) e salva via `PATCH /api/admin/empresas/:id/modulos`
+- "+ Nova Empresa" abre `EmpresaForm` no **Modal base** (cria empresa + admin inicial em transação atômica)
 - KPIs globais somam stats de todas as empresas
 
 ---
@@ -1111,6 +1121,7 @@ Ao implementar uma nova tela, verificar:
 | 03/08/2026 | 1.15 | Tabela com as 18 telas reais (adicionadas Atendidos 2b, Cobranças 2c, Caixa 14, Gastos 15, OperadorDetail 16); contagem corrigida; seções §14-16 documentadas; árvore de componentes atualizada |
 | 03/08/2026 | 1.16 | PLAN-029: tela Perfil (Meus dados) §18 + toggle mostrar/ocultar senha no login (§11) — troca de senha por todos os perfis |
 | 03/08/2026 | 1.17 | PLAN-030: KPIs de Operação do admin com **totais da equipe** (BR-091) + `ContribuicaoModal` por operador; `EquipeModal` com stats e navegação ao operador; navbar com links "Administração"/"Empresas" visíveis |
+| 03/08/2026 | 1.18 | PLAN-031: 5 temas por usuário com gradientes (engrenagem); módulos por empresa (whitelabel, BR-092/093) com `RequireModule`/navbar/entradas; Super Admin redesenhado (banner gradiente + `ModulosModal` + `EmpresaForm` no Modal base) |
 
 # Referências
 

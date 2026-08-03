@@ -1479,6 +1479,46 @@
             },
             "description": "API-UC-040 · 201 empresa+admin atômico · 409 e-mail duplicado"
           }
+        },
+        {
+          "name": "Módulos",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/empresas/{{empresaId}}/modulos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "empresas",
+                "{{empresaId}}",
+                "modulos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modulos\": [\n    \"clientes\",\n    \"contratos\",\n    \"caixa\",\n    \"gastos\",\n    \"rota\",\n    \"cobrancas\",\n    \"atendidos\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-043 · 200 · 422 dependência (gastos requer caixa) · 403 não-super"
+          }
         }
       ]
     }

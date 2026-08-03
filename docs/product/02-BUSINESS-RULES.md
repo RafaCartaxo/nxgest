@@ -2,7 +2,7 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.8
+**Versão:** 1.9
 
 **Última atualização:** 03/08/2026
 
@@ -684,6 +684,28 @@ No painel admin, os **KPIs de Operação** (`totalClientes`, `contratosAtivos`, 
 - Os dados do próprio admin continuam acessíveis na aba **"Meus dados"** e nas telas operacionais normais.
 - Fonte dos dados: `GET /api/admin/equipe` (por operador + totais). Coerência: a soma dos operadores = total = agregado da empresa em `GET /api/admin/dashboard` (BR-087 revisado).
 - **Substitui a BR-087** para os KPIs de Operação.
+
+---
+
+## BR-092
+
+O `super_admin` controla os **módulos ativos de cada empresa** (whitelabel) via `PATCH /api/admin/empresas/:id/modulos`. Cada empresa tem uma lista de módulos (`empresas.modulos`, JSON); módulos possíveis: `clientes`, `contratos`, `caixa`, `gastos`, `rota`, `cobrancas`, `atendidos`.
+
+- Empresa nova nasce com **todos os módulos** ativos (default).
+- **Dependências obrigatórias**: `gastos` requer `caixa`; `rota`, `cobrancas` e `atendidos` requerem `contratos`. Combinação que viole a dependência → 422.
+- Array vazio = apenas o módulo `central` (sempre ativo).
+- Somente `super_admin` pode alterar; `admin` → 403.
+
+---
+
+## BR-093
+
+Um módulo **desativado** em uma empresa oculta todas as **superfícies** daquele módulo para os usuários da empresa: links de navegação (Navbar), rotas (redirect para `/`), entradas do dashboard (Central) e blocos de dados em outras telas (ex.: blocos de gastos no Caixa; card de contratos no ClienteDetail).
+
+- O módulo `central` (dashboard) é **sempre ativo** — é a landing de todos.
+- `modulos` é derivado do `login`/`me`; alteração feita pelo super admin vale para o usuário no **próximo carregamento** (novo `/me`).
+- A ausência de `modulos` (tokens antigos, super admin) equivale a **todos ativos**.
+- > **Hardening futuro (P024):** o v1 é gating de UI; a aplicação no backend (403 por módulo desativado) é follow-up.
 
 ---
 

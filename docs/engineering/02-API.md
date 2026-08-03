@@ -1433,6 +1433,7 @@ Gestão de empresas. Acesso exclusivo para super administradores (`role = 'super
 | GET | `/api/admin/empresas` | Super Admin | Listar todas as empresas |
 | GET | `/api/admin/empresas/:id` | Super Admin | Buscar empresa por id (com totais) |
 | POST | `/api/admin/empresas` | Super Admin | Criar nova empresa com admin |
+| PATCH | `/api/admin/empresas/:id/modulos` | Super Admin | Ativar/desativar módulos da empresa (PLAN-031) |
 
 ---
 
@@ -1551,6 +1552,50 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
 |---------|------|
 | EMAIL_DUPLICATED | 409 |
 | VALIDATION_ERROR | 400 |
+
+---
+
+# PATCH /api/admin/empresas/{id}/modulos
+
+Ativa/desativa **módulos da empresa** (whitelabel, PLAN-031). O tenant passa a ver apenas as superfícies (nav/rotas/entradas) dos módulos ativos — `central` é sempre ativo.
+
+**Auth:** Super Admin
+
+## Request
+
+```json
+{
+    "modulos": ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"]
+}
+```
+
+## Validações
+
+- `modulos` deve ser um array de ids válidos: `clientes, contratos, caixa, gastos, rota, cobrancas, atendidos`.
+- **Dependências**: `gastos` requer `caixa`; `rota`, `cobrancas` e `atendidos` requerem `contratos`. Violação → 422.
+- Array vazio (`[]`) = apenas o módulo `central` (sempre ativo).
+
+## Response 200
+
+```json
+{
+    "id": "a1b2c3d4-...",
+    "nome": "Empresa Exemplo",
+    "createdAt": "2026-07-31T10:00:00.000Z",
+    "modulos": ["clientes", "contratos", "caixa"],
+    "totalUsuarios": 1,
+    "totalClientes": 0,
+    "contratosAtivos": 0
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| FORBIDDEN | 403 (não-super) |
+| EMPRESA_NOT_FOUND | 404 |
+| VALIDATION_ERROR | 422 (módulo inválido / dependência) |
 
 ---
 

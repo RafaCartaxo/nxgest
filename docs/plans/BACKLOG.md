@@ -339,6 +339,19 @@ Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já cobe
 
 ---
 
+## P024 — Whitelabel: enforcement de módulos no backend (hardening)
+
+> **Follow-up imediato do PLAN-031 (registrado, sem execução).** O v1 de módulos é **gating de UI** (rotas/nav/entradas). Para whitelabel, o API é o contrato — módulo desativado deve devolver **403** também no backend.
+
+### Escopo (quando entrar)
+
+- Middleware `requireModule('<id>')` (padrão do `adminMiddleware`) que lê `empresa.modulos` (do usuário/token) e bloqueia rotas do módulo desativado;
+- Mapa rota→módulo no backend (mesmos IDs do registro canônico em `src/modules/admin/domain/modules.ts`);
+- Aplicar em: clientes, contratos, caixa, gastos, operacoes (rota/cobrancas/atendidos);
+- CTs: operador de empresa com módulo off chamando API do módulo → 403.
+
+---
+
 # Prioridade sugerida
 
 ## Sprint 1 — Concluído (PLAN-026)

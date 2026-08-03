@@ -502,15 +502,55 @@ async function main() {
     const r = await req("GET", "/api/admin/empresas/00000000-0000-4000-8000-000000000000", { token: superToken })
     expect(r, 404, "empresa inexistente")
   })
+  let novaEmpresaId
+  let novaEmpresaAdminEmail
   await t("EMP-073", "POST /admin/empresas (201) + login admin novo + dashboard", async () => {
     const nome = `Empresa Smoke ${Date.now()}`
     const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, adminNome: "Admin Smoke", adminEmail: `smoke.${Date.now()}@empresa.com`, adminSenha: SENHA } })
     expect(r, 201, "criar empresa")
-    const adminEmail = r.data.admin.email
-    const login = await req("POST", "/api/auth/login", { body: { email: adminEmail, senha: SENHA } })
+    novaEmpresaId = r.data.empresa.id
+    novaEmpresaAdminEmail = r.data.admin.email
+    const login = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
     expect(login, 200, "login admin da nova empresa")
-    const dash = await req("GET", "/api/admin/dashboard", { token: superToken, query: { empresaId: r.data.empresa.id } })
+    const dash = await req("GET", "/api/admin/dashboard", { token: superToken, query: { empresaId: novaEmpresaId } })
     expect(dash, 200, "dashboard da nova empresa")
+  })
+
+  // ---------- MÓDULOS (PLAN-031, whitelabel) ----------
+  await t("MOD-096", "login/me retornam modulos da empresa (todos por padrão)", async () => {
+    const r = await req("GET", "/api/auth/me", { token: adminToken })
+    expect(r, 200, "me")
+    const expected = ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"]
+    const got = [...(r.data.modulos ?? [])].sort()
+    if (JSON.stringify(got) !== JSON.stringify([...expected].sort())) throw new Error(`modulos=${JSON.stringify(r.data.modulos)}`)
+  })
+  await t("MOD-091", "PATCH modulos válido (200) + GET/:id reflete + /me do tenant reflete", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa"] } })
+    expect(r, 200, "patch modulos")
+    const g = await req("GET", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken })
+    expect(g, 200, "get empresa")
+    if (JSON.stringify(g.data.modulos?.sort()) !== JSON.stringify(["caixa", "clientes", "contratos"])) throw new Error("GET/:id não refletiu")
+    const login = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
+    expect(login, 200, "login tenant")
+    if (JSON.stringify(login.data.usuario.modulos?.sort()) !== JSON.stringify(["caixa", "clientes", "contratos"])) throw new Error("login não refletiu modulos")
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] } })
+  })
+  await t("MOD-092", "Dependência gastos sem caixa (422)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["gastos"] } })
+    expect(r, 422, "gastos sem caixa")
+  })
+  await t("MOD-093", "Módulo inexistente (422)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["nao_existe"] } })
+    expect(r, 422, "modulo inexistente")
+  })
+  await t("MOD-094", "Array vazio = só central (200)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: [] } })
+    expect(r, 200, "array vazio")
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] } })
+  })
+  await t("MOD-095", "Admin (não super) em PATCH modulos (403)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: adminToken, body: { modulos: [] } })
+    expect(r, 403, "admin sem permissão")
   })
   await t("EMP-074", "Admin email duplicado (409)", async () => {
     const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: "Duplicada", adminNome: "X", adminEmail: "admin@cobranca.com", adminSenha: SENHA } })

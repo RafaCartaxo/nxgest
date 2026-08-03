@@ -94,6 +94,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 | 39 | `GET /api/admin/empresas/:id` | API-UC-039 | 071-072 |
 | 40 | `POST /api/admin/empresas` | API-UC-040 | 073-074 |
 | 41 | `PATCH /api/auth/senha` | API-UC-041 | 075-077 |
+| 43 | `PATCH /api/admin/empresas/:id/modulos` | API-UC-043 | 091-096 |
 
 ---
 
@@ -1017,6 +1018,44 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### API-CT-074 — E-mail duplicado
 **Dado** `adminEmail` já usado → **Então** 409 e **nenhuma** empresa criada (atômico).
+
+---
+
+# ADMIN — EMPRESAS · MÓDULOS (PLAN-031, whitelabel)
+
+## API-UC-043 — Ativar/desativar módulos da empresa
+
+**Endpoint:** `PATCH /api/admin/empresas/:id/modulos` · **Auth:** super_admin
+
+**Request:** `{ modulos: string[] }` — ids: `clientes, contratos, caixa, gastos, rota, cobrancas, atendidos`
+
+**Response 200:** empresa atualizada (com `modulos`)
+
+**Coerência (ponta a ponta):**
+- [ ] `GET /api/admin/empresas/:id` reflete a mudança?
+- [ ] O próximo `login`/`me` de usuários da empresa reflete os novos `modulos`?
+- [ ] Módulo com dependência violada → **422**?
+- [ ] Admin (não super) → **403**?
+
+**Regras:** BR-092, BR-093 · **Postman:** `Empresas > Módulos`
+
+### API-CT-091 — Válido + coerência
+**Dado** super admin → **Quando** `PATCH` com `["clientes","contratos","caixa"]` → **Então** 200; `GET /admin/empresas/:id` reflete; `login`/`me` de usuário da empresa retorna os mesmos módulos.
+
+### API-CT-092 — Dependência gastos ⇒ caixa
+**Dado** `modulos: ["gastos"]` sem `caixa` → **Então** 422 e nada muda.
+
+### API-CT-093 — Módulo inexistente
+**Dado** `modulos: ["nao_existe"]` → **Então** 422.
+
+### API-CT-094 — Só central (array vazio)
+**Dado** `modulos: []` → **Então** 200 (apenas o módulo `central`, sempre ativo).
+
+### API-CT-095 — Permissão
+**Dado** token de admin (não super) → **Então** 403. **Dado** id inexistente → **Então** 404.
+
+### API-CT-096 — login/me com modulos
+**Dado** usuário de empresa com módulos → **Então** `usuario.modulos` == modulos da empresa (default: todos). Super admin → `null`/todos.
 
 ---
 
