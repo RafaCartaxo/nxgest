@@ -46,25 +46,27 @@ export function Navbar() {
     navigate("/login")
   }
 
-  const isAdmin = user?.role === "admin" || user?.role === "super_admin"
+  const isAdmin = user?.role === "admin"
   const isSuperAdmin = user?.role === "super_admin"
+  const isTenant = user?.role === "operator" || user?.role === "admin"
   const modulos = user?.modulos
 
-  const links = [
-    { to: "/", label: t("nav.central") },
-    { to: "/clientes", label: t("nav.clientes"), mod: "clientes" as const },
-    { to: "/contratos", label: t("nav.contratos"), mod: "contratos" as const },
-    { to: "/caixa", label: t("nav.caixa"), mod: "caixa" as const },
-  ]
-    .filter((l) => "mod" in l ? hasModule(modulos, l.mod as ModuleId) : true)
-  if (isAdmin) links.push({ to: "/admin", label: t("admin.title") })
-  if (isSuperAdmin) links.push({ to: "/admin/empresas", label: t("superAdmin.navEmpresas") })
+  const links: { to: string; label: string; mod?: ModuleId }[] = []
+  if (isTenant) {
+    links.push({ to: "/", label: t("nav.central") })
+    links.push({ to: "/clientes", label: t("nav.clientes"), mod: "clientes" })
+    links.push({ to: "/contratos", label: t("nav.contratos"), mod: "contratos" })
+    links.push({ to: "/caixa", label: t("nav.caixa"), mod: "caixa" })
+  }
+  const visible = links.filter((l) => (l.mod ? hasModule(modulos, l.mod) : true))
+  if (isAdmin) visible.push({ to: "/admin", label: t("admin.title") })
+  if (isSuperAdmin) visible.push({ to: "/admin/empresas", label: t("superAdmin.navEmpresas") })
 
   return (
     <nav className="sticky top-0 z-40 border-b border-border-light bg-surface">
       <div className="mx-auto flex max-w-2xl items-center px-4">
         <div className="flex min-w-0 overflow-x-auto hide-scrollbar">
-          {links.map((link) => (
+          {visible.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}

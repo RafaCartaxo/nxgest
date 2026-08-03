@@ -96,6 +96,7 @@ export function SuperAdminPage() {
       )}
 
       <ModulosModal
+        key={modulosTarget?.id ?? "none"}
         open={modulosTarget !== null}
         empresaNome={modulosTarget?.nome ?? ""}
         initial={modulosTarget?.modulos ?? null}

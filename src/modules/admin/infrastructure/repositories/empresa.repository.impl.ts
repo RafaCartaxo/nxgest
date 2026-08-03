@@ -2,7 +2,7 @@ import { eq, and, count, isNull } from "drizzle-orm"
 import { db, empresas, usuarios, clientes, contratos } from "../../../../database.js"
 import type { IEmpresaRepository } from "../../application/ports/empresa.repository.js"
 import type { EmpresaComStats } from "../../domain/empresa.entity.js"
-import { parseModulos, serializeModulos } from "../../domain/modules.js"
+import { parseModulos, serializeModulos, DEFAULT_MODULOS } from "../../domain/modules.js"
 import type { IAuthRepository } from "../../../../modules/auth/application/ports/auth.repository.js"
 import { v4 as uuid } from "uuid"
 import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
@@ -84,7 +84,7 @@ export class EmpresaRepository implements IEmpresaRepository {
       }).run()
 
       return {
-        empresa: { id: empresaId, nome: input.nome, createdAt: new Date().toISOString(), totalUsuarios: 1, totalClientes: 0, contratosAtivos: 0 },
+        empresa: { id: empresaId, nome: input.nome, createdAt: new Date().toISOString(), totalUsuarios: 1, totalClientes: 0, contratosAtivos: 0, modulos: [...DEFAULT_MODULOS] },
         admin: { id: adminId, nome: input.adminNome, email: input.adminEmail },
       }
     })
