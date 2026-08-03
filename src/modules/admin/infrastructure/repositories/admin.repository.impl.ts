@@ -1,15 +1,20 @@
-import { eq, and, count, isNull, ne, sum } from "drizzle-orm"
+import { eq, and, count, isNull, ne, sum, inArray } from "drizzle-orm"
 import { db, usuarios, clientes, contratos, pagamentos, movimentacoesFinanceiras } from "../../../../database.js"
 import type { IAdminRepository, OperadorRow, AdminDashboardStats, EquipeItem } from "../../application/ports/admin.repository.js"
 import { v4 as uuid } from "uuid"
 import { NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, OperadorNaoEncontradoError } from "../../domain/errors/admin.error.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
+const SCOPE_NOT_SUPER = [isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin")]
+
 export class AdminRepository implements IAdminRepository {
-  async findAllOperadores(empresaId?: string | null): Promise<OperadorRow[]> {
-    const conditions = [isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin")]
+  async findAllOperadores(empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow[]> {
+    const conditions = [...SCOPE_NOT_SUPER]
     if (empresaId) {
       conditions.push(eq(usuarios.empresaId, empresaId))
+    }
+    if (scopeUserIds && scopeUserIds.length > 0) {
+      conditions.push(inArray(usuarios.id, scopeUserIds))
     }
     const rows = await db.select().from(usuarios).where(and(...conditions)).orderBy(usuarios.createdAt)
 
@@ -23,21 +28,25 @@ export class AdminRepository implements IAdminRepository {
         id: row.id,
         nome: row.nome,
         email: row.email,
-        role: row.role as "super_admin" | "admin" | "operator",
+        role: row.role as OperadorRow["role"],
         createdAt: row.createdAt,
         deletedAt: row.deletedAt,
         totalClientes: clientesCount[0].total,
         contratosAtivos: contratosCount[0].total,
         empresaId: row.empresaId ?? null,
+        chefeId: row.chefeId ?? null,
       })
     }
     return result
   }
 
-  async findById(id: string, empresaId?: string | null): Promise<OperadorRow | null> {
+  async findById(id: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
     const conditions = [eq(usuarios.id, id), isNull(usuarios.deletedAt)]
     if (empresaId) {
       conditions.push(eq(usuarios.empresaId, empresaId))
+    }
+    if (scopeUserIds && scopeUserIds.length > 0) {
+      conditions.push(inArray(usuarios.id, scopeUserIds))
     }
     const rows = await db.select().from(usuarios).where(and(...conditions))
     if (rows.length === 0) return null
@@ -48,10 +57,11 @@ export class AdminRepository implements IAdminRepository {
     ])
     return {
       ...row,
-      role: row.role as "super_admin" | "admin" | "operator",
+      role: row.role as OperadorRow["role"],
       totalClientes: clientesCount[0].total,
       contratosAtivos: contratosCount[0].total,
       empresaId: row.empresaId ?? null,
+      chefeId: row.chefeId ?? null,
     }
   }
 
@@ -65,14 +75,15 @@ export class AdminRepository implements IAdminRepository {
     ])
     return {
       ...row,
-      role: row.role as "super_admin" | "admin" | "operator",
+      role: row.role as OperadorRow["role"],
       totalClientes: clientesCount[0].total,
       contratosAtivos: contratosCount[0].total,
       empresaId: row.empresaId ?? null,
+      chefeId: row.chefeId ?? null,
     }
   }
 
-  async create(input: { nome: string; email: string; senhaHash: string; role: "admin" | "operator"; empresaId: string | null }): Promise<OperadorRow> {
+  async create(input: { nome: string; email: string; senhaHash: string; role: "super_admin" | "admin" | "socio" | "operator"; empresaId: string | null; chefeId?: string | null }): Promise<OperadorRow> {
     const id = uuid()
     await db.insert(usuarios).values({
       id,
@@ -81,17 +92,18 @@ export class AdminRepository implements IAdminRepository {
       senhaHash: input.senhaHash,
       role: input.role,
       empresaId: input.empresaId,
+      chefeId: input.chefeId ?? null,
       createdAt: new Date().toISOString(),
     })
-    return { id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0 }
+    return { id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, chefeId: input.chefeId ?? null, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0 }
   }
 
-  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "operator"; senhaHash?: string }, currentUserId: string, empresaId?: string | null): Promise<OperadorRow | null> {
-    if (id === currentUserId && data.role && data.role !== "admin") {
+  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
+    if (id === currentUserId && data.role !== undefined) {
       throw new NaoPodeAutoModificarError("Você não pode alterar seu próprio papel.")
     }
 
-    const existing = await this.findById(id, empresaId)
+    const existing = await this.findById(id, empresaId, scopeUserIds)
     if (!existing) throw new OperadorNaoEncontradoError()
     if (existing.role === "super_admin") {
       throw new NaoPodeAlterarSuperAdminError()
@@ -102,18 +114,19 @@ export class AdminRepository implements IAdminRepository {
     if (data.email !== undefined) updateData.email = data.email
     if (data.role !== undefined) updateData.role = data.role
     if (data.senhaHash !== undefined) updateData.senhaHash = data.senhaHash
+    if (data.chefeId !== undefined) updateData.chefeId = data.chefeId
 
     await db.update(usuarios).set(updateData).where(eq(usuarios.id, id))
 
-    return this.findById(id, empresaId)
+    return this.findById(id, empresaId, scopeUserIds)
   }
 
-  async softDelete(id: string, currentUserId: string, empresaId?: string | null): Promise<void> {
+  async softDelete(id: string, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<void> {
     if (id === currentUserId) {
       throw new NaoPodeAutoModificarError("Você não pode remover a si mesmo.")
     }
 
-    const existing = await this.findById(id, empresaId)
+    const existing = await this.findById(id, empresaId, scopeUserIds)
     if (!existing) throw new OperadorNaoEncontradoError()
     if (existing.role === "super_admin") {
       throw new NaoPodeAlterarSuperAdminError()
@@ -122,43 +135,38 @@ export class AdminRepository implements IAdminRepository {
     await db.update(usuarios).set({ deletedAt: new Date().toISOString() }).where(eq(usuarios.id, id))
   }
 
-  async getDashboardStats(empresaId?: string | null, userId?: string | null): Promise<AdminDashboardStats> {
+  async getDashboardStats(empresaId?: string | null, userId?: string | null, scopeUserIds?: string[]): Promise<AdminDashboardStats> {
     const hoje = getLocalDateString(new Date())
 
+    // Escopo de usuários nas queries com JOIN (subárvore p/ sócio, empresa p/ admin/super)
+    const usuarioScope = () => {
+      if (scopeUserIds && scopeUserIds.length > 0) return [inArray(usuarios.id, scopeUserIds)]
+      if (empresaId) return [eq(usuarios.empresaId, empresaId)]
+      return []
+    }
+
     const countRole = (role: string) =>
-      empresaId
-        ? db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.empresaId, empresaId), eq(usuarios.role, role)))
-        : db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.role, role)))
+      db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.role, role), ...usuarioScope()))
 
     const countClientes = userId
       ? db.select({ total: count() }).from(clientes).where(and(isNull(clientes.deletedAt), eq(clientes.userId, userId)))
-      : empresaId
-        ? db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, empresaId)))
-        : db.select({ total: count() }).from(clientes).where(isNull(clientes.deletedAt))
+      : db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), ...usuarioScope()))
 
     const countContratos = userId
       ? db.select({ total: count() }).from(contratos).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), eq(contratos.userId, userId)))
-      : empresaId
-        ? db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), eq(usuarios.empresaId, empresaId)))
-        : db.select({ total: count() }).from(contratos).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo")))
+      : db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), ...usuarioScope()))
 
     const recebidoHoje = userId
       ? db.select({ total: sum(pagamentos.valor) }).from(pagamentos).where(and(eq(pagamentos.data, hoje), eq(pagamentos.userId, userId)))
-      : empresaId
-        ? db.select({ total: sum(pagamentos.valor) }).from(pagamentos).innerJoin(usuarios, eq(pagamentos.userId, usuarios.id)).where(and(eq(pagamentos.data, hoje), eq(usuarios.empresaId, empresaId)))
-        : db.select({ total: sum(pagamentos.valor) }).from(pagamentos).where(eq(pagamentos.data, hoje))
+      : db.select({ total: sum(pagamentos.valor) }).from(pagamentos).innerJoin(usuarios, eq(pagamentos.userId, usuarios.id)).where(and(eq(pagamentos.data, hoje), ...usuarioScope()))
 
     const entradasHoje = userId
       ? db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje), eq(movimentacoesFinanceiras.userId, userId)))
-      : empresaId
-        ? db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).innerJoin(usuarios, eq(movimentacoesFinanceiras.userId, usuarios.id)).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje), eq(usuarios.empresaId, empresaId)))
-        : db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje)))
+      : db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).innerJoin(usuarios, eq(movimentacoesFinanceiras.userId, usuarios.id)).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje), ...usuarioScope()))
 
     const saidasHoje = userId
       ? db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje), eq(movimentacoesFinanceiras.userId, userId)))
-      : empresaId
-        ? db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).innerJoin(usuarios, eq(movimentacoesFinanceiras.userId, usuarios.id)).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje), eq(usuarios.empresaId, empresaId)))
-        : db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje)))
+      : db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).innerJoin(usuarios, eq(movimentacoesFinanceiras.userId, usuarios.id)).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje), ...usuarioScope()))
 
     const [totalAdminsResult, totalOps, totalClientesResult, contratosResult, recebidoResult, entradasResult, saidasResult] = await Promise.all([
       countRole("admin"),
@@ -183,12 +191,15 @@ export class AdminRepository implements IAdminRepository {
     }
   }
 
-  async listEquipe(empresaId: string | null): Promise<EquipeItem[]> {
+  async listEquipe(empresaId: string | null, scopeUserIds?: string[]): Promise<EquipeItem[]> {
     const hoje = getLocalDateString(new Date())
 
-    const conditions = [isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin")]
+    const conditions = [...SCOPE_NOT_SUPER]
     if (empresaId) {
       conditions.push(eq(usuarios.empresaId, empresaId))
+    }
+    if (scopeUserIds && scopeUserIds.length > 0) {
+      conditions.push(inArray(usuarios.id, scopeUserIds))
     }
     const rows = await db.select().from(usuarios).where(and(...conditions))
 
@@ -214,12 +225,23 @@ export class AdminRepository implements IAdminRepository {
         id: row.id,
         nome: row.nome,
         email: row.email,
-        role: row.role as "admin" | "operator",
+        role: row.role as EquipeItem["role"],
         totalClientes: clientesCount[0].total,
         contratosAtivos: contratosCount[0].total,
         recebidoHoje: recebidoMap.get(row.id) ?? 0,
       })
     }
+    return result
+  }
+
+  async subarvoreIds(chefeId: string): Promise<string[]> {
+    const all = await db.select({ id: usuarios.id, chefeId: usuarios.chefeId }).from(usuarios).where(and(...SCOPE_NOT_SUPER))
+    const result: string[] = []
+    const visit = (id: string) => {
+      result.push(id)
+      for (const u of all) if (u.chefeId === id) visit(u.id)
+    }
+    visit(chefeId)
     return result
   }
 }

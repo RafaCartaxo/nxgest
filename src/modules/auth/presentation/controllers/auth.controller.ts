@@ -74,6 +74,7 @@ export class AuthController {
         empresaId: usuario.empresaId,
         empresaNome,
         modulos,
+        chefeId: usuario.chefeId,
       })
     } catch (err) {
       console.error("Erro no me:", err)

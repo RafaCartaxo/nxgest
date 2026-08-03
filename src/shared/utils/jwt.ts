@@ -10,7 +10,7 @@ function getSecret(): string {
 
 export interface JwtPayload {
   userId: string
-  role: "super_admin" | "admin" | "operator"
+  role: "super_admin" | "admin" | "socio" | "operator"
   empresaId: string | null
 }
 

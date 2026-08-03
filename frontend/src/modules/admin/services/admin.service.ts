@@ -4,11 +4,12 @@ export interface OperadorRow {
   id: string
   nome: string
   email: string
-  role: "super_admin" | "admin" | "operator"
+  role: "super_admin" | "admin" | "socio" | "operator"
   createdAt: string
   deletedAt: string | null
   totalClientes: number
   contratosAtivos: number
+  chefeId?: string | null
 }
 
 export interface AdminDashboardStats {
@@ -47,13 +48,13 @@ export async function getOperador(id: string, empresaId?: string): Promise<Opera
   return apiRequest<OperadorRow>(`GET`, `/admin/operadores/${id}${params}`)
 }
 
-export async function createOperador(data: { nome: string; email: string; senha: string; role: "admin" | "operator"; empresaId?: string }): Promise<OperadorRow> {
+export async function createOperador(data: { nome: string; email: string; senha: string; role: "admin" | "socio" | "operator"; empresaId?: string; chefeId?: string | null }): Promise<OperadorRow> {
   const params = data.empresaId ? `?empresaId=${data.empresaId}` : ""
   const { empresaId, ...body } = data
   return apiRequest<OperadorRow>("POST", `/admin/operadores${params}`, body)
 }
 
-export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "operator"; senha?: string }, empresaId?: string): Promise<OperadorRow> {
+export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null }, empresaId?: string): Promise<OperadorRow> {
   const params = empresaId ? `?empresaId=${empresaId}` : ""
   return apiRequest<OperadorRow>("PATCH", `/admin/operadores/${id}${params}`, data)
 }

@@ -184,6 +184,7 @@ export const usuarios = sqliteTable("usuarios", {
   createdAt: text("createdAt").notNull(),
   deletedAt: text("deletedAt"),
   empresaId: text("empresaId"),
+  chefeId: text("chefeId"),
 })
 
 export const empresas = sqliteTable("empresas", {
@@ -393,7 +394,8 @@ export async function createTables() {
       role TEXT NOT NULL DEFAULT 'operator',
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       deletedAt TEXT,
-      empresaId TEXT
+      empresaId TEXT,
+      chefeId TEXT
     );
 
     CREATE TABLE IF NOT EXISTS empresas (
@@ -409,6 +411,12 @@ export async function createTables() {
   const empresaCols = sqlite.pragma("table_info(empresas)") as unknown as { name: string }[]
   if (!empresaCols.some((c) => c.name === "modulos")) {
     sqlite.exec(`ALTER TABLE empresas ADD COLUMN modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]'`)
+  }
+
+  // Migração incremental (PLAN-032): coluna `chefeId` (hierarquia de papéis) em usuários existentes.
+  const usuarioCols = sqlite.pragma("table_info(usuarios)") as unknown as { name: string }[]
+  if (!usuarioCols.some((c) => c.name === "chefeId")) {
+    sqlite.exec("ALTER TABLE usuarios ADD COLUMN chefeId TEXT")
   }
 
   // Migracao: adicionar coluna empresaId em bancos existentes (ignorar se ja existe)
@@ -427,10 +435,11 @@ export async function createTables() {
         role TEXT NOT NULL DEFAULT 'operator',
         createdAt TEXT NOT NULL DEFAULT (datetime('now')),
         deletedAt TEXT,
-        empresaId TEXT
+        empresaId TEXT,
+        chefeId TEXT
       )
     `)
-    sqlite.exec("INSERT INTO usuarios_new (id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId) SELECT id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId FROM usuarios")
+    sqlite.exec("INSERT INTO usuarios_new (id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId, chefeId) SELECT id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId, chefeId FROM usuarios")
     sqlite.exec("DROP TABLE usuarios")
     sqlite.exec("ALTER TABLE usuarios_new RENAME TO usuarios")
     sqlite.exec("COMMIT")

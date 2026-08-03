@@ -101,10 +101,10 @@ export function AdminPage() {
     op.email.toLowerCase().includes(search.toLowerCase())
   )
 
-  async function handleCreate(data: { nome: string; email: string; role: "admin" | "operator"; senha?: string }) {
+  async function handleCreate(data: { nome: string; email: string; role: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null }) {
     if (!data.senha) return
     await feedback.run({
-      action: async () => { await createOperador({ nome: data.nome, email: data.email, senha: data.senha!, role: data.role, empresaId }) },
+      action: async () => { await createOperador({ nome: data.nome, email: data.email, senha: data.senha!, role: data.role, empresaId, chefeId: data.chefeId }) },
       loading: t("common.saving"),
       success: t("admin.criarSucesso"),
       error: t("admin.erroCarregar"),
@@ -113,7 +113,7 @@ export function AdminPage() {
     fetchData()
   }
 
-  async function handleUpdate(data: { nome?: string; email?: string; role?: "admin" | "operator"; senha?: string }) {
+  async function handleUpdate(data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null }) {
     if (!editingOp) return
     await feedback.run({
       action: async () => { await updateOperador(editingOp.id, data, empresaId) },
@@ -216,6 +216,8 @@ export function AdminPage() {
             <Modal open onClose={() => { setFormOpen(false); setEditingOp(null) }} maxWidth="max-w-md">
                 <OperadorForm
                   editing={editingOp}
+                  chefes={operadores.filter((op) => op.role === "admin" || op.role === "socio")}
+                  actorRole={user?.role === "socio" ? "socio" : user?.role === "super_admin" ? "super_admin" : "admin"}
                   onSubmit={editingOp ? handleUpdate : handleCreate}
                   onCancel={() => { setFormOpen(false); setEditingOp(null) }}
                 />

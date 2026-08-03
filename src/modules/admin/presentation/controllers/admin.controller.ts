@@ -9,6 +9,8 @@ import { RemoverOperadorUseCase } from "../../application/use-cases/RemoverOpera
 import { OperadorNaoEncontradoError, NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, NaoPodeAtribuirSuperAdminError } from "../../domain/errors/admin.error.js"
 import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
 
+const ROLES_ADMIN = ["admin", "socio", "operator"] as const
+
 export class AdminController {
   private repository: IAdminRepository
   private listUseCase: ListOperadoresUseCase
@@ -35,10 +37,35 @@ export class AdminController {
     return req.empresaId
   }
 
+  /** Escopo da subárvore para sócio (PLAN-032). Admin/super = empresa inteira. */
+  private async resolveScope(req: Request): Promise<string[] | undefined> {
+    if (req.userRole === "socio") {
+      return this.repository.subarvoreIds(req.userId!)
+    }
+    return undefined
+  }
+
+  /** Valida o chefe: existe, mesma empresa, não-self (em relação ao alvo), role compatível. */
+  private async validarChefe(
+    chefeId: string | null | undefined,
+    empresaId: string | null | undefined,
+    targetRole: string,
+    targetUserId?: string
+  ): Promise<{ ok: true } | { ok: false; message: string }> {
+    if (!chefeId) return { ok: true } // null = sob o admin
+    if (targetUserId && chefeId === targetUserId) return { ok: false, message: "O usuário não pode ser chefe de si mesmo." }
+    const chefe = await this.repository.findById(chefeId, empresaId)
+    if (!chefe) return { ok: false, message: "Chefe não encontrado ou de outra empresa." }
+    if (targetRole === "socio" && chefe.role !== "admin") return { ok: false, message: "O chefe de um sócio deve ser um administrador." }
+    if (targetRole === "operator" && chefe.role !== "admin" && chefe.role !== "socio") return { ok: false, message: "O chefe de um operador deve ser um administrador ou sócio." }
+    return { ok: true }
+  }
+
   list = async (req: Request, res: Response) => {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req)
-      const operadores = await this.listUseCase.execute(targetEmpresaId)
+      const scope = await this.resolveScope(req)
+      const operadores = await this.listUseCase.execute(targetEmpresaId, scope)
       res.json(operadores)
     } catch (err) {
       console.error("Erro ao listar operadores:", err)
@@ -49,7 +76,8 @@ export class AdminController {
   getOperador = async (req: Request, res: Response) => {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req)
-      const operador = await this.dashboardGetter.findById(req.params.id, targetEmpresaId)
+      const scope = await this.resolveScope(req)
+      const operador = await this.dashboardGetter.findById(req.params.id, targetEmpresaId, scope)
       if (!operador) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
         return
@@ -68,21 +96,38 @@ export class AdminController {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Informe a empresa (empresaId)." })
         return
       }
-      const { nome, email, senha, role } = req.body
+      const { nome, email, senha, role, chefeId } = req.body
       if (!nome || !email || !senha || !role) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Nome, email, senha e role são obrigatórios." })
         return
       }
-      if (role !== "admin" && role !== "operator") {
-        res.status(400).json({ code: "VALIDATION_ERROR", message: "Role deve ser 'admin' ou 'operator'." })
+      if (!(ROLES_ADMIN as readonly string[]).includes(role)) {
+        res.status(400).json({ code: "VALIDATION_ERROR", message: "Role deve ser 'admin', 'socio' ou 'operator'." })
         return
       }
       if (typeof senha !== "string" || senha.length < 6) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
         return
       }
+
+      let finalChefeId = chefeId ?? null
+      if (req.userRole === "socio") {
+        if (role !== "operator") {
+          res.status(403).json({ code: "FORBIDDEN", message: "Sócio só pode criar operadores." })
+          return
+        }
+        finalChefeId = req.userId!
+      } else {
+        if (role === "socio" && !finalChefeId) finalChefeId = req.userId!
+        const chefeOk = await this.validarChefe(finalChefeId, targetEmpresaId, role)
+        if (!chefeOk.ok) {
+          res.status(422).json({ code: "VALIDATION_ERROR", message: chefeOk.message })
+          return
+        }
+      }
+
       const senhaHash = await bcrypt.hash(senha, 10)
-      const operador = await this.criarUseCase.execute({ nome, email, senhaHash, role, empresaId: targetEmpresaId })
+      const operador = await this.criarUseCase.execute({ nome, email, senhaHash, role, empresaId: targetEmpresaId, chefeId: finalChefeId })
       res.status(201).json(operador)
     } catch (err) {
       if (err instanceof EmailDuplicadoError) {
@@ -101,23 +146,40 @@ export class AdminController {
   update = async (req: Request, res: Response) => {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req)
+      const scope = await this.resolveScope(req)
       const userId = req.userId!
-      const { nome, email, role, senha } = req.body
-      if (role !== undefined && role !== "admin" && role !== "operator") {
-        res.status(400).json({ code: "VALIDATION_ERROR", message: "Role deve ser 'admin' ou 'operator'." })
+      const { nome, email, role, senha, chefeId } = req.body
+
+      const existing = await this.repository.findById(req.params.id, targetEmpresaId, scope)
+      if (!existing) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
+        return
+      }
+      if (role !== undefined && !(ROLES_ADMIN as readonly string[]).includes(role)) {
+        res.status(400).json({ code: "VALIDATION_ERROR", message: "Role deve ser 'admin', 'socio' ou 'operator'." })
         return
       }
       if (senha !== undefined && (typeof senha !== "string" || senha.length < 6)) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
         return
       }
-      const data: { nome?: string; email?: string; role?: "admin" | "operator"; senhaHash?: string } = {}
+      const targetRole = role ?? existing.role
+      if (chefeId !== undefined) {
+        const chefeOk = await this.validarChefe(chefeId, targetEmpresaId, targetRole, req.params.id)
+        if (!chefeOk.ok) {
+          res.status(422).json({ code: "VALIDATION_ERROR", message: chefeOk.message })
+          return
+        }
+      }
+
+      const data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null } = {}
       if (nome !== undefined) data.nome = nome
       if (email !== undefined) data.email = email
       if (role !== undefined) data.role = role
       if (senha !== undefined) data.senhaHash = await bcrypt.hash(senha, 10)
+      if (chefeId !== undefined) data.chefeId = chefeId
 
-      const operador = await this.editarUseCase.execute(req.params.id, data, userId, targetEmpresaId)
+      const operador = await this.editarUseCase.execute(req.params.id, data, userId, targetEmpresaId, scope)
       res.json(operador)
     } catch (err) {
       if (err instanceof OperadorNaoEncontradoError) {
@@ -136,8 +198,9 @@ export class AdminController {
   remove = async (req: Request, res: Response) => {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req)
+      const scope = await this.resolveScope(req)
       const userId = req.userId!
-      await this.removerUseCase.execute(req.params.id, userId, targetEmpresaId)
+      await this.removerUseCase.execute(req.params.id, userId, targetEmpresaId, scope)
       res.status(204).send()
     } catch (err) {
       if (err instanceof OperadorNaoEncontradoError) {
@@ -155,11 +218,14 @@ export class AdminController {
 
   dashboard = async (req: Request, res: Response) => {
     try {
+      const scope = await this.resolveScope(req)
       const isAdminSelf = req.userRole === "admin" && !req.query.empresaId
       const targetEmpresaId = this.resolveEmpresaId(req)
-      const stats = isAdminSelf
-        ? await this.dashboardGetter.getDashboardStats(req.empresaId ?? null, req.userId!)
-        : await this.dashboardGetter.getDashboardStats(targetEmpresaId)
+      const stats = scope
+        ? await this.dashboardGetter.getDashboardStats(targetEmpresaId ?? null, null, scope)
+        : isAdminSelf
+          ? await this.dashboardGetter.getDashboardStats(req.empresaId ?? null, req.userId!)
+          : await this.dashboardGetter.getDashboardStats(targetEmpresaId)
       res.json(stats)
     } catch (err) {
       console.error("Erro ao carregar dashboard admin:", err)
@@ -181,7 +247,8 @@ export class AdminController {
         targetEmpresaId = req.empresaId!
       }
 
-      const result = await this.listarEquipeUseCase.execute(targetEmpresaId)
+      const scope = await this.resolveScope(req)
+      const result = await this.listarEquipeUseCase.execute(targetEmpresaId, scope)
       res.json(result)
     } catch (err) {
       console.error("Erro ao carregar equipe:", err)

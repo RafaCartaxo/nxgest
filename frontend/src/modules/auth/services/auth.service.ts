@@ -6,10 +6,11 @@ export interface LoginResponse {
     id: string
     nome: string
     email: string
-    role: "super_admin" | "admin" | "operator"
+    role: "super_admin" | "admin" | "socio" | "operator"
     empresaId?: string | null
     empresaNome?: string | null
     modulos?: string[] | null
+    chefeId?: string | null
   }
 }
 
@@ -17,10 +18,11 @@ export interface MeResponse {
   id: string
   nome: string
   email: string
-  role: "super_admin" | "admin" | "operator"
+  role: "super_admin" | "admin" | "socio" | "operator"
   empresaId?: string | null
   empresaNome?: string | null
   modulos?: string[] | null
+  chefeId?: string | null
 }
 
 export async function login(email: string, senha: string): Promise<LoginResponse> {

@@ -13,16 +13,21 @@ interface Props {
   onDelete: (id: string) => void
 }
 
-const roleRank: Record<string, number> = { super_admin: 0, admin: 1, operator: 2 }
+const roleRank: Record<string, number> = { super_admin: 0, admin: 1, socio: 2, operator: 3 }
 
 function roleLabel(t: (k: string) => string, role: OperadorRow["role"]): string {
   if (role === "super_admin") return t("admin.roleSuperAdmin")
   if (role === "admin") return t("admin.roleAdmin")
+  if (role === "socio") return t("admin.roleSocio")
   return t("admin.roleOperator")
 }
 
 function isAdminRole(role: OperadorRow["role"]): boolean {
   return role === "super_admin" || role === "admin"
+}
+
+function isSocioRole(role: OperadorRow["role"]): boolean {
+  return role === "socio"
 }
 
 export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Props) {
@@ -37,11 +42,13 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Prop
   })
 
   const admins = sorted.filter((op) => isAdminRole(op.role))
-  const operators = sorted.filter((op) => !isAdminRole(op.role))
+  const socios = sorted.filter((op) => isSocioRole(op.role))
+  const operators = sorted.filter((op) => !isAdminRole(op.role) && !isSocioRole(op.role))
 
   type RowDef = { label: string; items: OperadorRow[] }
   const groups: RowDef[] = []
   if (admins.length > 0) groups.push({ label: t("admin.secaoAdministradores"), items: admins })
+  if (socios.length > 0) groups.push({ label: t("admin.secaoSocios"), items: socios })
   if (operators.length > 0) groups.push({ label: t("admin.operadores"), items: operators })
 
   if (sorted.length === 0) {

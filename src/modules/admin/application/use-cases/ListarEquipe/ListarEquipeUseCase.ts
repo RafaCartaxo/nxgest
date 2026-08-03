@@ -3,8 +3,8 @@ import type { IAdminRepository, EquipeResult } from "../../ports/admin.repositor
 export class ListarEquipeUseCase {
   constructor(private readonly repository: IAdminRepository) {}
 
-  async execute(empresaId: string): Promise<EquipeResult> {
-    const operadores = await this.repository.listEquipe(empresaId)
+  async execute(empresaId: string, scopeUserIds?: string[]): Promise<EquipeResult> {
+    const operadores = await this.repository.listEquipe(empresaId, scopeUserIds)
 
     const totais = operadores.reduce(
       (acc, op) => ({

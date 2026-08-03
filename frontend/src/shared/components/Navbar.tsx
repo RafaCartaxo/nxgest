@@ -47,8 +47,9 @@ export function Navbar() {
   }
 
   const isAdmin = user?.role === "admin"
+  const isSocio = user?.role === "socio"
   const isSuperAdmin = user?.role === "super_admin"
-  const isTenant = user?.role === "operator" || user?.role === "admin"
+  const isTenant = user?.role === "operator" || user?.role === "admin" || user?.role === "socio"
   const modulos = user?.modulos
 
   const links: { to: string; label: string; mod?: ModuleId }[] = []
@@ -59,7 +60,7 @@ export function Navbar() {
     links.push({ to: "/caixa", label: t("nav.caixa"), mod: "caixa" })
   }
   const visible = links.filter((l) => (l.mod ? hasModule(modulos, l.mod) : true))
-  if (isAdmin) visible.push({ to: "/admin", label: t("admin.title") })
+  if (isAdmin || isSocio) visible.push({ to: "/admin", label: t("admin.title") })
   if (isSuperAdmin) visible.push({ to: "/admin/empresas", label: t("superAdmin.navEmpresas") })
 
   return (

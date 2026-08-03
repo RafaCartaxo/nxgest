@@ -421,7 +421,11 @@
     "modalResultadoDia": "Resultado del Día",
     "acessar": "Acceder",
     "editar": "Editar",
-    "remover": "Eliminar"
+    "remover": "Eliminar",
+    "roleSocio": "Socio",
+    "chefe": "Jefe (gestor)",
+    "chefeSem": "Sin jefe (bajo el administrador)",
+    "secaoSocios": "Socios"
   },
   "superAdmin": {
     "title": "Empresas",

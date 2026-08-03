@@ -3,8 +3,9 @@ export interface Usuario {
   nome: string
   email: string
   senhaHash: string
-  role: "super_admin" | "admin" | "operator"
+  role: "super_admin" | "admin" | "socio" | "operator"
   createdAt: string
   deletedAt: string | null
   empresaId: string | null
+  chefeId: string | null
 }

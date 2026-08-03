@@ -11,21 +11,28 @@ interface FieldErrors {
 
 interface Props {
   editing: OperadorRow | null
-  onSubmit: (data: { nome: string; email: string; role: "admin" | "operator"; senha?: string }) => Promise<void>
+  /** Possíveis chefes (admins + sócios da empresa) — apenas para admin/super. */
+  chefes?: OperadorRow[]
+  /** Role de quem está criando/gerenciando (admin/socio/super_admin). */
+  actorRole?: "admin" | "socio" | "super_admin"
+  onSubmit: (data: { nome: string; email: string; role: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null }) => Promise<void>
   onCancel: () => void
 }
 
-export function OperadorForm({ editing, onSubmit, onCancel }: Props) {
+export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCancel }: Props) {
   const { t } = useTranslation()
   const [nome, setNome] = useState(editing?.nome ?? "")
   const [email, setEmail] = useState(editing?.email ?? "")
   const [senha, setSenha] = useState("")
-  const [role, setRole] = useState<"admin" | "operator">(editing && editing.role !== "super_admin" ? editing.role : "operator")
+  const [role, setRole] = useState<"admin" | "socio" | "operator">(editing && editing.role !== "super_admin" ? editing.role : "operator")
+  const [chefeId, setChefeId] = useState<string>(editing?.chefeId ?? "")
   const [errors, setErrors] = useState<FieldErrors>({})
   const [loading, setLoading] = useState(false)
   const nomeRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const senhaRef = useRef<HTMLInputElement>(null)
+
+  const isActorSocio = actorRole === "socio"
 
   useEffect(() => {
     const firstKey = (Object.keys(errors) as (keyof FieldErrors)[]).find((k) => errors[k])
@@ -49,11 +56,20 @@ export function OperadorForm({ editing, onSubmit, onCancel }: Props) {
     if (!validate()) return
     setLoading(true)
     try {
-      await onSubmit({ nome: nome.trim(), email: email.trim(), role, senha: senha || undefined })
+      await onSubmit({
+        nome: nome.trim(),
+        email: email.trim(),
+        role,
+        senha: senha || undefined,
+        // Sócio: chefe é ele mesmo; admin/super: chefe selecionado (ou null = sob o admin)
+        chefeId: isActorSocio ? undefined : role === "admin" ? null : chefeId || null,
+      })
     } finally {
       setLoading(false)
     }
   }
+
+  const showChefe = !isActorSocio && (role === "operator" || role === "socio")
 
   return (
     <form onSubmit={handleSubmit} className="p-4 space-y-4">
@@ -99,15 +115,43 @@ export function OperadorForm({ editing, onSubmit, onCancel }: Props) {
 
       <div>
         <label className="block text-sm font-medium text-text-primary mb-1">{t("admin.role")}</label>
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as "admin" | "operator")}
-          className="w-full rounded-md border border-border px-3 py-2 text-base"
-        >
-          <option value="operator">{t("admin.roleOperator")}</option>
-          <option value="admin">{t("admin.roleAdmin")}</option>
-        </select>
+        {isActorSocio ? (
+          <input
+            type="text"
+            value={t("admin.roleOperator")}
+            disabled
+            className="w-full rounded-md border border-border bg-surface-hover px-3 py-2 text-base text-text-muted"
+          />
+        ) : (
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value as "admin" | "socio" | "operator")}
+            className="w-full rounded-md border border-border px-3 py-2 text-base"
+          >
+            <option value="operator">{t("admin.roleOperator")}</option>
+            <option value="socio">{t("admin.roleSocio")}</option>
+            <option value="admin">{t("admin.roleAdmin")}</option>
+          </select>
+        )}
       </div>
+
+      {showChefe && (
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-1">{t("admin.chefe")}</label>
+          <select
+            value={chefeId}
+            onChange={(e) => setChefeId(e.target.value)}
+            className="w-full rounded-md border border-border px-3 py-2 text-base"
+          >
+            <option value="">{t("admin.chefeSem")}</option>
+            {chefes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nome} · {c.role === "socio" ? t("admin.roleSocio") : t("admin.roleAdmin")}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="flex gap-2 justify-end pt-2">
         <Button type="button" variant="ghost" onClick={onCancel}>

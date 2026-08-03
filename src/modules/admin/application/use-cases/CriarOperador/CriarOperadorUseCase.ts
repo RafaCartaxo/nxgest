@@ -6,8 +6,9 @@ interface CriarOperadorInput {
   nome: string
   email: string
   senhaHash: string
-  role: "super_admin" | "admin" | "operator"
+  role: "super_admin" | "admin" | "socio" | "operator"
   empresaId: string | null
+  chefeId?: string | null
 }
 
 export class CriarOperadorUseCase {

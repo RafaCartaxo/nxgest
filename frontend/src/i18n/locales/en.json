@@ -421,7 +421,11 @@
     "modalResultadoDia": "Daily Result",
     "acessar": "Open",
     "editar": "Edit",
-    "remover": "Remove"
+    "remover": "Remove",
+    "roleSocio": "Partner",
+    "chefe": "Manager (boss)",
+    "chefeSem": "No manager (under admin)",
+    "secaoSocios": "Partners"
   },
   "superAdmin": {
     "title": "Companies",
