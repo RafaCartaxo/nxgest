@@ -18,7 +18,7 @@ import { RouteProgress } from "../components/RouteProgress.js"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { Carousel } from "../../../shared/components/Carousel/Carousel.js"
 import { SuccessState } from "../../../shared/components/SuccessState/SuccessState.js"
-import { totalClientesAtendidos } from "../utils/atendimento.js"
+import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { PagamentoModal, type PagamentoSuccessData } from "../../pagamento/components/PagamentoModal.js"
 
@@ -197,6 +197,13 @@ export function RotaPage() {
   const routeNaoEncontrados = items.filter((i) => i.resultadoOperacional === ResultadoOperacional.NAO_ENCONTRADO).length
   const routePagos = new Set(pagamentosHoje.map((p) => p.clienteId)).size
   const totalClientesAtendidosHoje = totalClientesAtendidos(items, pagamentosHoje)
+  const resumoRota = useMemo(() => resumoAtendidos(items, pagamentosHoje), [items, pagamentosHoje])
+  const atendidosDetailRota = t("operacoes.resumoAtendidosDetail", {
+    visitado: resumoRota.visitado,
+    naoEncontrado: resumoRota.naoEncontrado,
+    promessa: resumoRota.promessa,
+    pagos: resumoRota.pagos,
+  })
 
   useEffect(() => {
     if (!currentKey) return
@@ -459,6 +466,7 @@ export function RotaPage() {
       ) : sortedItems.length === 0 && (items.length > 0 || routePagos > 0) ? (
         <SuccessState
           title={t("operacoes.todosAtendidos", { total: totalClientesAtendidosHoje })}
+          detail={atendidosDetailRota}
           linkLabel={t("operacoes.verResumo")}
           onLinkClick={() => navigate("/atendidos")}
         />

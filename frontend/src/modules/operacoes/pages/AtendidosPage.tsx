@@ -7,6 +7,7 @@ import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
 import { sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
 import { formatCurrency } from "../../../shared/utils/masks.js"
+import { resumoAtendidos } from "../utils/atendimento.js"
 import { CobrancaList } from "../components/CobrancaList.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 
@@ -103,6 +104,18 @@ export function AtendidosPage() {
     [completos, pagamentosHoje],
   )
 
+  const resumo = useMemo(
+    () => resumoAtendidos(data?.cobrancas ?? [], pagamentosHoje),
+    [data, pagamentosHoje],
+  )
+
+  const countFor = (key: Filtro): number =>
+    key === "all" ? resumo.total
+      : key === "VISITADO" ? resumo.visitado
+      : key === "NAO_ENCONTRADO" ? resumo.naoEncontrado
+      : key === "PROMESSA" ? resumo.promessa
+      : resumo.pagos
+
   function renderPagamentos() {
     if (pagamentosHoje.length === 0) return null
     return (
@@ -153,7 +166,7 @@ export function AtendidosPage() {
                 : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
-            {t(f.labelKey)}
+            {t(f.labelKey)} ({countFor(f.key)})
           </button>
         ))}
       </div>

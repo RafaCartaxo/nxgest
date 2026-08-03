@@ -117,7 +117,9 @@
     "historicoData": "Data",
     "historicoClientes": "Clientes",
     "historicoContratos": "Contratos",
-    "historicoValor": "Valor"
+    "historicoValor": "Valor",
+    "resumoAtendidosDetail": "{{visitado}} visitado(s) · {{naoEncontrado}} não encontrado(s) · {{promessa}} promessa(s) · {{pagos}} pago(s)",
+    "atrasadosResumoDetail": "{{pendente}} pendente(s) · {{visitado}} visitado(s) · {{naoEncontrado}} não encontrado(s) · {{promessa}} promessa(s)"
   },
   "cliente": {
     "title": "Clientes",

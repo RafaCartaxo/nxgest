@@ -1293,6 +1293,29 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+### UC-070 — Terminologia padronizada: "Atendidos" (guarda-chuva) × "Visitado" (subtipo)
+
+**Ator:** operador
+
+**Ação:** observa o banner "Todos os N clientes foram atendidos hoje" e os filtros de resultado (Atendidos hoje / Cobranças).
+
+**O que DEVE acontecer:** a terminologia é consistente:
+- **"Atendido"** é o guarda-chuva — qualquer visita registrada (`visitado`, `não encontrado`, `promessa`) ou pagamento;
+- **"Visitado"** é apenas o subtipo `visitado` — não encontrado e promessa geram **atendido**, mas **não** são "visitados";
+- os **contadores nos filtros** mostram a relação (ex.: Todos (6) · Visitado (1) · Não encontrado (2) · Promessa (3) · Pagos (X));
+- o **banner de atendidos** detalha o breakdown ("1 visitado · 2 não encontrados · 3 promessas"), assim como o **banner de atrasados**.
+
+**Conferências:**
+- [ ] Banner "N atendidos" = soma/união dos subtipos (guarda-chuva)?
+- [ ] Filtro "Visitado" mostra só `visitado` (pode ser menor que "Todos")?
+- [ ] "Não encontrado"/"Promessa" aparecem como atendidos no breakdown?
+- [ ] Contadores nos chips dos filtros (Atendidos e Cobranças)?
+- [ ] Banner de atrasados detalha pendente/visitado/não encontrado/promessa?
+
+**Regras:** BR-048 a BR-051
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)

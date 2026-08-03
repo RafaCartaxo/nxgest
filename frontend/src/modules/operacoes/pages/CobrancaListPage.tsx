@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { ChevronLeft } from "lucide-react"
 import { listarCobrancasDoDia, listarPagamentosHoje, listarHistoricoAtrasos, ResultadoOperacional, type CobrancaDoDiaResult, type CobrancaItem, type PagamentoDoDiaItem, type SnapshotAtraso } from "../services/operacoes.service.js"
-import { totalClientesAtendidos } from "../utils/atendimento.js"
+import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
 import { sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
@@ -118,12 +118,49 @@ export function CobrancaListPage() {
 
   const atrasadosResumo = useMemo(() => {
     if (filter !== "atrasado") return null
-    const clientes = new Set(pendentes.map((i) => i.clienteId)).size
+    const clientes = new Set(pendentes.map((i) => i.clienteId))
     const total = pendentes.reduce((s, i) => s + i.totalPendente, 0)
-    return { clientes, total }
+    const porResultado = { PENDENTE: new Set<string>(), VISITADO: new Set<string>(), NAO_ENCONTRADO: new Set<string>(), PROMESSA: new Set<string>() }
+    for (const i of pendentes) {
+      const r = i.resultadoOperacional
+      if (r === "PENDENTE" || r === "VISITADO" || r === "NAO_ENCONTRADO" || r === "PROMESSA") porResultado[r].add(i.clienteId)
+    }
+    return {
+      clientes: clientes.size,
+      total,
+      pendente: porResultado.PENDENTE.size,
+      visitado: porResultado.VISITADO.size,
+      naoEncontrado: porResultado.NAO_ENCONTRADO.size,
+      promessa: porResultado.PROMESSA.size,
+    }
   }, [filter, pendentes])
 
+  // Contadores dos chips de resultado (atrasados) — clientes distintos por subtipo
+  const atrasadosCounts = useMemo(() => {
+    if (filter !== "atrasado") return null
+    const atrasados = data?.cobrancas.filter((i) => i.situacao === "atrasado") ?? []
+    const sets = { all: new Set<string>(), VISITADO: new Set<string>(), NAO_ENCONTRADO: new Set<string>(), PROMESSA: new Set<string>() }
+    for (const i of atrasados) {
+      sets.all.add(i.clienteId)
+      const r = i.resultadoOperacional
+      if (r === "VISITADO" || r === "NAO_ENCONTRADO" || r === "PROMESSA") sets[r].add(i.clienteId)
+    }
+    return { all: sets.all.size, VISITADO: sets.VISITADO.size, NAO_ENCONTRADO: sets.NAO_ENCONTRADO.size, PROMESSA: sets.PROMESSA.size }
+  }, [data, filter])
+
+  const countFor = (key: string): number => {
+    if (!atrasadosCounts) return 0
+    return atrasadosCounts[key as keyof typeof atrasadosCounts] ?? 0
+  }
+
   const totalResolvidos = totalClientesAtendidos(data?.cobrancas ?? [], pagamentosHoje)
+  const resumo = useMemo(() => resumoAtendidos(data?.cobrancas ?? [], pagamentosHoje), [data, pagamentosHoje])
+  const atendidosDetail = t("operacoes.resumoAtendidosDetail", {
+    visitado: resumo.visitado,
+    naoEncontrado: resumo.naoEncontrado,
+    promessa: resumo.promessa,
+    pagos: resumo.pagos,
+  })
 
   function handleCardClick(item: CobrancaItem) {
     if (filter === "atrasado") {
@@ -169,17 +206,25 @@ export function CobrancaListPage() {
                 : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
-            {t(f.labelKey)}
+            {t(f.labelKey)} ({countFor(f.key)})
           </button>
         ))}
       </div>
 
       {atrasadosResumo && atrasadosResumo.clientes > 0 && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border border-danger bg-danger-light px-4 py-3">
-          <span className="text-sm font-medium text-danger-text">
+        <div className="mb-4 rounded-md border border-danger bg-danger-light px-4 py-3">
+          <span className="block text-sm font-medium text-danger-text">
             {t("operacoes.atrasadosResumo", {
               clientes: atrasadosResumo.clientes,
               total: formatCurrency(atrasadosResumo.total),
+            })}
+          </span>
+          <span className="mt-1 block text-xs text-danger-text/80">
+            {t("operacoes.atrasadosResumoDetail", {
+              pendente: atrasadosResumo.pendente,
+              visitado: atrasadosResumo.visitado,
+              naoEncontrado: atrasadosResumo.naoEncontrado,
+              promessa: atrasadosResumo.promessa,
             })}
           </span>
         </div>
@@ -198,6 +243,7 @@ export function CobrancaListPage() {
       ) : pendentes.length === 0 && totalResolvidos > 0 ? (
         <SuccessState
           title={t("operacoes.todosAtendidos", { total: totalResolvidos })}
+          detail={atendidosDetail}
           linkLabel={t("operacoes.verResumo")}
           onLinkClick={() => navigate("/atendidos")}
         />

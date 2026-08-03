@@ -19,7 +19,7 @@ import { PagamentosHojeModal } from "../components/PagamentosHojeModal.js"
 import { ParcelasHojeModal } from "../components/ParcelasHojeModal.js"
 import { GastosPeriodoModal } from "../../caixa/components/GastosPeriodoModal.js"
 import { SuccessState } from "../../../shared/components/SuccessState/SuccessState.js"
-import { totalClientesAtendidos } from "../utils/atendimento.js"
+import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 
 export function OperacoesDashboard() {
@@ -140,6 +140,13 @@ export function OperacoesDashboard() {
   )
 
   const totalResolvidos = totalClientesAtendidos(sortedCobrancas, pagamentosHoje)
+  const resumo = useMemo(() => resumoAtendidos(sortedCobrancas, pagamentosHoje), [sortedCobrancas, pagamentosHoje])
+  const atendidosDetail = t("operacoes.resumoAtendidosDetail", {
+    visitado: resumo.visitado,
+    naoEncontrado: resumo.naoEncontrado,
+    promessa: resumo.promessa,
+    pagos: resumo.pagos,
+  })
 
   const navigate = useNavigate()
 
@@ -303,6 +310,7 @@ export function OperacoesDashboard() {
               ) : (
                 <SuccessState
                   title={t("operacoes.todosAtendidos", { total: totalResolvidos })}
+                  detail={atendidosDetail}
                   linkLabel={t("operacoes.verResumo")}
                   onLinkClick={() => navigate("/atendidos")}
                 />
