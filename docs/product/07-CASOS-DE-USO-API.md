@@ -10,7 +10,7 @@
 
 **Contrato completo (request/response JSON):** `engineering/02-API.md`
 
-> **Validação executada (03/08/2026):** 91 cenários executados via `scripts/smoke-api.mjs` — todos PASS contra instância isolada, incluindo as variações V1–V8 (pagamento que atravessa parcelas, quitar→Finalizado, estorno reverte, 2 contratos, ajuste absoluto, cross-tenant, super admin, token inválido) e o **PLAN-030** (`GET /api/admin/equipe`, coerência Σ operadores = totais). Corrigidos no PLAN-029: `dataPromessa` obrigatória para promessa e senha mín. 6 no backend admin.
+> **Validação executada (03/08/2026):** 104 cenários executados via `scripts/smoke-api.mjs` — todos PASS contra instância isolada, incluindo as variações V1–V8 (pagamento que atravessa parcelas, quitar→Finalizado, estorno reverte, 2 contratos, ajuste absoluto, cross-tenant, super admin, token inválido), o **PLAN-030** (`GET /api/admin/equipe`, coerência Σ operadores = totais), o **PLAN-031** (módulos/whitelabel — MOD-091..096) e o **PLAN-032** (hierarquia/sócio — SC-001..006, subárvore). Corrigidos no PLAN-029: `dataPromessa` obrigatória para promessa e senha mín. 6 no backend admin.
 
 ---
 

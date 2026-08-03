@@ -2,6 +2,13 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 03/08/2026 — UX: estorno visível + terminologia "Atendidos × Visitados" + i18n
+
+**Corrigido**
+- **Estorno visível no detalhe do contrato**: `findByContratoId` passou a retornar `estornadoEm/Por/Motivo` — o pagamento estornado agora aparece **riscado** + badge "Estornado" + motivo (antes o campo não vinha da listagem e o estorno "nada ocorria" na tela).
+- **Terminologia padronizada (UC-070)**: "Atendido" é o guarda-chuva (visitado + não encontrado + promessa + pagos); "Visitado" é só o subtipo. **Contadores nos filtros** (Atendidos/Cobranças) e **breakdown nos banners** ("1 visitado · 2 não encontrados · 3 promessas") — resolve a confusão de banner com 6 atendidos e filtro "Visitado" zerado.
+- **i18n do banner de atrasados**: `atrasadosResumo` usava chaves simples `{clientes}`/`{total}` (não interpoladas) — corrigido para `{{...}}`; varredura confirma 0 chaves simples restantes.
+
 ## 03/08/2026 — PLAN-032 · Papéis hierárquicos (sócio)
 
 **Adicionado**
@@ -39,9 +46,9 @@ Referência: [PLAN-031](plans/PLAN-031-temas-modulos-whitelabel.md)
 
 Referência: [PLAN-030](plans/PLAN-030-admin-visao-equipe.md)
 
-## 03/08/2026 — Validação da API (smoke 88 cenários)
+## 03/08/2026 — Validação da API (smoke 104 cenários)
 
-**Validado** — `scripts/smoke-api.mjs` executou **88 cenários** da base `07-CASOS-DE-USO-API.md` contra instância isolada (seed em `/tmp`, `PORT=3002`): **todos PASS**, incluindo coerência (saldo cai após contrato, `recebidoHoje` sobe após pagamento, auditoria após ajuste, movimentação reversa no estorno, login novo/antigo na troca de senha, empresa + login do admin novo) e as **variações V1–V8** (pagamento que atravessa parcelas, quitar→`Finalizado`, estorno reverte, cliente 2 contratos → 2 linhas, ajuste de caixa absoluto, cross-tenant 404, super admin cross-empresa, token inválido 401).
+**Validado** — `scripts/smoke-api.mjs` executou **104 cenários** da base `07-CASOS-DE-USO-API.md` contra instância isolada (seed em `/tmp`, `PORT=3002`): **todos PASS**, incluindo coerência (saldo cai após contrato, `recebidoHoje` sobe após pagamento, auditoria após ajuste, movimentação reversa no estorno, login novo/antigo na troca de senha, empresa + login do admin novo), as **variações V1–V8**, os testes de **módulos/whitelabel** (MOD-091..096) e de **hierarquia/sócio** (SC-001..006 — subárvore, escopo por nível, acesso fora da subárvore → 404).
 
 **Cruzamento fluxos × API:** 06 ↔ 07 mapeados — sem endpoint órfão. Achados de coerência corrigidos: "resultado do dia" do operador é calculado no front (`recebidoHoje − aReceberHoje`, diferente do admin `entradas − saídas`), shape dos indicadores de `cobrancas` (5), 7 KPIs no mapeamento §1, `totalPeriodo` em `GET /gastos`, janela "a vencer" verificada.
 
