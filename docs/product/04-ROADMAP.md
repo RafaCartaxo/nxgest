@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 2.6
+**Versão:** 2.7
 
-**Última atualização:** 30/07/2026
+**Última atualização:** 03/08/2026
 
 ---
 
@@ -22,21 +22,29 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 
 | Camada | Qtde | Detalhes |
 |--------|------|----------|
-| Backend | 4 módulos | Cliente, Contrato, Pagamento, Operações |
-| Frontend | 10 telas | 4 módulos, 4 CRUDs, 1 Dashboard, 1 Fluxo Operacional |
-| Shared Components | 12 | Button, ButtonLink, Navbar, EstadoTela, ConfirmModal, Card, StatusBadge, ErrorBanner, SectionHeader, SearchBar, KpiCard, QuickActions, ErrorBoundary, FeedbackOverlay |
-| Module Components | 11 | ClienteInfo, SaldoInfo, ContratoInfo, ParcelaList, CobrancaList, IndicadoresCards, RotaCobrancaSection, PagamentosHojeModal, PagamentoModal, CobrancaCard, ClienteCard |
-| Documentação | ~50 arquivos | Foundation, Product, Engineering, Design, Plans, Skills, Tasks, Templates |
+| Backend | 10 módulos | health, auth, admin, empresas, cliente, contrato, pagamento, operações, caixa, gasto |
+| Frontend | 18 telas | 7 módulos (operacoes, cliente, contrato, auth, admin, caixa, gasto) |
+| Shared Components | 15 | Button, Card, Carousel, ConfirmModal, ErrorBanner, ErrorBoundary, EstadoTela, KpiCard, Modal, Navbar, QuickActions, SearchBar, SectionHeader, StatusBadge, SuccessState (+ FeedbackOverlay em `shared/feedback`) |
+| Module Components | 25 | ClienteInfo, SaldoInfo, ContratoInfo, ParcelaList, CobrancaList, IndicadoresCards, RotaCobrancaSection, PagamentosHojeModal, PagamentoModal, CobrancaCard, ClienteCard, ContratoCard, GastoForm, GastoList, OperadoresList, OperadorForm, EquipeModal, ContribuicaoModal, EmpresaForm, EmpresaList, ContratosSemanaModal, GastosPeriodoModal, PagamentosPeriodoModal, ParcelasHojeModal, RouteProgress |
+| Documentação | ~55 arquivos | Foundation, Product, Engineering, Design, Plans, Skills, Tasks, Templates |
 | Design System | 6 docs | UX, DESIGN-SYSTEM, COMPONENT-ARCHITECTURE, UI-COMPONENTS, TOKEN, UI-PATTERNS |
 
 ## O que não existe (planejado)
 
 | Módulo | BRs | Depende de |
 |--------|-----|------------|
-| Auth | BR-055 a BR-058, BR-066 a BR-071 | Fase 5.2a (PLAN-015), Fase 5.2b (PLAN-017) |
+| "Esqueci minha senha" | — | Backlog P020 (precisa de infra de e-mail) |
 | Mapa | — | Fase 5.3 |
 | PWA | — | Fase 5.4 |
 | Testes | — | Fase 5.5 |
+
+## O que foi entregue além do roadmap
+
+| Módulo | Onde |
+|--------|------|
+| Multi-Tenant (super admin + empresas) | Fase 5.7 (PLAN-019) |
+| Caixa e Gasto | Fase 4 (PLAN-014) |
+| Auditoria de caixa, modais, nomenclatura, estorno | Backlog → PLAN-026/027/028 |
 
 ## O que está inconsistente
 
@@ -554,6 +562,8 @@ A autenticação multi-usuário e o painel de administração são implementados
 - Frontend: LoginPage, AuthContext, ProtectedRoute, logout no Navbar
 - **Prioridade:** Média
 
+> **Pendência registrada (PLAN-015):** a "tela de perfil" (troca de senha pelo próprio usuário) foi **adiada** na implementação original — agora coberta pelo **PLAN-029** (BR-089/BR-090). "Esqueci minha senha" segue **fora de escopo** (backlog P020).
+
 #### 5.2b — Admin Panel + Permissões (PLAN-017)
 
 - Coluna `role` (`admin` / `operator`) na tabela `usuarios` (BR-066)
@@ -569,7 +579,7 @@ A autenticação multi-usuário e o painel de administração são implementados
 - `plans/PLAN-017-admin-panel.md` — Plano do painel de administração
 - `foundation/ADR-003-Auth-Autorizacao.md` — Decisão arquitetural do subsistema de auth
 
-#### 5.2c — Evoluções do painel admin (PLAN-020 a PLAN-026)
+#### 5.2c — Evoluções do painel admin (PLAN-020 a PLAN-030)
 
 **Status:** Concluído ✅
 
@@ -578,8 +588,10 @@ A autenticação multi-usuário e o painel de administração são implementados
 - **PLAN-023/024** — Ajustes pós-validação; página admin no padrão do sistema, usuário corrente na Equipe.
 - **PLAN-025** — Ajuste do Caixa Base **exclusivo de admin** (operador 403); contexto de empresa no super admin.
 - **PLAN-026** — Sprint 1 do backlog: auditoria de caixa (BR-088), `Modal` base compartilhado e nomenclatura Equipe/Administradores/Operadores.
+- **PLAN-029** — Senha e Perfil (troca de senha própria, `PATCH /api/auth/senha`, mostrar/ocultar no login).
+- **PLAN-030** — Visão da equipe no admin: KPIs de Operação com **totais da equipe** (BR-091), `GET /api/admin/equipe`, `ContribuicaoModal`, navbar com Administração/Empresas visíveis.
 
-Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019 pendentes).
+Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019, P020, P021 pendentes).
 
 ### 5.3 Visualização em mapa
 - Integração com Google Maps (já tem `maps.ts`)
@@ -594,9 +606,9 @@ Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019 pen
 - **Prioridade:** Média — melhor experiência mobile
 
 ### 5.5 Testes automatizados
-- Vitest para backend
-- React Testing Library para frontend
-- **Prioridade:** Média — cobertura atual = 0%
+- **API/backend:** `scripts/smoke-api.mjs` (91 cenários da `07` — validado 03/08/2026) ✅; testes unitários pendentes.
+- **UI/frontend:** **pendente (T1)** — Vitest + React Testing Library para as telas alteradas (login, perfil, admin/equipe, navbar); `npm test` hoje não encontra arquivos (exit 1).
+- **Prioridade:** Média — cobertura de UI atual = 0%
 
 ### 5.6 Endereço do Comércio + GPS
 - Separar endereço pessoal do endereço do comércio
@@ -635,9 +647,28 @@ Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019 pen
 ---
 
 ### 5.8 Testes automatizados
-- Vitest para backend
-- React Testing Library para frontend
-- **Prioridade:** Média — cobertura atual = 0%
+- **API:** `scripts/smoke-api.mjs` ✅ (91 cenários, validado 03/08)
+- **UI (pendente T1):** Vitest + React Testing Library — telas alteradas (login, perfil, admin/equipe, navbar); `npm test` sem arquivos hoje
+- **Prioridade:** Média — cobertura de UI atual = 0%
+
+---
+
+### 5.9 Perfil do usuário e senha (PLAN-029)
+
+**Status:** Concluído ✅
+
+**Objetivo:** completar o ciclo de autenticação adiado no PLAN-015 — o usuário vê e gerencia a própria senha.
+
+| Entrega | Detalhe |
+|---|---|
+| Mostrar/ocultar senha no login | Toggle Eye/EyeOff no campo senha (UC-041) |
+| Trocar a própria senha | `PATCH /api/auth/senha` — senha atual + nova (BR-089/090, UC-042) |
+| Seção "Meus dados" p/ todos os perfis | Perfil com dados + troca de senha; admin funde com a aba existente (UC-042) |
+| i18n | Chaves `auth.*`/`perfil.*` nos 3 idiomas |
+
+**Fora de escopo:** "esqueci minha senha" → backlog **P020** (sem infraestrutura de e-mail hoje; admin redefine via `PATCH /api/admin/operadores/:id`).
+
+**Regras:** `02-BUSINESS-RULES.md` BR-089, BR-090
 
 ---
 
@@ -686,7 +717,7 @@ A Fase 3 possui checklist próprio: `tasks/2026-07-03/CHECKLIST-FASE3.md`.
 - `foundation/ADR-001-Arquitetura.md` — Decisão arquitetural base
 - `foundation/ADR-002-Arquitetura-Front.md` — Decisão arquitetural do frontend
 - `foundation/ADR-003-Auth-Autorizacao.md` — Decisão arquitetural de auth + autorização
-- `engineering/05-MAPEAMENTO-TELAS.md` — Mapeamento das 12 telas
+- `engineering/05-MAPEAMENTO-TELAS.md` — Mapeamento das 18 telas
 - `engineering/design/02-DESIGN-SYSTEM.md` — Identidade visual
 - `engineering/design/03-COMPONENT-ARCHITECTURE.md` — Arquitetura de componentes
 - `engineering/design/04-UI-COMPONENTS.md` — Catálogo de componentes

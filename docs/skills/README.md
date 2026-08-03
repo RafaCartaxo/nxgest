@@ -14,6 +14,7 @@ Cada Skill possui uma responsabilidade única e complementa as demais, formando 
 | [SKILL-006](SKILL-006-bug-investigator.md) | Investigação de bugs |
 | [SKILL-007](SKILL-007-ux-reviewer.md) | Avaliação de UX e experiência do operador |
 | [SKILL-008](SKILL-008-release-reviewer.md) | Revisão de release e documentação final |
+| [SKILL-009](SKILL-009-documentation-sync.md) | Sincronização da documentação (fonte única de verdade + matriz de propagação + auditoria) |
 
 ## Fluxo recomendado
 
@@ -22,4 +23,5 @@ Cada Skill possui uma responsabilidade única e complementa as demais, formando 
 3. Revisar o código (SKILL-005)
 4. Validar a arquitetura (SKILL-002)
 5. Atualizar ou revisar a documentação (SKILL-001)
-6. Utilizar a SKILL-006 sempre que houver investigação de problemas ou comportamentos inesperados.
+6. **Manter a documentação sincronizada** (SKILL-009) — rodar `node scripts/audit-docs.mjs` e aplicar a matriz de propagação
+7. Utilizar a SKILL-006 sempre que houver investigação de problemas ou comportamentos inesperados.

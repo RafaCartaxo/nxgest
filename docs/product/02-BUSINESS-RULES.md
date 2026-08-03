@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.6
+**Versão:** 1.8
 
-**Última atualização:** 30/07/2026
+**Última atualização:** 03/08/2026
 
 ---
 
@@ -671,6 +671,20 @@ O super admin (ou um admin visualizando uma empresa via `?empresaId=`) mantém a
 
 Os KPIs de Equipe (`totalAdmins`, `totalOperadores`) permanecem sempre por empresa.
 
+> **~~BR-087~~ → **substituída pela BR-091 (PLAN-030)**: o escopo "do próprio admin" deixou de valer para os KPIs de Operação — ver BR-091.
+
+---
+
+## BR-091
+
+No painel admin, os **KPIs de Operação** (`totalClientes`, `contratosAtivos`, `recebidoHoje`) exibem o **total da equipe** — a soma de todos os usuários da empresa (admins + operadores + o próprio admin), independentemente de admin self ou contexto de empresa.
+
+- O **clique** em cada KPI abre um **modal de contribuição por operador** ("quanto cada um geriu"), e o clique em um operador navega para o `OperadorDetail` (preservando `?empresaId=` quando em contexto).
+- O KPI que antes se chamava "Resultado do Dia" passa a ser **"Recebido hoje"** (total do dia da equipe) — decomponível por operador (o modal usa `recebidoHoje` de cada usuário).
+- Os dados do próprio admin continuam acessíveis na aba **"Meus dados"** e nas telas operacionais normais.
+- Fonte dos dados: `GET /api/admin/equipe` (por operador + totais). Coerência: a soma dos operadores = total = agregado da empresa em `GET /api/admin/dashboard` (BR-087 revisado).
+- **Substitui a BR-087** para os KPIs de Operação.
+
 ---
 
 ## BR-088
@@ -678,6 +692,29 @@ Os KPIs de Equipe (`totalAdmins`, `totalOperadores`) permanecem sempre por empre
 Todo ajuste manual do Caixa Base (`POST /api/caixa/ajuste`) gera obrigatoriamente um registro na tabela `auditoria_caixa` — independentemente de o alvo ser outro operador ou o próprio admin. O registro armazena: `operadorId` (alvo), `adminId` (responsável autenticado), `valorAnterior`, `valorNovo`, `motivo` e data/hora.
 
 O campo `motivo` é **obrigatório** em todo ajuste (validação do schema, `min(1)`/`max(200)`). Nenhuma alteração manual do Caixa Base ocorre sem histórico.
+
+---
+
+# Autenticação — Senha (PLAN-029)
+
+## BR-089
+
+Todo usuário autenticado pode alterar a **própria senha**, informando a senha atual e a nova senha (mínimo 6 caracteres).
+
+Regras:
+- A senha atual deve ser validada — se incorreta, a alteração é rejeitada (422 `INVALID_CURRENT_PASSWORD`) e a senha não muda.
+- A nova senha é armazenada como hash (bcrypt) — nunca em texto puro.
+- O endpoint é autenticado (`PATCH /api/auth/senha`) e opera sempre sobre o `req.userId` (o usuário só altera a própria senha; `?usuarioId=` é ignorado).
+- O admin/super_admin continua podendo redefinir a senha de operadores via `PATCH /api/admin/operadores/:id` (UC-046) — fluxos independentes.
+- > **Decisão (PLAN-029):** senha atual incorreta responde **422** (e não 401) para não disparar o logout automático do cliente — o token continua válido.
+
+## BR-090
+
+Após a alteração da própria senha, o **token JWT atual permanece válido** (a sessão corrente não é revogada).
+
+- O novo hash passa a valer para os próximos logins.
+- Tokens já emitidos (até expiração de 7 dias — BR-058) continuam aceitos.
+- > **Decisão a validar na implementação (PLAN-029):** se a política futura exigir revogação de sessões, será necessária uma tabela/lista de tokens revogados — fora do escopo atual.
 
 ---
 
@@ -689,7 +726,8 @@ O campo `motivo` é **obrigatório** em todo ajuste (validação do schema, `min
 - ARCHITECTURE.md
 - CONVENTIONS.md
 - CASOS-DE-USO.md (validação por fluxo — o que deve acontecer e onde reflete)
+- CASOS-DE-USO-API.md (validação no nível de API — cenários de teste por endpoint)
 - ADR-001
-- PLAN-009-conceito-atendimento.md
 - PLAN-015-autenticacao.md
 - PLAN-017-admin-panel.md
+- PLAN-029-senha-perfil.md (BR-089/090 — troca de senha pelo próprio usuário)

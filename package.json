@@ -9,7 +9,10 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build": "tsc && cd frontend && npm run build",
     "start": "NODE_ENV=production node dist/main.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "docs:audit": "node scripts/audit-docs.mjs",
+    "docs:collection": "node scripts/build-collection.mjs",
+    "smoke:api": "node scripts/smoke-api.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

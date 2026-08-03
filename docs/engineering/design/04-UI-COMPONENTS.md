@@ -426,7 +426,7 @@ Separar visualmente grupos de conteúdo.
 
 # Modal
 
-**Status:** ✅ `Modal` (base compartilhado) + `PagamentoModal`, `ConfirmModal`, `PagamentosHojeModal`, `EquipeModal`, `ResultadoDiaModal`
+**Status:** ✅ `Modal` (base compartilhado) + `PagamentoModal`, `ConfirmModal`, `PagamentosHojeModal`, `EquipeModal`, `ContribuicaoModal`
 
 ## Objetivo
 
@@ -443,7 +443,7 @@ Executar fluxos secundários.
 - overflow do body oculto enquanto aberto;
 - `role="dialog"` + `aria-modal`.
 
-Os modais de domínio (`PagamentoModal`, `ConfirmModal`, `EquipeModal`, `ResultadoDiaModal`, `OperadorForm`) usam o base.
+Os modais de domínio (`PagamentoModal`, `ConfirmModal`, `EquipeModal`, `ContribuicaoModal`, `OperadorForm`) usam o base. *(PLAN-030: `ResultadoDiaModal` removido — sem usos.)*
 
 ---
 

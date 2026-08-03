@@ -22,7 +22,9 @@ Bem-vindo à documentação oficial do sistema de gestão de cobranças em campo
 1. Comece pelo [INDEX.md](INDEX.md) para visão geral completa
 2. Consulte o [ROADMAP.md](product/04-ROADMAP.md) para saber a fase atual
 3. Veja o [MAPEAMENTO-TELAS.md](engineering/05-MAPEAMENTO-TELAS.md) para as telas existentes
-4. Cada seção possui seu próprio README com a lista de documentos disponíveis
+4. Veja os casos de uso de validação: [fluxos](product/06-CASOS-DE-USO.md) e [API](product/07-CASOS-DE-USO-API.md)
+5. Para manter tudo alinhado (fonte única de verdade), use a [SKILL-009](skills/SKILL-009-documentation-sync.md) ou o comando `audita-docs`
+6. Cada seção possui seu próprio README com a lista de documentos disponíveis
 
 ## Convenções
 

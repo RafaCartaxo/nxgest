@@ -2,11 +2,13 @@
 
 **Status:** Em uso
 
-**Versão:** 1.0
+**Versão:** 1.1
 
-**Data:** 02/08/2026
+**Data:** 03/08/2026
 
 **Regras relacionadas:** `02-BUSINESS-RULES.md`
+
+> **Série de validação:** para os casos de uso no nível de **API** (request/response/coerência de retornos), ver `07-CASOS-DE-USO-API.md`. Este documento cobre os **fluxos** (o que o usuário faz na tela).
 
 ---
 
@@ -41,6 +43,8 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 **Ação:** acessa a tela inicial (`/`).
 
 **O que DEVE acontecer:** os 7 KPIs são exibidos (a receber hoje, recebido hoje, resultado do dia, clientes para cobrar, atrasado, a vencer, gastos hoje), todos consistentes com as listas que abrem ao clicar.
+
+> **"Resultado do dia" (semântica do operador):** é **calculado no front** como `recebidoHoje − aReceberHoje` (`OperacoesDashboard.tsx`), **não** vem da API e **não** é igual ao `resultadoDoDia` do painel admin (que é `entradas − saídas` de movimentações). Diferença documentada; ideia de "bônus" de pagamento a mais → backlog **P021**.
 
 **Conferências:**
 - [ ] Cada KPI corresponde à definição do backend (ex.: "atrasado" = saldo de parcelas vencidas antes de hoje)?
@@ -519,17 +523,19 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ### UC-023 — Acessar o painel admin
 
-**Ator:** admin
+**Ator:** admin / super_admin
 
-**Ação:** acessa `/admin`.
+**Ação:** acessa `/admin` (link "Administração" na Navbar — visível para admin/super_admin).
 
-**O que DEVE acontecer:** KPIs de equipe (Admins × Operadores) e de operação coerentes; navegação por KPI abre as listas corretas.
+**O que DEVE acontecer:** KPIs de Equipe (Admins × Operadores) e de Operação (Clientes, Contratos Ativos, Recebido Hoje) com **totais da equipe**; cada KPI de Operação abre o **modal de contribuição por operador** (BR-091).
 
 **Conferências:**
-- [ ] KPIs de equipe = contagens por role?
-- [ ] KPIs de operação batem com `/clientes`, `/contratos` e o caixa (admin self)?
+- [ ] KPIs de Equipe = contagens por role (BR-082)?
+- [ ] KPIs de Operação = **total da equipe** (soma dos operadores, BR-091), com subtítulo "da equipe · N operadores"?
+- [ ] Clique em Clientes/Contratos/Recebido hoje abre o modal de contribuição (não navega mais direto)?
+- [ ] "Administração" aparece visível na Navbar (não só na engrenagem)?
 
-**Regras:** BR-082, BR-087
+**Regras:** BR-082, BR-091
 
 ---
 
@@ -539,13 +545,50 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 **Ação:** na página admin, vê a lista de membros.
 
-**O que DEVE acontecer:** subseções **Administradores** e **Operadores**; usuário atual marcado com "(Eu)"; ordenação (admins no topo, depois operadores, alfabético).
+**O que DEVE acontecer:** subseções **Administradores** e **Operadores**; usuário atual marcado com "(Eu)"; ordenação (admins no topo, depois operadores, alfabético); clique em Admins/Operadores (KPIs de Equipe) abre o modal com stats e leva ao `OperadorDetail`.
 
 **Conferências:**
 - [ ] Admins e operadores em subseções separadas?
 - [ ] Usuário logado aparece com "(Eu)" e sem editar/remover no próprio card?
+- [ ] Modal de equipe mostra stats (clientes/contratos) por membro?
+- [ ] Clique no membro no modal → `OperadorDetail` (preservando `?empresaId=`)?
 
 **Regras:** BR-082
+
+---
+
+### UC-053 — Ver a contribuição da equipe por KPI
+
+**Ator:** admin / super_admin
+
+**Ação:** no painel admin, clica num KPI de Operação (Clientes, Contratos Ativos ou Recebido hoje).
+
+**O que DEVE acontecer:** abre o **modal de contribuição**: total no topo + cada operador com **quanto geriu** naquela métrica (clientes/contratos/recebido hoje), ordenado do maior para o menor; clique no operador → `OperadorDetail` (mesmo fluxo dos cards da lista).
+
+**Conferências:**
+- [ ] Modal mostra o total da equipe + a lista por operador?
+- [ ] Ordenação decrescente por contribuição?
+- [ ] Clique no operador leva ao detalhe dele, preservando o contexto (`?empresaId=`)?
+- [ ] KPI "Recebido hoje" = Σ recebido dos operadores (BR-091)?
+
+**Regras:** BR-091 · API: `GET /api/admin/equipe` (API-UC-042)
+
+---
+
+### UC-054 — Acessar a administração pela navbar
+
+**Ator:** admin / super_admin
+
+**Ação:** usa o link **"Administração"** (admin) ou **"Empresas"** (super_admin) direto na Navbar — sem depender da engrenagem.
+
+**O que DEVE acontecer:** o admin enxerga a parte administrativa sem "ficar cego"; o link leva a `/admin` (admin) ou `/admin/empresas` (super_admin).
+
+**Conferências:**
+- [ ] Link "Administração"/"Empresas" visível na Navbar para o perfil certo?
+- [ ] Operador **não** vê esses links?
+- [ ] Navegação funciona (e super_admin em `/admin` redireciona para `/admin/empresas`, BR-081)?
+
+**Regras:** BR-081
 
 ---
 
@@ -712,8 +755,274 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+# AUTENTICAÇÃO E ACESSO (todos os atores)
+
+> Estes casos cobrem o ciclo de autenticação (login, sessão, senha, acesso). Os cenários no nível de API estão em `07-CASOS-DE-USO-API.md` (API-UC-001.., API-CT-001..).
+
+### UC-039 — Login com credenciais válidas
+
+**Ator:** operador / admin / super_admin
+
+**Ação:** acessa `/login`, informa e-mail + senha corretos e clica em Entrar.
+
+**O que DEVE acontecer:** autentica e **roteia por perfil** (BR-081): `operator` → `/`, `admin` → `/admin`, `super_admin` → `/admin/empresas`.
+
+**Conferências:**
+- [ ] Cada perfil cai na rota certa após o login?
+- [ ] Token armazenado e sessão restaurada em recarga (sem re-login imediato)?
+- [ ] Navbar mostra o nome/engrenagem do usuário logado?
+
+**Regras:** BR-055, BR-058, BR-081
+
+---
+
+### UC-040 — Login com credenciais inválidas
+
+**Ator:** qualquer
+
+**Ação:** informa e-mail ou senha incorretos.
+
+**O que DEVE acontecer:** erro "E-mail ou senha inválidos." (401) sem expor qual campo falhou; após **10 tentativas no mesmo IP/15min**, retorna 429 "Muitas tentativas" (BR-077).
+
+**Conferências:**
+- [ ] Mensagem genérica (não diz se é e-mail ou senha)?
+- [ ] Usuário inexistente e senha errada retornam o mesmo erro?
+- [ ] 11ª tentativa → 429?
+- [ ] Erro de conexão (backend fora) mostra mensagem própria, não "inválidos"?
+
+**Regras:** BR-055, BR-077
+
+---
+
+### UC-041 — Mostrar/ocultar a senha no login
+
+**Ator:** operador / admin / super_admin
+
+**Ação:** no campo senha do login, clica no ícone de olho.
+
+**O que DEVE acontecer:** alterna o campo entre `type=password` e `type=text`, permitindo conferir a senha digitada.
+
+**Status:** ✅ **Implementado** (PLAN-029) — toggle Eye/EyeOff no campo senha do login.
+
+**Conferências:**
+- [ ] Ícone de olho no campo senha (login)?
+- [ ] Alternar mostra/oculta sem perder o valor digitado?
+- [ ] i18n nos 3 idiomas?
+
+**Regras:** — (UX)
+
+---
+
+### UC-042 — Trocar a própria senha
+
+**Ator:** operador / admin / super_admin
+
+**Ação:** na seção "Meus dados" (perfil), informa a senha atual + a nova e salva.
+
+**O que DEVE acontecer:** valida a senha atual (errada → erro), exige nova com mín. 6 caracteres, grava o novo hash (bcrypt) e mantém a sessão atual válida (BR-089/090).
+
+**Status:** ✅ **Implementado** (PLAN-029) — página Perfil (`/perfil`, todos os perfis) via `PATCH /api/auth/senha`.
+
+**Conferências:**
+- [ ] Senha atual errada → 422 (mensagem clara, sem deslogar)?
+- [ ] Senha nova < 6 caracteres → bloqueada?
+- [ ] Após trocar, login com a nova senha funciona e com a antiga falha?
+- [ ] Sessão atual continua válida após a troca (BR-090)?
+- [ ] Admin/operador/super_admin todos têm acesso à seção?
+
+**Regras:** BR-089, BR-090
+
+---
+
+### UC-043 — Logout
+
+**Ator:** operador / admin / super_admin
+
+**Ação:** abre a engrenagem do Navbar e clica em "Sair".
+
+**O que DEVE acontecer:** limpa o token, volta para `/login`; rotas protegidas ficam inacessíveis sem novo login.
+
+**Conferências:**
+- [ ] Token removido do localStorage?
+- [ ] Volta para `/login`?
+- [ ] Tentar acessar uma rota protegida depois → redireciona ao login?
+
+**Regras:** BR-058
+
+---
+
+### UC-044 — Sessão expirada
+
+**Ator:** operador / admin / super_admin
+
+**Ação:** deixa o token expirar (7 dias, BR-058) e faz uma requisição protegida.
+
+**O que DEVE acontecer:** a API responde 401; o frontend limpa o token e redireciona para `/login` (com aviso de sessão expirada se existir).
+
+**Conferências:**
+- [ ] 401 em token expirado/inválido?
+- [ ] Redireciona para `/login` sem tela quebrada?
+- [ ] Token soft-deleted (usuário removido) também é rejeitado?
+
+**Regras:** BR-058, BR-071
+
+---
+
+### UC-045 — Acesso negado (permissão)
+
+**Ator:** operador
+
+**Ação:** tenta acessar `/admin` ou chamar endpoint administrativo.
+
+**O que DEVE acontecer:** rota frontend protegida (`AdminRoute`) bloqueia/redireciona; qualquer endpoint `admin`/`caixa/ajuste`/`estornar` responde **403** para operador (BR-067, BR-079).
+
+**Conferências:**
+- [ ] Operador em `/admin` não vê conteúdo admin?
+- [ ] `GET /api/admin/operadores` com token de operador → 403?
+- [ ] `POST /api/caixa/ajuste` com operador → 403 (mesmo com `?usuarioId=`)?
+- [ ] `POST /api/pagamentos/:id/estornar` com operador → 403?
+
+**Regras:** BR-067, BR-069, BR-079
+
+---
+
+### UC-046 — Admin redefine a senha de um operador
+
+**Ator:** admin / super_admin
+
+**Ação:** edita um operador e preenche uma nova senha no campo (opcional na edição).
+
+**O que DEVE acontecer:** o novo hash é gravado (`PATCH /api/admin/operadores/:id`); a senha antiga deixa de funcionar; campo em branco mantém a senha atual.
+
+**Conferências:**
+- [ ] Campo senha é opcional na edição (em branco mantém)?
+- [ ] Nova senha ≥ 6 caracteres validada?
+- [ ] Operador logado não pode alterar a própria senha aqui (bloqueado/fora do escopo)?
+- [ ] Sessões ativas do operador-alvo? (decisão: token atual continua válido até expirar — registrar)
+
+**Regras:** BR-057, BR-067
+
+---
+
+# CASOS BÁSICOS COMPLEMENTARES (CRUD)
+
+> Cenários de edição/exclusão que complementam os casos de criação (UC-015/016) e o fluxo operacional. O nível de API de cada um está em `07-CASOS-DE-USO-API.md`.
+
+### UC-047 — Editar cliente
+
+**Ator:** operador
+
+**Ação:** abre `/clientes/:id/editar`, altera dados e salva.
+
+**O que DEVE acontecer:** valida CPF (duplicado **excluindo o próprio** → 409); dados históricos de contratos/pagamentos **não** mudam (BR-003).
+
+**Conferências:**
+- [ ] CPF duplicado de outro cliente → 409 com mensagem clara?
+- [ ] CPF próprio (sem alterar) não acusa duplicação?
+- [ ] Dados de contratos/pagamentos existentes intactos após edição?
+- [ ] Saldo/nome atualizam nas listas?
+
+**Regras:** BR-003, BR-036, BR-037, BR-043
+
+---
+
+### UC-048 — Excluir cliente
+
+**Ator:** operador
+
+**Ação:** tenta excluir um cliente.
+
+**O que DEVE acontecer:** cliente **com contratos ativos** é bloqueado (não exclui); sem contratos, é removido (soft delete) e some das listas.
+
+**Status:** ⚠️ **Backend existe** (`DELETE /api/clientes/:id`, `ClienteHasActiveContractsError`), **UI pendente** no `ClienteDetail` — reativar no PLAN-029/backlog.
+
+**Conferências (após implementar):**
+- [ ] Cliente com contrato ativo → bloqueio com mensagem?
+- [ ] Cliente sem contrato → excluído e some das listas?
+- [ ] Confirmação antes de excluir (ConfirmModal)?
+
+**Regras:** BR-017, BR-071
+
+---
+
+### UC-049 — Editar contrato (antes de pagamentos) / bloqueio
+
+**Ator:** operador
+
+**Ação:** abre `/contratos/:id/editar`.
+
+**O que DEVE acontecer:** sem pagamentos, pode alterar condições (juros, parcelas, valor, data) — parcelas antigas substituídas preservando histórico (BR-041); **com pagamentos**, tela de bloqueio (BR-006/BR-008).
+
+**Conferências:**
+- [ ] Sem pagamentos → edição liberada, parcelas recalculadas?
+- [ ] Com pagamentos → tela de bloqueio (aviso amarelo), sem formulário?
+- [ ] Histórico de parcelas antigas preservado (soft delete)?
+
+**Regras:** BR-006, BR-008, BR-041
+
+---
+
+### UC-050 — Excluir contrato
+
+**Ator:** operador
+
+**Ação:** no detalhe do contrato, clica em "Excluir" e confirma.
+
+**O que DEVE acontecer:** contrato **com pagamentos** é bloqueado; sem pagamentos, remove contrato + parcelas (soft delete) e gera **movimentação de entrada** (origem Cancelamento) devolvendo o `valorBase` ao caixa.
+
+**Reflexos de dados:** contratos (deletedAt) · parcelas (deletedAt) · movimentações (entrada/Cancelamento) · saldo do caixa.
+
+**Conferências:**
+- [ ] Com pagamentos → bloqueio?
+- [ ] Sem pagamentos → excluído e some da lista?
+- [ ] Movimentação de entrada (Cancelamento) aparece no caixa?
+- [ ] Saldo do caixa aumentou no valorBase?
+
+**Regras:** BR-019, BR-029
+
+---
+
+### UC-051 — Excluir gasto
+
+**Ator:** operador
+
+**Ação:** exclui um gasto registrado por engano.
+
+**O que DEVE acontecer:** remove o gasto (soft delete). **Nota:** não gera movimentação reversa — o caixa **não** é creditado de volta (comportamento atual a validar com Produto).
+
+**Status:** ⚠️ **Backend existe** (`DELETE /api/gastos/:id`), componente `GastoList` com `onDelete` **órfão** (nenhuma tela usa) — reativar no PLAN-029/backlog.
+
+**Conferências (após implementar):**
+- [ ] Gasto some da lista?
+- [ ] Movimentação original permanece no histórico (BR-032)?
+- [ ] Caixa/lucro não são alterados pela exclusão (decisão registrada)?
+
+**Regras:** BR-032
+
+---
+
+### UC-052 — Criar empresa (super admin)
+
+**Ator:** super_admin
+
+**Ação:** na lista de empresas (`/admin/empresas`), clica em "+ Nova Empresa", preenche nome + admin inicial e salva.
+
+**O que DEVE acontecer:** cria empresa **e** admin vinculado de forma **atômica** (BR-072); a nova empresa aparece na lista com o admin; duplicação de e-mail → 409.
+
+**Conferências:**
+- [ ] Empresa + admin criados juntos (ou nada)?
+- [ ] Nova empresa aparece na lista com stats zerados?
+- [ ] Login do novo admin funciona?
+- [ ] E-mail duplicado → 409?
+
+**Regras:** BR-072, BR-076
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)
 - `04-ROADMAP.md` — fases do produto
+- `07-CASOS-DE-USO-API.md` — casos de uso e cenários de teste da API (nível request/response)
 - PLANs de implementação (PLAN-020 a PLAN-028) — origem das funcionalidades
+- PLAN-029 — mostrar/ocultar senha, troca de senha e "Meus dados" (UC-041, UC-042)

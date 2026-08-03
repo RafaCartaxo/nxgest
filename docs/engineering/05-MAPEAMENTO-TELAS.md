@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.8
+**Versão:** 1.17
 
-**Última atualização:** 31/07/2026
+**Última atualização:** 03/08/2026
 
 ---
 
@@ -20,6 +20,8 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 |---|------|------|--------|------|
 | 1 | Central de Operações | `/` | operacoes | Dashboard |
 | 2 | Rota de Cobrança | `/rota` | operacoes | Operação |
+| 2b | Atendidos Hoje | `/atendidos` | operacoes | Lista |
+| 2c | Cobranças do Dia (Atrasos) | `/cobrancas` | operacoes | Lista |
 | 3 | Lista de Clientes | `/clientes` | cliente | Lista |
 | 4 | Novo Cliente | `/clientes/novo` | cliente | Formulário |
 | 5 | Detalhe do Cliente | `/clientes/:id` | cliente | Detalhe |
@@ -32,8 +34,14 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 12 | Administração | `/admin` | admin | Dashboard |
 | 13 | Super Admin (Empresas) | `/admin/empresas` | admin | Dashboard |
 | 14 | Admin em contexto de empresa | `/admin/empresas/:id` | admin | Dashboard |
+| 15 | Detalhe do Operador | `/admin/operadores/:id` | admin | Detalhe |
+| 16 | Caixa | `/caixa` | caixa | Dashboard |
+| 17 | Gastos | `/gastos` | gasto | Formulário |
+| 18 | Perfil (Meus dados) | `/perfil` | auth | Formulário |
 
-**Total:** 13 telas | 5 módulos | 37 componentes (12 shared + 3 feedback + 15 módulo + 2 domínio + 5 auth/admin)
+**Total:** 19 telas (páginas) · 20 rotas | 7 módulos | 45 componentes (15 shared + 2 feedback + 3 auth + 25 módulo)
+
+> **Nota de navegação:** esta tabela é o espelho das rotas de `frontend/src/App.tsx`. Qualquer rota nova (ou removida) exige atualizar esta tabela + a seção correspondente — ver `SKILL-009-documentation-sync.md`.
 
 ---
 
@@ -46,11 +54,12 @@ App
 │   ├── NavLink: Clientes (/clientes)
 │   ├── NavLink: Contratos (/contratos)
 │   ├── NavLink: Caixa (/caixa)
+│   ├── NavLink: Administração (/admin) [condicional: role=admin|super_admin] [PLAN-030]
+│   ├── NavLink: Empresas (/admin/empresas) [condicional: role=super_admin] [PLAN-030]
 │   ├── Engrenagem (dropdown de configurações):
-│   │   ├── Administração (/admin) [condicional: role=admin|super_admin]
-│   │   ├── Empresas (/admin/empresas) [condicional: role=super_admin]
+│   │   ├── Meus dados (/perfil) [PLAN-029]
 │   │   ├── Tema claro/escuro
-│   │   ├── Idioma (PT/EN/ES) [PLAN-022: movido da barra pra cá]
+│   │   ├── Idioma (PT/EN/ES)
 │   │   └── Sair
 │
 ├── [Shared Components]
@@ -79,14 +88,19 @@ App
     ├── LoginPage
     │   ├── Identidade visual (logo/nome do sistema)
     │   ├── Campo email
-    │   ├── Campo senha
+    │   ├── Campo senha (+ toggle mostrar/ocultar — Eye/EyeOff) [PLAN-029]
     │   └── Botão Entrar + feedback de erro
+    │
+    ├── PerfilPage
+    │   ├── Header (voltar, título "Meus dados")
+    │   ├── Card com dados do usuário (nome, e-mail, badge de role)
+    │   └── Formulário "Trocar senha" (senha atual, nova senha, confirmação) [PLAN-029]
     │
     ├── AdminPage
     │   ├── Contexto: header <h1> por nível — admin self: nome do usuário + badge Administrador; super admin (/admin/empresas/:id): nome da empresa + badge Super Admin [PLAN-022]
     │   ├── Redirect: super_admin em /admin → /admin/empresas
     │   ├── Bloco "Equipe": KPIs Admins × Operadores (KpiCard × 2)
-    │   ├── Bloco "Operação": Clientes, Contratos, Resultado do dia (KpiCard × 3) — com legenda "de {nome}" (escopo) e tooltip no Resultado do Dia [PLAN-022]
+    │   ├── Bloco "Operação": Clientes, Contratos Ativos, Recebido hoje (KpiCard × 3) — **totais da equipe** com subtítulo "da equipe · N"; clique → ContribuicaoModal (por operador) [PLAN-030 / BR-091]
     │   ├── Abas: Equipe (default) / Meus dados (admin)
     │   ├── SectionHeader ("Operadores" + botão Novo)
     │   ├── SearchBar (busca por nome/email)
@@ -110,6 +124,17 @@ App
     │   ├── PagamentoModal
     │   ├── Modal de Promessa (date picker)
     │   └── Modal de Comprovante (canvas + compartilhar)
+    │
+    ├── AtendidosPage
+    │   ├── Header (voltar, título, filtro Todos/Visitado/Não encontrado/Promessa/Pagos)
+    │   ├── CobrancaList (deduplicada: exclui clientes já pagos)
+    │   └── Bloco "Pagos Hoje" (PagamentoDoDia cards)
+    │
+    ├── CobrancaListPage
+    │   ├── Header (voltar, título)
+    │   ├── Banner resumo de atrasados (filtro `atrasado`)
+    │   ├── CobrancaCard por cliente
+    │   └── Histórico de atrasos (30 dias)
     │
     ├── ClienteList
     │   ├── Header (voltar, título, Novo Cliente)
@@ -154,14 +179,37 @@ App
     │   │   ├── PagamentoModal
     │   │   ├── ConfirmModal (exclusão)
     │
-    └── ContratoEdit
-        ├── Header (voltar, título)
-        ├── EstadoTela > Formulário
-        │   ├── Nome do cliente (display somente)
-        │   ├── Condições (valor, juros, parcelas, data início)
-        │   ├── Preview monetário
-        │   └── Botões (Salvar, Cancelar)
-        └── Tela de bloqueio (se houver pagamentos)
+    ├── ContratoEdit
+    │   ├── Header (voltar, título)
+    │   ├── EstadoTela > Formulário
+    │   │   ├── Nome do cliente (display somente)
+    │   │   ├── Condições (valor, juros, parcelas, data início)
+    │   │   ├── Preview monetário
+    │   │   └── Botões (Salvar, Cancelar)
+    │   └── Tela de bloqueio (se houver pagamentos)
+    │
+    ├── CaixaPage
+    │   ├── Header (voltar, título, Liquidar semana)
+    │   ├── KPIs "Hoje" (a receber hoje, recebido semana, cobrado hoje)
+    │   ├── KPIs "Semana" (vendas, gastos, resultado — com navegação de semana)
+    │   ├── KPIs "Caixa" (lucro, saldo atual, caixa base + último fechamento)
+    │   ├── Bloco "Histórico de ajustes" (auditoria)
+    │   ├── Bloco "Movimentações" (entrada/saída, origem, cliente, categoria)
+    │   ├── Bloco "Ajustar caixa" (condicional: admin/super_admin)
+    │   └── Modais: ParcelasHojeModal, PagamentosHojeModal, PagamentosPeriodoModal, ContratosSemanaModal, GastosPeriodoModal, ConfirmModal (liquidação)
+    │
+    ├── GastoPage
+    │   ├── Header (voltar, título)
+    │   └── GastoForm (valor, categoria, data, observações)
+    │
+    ├── OperadorDetail
+    │   ├── Header (voltar, nome do operador, badge de role)
+    │   ├── E-mail do operador
+    │   ├── KPIs "Dados do operador" (total clientes, contratos ativos)
+    │   ├── KPIs "Caixa do operador" (caixa base, saldo, lucro, a receber, recebido)
+    │   ├── Bloco "Ajustar caixa base do operador" (valor + motivo)
+    │   ├── Bloco "Histórico de ajustes"
+    │   └── Bloco "Contratos do operador" (list-item → modo admin somente leitura)
 ```
 
 ---
@@ -181,9 +229,12 @@ App
 │ [Erro banner - condicional]       │
 │                                  │
 │ ┌──────┬──────┬──────┬──────┐   │
-│ │A Rec.│Receb.│Client│Result│   │  ← IndicadoresCards
-│ │ azul │verde │ambar │cinza │   │
+│ │A Rec.│Receb.│Client│Result│   │  ← IndicadoresCards (7 KPIs: aReceberHoje, recebidoHoje,
+│ │ azul │verde │ambar │cinza │   │     clientesParaCobrar, resultadoDoDia, atrasado, aVencer, gastosHoje)
 │ └──────┴──────┴──────┴──────┘   │
+│   ┌──────┬──────┬──────┐         │
+│   │Atras.│A Vinc│Gastos│         │  ← KPIs restantes (navegam /cobrancas, parcelas-semana, gastos)
+│   └──────┴──────┴──────┘         │
 │                                  │
 │ ┌──────────────────────────────┐ │
 │ │ 📍 Rota de Cobrança  [Start]│ │  ← RotaCobrancaSection
@@ -644,6 +695,46 @@ App
 
 ---
 
+## 18. Perfil (Meus dados)
+
+**Arquivo:** `frontend/src/modules/auth/pages/PerfilPage.tsx` · Rota `/perfil` · Acessível a **todos os perfis** (PLAN-029)
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────┐
+│ ← Meus dados                     │  ← Header
+├──────────────────────────────────┤
+│ ┌──────────────────────────────┐ │
+│ │ Nome do Usuário    [Operador]│ │  ← Card + StatusBadge de role
+│ │ usuario@empresa.com          │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ Trocar senha (h2)                │
+│ Senha atual *     [___________]  │
+│ Nova senha *      [___________]  │
+│ Confirmar senha*  [___________]  │
+│                                  │
+│ [Salvar]                         │
+└──────────────────────────────────┘
+```
+
+**Aderência ao Design System:**
+
+| Regra | Status | Observação |
+|-------|--------|------------|
+| Header | ✅ `< Back Título` | |
+| Cards | ✅ `border p-4` sem sombra | |
+| Inputs | ✅ Padrão com focus ring + erro `text-red-500` | |
+| Feedback | ✅ `useFeedback().run()` no salvamento | |
+| Acessibilidade | ✅ `autoComplete` (current/new-password) | |
+| i18n | ✅ `perfil.*` (pt-BR, en, es) | |
+
+**Comportamento:**
+- Troca de senha via `PATCH /api/auth/senha` (BR-089/090): valida a senha atual (422 se incorreta, sem deslogar), exige nova ≥ 6 caracteres e diferente da atual; sessão atual permanece válida após a troca.
+- Acesso pelo menu da engrenagem do Navbar; para o admin, também a partir da aba "Meus dados" do painel (`/admin`).
+
+---
+
 ## 12. Administração
 
 **Arquivo:** `frontend/src/modules/admin/pages/AdminPage.tsx`
@@ -660,8 +751,8 @@ App
 │ └────────┴────────┘            ││
 │ ┌── Operação ─────────────────┐│
 │ ┌────────┬────────┬──────────┐││
-│ │Clientes│Contr At│ Resultado│││  ← KpiCard × 3 (clique, admin self)
-│ │   45   │   12   │   R$     │││     → /clientes, /contratos, ResultadoDiaModal
+│ │Clientes│Contr At│ Recebido │││  ← KpiCard × 3 (totais da equipe — BR-091)
+│ │   45   │   12   │   R$     │││     clique → ContribuicaoModal (por operador)
 │ └────────┴────────┴──────────┘││
 │                                  │
 │ Operadores           + Novo Op.  │  ← SectionHeader
@@ -684,20 +775,22 @@ Modal EquipeModal (clique em Admins/Operadores):
 ┌──────────────────────────────────┐
 │ Administradores / Operadores     │
 ├──────────────────────────────────┤
-│ [Admin Joao]  [Administrador]    │  ← lista filtrada por role
+│ [Admin Joao]  [Administrador]    │  ← lista filtrada por role + stats
+│   15 clientes · 4 contratos   → │     (clique → OperadorDetail)
 │ [Maria Op]    [Operador]         │
 │                                  │
 │ [Fechar]                         │
 └──────────────────────────────────┘
 
-Modal ResultadoDiaModal (clique em Resultado do Dia):
+Modal ContribuicaoModal (clique num KPI de Operação):
 ┌──────────────────────────────────┐
-│ Resultado do Dia                 │
+│ Clientes por operador            │  ← ou Contratos/Recebido hoje
 ├──────────────────────────────────┤
-│ Entradas  R$ X  ·  Saídas R$ Y   │
-│ Resultado: R$ Z                  │
-│ [lista de movimentações de hoje] │
-│                                  │
+│ Total: 45                        │  ← totais da equipe (BR-091)
+│ ┌──────────────────────────────┐ │
+│ │ Maria Op   [Operador]    30 →│ │  ← cada operador: quanto geriu
+│ │ Admin Joao [Admin]       15 →│ │     (clique → OperadorDetail)
+│ └──────────────────────────────┘ │
 │ [Fechar]                         │
 └──────────────────────────────────┘
 
@@ -723,19 +816,162 @@ Modal OperadorForm (criação/edição):
 | Redirect | ✅ super_admin em `/admin` → `/admin/empresas` | BR-081 |
 | KPIs | ✅ Reusa `KpiCard` em blocos com `SectionHeader` (Equipe / Operação) | PLAN-021 |
 | Contagem | ✅ Admins (role admin) × Operadores (role operator) separados | BR-082 |
-| KPIs clicáveis | ✅ Equipe abre `EquipeModal`; Clientes/Contratos navegam (admin self); Resultado do Dia abre `ResultadoDiaModal` | PLAN-024 |
-| Escopo KPIs Operação | ✅ Admin self → por `req.userId`; super admin → por empresa (sem clique) | PLAN-024 / BR-087 |
+| KPIs clicáveis | ✅ Equipe abre `EquipeModal` (com stats + navegação ao operador); KPIs de Operação abrem `ContribuicaoModal` (por operador) | PLAN-024 / PLAN-030 |
+| Escopo KPIs Operação | ✅ **Total da equipe** (admins + operadores + próprio), subtítulo "da equipe · N"; dados via `GET /api/admin/equipe` | PLAN-030 / BR-091 |
 | Abas | ✅ Equipe (default) / Meus dados (admin) | PLAN-020 |
 | Busca | ✅ `SearchBar` com placeholder i18n | |
 | Cards | ✅ `Card.Root list-item` com Header (`flex-wrap`)/Body/Actions; admins no topo (role rank + nome) | PLAN-024 |
 | Usuário corrente | ✅ Card do próprio usuário com tag "Eu" (`StatusBadge success`), sem Editar/Remover | PLAN-024 |
 | Status | ✅ `StatusBadge`: admin=info, operator=neutral, Eu=success | |
 | Formulário | ✅ `react-hook-form` + `zod` + `useFeedback().run()` | |
-| Modal | ✅ `ConfirmModal` para remoção de operador; `EquipeModal`/`ResultadoDiaModal` no padrão `PagamentosHojeModal` | |
+| Modal | ✅ `ConfirmModal` para remoção de operador; `EquipeModal`/`ContribuicaoModal` no padrão `Modal` base | PLAN-026 / PLAN-030 |
 | QuickActions | ✅ Variantes `blue`/`green`/`gray`/`warning`/`danger` (vermelho no remover) | PLAN-024 |
 | Estados | ✅ `EstadoTela` (loading/empty/error) na lista | |
 | Restrições | ✅ Admin não remove a si mesmo; não rebaixa o próprio role | BR-069, BR-070 |
 | i18n | ✅ `admin.*` (pt-BR, en, es) | |
+
+---
+
+## 14. Caixa
+
+**Arquivo:** `frontend/src/modules/caixa/pages/CaixaPage.tsx` · Rota `/caixa`
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────┐
+│ ← Caixa        [Liquidar semana ›]│  ← Header
+├──────────────────────────────────┤
+│ Hoje (h2)                        │
+│ ┌────────┬────────┬────────┐    │
+│ │A Rec.  │Receb.  │Cobrado │    │  ← KpiCard: aReceberHoje / recebidoSemana / recebidoHoje (clicáveis)
+│ │ Hoje   │Semana  │ Hoje   │    │
+│ └────────┴────────┴────────┘    │
+│                                  │
+│ ‹ Semana ›   DD/MM a DD/MM       │  ← Navegação de semana
+│ ┌────────┬────────┬────────┐    │
+│ │Vendas  │Gastos  │Result. │    │  ← KpiCard: vendasSemana / gastosSemana / resultadoSemana
+│ └────────┴────────┴────────┘    │
+│                                  │
+│ Caixa (h2)                       │
+│ ┌────────┬────────┬────────┐    │
+│ │ Lucro  │Saldo   │Caixa   │    │  ← KpiCard: lucro / saldoAtual / caixaBase
+│ └────────┴────────┴────────┘    │
+│                                  │
+│ [Registrar Gasto]                 │  ← Button → /gastos
+│                                  │
+│ Histórico de ajustes (h2)         │
+│ R$ ant → R$ novo · por X · motivo│  ← auditoria_caixa
+│                                  │
+│ Movimentações (h2)                │
+│ + R$ · Pagamento · Cliente        │  ← lista movimentações (origem/badge Estorno/categoria)
+│                                  │
+│ Ajustar caixa (h2, admin only)    │
+│ [R$ valor] [Ajustar]              │
+│ [motivo obrigatório]              │
+└──────────────────────────────────┘
+```
+
+**Aderência ao Design System:**
+
+| Regra | Status | Observação |
+|-------|--------|------------|
+| Header `< Back Título [Ação]` | ✅ Back + título + ação "Liquidar semana" | |
+| KPI cards | ✅ `KpiCard` (blue/green/yellow/gray) | |
+| Modais | ✅ Padrão `Modal` base + `ConfirmModal` na liquidação | |
+| Feedback | ✅ `useFeedback().run()` em ajuste/liquidação | |
+| Skeleton loading | ✅ `animate-pulse` em todos os blocos | |
+| Formatação financeira | ✅ `formatCurrency` / `maskMonetario` | |
+| Ajuste exclusivo admin | ✅ `canAdjust` = role admin/super_admin (BR-079) | |
+
+**Comportamento:**
+- KPIs "Hoje" e "Semana" abrem modais de composição (ParcelasHojeModal, PagamentosHojeModal, PagamentosPeriodoModal, ContratosSemanaModal, GastosPeriodoModal).
+- Navegação de semana (`semanaOffset`) recalcula `dataInicio`/`dataFim` e recarrega os indicadores semanais.
+- "Histórico de ajustes" vem de `GET /api/caixa/auditoria` (BR-088) — visível também ao operador (apenas o próprio histórico).
+- "Ajustar caixa" só para admin/super_admin; motivo obrigatório.
+
+---
+
+## 15. Gastos
+
+**Arquivo:** `frontend/src/modules/gasto/pages/GastoPage.tsx` · Rota `/gastos`
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────┐
+│ ← Gastos                         │  ← Header (sem ação à direita)
+├──────────────────────────────────┤
+│ Total de gastos hoje (legenda)   │
+│                                  │
+│ Novo gasto (h2)                  │
+│ Valor *      [R$ ____]           │
+│ Categoria *  [Selecione ▾]       │  ← GastoForm
+│ Data *       [____]              │
+│ Observações  [____________]      │
+│                                  │
+│ [Salvar]  [Cancelar]             │
+└──────────────────────────────────┘
+```
+
+**Aderência ao Design System:**
+
+| Regra | Status | Observação |
+|-------|--------|------------|
+| Header | ✅ `< Back Título` (sem ação - OK para forms) | |
+| Formulário | ✅ `GastoForm` com validação por schema (`gasto.schema.ts`) | |
+| Categorias | ✅ Ícones por categoria (`CATEGORIA_ICONES`) | |
+| Feedback | ✅ `useFeedback()` no salvamento | |
+| Navegação | ✅ Salvar → volta (`navigate(-1)`) | |
+
+**Comportamento:**
+- Registra gasto → movimentação de saída (origem Gasto) + reduz saldo/lucro (BR-028).
+- `GastoList.tsx` (componente de listagem com exclusão) existe mas **não é usado** em nenhuma tela — UC-051 pendente de reativação (backend `DELETE /api/gastos/:id` já existe).
+
+---
+
+## 16. Detalhe do Operador
+
+**Arquivo:** `frontend/src/modules/admin/pages/OperadorDetail.tsx` · Rota `/admin/operadores/:id`
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────┐
+│ ← Nome do Operador      [Role]   │  ← Header + StatusBadge (admin=info, operator=neutral)
+├──────────────────────────────────┤
+│ E-mail: op@empresa.com           │
+│                                  │
+│ Dados do operador (h2)           │
+│ ┌──────────┬──────────┐         │
+│ │ Clientes │ Contr.Atv│         │  ← KpiCard totalClientes / contratosAtivos
+│ └──────────┴──────────┘         │
+│                                  │
+│ Caixa do operador (h2)           │
+│ ┌──────┬──────┬──────┬──────┐   │
+│ │Caixa │Saldo │Lucro │...   │   │  ← KpiCard caixa (via ?usuarioId=)
+│ └──────┴──────┴──────┴──────┘   │
+│                                  │
+│ Ajustar caixa base (h2)          │
+│ [R$ valor] [Ajustar]  [motivo]   │  ← grava no operador-alvo (BR-078/088)
+│                                  │
+│ Histórico de ajustes (h2)         │
+│                                  │
+│ Contratos do operador (h2)        │
+│ Cliente · N/N parcelas  [→]      │  ← Card.Root list-item → /contratos/:id?usuarioId=
+└──────────────────────────────────┘
+```
+
+**Aderência ao Design System:**
+
+| Regra | Status | Observação |
+|-------|--------|------------|
+| Header | ✅ `< Back Nome [badge]` | |
+| KPI cards | ✅ `KpiCard` | |
+| Contratos | ✅ `Card.Root` list-item com `Card.Actions` | |
+| EstadoTela | ✅ Loading/Error/Empty | |
+| Feedback | ✅ `useFeedback()` no ajuste | |
+
+**Comportamento:**
+- Ajuste de caixa grava no operador-alvo via `?usuarioId=` (BR-078), com `motivo` obrigatório e auditoria (BR-088).
+- Contratos abrem em **modo admin somente leitura** (`/contratos/:id?usuarioId=&empresaId=`) — sem editar/excluir/pagar; única ação é **Estornar** pagamento (P013 fatia 1, PLAN-028).
 
 ---
 
@@ -872,6 +1108,9 @@ Ao implementar uma nova tela, verificar:
 | 02/08/2026 | 1.12 | PLAN-026: Modal base compartilhado (Escape/backdrop configurável) e modais refatorados; OperadoresList com subseções Administradores/Operadores; auditoria de caixa (P014) |
 | 02/08/2026 | 1.13 | PLAN-027: Histórico de ajustes do Caixa Base no OperadorDetail (admin) e no /caixa (operador) — endpoint GET /api/caixa/auditoria |
 | 02/08/2026 | 1.14 | PLAN-028: Estorno de pagamento no ContratoDetail (modo admin, somente leitura) + contratos do operador no OperadorDetail |
+| 03/08/2026 | 1.15 | Tabela com as 18 telas reais (adicionadas Atendidos 2b, Cobranças 2c, Caixa 14, Gastos 15, OperadorDetail 16); contagem corrigida; seções §14-16 documentadas; árvore de componentes atualizada |
+| 03/08/2026 | 1.16 | PLAN-029: tela Perfil (Meus dados) §18 + toggle mostrar/ocultar senha no login (§11) — troca de senha por todos os perfis |
+| 03/08/2026 | 1.17 | PLAN-030: KPIs de Operação do admin com **totais da equipe** (BR-091) + `ContribuicaoModal` por operador; `EquipeModal` com stats e navegação ao operador; navbar com links "Administração"/"Empresas" visíveis |
 
 # Referências
 
@@ -884,3 +1123,6 @@ Ao implementar uma nova tela, verificar:
 - `design/04-UI-COMPONENTS.md` — Catálogo de componentes da UI
 - `design/06-UI-PATTERNS.md` — Padrões de composição e anti-patterns
 - `03-FRONTEND.md` — Arquitetura do frontend
+- `product/06-CASOS-DE-USO.md` — casos de uso de validação por fluxo
+- `product/07-CASOS-DE-USO-API.md` — casos de uso e cenários de teste da API
+- `skills/SKILL-009-documentation-sync.md` — matriz de propagação (mudou tela → atualize este doc)

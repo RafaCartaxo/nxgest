@@ -45,7 +45,12 @@ npm run dev:frontend     # só frontend (Vite)
 npm run build            # tsc (backend) + vite build (frontend)
 npm start                # produção local (Node serve API + frontend estático)
 npm test                 # vitest
+npm run docs:audit       # auditoria de consistência da documentação (SKILL-009)
+npm run docs:collection  # regenera docs/api-collection.json
+npm run smoke:api        # executa os cenários da 07 (requer instância isolada; ver 07 "Como executar")
 ```
+
+> **Documentação alinhada (SKILL-009):** após qualquer mudança de código, rodar `npm run docs:audit` e aplicar a matriz de propagação — ver `docs/skills/SKILL-009-documentation-sync.md`.
 
 ## Diagnóstico de ambiente — checar antes de culpar o código
 

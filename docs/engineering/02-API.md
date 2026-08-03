@@ -568,6 +568,8 @@ Permitido apenas quando não há pagamentos registrados.
 |---------|----------|-----------|
 | GET | `/api/operacoes/cobrancas` | Listar cobranças do dia |
 | GET | `/api/operacoes/pagamentos-hoje` | Listar pagamentos do dia |
+| GET | `/api/operacoes/parcelas-hoje` | Listar parcelas que vencem hoje (agrupadas por cliente/contrato) |
+| GET | `/api/operacoes/parcelas-semana` | Listar parcelas que vencem nos próximos 7 dias (excluindo hoje) |
 | GET | `/api/operacoes/historico-atrasos` | Listar histórico diário de atrasos (snapshots) |
 | POST | `/api/operacoes/visitas` | Registrar visita operacional do dia |
 
@@ -592,7 +594,9 @@ Lista todas as cobranças previstas para o dia atual, com indicadores financeiro
     "indicadores": {
         "aReceberHoje": 1250.00,
         "recebidoHoje": 480.00,
-        "clientesParaCobrar": 8
+        "clientesParaCobrar": 8,
+        "atrasado": 340.00,
+        "aVencer": 890.00
     },
     "cobrancas": [
         {
@@ -644,6 +648,59 @@ Lista todos os pagamentos registrados na data atual.
     }
 ]
 ```
+
+---
+
+# GET /api/operacoes/parcelas-hoje
+
+Lista as parcelas que vencem **hoje** e ainda têm saldo pendente, agrupadas por cliente/contrato.
+
+## Response 200
+
+```json
+[
+    {
+        "clienteId": "...",
+        "clienteNome": "João Silva",
+        "contratoId": "...",
+        "parcelas": [
+            { "numero": 1, "valorPrevisto": 120.00, "saldoPendente": 120.00 }
+        ]
+    }
+]
+```
+
+## Comportamento
+
+- Filtro: `dataVencimento = hoje`, `saldoPendente > 0`, tudo sem `deletedAt`
+- Agrupado por `clienteId` + `contratoId` (um cliente com 2 contratos aparece 2x)
+- Alimenta o modal "Parcelas hoje" (KPI "a receber hoje") do `/caixa`
+
+---
+
+# GET /api/operacoes/parcelas-semana
+
+Lista as parcelas que vencem nos próximos **7 dias** (excluindo hoje) com saldo pendente, agrupadas por cliente/contrato.
+
+## Response 200
+
+```json
+[
+    {
+        "clienteId": "...",
+        "clienteNome": "João Silva",
+        "contratoId": "...",
+        "parcelas": [
+            { "numero": 2, "valorPrevisto": 120.00, "saldoPendente": 120.00 }
+        ]
+    }
+]
+```
+
+## Comportamento
+
+- Filtro: `dataVencimento > hoje AND dataVencimento <= hoje+7`, `saldoPendente > 0`, sem `deletedAt`
+- **Exclui hoje** — parcelas que vencem hoje pertencem a `parcelas-hoje`/`cobrancas` (UC-038)
 
 ---
 
@@ -1286,6 +1343,7 @@ Remove um gasto (soft delete). Não estorna o caixa — o histórico é preserva
 |---------|----------|------|-----------|
 | POST | `/api/auth/login` | Não | Autenticar e receber JWT |
 | GET | `/api/auth/me` | Sim | Dados do operador logado |
+| PATCH | `/api/auth/senha` | Sim | Alterar a própria senha (BR-089/090) — PLAN-029 |
 
 > **Registro de operadores:** Movido para o [Módulo Admin](#módulo-admin) — `POST /api/admin/operadores`.
 
@@ -1329,7 +1387,9 @@ Autentica um operador e retorna token JWT.
 | Código | HTTP |
 |---------|------|
 | CREDENCIAIS_INVALIDAS | 401 |
-| VALIDATION_ERROR | 422 |
+| VALIDATION_ERROR | 400 |
+
+> **Rate limit (BR-077):** 10 tentativas por IP a cada 15 minutos → 429. O limite pode ser sobrescrito por env `LOGIN_RATE_LIMIT_MAX` (default 10) — usado em ambientes de teste/smoke.
 
 ---
 
@@ -1490,7 +1550,7 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
 | Código | HTTP |
 |---------|------|
 | EMAIL_DUPLICATED | 409 |
-| VALIDATION_ERROR | 422 |
+| VALIDATION_ERROR | 400 |
 
 ---
 
@@ -1510,10 +1570,60 @@ Gestão de operadores e dashboard consolidado. Acesso para administradores (`rol
 | PATCH | `/api/admin/operadores/:id` | Admin / Super Admin | Editar operador (nome, email, role, senha) |
 | DELETE | `/api/admin/operadores/:id` | Admin / Super Admin | Remover operador (soft-delete) |
 | GET | `/api/admin/dashboard` | Admin / Super Admin | KPIs consolidados (filtrados por empresa) |
+| GET | `/api/admin/equipe` | Admin / Super Admin | Equipe com contribuição por operador + totais (PLAN-030) |
+
+---
+
+# GET /api/admin/equipe
+
+Retorna a **equipe da empresa com contribuição por operador** e os totais — alimenta o drill-down dos KPIs de Operação do painel admin (BR-091). A soma dos operadores é igual ao agregado da empresa (`GET /api/admin/dashboard`).
+
+**Auth:** Admin / Super Admin
+
+## Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| empresaId | string | Super Admin: sim · Admin: ignorado | Empresa-alvo (super admin); admin usa a própria empresa do token |
+
+## Response 200
+
+```json
+{
+    "operadores": [
+        {
+            "id": "a1b2c3d4-...",
+            "nome": "Maria Op",
+            "email": "maria.nx@uorak.com",
+            "role": "operator",
+            "totalClientes": 30,
+            "contratosAtivos": 8,
+            "recebidoHoje": 480.00
+        }
+    ],
+    "totais": {
+        "totalClientes": 45,
+        "contratosAtivos": 12,
+        "recebidoHoje": 480.00
+    }
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| FORBIDDEN | 403 (operator) |
+| VALIDATION_ERROR | 400 (super admin sem `empresaId`) |
+| INTERNAL_ERROR | 500 |
+
+---
 
 # GET /api/admin/dashboard
 
 KPIs consolidados. Comportamento por nível (PLAN-024 / BR-087):
+
+> **Nota (PLAN-030 / BR-091):** o painel admin usa os KPIs de Operação vindos de `GET /api/admin/equipe` (total da equipe + drill-down). O `/dashboard` permanece disponível (e ainda é a fonte dos KPIs de Equipe — `totalAdmins`/`totalOperadores`).
 
 - **Admin self** (sem `?empresaId=`): KPIs de Operação (`totalClientes`, `contratosAtivos`, `recebidoHoje`, `resultadoDoDia`) escopados aos dados do **próprio usuário logado** (`req.userId`), coincidindo com `/clientes`, `/contratos` e o caixa. KPIs de Equipe permanecem por empresa.
 - **Super admin** sem `empresaId`: agregado de todas as empresas.
@@ -1575,3 +1685,78 @@ KPIs consolidados. Comportamento por nível (PLAN-024 / BR-087):
 | BR-085 | Contratos ativos (KPIs admin/empresa) contam apenas `estado = 'Ativo'`; `Finalizado`/`Cancelado` não entram |
 | BR-087 | Dashboard admin self escopado por `req.userId` nos KPIs de Operação (bate com navegação `/clientes`, `/contratos`); super admin mantém visão agregada de empresa |
 | BR-088 | Todo ajuste do Caixa Base (`POST /api/caixa/ajuste`) grava registro em `auditoria_caixa` (operador, admin, valor anterior/novo, motivo, data); `motivo` é obrigatório. Histórico consultável via `GET /api/caixa/auditoria` (PLAN-027) |
+
+---
+
+# Módulo Health
+
+Health check público — usado pelo runbook e pelo `ops-runner` para validar o serviço.
+
+## Endpoints
+
+| Método | Endpoint | Auth | Descrição |
+|---------|----------|------|-----------|
+| GET | `/api/health` | Não | Health check (status do serviço + conexão com o banco) |
+
+---
+
+# GET /api/health
+
+## Response 200
+
+```json
+{
+    "status": "ok",
+    "db": "connected"
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| INTERNAL_ERROR | 500 (banco indisponível) |
+
+---
+
+# PATCH /api/auth/senha
+
+Altera a **própria senha** do usuário autenticado (BR-089/BR-090). Opera sempre sobre o `req.userId` — `?usuarioId=` é ignorado.
+
+**Auth:** Sim (Bearer)
+
+## Request
+
+```json
+{
+    "senhaAtual": "teste123!",
+    "novaSenha": "novaSenha123"
+}
+```
+
+## Validações
+
+| Campo | Obrigatório | Regra |
+|--------|------------|-------|
+| senhaAtual | Sim | Deve corresponder à senha atual do usuário |
+| novaSenha | Sim | Mínimo 6 caracteres e diferente da atual |
+
+## Response 200
+
+```json
+{
+    "ok": true
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| INVALID_CURRENT_PASSWORD | 422 |
+| VALIDATION_ERROR | 400/422 |
+| UNAUTHORIZED | 401 |
+
+> **Nota (PLAN-029):** senha atual incorreta responde **422** (não 401) para não disparar o logout automático do cliente. Após a troca, o token atual permanece válido (BR-090).
+
+---

@@ -12,11 +12,12 @@
 
 - [00-PROJECT.md](product/00-PROJECT.md) — Visão do produto, escopo, funcionalidades e premissas
 - [01-DOMAIN.md](product/01-DOMAIN.md) — Entidades, responsabilidades, relacionamentos e estados
-- [02-BUSINESS-RULES.md](product/02-BUSINESS-RULES.md) — Regras de negócio (BR-001 a BR-077)
+- [02-BUSINESS-RULES.md](product/02-BUSINESS-RULES.md) — Regras de negócio (BR-001 a BR-090)
 - [03-PRD.md](product/03-PRD.md) — Product Requirements Document
-- [04-ROADMAP.md](product/04-ROADMAP.md) — Roadmap do produto (v2.6, Fases 0-5)
+- [04-ROADMAP.md](product/04-ROADMAP.md) — Roadmap do produto (v2.7, Fases 0-5)
 - [05-CONVENTIONS.md](product/05-CONVENTIONS.md) — Convenções de código e nomenclatura
-- [06-CASOS-DE-USO.md](product/06-CASOS-DE-USO.md) — Casos de uso reais de validação (o que deve acontecer e onde o dado reflete)
+- [06-CASOS-DE-USO.md](product/06-CASOS-DE-USO.md) — Casos de uso reais de validação por fluxo (o que deve acontecer e onde o dado reflete)
+- [07-CASOS-DE-USO-API.md](product/07-CASOS-DE-USO-API.md) — Casos de uso e cenários de teste da API (request/response + coerência de retornos)
 
 ## Engineering
 
@@ -55,6 +56,15 @@ Consulte o [índice completo de planos](plans/README.md).
 - [SKILL-006 — Bug Investigator](skills/SKILL-006-bug-investigator.md)
 - [SKILL-007 — UX Reviewer](skills/SKILL-007-ux-reviewer.md)
 - [SKILL-008 — Release Reviewer](skills/SKILL-008-release-reviewer.md)
+- [SKILL-009 — Documentation Sync](skills/SKILL-009-documentation-sync.md) — fonte única de verdade + matriz de propagação (mantém docs sempre alinhadas)
+
+## Scripts (ferramentas de apoio)
+
+| Script | npm | Finalidade |
+|--------|-----|------------|
+| [`scripts/audit-docs.mjs`](scripts/audit-docs.mjs) | `npm run docs:audit` | Auditoria de consistência: código ↔ 02-API ↔ 07 ↔ collection ↔ telas (SKILL-009) |
+| [`scripts/build-collection.mjs`](scripts/build-collection.mjs) | `npm run docs:collection` | Regenera `api-collection.json` a partir da lista canônica |
+| [`scripts/smoke-api.mjs`](scripts/smoke-api.mjs) | `npm run smoke:api` | Executa os cenários da [07-CASOS-DE-USO-API](product/07-CASOS-DE-USO-API.md) (PASS/FAIL) |
 
 ## Templates
 

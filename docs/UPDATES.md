@@ -2,6 +2,59 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 03/08/2026 — PLAN-030 · Admin: visão da equipe
+
+**Melhorado**
+- **KPIs de Operação do painel admin agora mostram o total da equipe** (admins + operadores + próprio), com subtítulo "da equipe · N operadores" — antes mostravam os dados do próprio admin (BR-087 → **BR-091**).
+- **Click no KPI → modal de contribuição por operador** ("quanto cada um geriu": clientes, contratos ativos, recebido hoje); click no operador → `OperadorDetail` (preservando `?empresaId=`).
+- **Novo endpoint `GET /api/admin/equipe`** (operadores + totais; coerência Σ = agregado da empresa).
+- **KPI "Resultado do Dia" virou "Recebido hoje"** (Σ do dia da equipe) — rótulo honesto e decomposto por operador.
+- **EquipeModal** com stats + navegação ao operador; `ResultadoDiaModal` removido (sem uso).
+- **Navbar**: links **"Administração"** (admin) e **"Empresas"** (super) visíveis — administração deixa de ficar escondida na engrenagem.
+
+Referência: [PLAN-030](plans/PLAN-030-admin-visao-equipe.md)
+
+## 03/08/2026 — Validação da API (smoke 88 cenários)
+
+**Validado** — `scripts/smoke-api.mjs` executou **88 cenários** da base `07-CASOS-DE-USO-API.md` contra instância isolada (seed em `/tmp`, `PORT=3002`): **todos PASS**, incluindo coerência (saldo cai após contrato, `recebidoHoje` sobe após pagamento, auditoria após ajuste, movimentação reversa no estorno, login novo/antigo na troca de senha, empresa + login do admin novo) e as **variações V1–V8** (pagamento que atravessa parcelas, quitar→`Finalizado`, estorno reverte, cliente 2 contratos → 2 linhas, ajuste de caixa absoluto, cross-tenant 404, super admin cross-empresa, token inválido 401).
+
+**Cruzamento fluxos × API:** 06 ↔ 07 mapeados — sem endpoint órfão. Achados de coerência corrigidos: "resultado do dia" do operador é calculado no front (`recebidoHoje − aReceberHoje`, diferente do admin `entradas − saídas`), shape dos indicadores de `cobrancas` (5), 7 KPIs no mapeamento §1, `totalPeriodo` em `GET /gastos`, janela "a vencer" verificada.
+
+**Ajustes decorrentes:**
+- `dataPromessa` **obrigatória** quando `tipo=promessa` (422) — `operacoes.controller.ts`.
+- **Senha mín. 6** no `POST/PATCH /api/admin/operadores` (400) — não dependia só do front.
+- `LOGIN_RATE_LIMIT_MAX` (env, default 10) — elevar limite em teste/smoke.
+- `07-CASOS-DE-USO-API.md` corrigida para a realidade do código (204 nos deletes, 403 auto-rebaixar/remover, 400 role/senha, enum `nao_localizado`, `percentualJuros`, escopo `?usuarioId=`) + CTs 078–087; collection regenerada.
+- **P021** registrado no backlog (pagamento a mais do total — observação de produto, sem implementação).
+
+Referência: [07-CASOS-DE-USO-API](product/07-CASOS-DE-USO-API.md) · [PLAN-029](plans/PLAN-029-senha-perfil.md)
+
+## 03/08/2026 — PLAN-029 · Senha e Perfil do Usuário
+
+**Adicionado**
+- **Mostrar/ocultar senha no login** — toggle Eye/EyeOff no campo senha (UC-041).
+- **Troca da própria senha** — novo endpoint `PATCH /api/auth/senha` (BR-089/090): valida a senha atual (incorreta → 422, sem deslogar), exige nova ≥ 6 caracteres; o token atual permanece válido.
+- **Página "Meus dados" (`/perfil`)** para todos os perfis — dados do usuário + troca de senha; acesso pela engrenagem do Navbar e pela aba "Meus dados" do painel admin.
+
+**Fora de escopo:** "esqueci minha senha" → backlog P020 (sem infra de e-mail; admin redefine via `PATCH /api/admin/operadores/:id`).
+
+Referência: [PLAN-029](plans/PLAN-029-senha-perfil.md)
+
+## 03/08/2026 — Documentação alinhada + SKILL-009 (Documentation Sync)
+
+**Alinhado**
+- `05-MAPEAMENTO-TELAS.md` v1.15: telas Caixa, Gastos, OperadorDetail, Atendidos, Cobranças adicionadas; contagem corrigida (19 telas).
+- `06-CASOS-DE-USO.md` v1.1: UCs 039-052 (auth + CRUDs básicos).
+- `02-BUSINESS-RULES.md` v1.7: BR-089/090.
+- `02-API.md`: `parcelas-hoje`, `parcelas-semana`, `health` documentados.
+- **Novo** `07-CASOS-DE-USO-API.md`: base de casos de uso e cenários de teste da API (UCs + CTs por endpoint).
+- **`api-collection.json` reconstruída**: 40 → 41 requests espelhando a 07 (gerada por `scripts/build-collection.mjs`).
+
+**Mecanismo novo**
+- **SKILL-009** (`docs/skills/SKILL-009-documentation-sync.md`): fonte única de verdade + matriz de propagação.
+- `scripts/audit-docs.mjs`: auditoria de consistência (código ↔ 02-API ↔ 07 ↔ collection ↔ mapeamento).
+- Agente `.opencode/agents/docs-sync.md` + comandos `audita-docs` / `atualiza-docs`.
+
 ## 02/08/2026 — PLAN-028 · Estorno de Pagamento pelo Admin
 
 **Adicionado**

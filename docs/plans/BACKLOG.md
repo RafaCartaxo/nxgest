@@ -258,6 +258,22 @@ Também revisar os demais fluxos para evitar inconsistências semelhantes.
 
 ---
 
+## P021 — Pagamento a mais que o total do contrato (observação de produto)
+
+> ⚠️ **Mudança drástica — apenas registro, sem implementação.** Não entrou no PLAN-029 nem nos CTs de API como comportamento atual.
+
+### Observação
+
+Hoje `POST /api/pagamentos` **rejeita** valor acima do saldo devedor do contrato (422 — BR-016: "O valor aplicado a um contrato nunca poderá exceder seu saldo devedor").
+
+**Ideia registrada:** permitir **pagamento a mais que o total do contrato** — ex.: contrato com total de R$ 520, o operador recebe R$ 530 → R$ 10 de excedente — e exibir esse **"bônus"/excedente na transação do operador**.
+
+**Condição:** o excedente só faz sentido **após tudo pago** ("só depois de tudo pago") — com o contrato quitado, o valor recebido acima do total vira o "bônus" visível na transação.
+
+**Impactos a avaliar (quando entrar em escopo):** caixa (o que entra de excedente?), movimentação financeira, KPI "recebido hoje", BR-016 (revogar/ajustar), auditabilidade, e se o excedente é devolvido ou fica como crédito do cliente.
+
+---
+
 # EPIC 4 — Operação
 
 > **Observação:** O conceito de Status Financeiro × Status Operacional já foi implementado e não faz parte deste backlog.
@@ -271,6 +287,55 @@ Este epic contempla apenas refinamentos da experiência operacional.
 Itens de melhoria identificados durante os testes da operação diária.
 
 Novos refinamentos deverão ser adicionados aqui conforme evolução do produto.
+
+---
+
+# EPIC 5 — Autenticação e Perfil
+
+## P020 — Perfil do usuário: troca de senha e recuperação
+
+### Situação atual
+
+O usuário **não** pode gerenciar a própria senha:
+- o campo de senha do login **não** permite mostrar/ocultar o que foi digitado;
+- **não existe** troca de senha pelo próprio usuário (o admin redefine via `PATCH /api/admin/operadores/:id`);
+- **não existe** fluxo de "esqueci minha senha".
+
+### Proposta (fatia 1 — PLAN-029)
+
+- Mostrar/ocultar senha no login (UC-041);
+- Troca de senha pelo próprio usuário via `PATCH /api/auth/senha` (senha atual + nova, mín. 6 caracteres) — BR-089/BR-090 (UC-042);
+- Seção "Meus dados" para todos os perfis (admin funde com a aba existente no painel).
+
+### Fora de escopo (fatia 2 — pendente)
+
+- **"Esqueci minha senha"**: sem infraestrutura de e-mail hoje. Quando houver, avaliar token de recuperação + serviço de envio. Até lá, admin redefine a senha manualmente.
+
+---
+
+# EPIC 6 — Testes e validação
+
+## P022 — Testes de UI das telas alteradas (pendente)
+
+> **Adiado por decisão (03/08):** registrar apenas, não implementar agora.
+
+### Escopo (quando entrar)
+
+Vitest + React Testing Library (jsdom) para as telas alteradas em PLAN-029/030:
+- LoginPage — toggle mostrar/ocultar senha (UC-041);
+- PerfilPage — validações + sucesso/422 da troca de senha (UC-042);
+- AdminPage — KPIs com totais da equipe (mock `getEquipe`) e click → `ContribuicaoModal` (UC-053);
+- ContribuicaoModal / EquipeModal — total, ordenação, navegação ao operador com `?empresaId=` (UC-024/053);
+- Navbar — links Administração/Empresas por role (UC-054).
+
+Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já coberto por `scripts/smoke-api.mjs` (91 cenários).
+
+## P023 — Validação manual de fim de fluxo e empty states
+
+> **T2 — manual (pendente).** Conferência visual no navegador (notebook + celular na rede local):
+- Fim de fluxo: UC-018..022 (rota concluída, dashboard vazio, atendidos vazio, cliente quitado) e UC-031 (voltar do contrato do operador);
+- Empty states da API (V9): `cobrancas`/`pagamentos-hoje` vazios — com operador sem dados;
+- UX do admin (PLAN-030): modais, navegação e navbar em tela pequena (celular).
 
 ---
 
@@ -303,6 +368,19 @@ Novos refinamentos deverão ser adicionados aqui conforme evolução do produto.
 
 - P017 — Mensagens Inteligentes do WhatsApp
 - P019 — Refinamentos Operacionais
+
+---
+
+## Sprint 5 (proposta)
+
+- P020 — Perfil do usuário: troca de senha (PLAN-029) — fatia 1
+- P013 — Contexto do Operador (restante)
+
+---
+
+> **Sem sprint (observação de produto):** P021 — pagamento a mais que o total do contrato ("bônus" na transação do operador). Mudança drástica; aguardar decisão.
+>
+> **Pendências registradas (EPIC 6):** P022 — Testes de UI (adiado) · P023 — Validação manual fim de fluxo/empty states.
 
 ---
 

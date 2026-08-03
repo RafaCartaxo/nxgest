@@ -38,4 +38,6 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-026-auditoria-modais-nomencleatura-admin.md](PLAN-026-auditoria-modais-nomencleatura-admin.md) | Sprint 1 do backlog: Auditoria de Caixa (P014), padronização de modais (P018), nomenclatura admin (P012) | Concluído |
 | [PLAN-027-exibicao-historico-caixa.md](PLAN-027-exibicao-historico-caixa.md) | Exibição do Histórico de Ajustes do Caixa Base (P014) — admin e operador veem data, valores, quem ajustou e motivo | Concluído |
 | [PLAN-028-estorno-pagamento.md](PLAN-028-estorno-pagamento.md) | Estorno de Pagamento pelo Admin (P013 — fatia 1): admin corrige transação errada do operador | Concluído |
+| [PLAN-029-senha-perfil.md](PLAN-029-senha-perfil.md) | Senha e Perfil do Usuário: mostrar/ocultar senha no login, `PATCH /api/auth/senha`, página "Meus dados" para todos os perfis | Concluído |
+| [PLAN-030-admin-visao-equipe.md](PLAN-030-admin-visao-equipe.md) | Admin: visão da equipe — KPIs de Operação agregados (BR-091), `GET /api/admin/equipe`, `ContribuicaoModal`, navbar com Administração/Empresas visíveis | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Rascunho — Prévia de Pagamento | Em análise |

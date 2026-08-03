@@ -1,362 +1,1486 @@
 {
   "info": {
+    "_postman_id": "0f5a4a5c-9c6e-4b3a-8f1d-2e5c7a9b0d1e",
     "name": "Gestão de Cobranças — API",
-    "description": "Coleção dos endpoints da API",
-    "version": "1.1.0",
+    "description": "Collection espelho da base de validação docs/product/07-CASOS-DE-USO-API.md.\nVariáveis: baseUrl (ex.: https://nxgestao.duckdns.org ou http://localhost:3001) e token (Bearer).\nGerenciar: node scripts/build-collection.mjs.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://nxgestao.duckdns.org",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
   "item": [
     {
-      "name": "Clientes",
+      "name": "Health",
+      "description": "Health check público (runbook / ops-runner)",
       "item": [
         {
-          "name": "Criar Cliente",
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "API-UC-001 · 200 {status, db}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "Autenticação e identidade",
+      "item": [
+        {
+          "name": "Login",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"João Silva\",\n  \"cpf\": \"12345678900\",\n  \"comercio\": \"Padaria do João\",\n  \"telefone\": \"11999999999\",\n  \"endereco\": {\n    \"logradouro\": \"Rua A\",\n    \"numero\": \"123\",\n    \"bairro\": \"Centro\",\n    \"cidade\": \"São Paulo\"\n  },\n  \"localizacao\": {\n    \"lat\": -23.5505,\n    \"lng\": -46.6333\n  }\n}"
+              "raw": "{\n  \"email\": \"admin@cobranca.com\",\n  \"senha\": \"teste123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/clientes",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "clientes"]
-            }
+            "description": "API-UC-002 · 200 {token, usuario} · 401 inválido · 429 rate limit (10/15min)"
           }
         },
         {
-          "name": "Listar Clientes",
+          "name": "Me",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/clientes?page=1&limit=20&sort=createdAt&order=asc",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "clientes"],
-              "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" },
-                { "key": "sort", "value": "createdAt" },
-                { "key": "order", "value": "asc" }
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
               ]
-            }
-          }
-        },
-        {
-          "name": "Buscar Clientes por Nome",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/clientes?nome=João",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "clientes"],
-              "query": [
-                { "key": "nome", "value": "João" }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
               ]
-            }
+            },
+            "description": "API-UC-003 · 200 dados do usuário logado"
           }
         },
         {
-          "name": "Buscar Cliente por ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/clientes/{{clienteId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "clientes", "{{clienteId}}"]
-            }
-          }
-        },
-        {
-          "name": "Atualizar Cliente (PATCH)",
+          "name": "Alterar senha",
           "request": {
             "method": "PATCH",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/senha",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "senha"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"João Silva Atualizado\",\n  \"telefone\": \"11988888888\",\n  \"endereco\": {\n    \"bairro\": \"Jardins\"\n  }\n}"
+              "raw": "{\n  \"senhaAtual\": \"teste123!\",\n  \"novaSenha\": \"novaSenha123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
+            "description": "API-UC-041 · 200 {ok} · 422 senha atual incorreta/nova inválida (BR-089/090, PLAN-029)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "description": "CRUD de clientes (escopo por operador)",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/clientes/{{clienteId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "clientes", "{{clienteId}}"]
-            }
+              "raw": "{{baseUrl}}/api/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva\",\n  \"telefone\": \"11999999999\",\n  \"cpf\": \"39053344705\",\n  \"comercio\": \"Padaria Central\",\n  \"endereco\": {\n    \"logradouro\": \"Rua A\",\n    \"numero\": \"123\",\n    \"bairro\": \"Centro\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-004 · 201 · 409 CPF duplicado · 422 inválido · endereco aninhado"
           }
         },
         {
-          "name": "Excluir Cliente",
+          "name": "Listar",
           "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-005 · 200 lista escopada"
+          }
+        },
+        {
+          "name": "Detalhe",
+          "request": {
+            "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/clientes/{{clienteId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "clientes", "{{clienteId}}"]
-            }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{clienteId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-006 · 200 · 404 outro operador"
+          }
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{clienteId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva Atualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-007 · 200 · 409 CPF de outro cliente"
+          }
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clientes",
+                "{{clienteId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-008 · 204 · 409 com contratos ativos"
           }
         }
       ]
     },
     {
       "name": "Contratos",
+      "description": "CRUD de contratos",
       "item": [
         {
-          "name": "Criar Contrato",
+          "name": "Criar",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"valorBase\": 500,\n  \"percentualJuros\": 20,\n  \"quantidadeParcelas\": 10,\n  \"dataInicio\": \"2026-07-01\"\n}"
-            },
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/contratos",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "contratos"]
-            }
-          }
-        },
-        {
-          "name": "Listar Contratos",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/contratos?page=1&limit=20&sort=createdAt&order=desc",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "contratos"],
-              "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" },
-                { "key": "sort", "value": "createdAt" },
-                { "key": "order", "value": "desc" }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contratos"
               ]
-            }
-          }
-        },
-        {
-          "name": "Listar Contratos por Cliente",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/contratos?clienteId={{clienteId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "contratos"],
-              "query": [
-                { "key": "clienteId", "value": "{{clienteId}}" }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
               ]
-            }
-          }
-        },
-        {
-          "name": "Buscar Contrato por ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/contratos/{{contratoId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "contratos", "{{contratoId}}"]
-            }
-          }
-        },
-        {
-          "name": "Atualizar Contrato (PATCH)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"valorBase\": 600,\n  \"percentualJuros\": 15\n}"
+              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"valorBase\": 1000,\n  \"percentualJuros\": 20,\n  \"quantidadeParcelas\": 5,\n  \"dataInicio\": \"2026-08-04\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/contratos/{{contratoId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "contratos", "{{contratoId}}"]
-            }
+            "description": "API-UC-009 · 201 · 422 caixa insuficiente · 404 cliente · campo percentualJuros"
           }
         },
         {
-          "name": "Excluir Contrato",
+          "name": "Listar",
           "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/contratos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contratos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-010 · 200 lista escopada"
+          }
+        },
+        {
+          "name": "Detalhe",
+          "request": {
+            "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/contratos/{{contratoId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "contratos", "{{contratoId}}"]
-            }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contratos",
+                "{{contratoId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-011 · 200 · 404 outro operador"
+          }
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/contratos/{{contratoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contratos",
+                "{{contratoId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidadeParcelas\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-012 · 200 sem pagamentos · 409 com pagamentos"
+          }
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/contratos/{{contratoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contratos",
+                "{{contratoId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-013 · 204 sem pagamentos (devolve valorBase) · 409 com pagamentos"
           }
         }
       ]
     },
     {
       "name": "Pagamentos",
+      "description": "Registro, preview, listagem e estorno",
       "item": [
         {
-          "name": "Registrar Pagamento",
+          "name": "Registrar",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"contratoId\": \"{{contratoId}}\",\n  \"valor\": 60.00\n}"
-            },
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/pagamentos",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pagamentos"]
-            }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagamentos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contratoId\": \"{{contratoId}}\",\n  \"valor\": 120\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-014 · 201 · 422 excede saldo"
           }
         },
         {
-          "name": "Listar Pagamentos do Contrato",
+          "name": "Preview",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pagamentos/preview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagamentos",
+                "preview"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contratoId\": \"{{contratoId}}\",\n  \"valor\": 120\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-015 · 200 distribuição simulada (não persiste)"
+          }
+        },
+        {
+          "name": "Por contrato",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/pagamentos/contrato/{{contratoId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pagamentos", "contrato", "{{contratoId}}"]
-            }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagamentos",
+                "contrato",
+                "{{contratoId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-016 · 200 lista de pagamentos do contrato"
           }
-         }
-       ]
-     },
-     {
-       "name": "Empresas",
-       "item": [
-         {
-           "name": "Listar Empresas",
-           "request": {
-             "method": "GET",
-             "header": [
-               { "key": "Authorization", "value": "Bearer {{token}}" }
-             ],
-             "url": {
-               "raw": "{{baseUrl}}/api/admin/empresas",
-               "host": ["{{baseUrl}}"],
-               "path": ["api", "admin", "empresas"]
-             },
-             "description": "Lista todas as empresas (super_admin apenas)"
-           }
-         },
-         {
-           "name": "Criar Empresa",
-           "request": {
-             "method": "POST",
-             "header": [
-               { "key": "Authorization", "value": "Bearer {{token}}" },
-               { "key": "Content-Type", "value": "application/json" }
-             ],
-             "body": {
-               "mode": "raw",
-               "raw": "{\n  \"nome\": \"Empresa Exemplo\",\n  \"adminNome\": \"João Administrador\",\n  \"adminEmail\": \"admin@empresa.com\",\n  \"adminSenha\": \"senhaSegura123\"\n}"
-             },
-             "url": {
-               "raw": "{{baseUrl}}/api/admin/empresas",
-               "host": ["{{baseUrl}}"],
-               "path": ["api", "admin", "empresas"]
-             },
-             "description": "Cria empresa + admin inicial em transação atômica (super_admin apenas)"
-           }
-         }
-       ]
-     },
-     {
-       "name": "Admin (Atualizado)",
-       "item": [
-         {
-           "name": "Listar Operadores (com empresaId)",
-           "request": {
-             "method": "GET",
-             "header": [
-               { "key": "Authorization", "value": "Bearer {{token}}" }
-             ],
-             "url": {
-               "raw": "{{baseUrl}}/api/admin/operadores?empresaId={{empresaId}}",
-               "host": ["{{baseUrl}}"],
-               "path": ["api", "admin", "operadores"],
-               "query": [
-                 { "key": "empresaId", "value": "{{empresaId}}", "disabled": false }
-               ]
-             },
-             "description": "Lista operadores filtrados por empresa (admin: empresa do token; super_admin: query param)"
-           }
-         },
-         {
-           "name": "Dashboard (com empresaId)",
-           "request": {
-             "method": "GET",
-             "header": [
-               { "key": "Authorization", "value": "Bearer {{token}}" }
-             ],
-             "url": {
-               "raw": "{{baseUrl}}/api/admin/dashboard?empresaId={{empresaId}}",
-               "host": ["{{baseUrl}}"],
-               "path": ["api", "admin", "dashboard"],
-               "query": [
-                 { "key": "empresaId", "value": "{{empresaId}}", "disabled": false }
-               ]
-             },
-             "description": "KPIs filtrados por empresa (admin: empresa do token; super_admin: query param)"
-           }
-         }
-       ]
-     }
-   ],
-   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3000",
-      "type": "string"
+        },
+        {
+          "name": "Estornar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pagamentos/{{pagamentoId}}/estornar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagamentos",
+                "{{pagamentoId}}",
+                "estornar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Pagamento registrado por engano\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-017 · 201 · 403 operator · 409 já estornado · query ?usuarioId= (admin)"
+          }
+        }
+      ]
     },
     {
-      "key": "clienteId",
-      "value": "",
-      "type": "string"
+      "name": "Operações",
+      "description": "Cobranças, pagamentos/parcelas do dia, visitas e histórico de atrasos",
+      "item": [
+        {
+          "name": "Cobranças do dia",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/operacoes/cobrancas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "operacoes",
+                "cobrancas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-018 · 200 {indicadores, cobrancas} · query sort/lat/lng"
+          }
+        },
+        {
+          "name": "Pagamentos hoje",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/operacoes/pagamentos-hoje",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "operacoes",
+                "pagamentos-hoje"
+              ],
+              "query": [
+                {
+                  "key": "dataInicio",
+                  "value": ""
+                },
+                {
+                  "key": "dataFim",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-019 · 200 pagamentos do período (padrão hoje)"
+          }
+        },
+        {
+          "name": "Parcelas hoje",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/operacoes/parcelas-hoje",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "operacoes",
+                "parcelas-hoje"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-020 · 200 parcelas vencendo hoje"
+          }
+        },
+        {
+          "name": "Parcelas semana",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/operacoes/parcelas-semana",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "operacoes",
+                "parcelas-semana"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-021 · 200 próximos 7 dias (exclui hoje)"
+          }
+        },
+        {
+          "name": "Histórico atrasos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/operacoes/historico-atrasos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "operacoes",
+                "historico-atrasos"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "30"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-022 · 200 snapshots diários"
+          }
+        },
+        {
+          "name": "Registrar visita",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/operacoes/visitas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "operacoes",
+                "visitas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"contratoId\": \"{{contratoId}}\",\n  \"tipo\": \"visitado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-023 · 201 · 422 tipo inválido (visitado|nao_localizado|promessa) · 422 promessa sem dataPromessa · GET retorna NAO_ENCONTRADO"
+          }
+        }
+      ]
     },
     {
-      "key": "contratoId",
-      "value": "",
-      "type": "string"
+      "name": "Caixa",
+      "description": "Status, ajuste (admin), movimentações, auditoria e liquidação",
+      "item": [
+        {
+          "name": "Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/caixa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "caixa"
+              ],
+              "query": [
+                {
+                  "key": "dataInicio",
+                  "value": ""
+                },
+                {
+                  "key": "dataFim",
+                  "value": ""
+                },
+                {
+                  "key": "usuarioId",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-024 · 200 status completo · 404 alvo inexistente"
+          }
+        },
+        {
+          "name": "Ajustar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/caixa/ajuste",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "caixa",
+                "ajuste"
+              ],
+              "query": [
+                {
+                  "key": "usuarioId",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valor\": 22000,\n  \"motivo\": \"Reposição de troco\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-025 · 201 · 403 operator · 422 sem motivo · grava auditoria"
+          }
+        },
+        {
+          "name": "Movimentações",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/caixa/movimentacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "caixa",
+                "movimentacoes"
+              ],
+              "query": [
+                {
+                  "key": "origem",
+                  "value": ""
+                },
+                {
+                  "key": "usuarioId",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-026 · 200 {data, pagination}"
+          }
+        },
+        {
+          "name": "Auditoria",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/caixa/auditoria",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "caixa",
+                "auditoria"
+              ],
+              "query": [
+                {
+                  "key": "usuarioId",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-027 · 200 histórico de ajustes"
+          }
+        },
+        {
+          "name": "Liquidar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/caixa/liquidar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "caixa",
+                "liquidar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-028 · 201 · 409 semana já liquidada"
+          }
+        }
+      ]
     },
     {
-      "key": "empresaId",
-      "value": "",
-      "type": "string"
+      "name": "Gastos",
+      "description": "Registro, listagem e exclusão de gastos",
+      "item": [
+        {
+          "name": "Registrar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/gastos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "gastos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valor\": 50,\n  \"categoria\": \"Transporte\",\n  \"data\": \"2026-08-03\",\n  \"observacao\": \"Combustível\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-029 · 201 · 422 obrigatórios"
+          }
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/gastos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "gastos"
+              ],
+              "query": [
+                {
+                  "key": "dataInicio",
+                  "value": ""
+                },
+                {
+                  "key": "dataFim",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-030 · 200 lista escopada"
+          }
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/gastos/{{gastoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "gastos",
+                "{{gastoId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-031 · 204 · 404 inexistente"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Gestão de operadores e dashboard (admin/super_admin)",
+      "item": [
+        {
+          "name": "Listar operadores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/operadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "operadores"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-032 · 200 · 403 operator"
+          }
+        },
+        {
+          "name": "Detalhe operador",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/operadores/{{operadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "operadores",
+                "{{operadorId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-033 · 200 · 404 outra empresa"
+          }
+        },
+        {
+          "name": "Criar operador",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/operadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "operadores"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria Op\",\n  \"email\": \"maria.nx@uorak.com\",\n  \"senha\": \"teste123!\",\n  \"role\": \"operator\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-034 · 201 · 409 e-mail · 400 role inválido/senha < 6"
+          }
+        },
+        {
+          "name": "Editar operador",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/operadores/{{operadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "operadores",
+                "{{operadorId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria Atualizada\",\n  \"senha\": \"novaSenha123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-035 · 200 · 403 auto-rebaixar"
+          }
+        },
+        {
+          "name": "Remover operador",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/operadores/{{operadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "operadores",
+                "{{operadorId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-036 · 204 · 403 auto-remover"
+          }
+        },
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "empresaId",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-037 · 200 KPIs · 403 operator"
+          }
+        },
+        {
+          "name": "Equipe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/equipe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "equipe"
+              ],
+              "query": [
+                {
+                  "key": "empresaId",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-042 · 200 operadores+totais (BR-091) · 403 operator · 400 super sem empresaId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Empresas",
+      "description": "Multi-tenant (super_admin)",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/empresas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "empresas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-038 · 200 · 403 não-super"
+          }
+        },
+        {
+          "name": "Detalhe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/empresas/{{empresaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "empresas",
+                "{{empresaId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-039 · 200 · 404 inexistente"
+          }
+        },
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/empresas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "empresas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Empresa Exemplo\",\n  \"adminNome\": \"João Admin\",\n  \"adminEmail\": \"admin@empresa.com\",\n  \"adminSenha\": \"senhaSegura123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-040 · 201 empresa+admin atômico · 409 e-mail duplicado"
+          }
+        }
+      ]
     }
   ]
 }
