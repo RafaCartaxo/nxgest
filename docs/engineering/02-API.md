@@ -1577,6 +1577,8 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
 
 Ativa/desativa **módulos da empresa** (whitelabel, PLAN-031). O tenant passa a ver apenas as superfícies (nav/rotas/entradas) dos módulos ativos — `central` é sempre ativo.
 
+> **Enforcement no backend (PLAN-036, P024):** além do gating de UI, módulo desativado devolve **403 `MODULE_DISABLED`** nas rotas do módulo: `/api/clientes` (clientes), `/api/contratos` (contratos), `/api/caixa` (caixa), `/api/gastos` (gastos), `/api/pagamentos` (contratos), e em `/api/operacoes`: `POST /visitas` (rota) e `GET /historico-atrasos` (cobrancas). Super admin sem `?empresaId=` não é bloqueado; com `?empresaId=` respeita os módulos da empresa-alvo. Endpoints compartilhados com a Central (`GET /operacoes/cobrancas`, `pagamentos-hoje`, `parcelas-hoje`, `parcelas-semana`) permanecem abertos (limite do v1).
+
 **Auth:** Super Admin
 
 ## Request

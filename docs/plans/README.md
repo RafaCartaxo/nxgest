@@ -25,7 +25,7 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-013-dark-mode.md](PLAN-013-dark-mode.md) | Dark Mode — Tema Escuro | Concluído |
 | [PLAN-014-caixa-gasto.md](PLAN-014-caixa-gasto.md) | Módulos Caixa e Gasto (Fase 4) | Concluído |
 | [PLAN-015-autenticacao.md](PLAN-015-autenticacao.md) | Autenticação Multi-Usuário (Fase 5.2) | Concluído |
-| [PLAN-016-endereco-comercio.md](PLAN-016-endereco-comercio.md) | Endereço do Comércio + GPS (Fase 5.6) | Planejado |
+| [PLAN-016-endereco-comercio.md](PLAN-016-endereco-comercio.md) | Endereço do Comércio + GPS (Fase 5.6) | Concluído |
 | [PLAN-017-admin-panel.md](PLAN-017-admin-panel.md) | Admin Panel + Níveis Permissionais (Fase 5.2b) | Concluído |
 | [PLAN-018-deploy.md](PLAN-018-deploy.md) | Deploy do Primeiro Cliente (SQLite + VPS) | Concluído |
 | [PLAN-019-multi-tenant.md](PLAN-019-multi-tenant.md) | Multi-Tenant: Super Admin + Empresas | Concluído |
@@ -45,4 +45,5 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-033-atrasos-cliente-historico.md](PLAN-033-atrasos-cliente-historico.md) | Situação financeira do cliente: atraso, vence hoje e lucro previsto no detalhe + histórico de atrasos (BR-096/097/098) | Concluído |
 | [PLAN-034-atraso-card-contrato.md](PLAN-034-atraso-card-contrato.md) | Atraso no card do contrato (lista): linha de atraso "N parcelas · R$ Y · D dias" (BR-099) | Concluído |
 | [PLAN-035-temas-componentes-e-hero-headers.md](PLAN-035-temas-componentes-e-hero-headers.md) | Temas nos componentes (fim das cores fixas da paleta) + hero header nos módulos (`PageHeader`) + guarda `audit:styles` | Concluído |
-| [FEATURE-temp.md](FEATURE-temp.md) | Rascunho — Prévia de Pagamento | Em análise |
+| [PLAN-036-whitelabel-enforcement-backend.md](PLAN-036-whitelabel-enforcement-backend.md) | Whitelabel: enforcement de módulos no backend — 403 `MODULE_DISABLED` por módulo desativado (P024) | Concluído |
+| [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |

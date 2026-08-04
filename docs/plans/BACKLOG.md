@@ -343,14 +343,7 @@ Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já cobe
 
 ## P024 — Whitelabel: enforcement de módulos no backend (hardening)
 
-> **Follow-up imediato do PLAN-031 (registrado, sem execução).** O v1 de módulos é **gating de UI** (rotas/nav/entradas). Para whitelabel, o API é o contrato — módulo desativado deve devolver **403** também no backend.
-
-### Escopo (quando entrar)
-
-- Middleware `requireModule('<id>')` (padrão do `adminMiddleware`) que lê `empresa.modulos` (do usuário/token) e bloqueia rotas do módulo desativado;
-- Mapa rota→módulo no backend (mesmos IDs do registro canônico em `src/modules/admin/domain/modules.ts`);
-- Aplicar em: clientes, contratos, caixa, gastos, operacoes (rota/cobrancas/atendidos);
-- CTs: operador de empresa com módulo off chamando API do módulo → 403.
+> **Concluído** (PLAN-036). O v1 de módulos era gating de UI; agora módulo desativado devolve **403 `MODULE_DISABLED`** no backend: `requireModule` no mount de `clientes`, `contratos`, `caixa`, `gastos`, `pagamentos` (=contratos) e por endpoint em `/operacoes` (`POST /visitas`=rota, `GET /historico-atrasos`=cobrancas). Super admin sem `?empresaId=` não é bloqueado; com `?empresaId=` respeita a empresa-alvo. Limite do v1: endpoints compartilhados com a Central (`GET /operacoes/cobrancas`, `pagamentos-hoje`, `parcelas-hoje`, `parcelas-semana`) seguem abertos (PLAN-036).
 
 ---
 

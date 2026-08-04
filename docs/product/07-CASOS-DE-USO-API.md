@@ -1074,6 +1074,29 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+# WHITELABEL — ENFORCEMENT NO BACKEND (PLAN-036, P024)
+
+## API-UC-043 — Modulos com enforcement (403 por módulo)
+
+**Dado** uma empresa com módulo desativado (ex.: sem `caixa`) e um usuário da empresa → **Então** as rotas do módulo devolvem **403 `MODULE_DISABLED`** (não é só gating de UI).
+
+### API-CT-106 — Módulo off bloqueia a API
+**Dado** empresa com `modulos` sem `caixa` → **Então** `GET /api/caixa` → **403** `{ code: "MODULE_DISABLED" }`. Vale para `clientes`, `contratos`, `caixa`, `gastos`, `pagamentos` (= `contratos`) e, em `/operacoes`: `POST /visitas` (= `rota`), `GET /historico-atrasos` (= `cobrancas`).
+
+### API-CT-107 — Módulo ativo libera a API
+**Dado** empresa com `caixa` ativo → **Então** `GET /api/caixa` → **200**.
+
+### API-CT-108 — `modulos` ausente = todos ativos (fallback)
+**Dado** empresa sem `modulos` definido (token antigo / legado) → **Então** todas as rotas → **200** (BR-093).
+
+### API-CT-109 — Super admin: empresa-alvo via `?empresaId=`
+**Dado** super admin **sem** `?empresaId=` → **Então** rotas → **200** (gestão global, sem empresa-alvo). **Dado** super admin com `?empresaId=` de empresa com módulo off → **Então** rota do módulo → **403**.
+
+### API-CT-110 — Endpoints compartilhados (limite do v1)
+**Dado** módulo `cobrancas` off → **Então** `GET /operacoes/cobrancas` continua **200** (compartilhado com Central/Rota/Atendidos — ver PLAN-036, fora de escopo do gating). `GET /operacoes/pagamentos-hoje|parcelas-hoje|parcelas-semana` idem.
+
+---
+
 # AUTH — SENHA (PLAN-029)
 
 ## API-UC-041 — Alterar a própria senha

@@ -1,8 +1,10 @@
 # PLAN-016: Endereço do Comércio + GPS
 
+> **Status: Concluído (implementado em 11/07/2026).** Endereço pessoal × comércio, botão GPS ("Usar local atual") e navegação priorizando `localizacaoComercio` com fallback — ver `ClienteNovo`/`ClienteEdit`/`ClienteDetail` e `buildMapsUrl`.
+
 **Versão:** 1.0  
 **Data:** 11/07/2026  
-**Status:** Planejado  
+**Status:** Concluído  
 **Fase:** 5.6 — Polimento  
 **Dependências:** Nenhuma
 

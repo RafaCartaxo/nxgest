@@ -713,7 +713,7 @@ Um módulo **desativado** em uma empresa oculta todas as **superfícies** daquel
 - O módulo `central` (dashboard) é **sempre ativo** — é a landing de todos.
 - `modulos` é derivado do `login`/`me`; alteração feita pelo super admin vale para o usuário no **próximo carregamento** (novo `/me`).
 - A ausência de `modulos` (tokens antigos, super admin) equivale a **todos ativos**.
-- > **Hardening futuro (P024):** o v1 é gating de UI; a aplicação no backend (403 por módulo desativado) é follow-up.
+- **Enforcement no backend (PLAN-036, P024):** além do gating de UI, a API devolve **403 `MODULE_DISABLED`** para as rotas de módulo desativado — via `requireModule` no mount das rotas (`clientes`, `contratos`, `caixa`, `gastos`, `pagamentos`=contratos) e por endpoint em `/operacoes` (`POST /visitas`=rota, `GET /historico-atrasos`=cobrancas). Super admin sem `?empresaId=` não é bloqueado (gestão global); com `?empresaId=` respeita os módulos da empresa-alvo. Endpoints compartilhados com a Central (`/operacoes/cobrancas`, `pagamentos-hoje`, `parcelas-hoje`, `parcelas-semana`) permanecem abertos (limite do v1 — PLAN-036).
 
 ---
 

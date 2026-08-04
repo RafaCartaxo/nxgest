@@ -590,11 +590,12 @@ A autenticação multi-usuário e o painel de administração são implementados
 - **PLAN-026** — Sprint 1 do backlog: auditoria de caixa (BR-088), `Modal` base compartilhado e nomenclatura Equipe/Administradores/Operadores.
 - **PLAN-029** — Senha e Perfil (troca de senha própria, `PATCH /api/auth/senha`, mostrar/ocultar no login).
 - **PLAN-030** — Visão da equipe no admin: KPIs de Operação com **totais da equipe** (BR-091), `GET /api/admin/equipe`, `ContribuicaoModal`, navbar com Administração/Empresas visíveis.
-- **PLAN-031** — Temas & gradientes (5 por usuário) + **Super Admin whitelabel**: módulos por empresa (BR-092/093), `PATCH /modulos`, gating de UI. Hardening backend (403 por módulo) → **P024**.
+- **PLAN-031** — Temas & gradientes (5 por usuário) + **Super Admin whitelabel**: módulos por empresa (BR-092/093), `PATCH /modulos`, gating de UI.
+- **PLAN-036** — Whitelabel **enforcement no backend**: 403 `MODULE_DISABLED` por módulo desativado (P024) — `requireModule` no mount das rotas + por endpoint em `/operacoes`.
 
-Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019, P020, P021, P022, P023, P024 pendentes).
+Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019, P020, P021, P022, P023 pendentes).
 
-> **Whitelabel futuro (5.10):** com a infra de temas (blocos `data-theme`) e módulos por empresa prontas, a evolução é: `empresa.tema` (paleta do cliente aplicada a todos os usuários do tenant) + enforcement de módulos no backend (P024). Sem coluna/cronograma ainda.
+> **Whitelabel futuro (5.10):** com a infra de temas (blocos `data-theme`) e módulos por empresa prontas, a evolução é: `empresa.tema` (paleta do cliente aplicada a todos os usuários do tenant). Sem coluna/cronograma ainda.
 
 ### 5.3 Visualização em mapa
 - Integração com Google Maps (já tem `maps.ts`)

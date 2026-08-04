@@ -2,6 +2,24 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 03/08/2026 — PLAN-036 · Whitelabel: enforcement de módulos no backend (P024)
+
+**Adicionado**
+- **403 por módulo desativado** — o v1 do whitelabel (PLAN-031) era só gating de UI; agora a API bloqueia módulos off com `MODULE_DISABLED`.
+- **Middleware `requireModule('<id>')`** (`src/shared/middleware/module.middleware.ts`): lê `empresas.modulos` por request (o JWT não carrega módulos) e devolve **403** quando o módulo está off.
+- **Aplicado** no mount de `clientes`, `contratos`, `caixa`, `gastos`, `pagamentos` (=contratos) e por endpoint em `/operacoes`: `POST /visitas` (rota), `GET /historico-atrasos` (cobrancas).
+- **Super admin:** sem `?empresaId=` → gestão global (não bloqueado); com `?empresaId=` → respeita os módulos da empresa-alvo (mesma regra do `resolveUsuarioAlvo`).
+- **Fallback (BR-093):** empresa sem `modulos` = todos ativos.
+- **Limite do v1:** endpoints compartilhados com a Central (`/operacoes/cobrancas`, `pagamentos-hoje`, `parcelas-hoje`, `parcelas-semana`) seguem abertos — gating por módulo único quebraria Rota/Atendidos/Cobranças.
+- **Frontend:** `errors.MODULE_DISABLED` traduzido (PT/EN/ES).
+- **Validação:** teste real em instância isolada (módulo off → 403; ativo → 200; compartilhado → 200; super admin com/sem `?empresaId=`); CTs API-CT-106..110; UC-079; BR-093 ampliada.
+
+**Registro corrigido:** PLAN-016 e FEATURE-temp (prévia de pagamento) marcados como **Concluído** — estavam com status stale apesar de implementados.
+
+**Bug encontrado e corrigido na validação (fuso horário):** a query de cobranças comparava `date(h.createdAt)` (UTC) com `hoje` (data local) — em determinados horários do dia (UTC já no dia seguinte vs local) a visita registrada não refletia na lista. Corrigido para `date(h.createdAt, 'localtime')` (`operacoes.repository.impl.ts`). O `smoke` voltou a passar **105/105**.
+
+Referência: [PLAN-036](plans/PLAN-036-whitelabel-enforcement-backend.md)
+
 ## 03/08/2026 — PLAN-035 · Temas em componentes + Hero headers nos módulos
 
 **Adicionado**

@@ -70,3 +70,35 @@
 - [ ] UC-076: subtítulos em PT/EN/ES
 - [ ] UC-077: contraste claro/escuro × 5 paletas
 - [ ] UC-078: regressão headers compactos (novo/editar/detalhe/perfil/login)
+
+---
+
+# CHECKLIST — Whitelabel: enforcement de módulos no backend (PLAN-036 / P024)
+
+**Data:** 03/08/2026
+
+**Plano:** plans/PLAN-036-whitelabel-enforcement-backend.md
+
+## Backend
+
+- [x] `src/shared/middleware/module.middleware.ts`: `requireModule(id)` — empresa efetiva (token p/ tenant; `?empresaId=` p/ super_admin), lê `empresas.modulos`, 403 `MODULE_DISABLED`; sem `modulos` = todos ativos
+- [x] `src/main.ts`: `requireModule` no mount de `clientes`, `contratos`, `caixa`, `gastos`, `pagamentos` (=contratos)
+- [x] `operacoes.routes.ts`: `POST /visitas` → rota; `GET /historico-atrasos` → cobrancas
+
+## Frontend
+
+- [x] i18n `errors.MODULE_DISABLED` (pt/en/es)
+
+## Documentação
+
+- [x] `PLAN-036` · `BR-093` (enforcement) · `02-API.md` · `07` (API-CT-106..110) · `06` (UC-079) · `BACKLOG.md` (P024) · `plans/README.md` · `04-ROADMAP.md` · `UPDATES.md`
+- [x] Status stale corrigidos: `PLAN-016` e `FEATURE-temp` → Concluído
+- [x] Fix `scripts/audit-docs.mjs` (regex de `main.ts` com middleware de parênteses) + fix bug do `--baseUrl` no `smoke-api.mjs`
+
+## Validação
+
+- [x] `npm run build` → OK
+- [x] `npm run docs:audit` → limpo (43 rotas, 20 telas)
+- [x] Teste real isolado (PORT=3002): off → 403 `MODULE_DISABLED`; ativo → 200; compartilhado → 200; super admin sem/com `?empresaId=`
+- [x] `smoke:api` → **105/105** (inclui MOD-097 + OPS-040)
+- [x] **Bug de fuso corrigido:** `date(h.createdAt, 'localtime')` no `operacoes.repository.impl.ts` (UTC × local divergia à noite → visita não refletia)

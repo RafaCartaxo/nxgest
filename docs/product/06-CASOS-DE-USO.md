@@ -1466,6 +1466,25 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+### UC-079 — Enforcement de módulos no backend (P024/PLAN-036)
+
+**Ator:** operador/admin de empresa com módulos parciais / super admin
+
+**Ação:** super admin desativa um módulo (ex.: `caixa`) da empresa; usuário da empresa segue usando o sistema.
+
+**O que DEVE acontecer:** além das superfícies ocultas (UC-056), a API do módulo desativado devolve **403 `MODULE_DISABLED`** — `requireModule` no mount (`/clientes`, `/contratos`, `/caixa`, `/gastos`, `/pagamentos`) e por endpoint em `/operacoes` (`POST /visitas`=rota, `GET /historico-atrasos`=cobrancas). Módulos ativos seguem 200. Super admin sem `?empresaId=` não é bloqueado; com `?empresaId=` respeita a empresa-alvo.
+
+**Conferências:**
+- [ ] Chamada de API de módulo off por usuário da empresa → 403 `MODULE_DISABLED`?
+- [ ] Módulo ativo → 200?
+- [ ] Empresa sem `modulos` (fallback) → 200 (todos ativos)?
+- [ ] Super admin sem `?empresaId=` → 200; com `?empresaId=` de módulo off → 403?
+- [ ] Endpoints compartilhados da Central (`/operacoes/cobrancas`, `pagamentos-hoje`, `parcelas-hoje`, `parcelas-semana`) seguem 200 (limite do v1)?
+
+**Regras:** BR-093
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)

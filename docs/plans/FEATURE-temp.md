@@ -1,3 +1,5 @@
+> **Status: Concluído (implementado no `PagamentoModal`).** Prévia em tempo real da distribuição do pagamento entre as parcelas (quitação/parcial/saldo excedente) antes de confirmar — `pagamento.preview`, `parcelaParcial`, `saldoExcedente`, `infoPrevia`. Sem mudança de regra de negócio.
+
 História de Usuário
 
 Como operador, quero visualizar em tempo real como o valor informado será distribuído entre as parcelas antes de confirmar o pagamento, para evitar erros e ter segurança sobre o resultado da operação.
