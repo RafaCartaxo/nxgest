@@ -9,7 +9,8 @@
  *
  * Não testa rate limit (429) — bloquearia o IP da própria execução.
  */
-const baseUrlArg = process.argv[process.argv.indexOf("--baseUrl") + 1]
+const baseUrlIdx = process.argv.indexOf("--baseUrl")
+const baseUrlArg = baseUrlIdx !== -1 ? process.argv[baseUrlIdx + 1] : undefined
 const BASE = baseUrlArg || "http://localhost:3002"
 
 const SENHA = "teste123!"
@@ -571,6 +572,24 @@ async function main() {
   await t("MOD-095", "Admin (não super) em PATCH modulos (403)", async () => {
     const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: adminToken, body: { modulos: [] } })
     expect(r, 403, "admin sem permissão")
+  })
+  await t("MOD-097", "Enforcement: módulo off → 403 MODULE_DISABLED; ativo → 200 (P024)", async () => {
+    const tenantLogin = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
+    expect(tenantLogin, 200, "login tenant")
+    const tenantToken = tenantLogin.data.token
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos"] } })
+    const caixa = await req("GET", "/api/caixa", { token: tenantToken })
+    expect(caixa, 403, "caixa off")
+    if (caixa.data?.code !== "MODULE_DISABLED") throw new Error(`code=${caixa.data?.code}`)
+    const gastos = await req("GET", "/api/gastos", { token: tenantToken })
+    expect(gastos, 403, "gastos off")
+    const visitas = await req("POST", "/api/operacoes/visitas", { token: tenantToken, body: { clienteId: "x", contratoId: "x", tipo: "visitado" } })
+    expect(visitas, 403, "rota off")
+    const clientes = await req("GET", "/api/clientes", { token: tenantToken })
+    expect(clientes, 200, "clientes on")
+    const contratos = await req("GET", "/api/contratos", { token: tenantToken })
+    expect(contratos, 200, "contratos on")
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] } })
   })
 
   // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------

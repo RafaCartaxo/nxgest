@@ -104,14 +104,14 @@ export class OperacoesRepository implements IOperacoesRepository {
 LEFT JOIN (
   SELECT clienteId, contratoId,
     MAX(createdAt) AS visitadoEm,
-    (SELECT h2.tipo FROM historico_operacional h2
-     WHERE h2.clienteId = h.clienteId
-       AND h2.contratoId = h.contratoId
-       AND date(h2.createdAt) = ?
-       AND h2.userId = ?
-     ORDER BY h2.createdAt DESC LIMIT 1) AS resultadoOperacional
+     (SELECT h2.tipo FROM historico_operacional h2
+      WHERE h2.clienteId = h.clienteId
+        AND h2.contratoId = h.contratoId
+        AND date(h2.createdAt, 'localtime') = ?
+        AND h2.userId = ?
+      ORDER BY h2.createdAt DESC LIMIT 1) AS resultadoOperacional
   FROM historico_operacional h
-  WHERE date(h.createdAt) = ?
+  WHERE date(h.createdAt, 'localtime') = ?
     AND h.userId = ?
   GROUP BY clienteId, contratoId
 ) v ON v.clienteId = c.id AND v.contratoId = ct.id

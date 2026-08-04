@@ -36,8 +36,9 @@ function realBackendRoutes() {
   const mainSrc = readFileSync(join(root, "src/main.ts"), "utf8")
 
   // main.ts: mapeia nome do router (authRoutes, clienteRoutes...) → mount (/api/auth, ...)
+  // `.*?` atravessa middlewares com parênteses (ex.: requireModule("clientes")).
   const mountByVar = new Map()
-  for (const m of mainSrc.matchAll(/app\.use\(\s*"(\/api\/[^"]+)",[^)]*?\b(\w+Routes)\)/g)) {
+  for (const m of mainSrc.matchAll(/app\.use\(\s*"(\/api\/[^"]+)",.*?\b(\w+Routes)\)/g)) {
     mountByVar.set(m[2], m[1])
   }
 
