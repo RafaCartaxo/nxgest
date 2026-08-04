@@ -95,10 +95,17 @@
 - [x] Status stale corrigidos: `PLAN-016` e `FEATURE-temp` → Concluído
 - [x] Fix `scripts/audit-docs.mjs` (regex de `main.ts` com middleware de parênteses) + fix bug do `--baseUrl` no `smoke-api.mjs`
 
+## Revisão de casos (gap e cenários alternativos)
+
+- [x] `07`: **API-CT-111..116** — sócio gated; `modulos: []` → 403 em todas as rotas operacionais; efeito imediato no backend (mesmo token); sem bypass por `?empresaId=`; pagamentos=contratos; `?empresaId=` inexistente → 404
+- [x] `06`: **UC-080** (efeito imediato com sessão ativa) e **UC-081** (Central se adapta — **gap**)
+- [x] `smoke`: **MOD-098** (sócio + efeito imediato + sem bypass) e **MOD-099** (só central)
+- [x] **Follow-up P025** registrado (`BACKLOG.md`): Central não adapta por módulo (UC-081)
+
 ## Validação
 
 - [x] `npm run build` → OK
 - [x] `npm run docs:audit` → limpo (43 rotas, 20 telas)
 - [x] Teste real isolado (PORT=3002): off → 403 `MODULE_DISABLED`; ativo → 200; compartilhado → 200; super admin sem/com `?empresaId=`
-- [x] `smoke:api` → **105/105** (inclui MOD-097 + OPS-040)
+- [x] `smoke:api` → **107/107** (MOD-097/098/099 + OPS-040)
 - [x] **Bug de fuso corrigido:** `date(h.createdAt, 'localtime')` no `operacoes.repository.impl.ts` (UTC × local divergia à noite → visita não refletia)

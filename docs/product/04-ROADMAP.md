@@ -593,7 +593,7 @@ A autenticação multi-usuário e o painel de administração são implementados
 - **PLAN-031** — Temas & gradientes (5 por usuário) + **Super Admin whitelabel**: módulos por empresa (BR-092/093), `PATCH /modulos`, gating de UI.
 - **PLAN-036** — Whitelabel **enforcement no backend**: 403 `MODULE_DISABLED` por módulo desativado (P024) — `requireModule` no mount das rotas + por endpoint em `/operacoes`.
 
-Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019, P020, P021, P022, P023 pendentes).
+Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019, P020, P021, P022, P023, P025 pendentes).
 
 > **Whitelabel futuro (5.10):** com a infra de temas (blocos `data-theme`) e módulos por empresa prontas, a evolução é: `empresa.tema` (paleta do cliente aplicada a todos os usuários do tenant). Sem coluna/cronograma ainda.
 

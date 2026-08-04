@@ -1095,6 +1095,24 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 ### API-CT-110 — Endpoints compartilhados (limite do v1)
 **Dado** módulo `cobrancas` off → **Então** `GET /operacoes/cobrancas` continua **200** (compartilhado com Central/Rota/Atendidos — ver PLAN-036, fora de escopo do gating). `GET /operacoes/pagamentos-hoje|parcelas-hoje|parcelas-semana` idem.
 
+### API-CT-111 — Sócio respeita os módulos da empresa
+**Dado** sócio de empresa com `caixa` off → **Então** `GET /api/caixa` → **403** `MODULE_DISABLED` (sócio não é tratado como super admin; usa o `empresaId` do token).
+
+### API-CT-112 — Empresa "só central" (`modulos: []`) → 403 em todas as rotas operacionais
+**Dado** empresa com `modulos: []` → **Então** `GET /api/clientes`, `GET /api/contratos`, `GET /api/caixa`, `GET /api/gastos`, `GET /api/pagamentos` → **403**. Apenas `central` (dashboard) e `/auth`/`/admin` seguem 200.
+
+### API-CT-113 — Mudança de módulos vale imediatamente no backend
+**Dado** usuário logado (token X) de empresa com `caixa` ativo → **Então** `GET /api/caixa` → **200**. **E** super admin remove `caixa` via PATCH → **Então** **mesmo token X** → `GET /api/caixa` → **403** (sem novo login/`/me` — o middleware lê `empresas.modulos` por request; contraste com o gating de UI, que reflete no próximo `/me` — UC-060).
+
+### API-CT-114 — Operator/admin não contornam com `?empresaId=`
+**Dado** operator/admin de empresa A (com `caixa` off) → **Então** `GET /api/caixa?empresaId=<B>` (empresa B com `caixa` on) → **403** (o middleware usa o `empresaId` do token; `?empresaId=` só é respeitado para super admin).
+
+### API-CT-115 — Pagamentos gated por contratos
+**Dado** empresa válida com `caixa` on e `contratos` off (`["clientes","caixa"]`) → **Então** `GET /api/pagamentos/contrato/:id` → **403** (mount de `/pagamentos` = `contratos`); `GET /api/caixa` → **200**.
+
+### API-CT-116 — Super admin com `?empresaId=` inexistente → 404
+**Dado** super admin com `?empresaId=<uuid-invalido>` → **Então** rota gated → **404** `EMPRESA_NOT_FOUND`.
+
 ---
 
 # AUTH — SENHA (PLAN-029)

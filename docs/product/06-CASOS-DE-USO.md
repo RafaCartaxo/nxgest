@@ -1485,6 +1485,42 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+### UC-080 — Enforcement com sessão ativa: mudança vale imediato no backend
+
+**Ator:** super_admin + usuário logado
+
+**Ação:** super admin desativa um módulo (ex.: `caixa`) da empresa **durante** uma sessão ativa do usuário; o usuário chama a API sem refazer login.
+
+**O que DEVE acontecer:** o **backend** reflete a mudança **imediatamente** (o `requireModule` lê `empresas.modulos` por request) — a próxima chamada à API do módulo devolve 403, mesmo com o token antigo. Contraste com o **gating de UI** (UC-060), que só reflete no próximo `/me`/carregamento.
+
+**Conferências:**
+- [ ] Com `caixa` ativo, `GET /api/caixa` → 200; após PATCH remover `caixa`, **mesmo token** → 403 (sem novo login)?
+- [ ] O app não quebra ao receber o 403 (mensagem `MODULE_DISABLED` traduzida)?
+- [ ] Ao reativar o módulo, a API volta a 200 com o mesmo token?
+
+**Regras:** BR-093
+
+---
+
+### UC-081 — Central se adapta aos módulos off (gap de frontend — follow-up)
+
+**Ator:** usuário de empresa com módulos parciais (ex.: "só clientes")
+
+**Ação:** empresa com `modulos: ["clientes"]` (ou `["clientes","contratos"]`); usuário abre a Central (`/`).
+
+**O que DEVE acontecer (esperado, BR-093/UC-058):** a Central **se adapta** — sem "Pendentes do Dia", sem KPIs de caixa (a receber hoje / recebido hoje / clientes pendentes / atrasado / a vencer) quando os módulos `cobrancas`/`caixa` estão off, e **sem disparar chamadas** às rotas do módulo off.
+
+> ⚠️ **Gap atual (follow-up P025):** hoje a Central renderiza "Pendentes do Dia" por *dados* (não por módulo) e os KPIs financeiros são sempre exibidos (`OperacoesDashboard.tsx`), pois `GET /operacoes/cobrancas` é aberto (limite v1 do PLAN-036). Isso contradiz UC-058 — registrar como pendência.
+
+**Conferências:**
+- [ ] Tenant "só clientes" NÃO vê "Pendentes do Dia" nem KPIs de caixa na Central?
+- [ ] A Central não chama a API de módulo off (sem 403 silencioso)?
+- [ ] Rota/Atendidos/Gastos já ocultos (coberto hoje)?
+
+**Regras:** BR-093
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)

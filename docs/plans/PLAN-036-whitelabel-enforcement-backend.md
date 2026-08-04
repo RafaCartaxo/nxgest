@@ -62,7 +62,7 @@ Fechar a lacuna do PLAN-031: o v1 de módulos era **gating de UI** (rotas/nav/en
 403 `MODULE_DISABLED` nas rotas de módulo off — ver `engineering/02-API.md` (nota no PATCH modulos) e `product/07-CASOS-DE-USO-API.md` (API-CT-106..110).
 
 ## UCs de validação
-`product/06-CASOS-DE-USO.md` UC-079.
+`product/06-CASOS-DE-USO.md` UC-079 (enforcement), UC-080 (efeito imediato com sessão ativa), UC-081 (Central se adapta — **gap de frontend, follow-up P025**).
 
 ## Documentação atualizada (matriz SKILL-009)
 - `02-BUSINESS-RULES.md` BR-093 · `02-API.md` · `07` (API-CT-106..110) · `06` (UC-079)
@@ -73,6 +73,14 @@ Fechar a lacuna do PLAN-031: o v1 de módulos era **gating de UI** (rotas/nav/en
 - **Teste real em instância isolada** (seed + PORT=3002): módulos off → 403 `MODULE_DISABLED` (`caixa`, `gastos`, `rota` via `/visitas`, `cobrancas` via `/historico-atrasos`); ativos → 200; compartilhado `/operacoes/cobrancas` → 200; super admin sem `?empresaId=` → 200, com `?empresaId=` → 403; sem `modulos` (fallback) → 200.
 - **`smoke:api` 105/105** (inclui novo MOD-097 e OPS-040).
 - **Bug de fuso corrigido na validação:** `date(h.createdAt)` (UTC) × `hoje` (local) divergiam em certos horários → visita não refletia na lista. Corrigido com `'localtime'` (`operacoes.repository.impl.ts`).
+
+## Casos de teste ampliados (03/08/2026)
+- `07-CASOS-DE-USO-API.md`: **API-CT-111..116** — sócio respeita módulos; `modulos: []` (só central) → 403 em todas as rotas operacionais; mudança de módulos vale imediato no backend (mesmo token); operator/admin não contornam com `?empresaId=`; pagamentos gated por `contratos`; super admin com `?empresaId=` inexistente → 404.
+- `06-CASOS-DE-USO.md`: **UC-080** (efeito imediato com sessão ativa) e **UC-081** (Central se adapta — **gap**).
+- `smoke-api.mjs`: **MOD-098** (sócio gated + efeito imediato + sem bypass) e **MOD-099** (só central).
+
+## Follow-up registrado
+- **P025** (`BACKLOG.md`): a Central (`/`) não se adapta por módulo — renderiza "Pendentes do Dia" por dados e exibe KPIs financeiros mesmo com `cobrancas`/`caixa` off (UC-081). Gatear as seções por módulo + evitar chamadas às rotas off; viabilizaria gatear `/operacoes/cobrancas` por `cobrancas` no futuro.
 
 ## Referências
 - `plans/PLAN-031-temas-modulos-whitelabel.md` (origem dos módulos) · `plans/BACKLOG.md` P024

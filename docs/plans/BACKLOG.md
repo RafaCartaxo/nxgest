@@ -347,6 +347,19 @@ Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já cobe
 
 ---
 
+## P025 — Central se adapta aos módulos off (frontend, follow-up do PLAN-036)
+
+> **Gap registrado em 03/08/2026 (UC-081).** O enforcement no backend expôs que a Central (`/`) não se adapta por módulo: `OperacoesDashboard` renderiza "Pendentes do Dia" por **dados** (não por `cobrancasAtivo`) e os KPIs financeiros (a receber/recebido/clientes pendentes/atrasado/a vencer) são sempre exibidos — mesmo com `cobrancas`/`caixa` off (UC-058/BR-093 exigem adaptação). Como `GET /operacoes/cobrancas` é aberto (limite v1 do P024), o tenant "só clientes" ainda vê pendentes + KPIs de caixa.
+
+### Escopo (quando entrar)
+
+- Gatear as seções/KPIs da Central por módulo (`cobrancas`, `caixa`): ocultar "Pendentes do Dia" e os KPIs financeiros quando o módulo estiver off;
+- Evitar chamadas às rotas do módulo off (hoje `fetchGastos` já 403 silencioso → 0; padronizar para não disparar);
+- Isso também viabilizaria, no futuro, gatear `GET /operacoes/cobrancas` por `cobrancas` sem quebrar Rota/Atendidos (que hoje consomem o mesmo feed);
+- CTs/UC: UC-081 + conferências.
+
+---
+
 # Prioridade sugerida
 
 ## Sprint 1 — Concluído (PLAN-026)

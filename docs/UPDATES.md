@@ -18,6 +18,10 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 
 **Bug encontrado e corrigido na validação (fuso horário):** a query de cobranças comparava `date(h.createdAt)` (UTC) com `hoje` (data local) — em determinados horários do dia (UTC já no dia seguinte vs local) a visita registrada não refletia na lista. Corrigido para `date(h.createdAt, 'localtime')` (`operacoes.repository.impl.ts`). O `smoke` voltou a passar **105/105**.
 
+**Casos de teste ampliados** — `07`: API-CT-111..116 (sócio gated, só central → 403 em todas as rotas operacionais, efeito imediato no backend, sem bypass por `?empresaId=`, pagamentos=contratos, empresa inexistente → 404); `06`: UC-080 (efeito imediato) e UC-081; `smoke`: MOD-098/099.
+
+**Gap registrado (follow-up P025):** a **Central não se adapta por módulo** — exibe "Pendentes do Dia" e KPIs de caixa mesmo com `cobrancas`/`caixa` off (UC-081/BR-093); registrar como pendência no backlog.
+
 Referência: [PLAN-036](plans/PLAN-036-whitelabel-enforcement-backend.md)
 
 ## 03/08/2026 — PLAN-035 · Temas em componentes + Hero headers nos módulos
