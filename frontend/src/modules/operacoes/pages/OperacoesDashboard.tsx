@@ -28,6 +28,7 @@ export function OperacoesDashboard() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const modulos = user?.modulos
+  const contratosAtivo = hasModule(modulos, "contratos")
   const gastosAtivo = hasModule(modulos, "gastos")
   const rotaAtivo = hasModule(modulos, "rota")
   const cobrancasAtivo = hasModule(modulos, "cobrancas")
@@ -58,6 +59,11 @@ export function OperacoesDashboard() {
   coordsRef.current = { lat, lng, gpsAtivo }
 
   const fetch = useCallback(async () => {
+    if (!contratosAtivo) {
+      setData(null)
+      setLoading(false)
+      return
+    }
     const { lat: refLat, lng: refLng, gpsAtivo: refGps } = coordsRef.current
     setLoading(true)
     setError(null)
@@ -76,18 +82,20 @@ export function OperacoesDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [t])
+  }, [t, contratosAtivo])
 
   const fetchPagamentos = useCallback(async () => {
+    if (!contratosAtivo) return
     try {
       const result = await listarPagamentosHoje()
       setPagamentosHoje(result)
     } catch {
       setPagamentosHoje([])
     }
-  }, [])
+  }, [contratosAtivo])
 
   const fetchGastos = useCallback(async () => {
+    if (!gastosAtivo) return
     try {
       const hoje = getLocalDateString(new Date())
       const result = await listGastos({ dataInicio: hoje, dataFim: hoje, limit: 1 })
@@ -95,7 +103,7 @@ export function OperacoesDashboard() {
     } catch {
       setGastosHoje(0)
     }
-  }, [])
+  }, [gastosAtivo])
 
   useEffect(() => {
     fetch()
@@ -239,6 +247,7 @@ export function OperacoesDashboard() {
             aVencer={data.indicadores.aVencer}
             gastosHoje={gastosHoje}
             hideGastos={!gastosAtivo}
+            hideCobrancas={!cobrancasAtivo}
             onRecebidoClick={() => {
               setPagamentosHojeLoading(true)
               setPagamentosModalOpen(true)
@@ -256,7 +265,7 @@ export function OperacoesDashboard() {
               distanciaTotal={Math.round(distanciaTotal * 10) / 10}
             />
           )}
-          {itemsOrdenados.length > 0 || totalResolvidos > 0 ? (
+          {cobrancasAtivo && (itemsOrdenados.length > 0 || totalResolvidos > 0) ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-text-primary">{t("operacoes.cobrancasDoDia")}</h2>
@@ -320,6 +329,10 @@ export function OperacoesDashboard() {
             </div>
           ) : null}
         </>
+      ) : !contratosAtivo ? (
+        <div className="rounded-md border border-border-light bg-surface p-6 text-center text-text-secondary">
+          <p className="text-sm">{t("operacoes.centralVazia")}</p>
+        </div>
       ) : null}
       <PagamentosHojeModal
         open={pagamentosModalOpen}

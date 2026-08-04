@@ -117,7 +117,8 @@
     "verResumo": "Ver resumen →",
     "atrasadosResumo": "{{clientes}} cliente(s) en atraso · R$ {{total}}",
     "resumoAtendidosDetail": "{{visitado}} visitado(s) · {{naoEncontrado}} no encontrado(s) · {{promessa}} promesa(s) · {{pagos}} pagado(s)",
-    "atrasadosResumoDetail": "{{pendente}} pendiente(s) · {{visitado}} visitado(s) · {{naoEncontrado}} no encontrado(s) · {{promessa}} promesa(s)"
+    "atrasadosResumoDetail": "{{pendente}} pendiente(s) · {{visitado}} visitado(s) · {{naoEncontrado}} no encontrado(s) · {{promessa}} promesa(s)",
+    "centralVazia": "Ningún módulo operacional está activo para este negocio."
   },
   "cliente": {
     "title": "Clientes",

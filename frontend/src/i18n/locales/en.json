@@ -117,7 +117,8 @@
     "verResumo": "View summary →",
     "atrasadosResumo": "{{clientes}} overdue client(s) · R$ {{total}}",
     "resumoAtendidosDetail": "{{visitado}} visited · {{naoEncontrado}} not found · {{promessa}} promise(s) · {{pagos}} paid",
-    "atrasadosResumoDetail": "{{pendente}} pending · {{visitado}} visited · {{naoEncontrado}} not found · {{promessa}} promise(s)"
+    "atrasadosResumoDetail": "{{pendente}} pending · {{visitado}} visited · {{naoEncontrado}} not found · {{promessa}} promise(s)",
+    "centralVazia": "No operational module is active for this business."
   },
   "cliente": {
     "title": "Clients",

@@ -1,6 +1,6 @@
 export const MODULES = [
   { id: "clientes", labelKey: "modules.clientes", dependsOn: [] as string[] },
-  { id: "contratos", labelKey: "modules.contratos", dependsOn: [] as string[] },
+  { id: "contratos", labelKey: "modules.contratos", dependsOn: ["clientes"] },
   { id: "caixa", labelKey: "modules.caixa", dependsOn: [] as string[] },
   { id: "gastos", labelKey: "modules.gastos", dependsOn: ["caixa"] },
   { id: "rota", labelKey: "modules.rota", dependsOn: ["contratos"] },

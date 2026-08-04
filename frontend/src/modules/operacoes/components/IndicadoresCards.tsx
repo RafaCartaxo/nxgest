@@ -11,6 +11,7 @@ interface IndicadoresCardsProps {
   aVencer: number
   gastosHoje?: number
   hideGastos?: boolean
+  hideCobrancas?: boolean
   onRecebidoClick?: () => void
   onAReceberClick?: () => void
   onPendentesClick?: () => void
@@ -28,6 +29,7 @@ export function IndicadoresCards({
   aVencer,
   gastosHoje,
   hideGastos = false,
+  hideCobrancas = false,
   onRecebidoClick,
   onAReceberClick,
   onPendentesClick,
@@ -56,12 +58,14 @@ export function IndicadoresCards({
         value={`R$ ${formatCurrency(Math.abs(resultadoDoDia))}`}
         valueClassName={resultadoDoDia >= 0 ? "text-success-text" : "text-danger-text"}
       />
-      <KpiCard
-        variant="yellow"
-        title={t("operacoes.clientesParaCobrar")}
-        value={clientesParaCobrar}
-        onClick={onPendentesClick}
-      />
+      {!hideCobrancas && (
+        <KpiCard
+          variant="yellow"
+          title={t("operacoes.clientesParaCobrar")}
+          value={clientesParaCobrar}
+          onClick={onPendentesClick}
+        />
+      )}
       <KpiCard
         variant="danger"
         title={t("operacoes.atrasado")}

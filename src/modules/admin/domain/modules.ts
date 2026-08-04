@@ -10,8 +10,9 @@ export const ALL_MODULES = [
 
 export type ModuleId = (typeof ALL_MODULES)[number]
 
-/** Dependências: módulo → lista de módulos obrigatórios. */
+/** Dependências: módulo → lista de módulos obrigatórios (fonte única de coerência do whitelabel). */
 export const MODULE_DEPENDENCIES: Record<string, ModuleId[]> = {
+  contratos: ["clientes"],
   gastos: ["caixa"],
   rota: ["contratos"],
   cobrancas: ["contratos"],
@@ -37,6 +38,22 @@ export function serializeModulos(modulos: string[]): string {
 
 export type ValidacaoModulos = { ok: true; value: string[] } | { ok: false; message: string }
 
+/** Dependências transitivas (incl. indiretas) ausentes do conjunto. */
+function dependenciasFaltantes(moduleId: ModuleId, inSet: Set<string>): string[] {
+  const faltantes: string[] = []
+  const visitados = new Set<string>()
+  function walk(id: string): void {
+    if (visitados.has(id)) return
+    visitados.add(id)
+    for (const dep of MODULE_DEPENDENCIES[id] ?? []) {
+      if (!inSet.has(dep) && !faltantes.includes(dep)) faltantes.push(dep)
+      walk(dep)
+    }
+  }
+  walk(moduleId)
+  return faltantes
+}
+
 export function validateModulos(input: unknown): ValidacaoModulos {
   if (!Array.isArray(input)) {
     return { ok: false, message: "modulos deve ser um array." }
@@ -46,12 +63,13 @@ export function validateModulos(input: unknown): ValidacaoModulos {
   }
 
   const value = input as string[]
+  const inSet = new Set(value)
   for (const moduleId of value) {
-    const deps = MODULE_DEPENDENCIES[moduleId]
-    if (deps && !deps.every((d) => value.includes(d))) {
+    const faltantes = dependenciasFaltantes(moduleId as ModuleId, inSet)
+    if (faltantes.length > 0) {
       return {
         ok: false,
-        message: `O módulo "${moduleId}" requer: ${deps.join(", ")}.`,
+        message: `O módulo "${moduleId}" requer: ${faltantes.join(", ")}.`,
       }
     }
   }
