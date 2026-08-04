@@ -7,6 +7,7 @@ import { createTables } from "./database.js"
 import { healthRoutes } from "./modules/health/presentation/routes/health.routes.js"
 import { authRoutes } from "./modules/auth/presentation/routes/auth.routes.js"
 import { authMiddleware } from "./shared/middleware/auth.middleware.js"
+import { requireModule } from "./shared/middleware/module.middleware.js"
 import { adminRoutes } from "./modules/admin/presentation/routes/admin.routes.js"
 import { clienteRoutes } from "./modules/cliente/presentation/routes/cliente.routes.js"
 import { contratoRoutes } from "./modules/contrato/presentation/routes/contrato.routes.js"
@@ -30,12 +31,12 @@ app.use("/api/auth", authRoutes)
 app.use("/api/admin", authMiddleware, adminRoutes)
 app.use("/api/admin/empresas", authMiddleware, empresaRoutes)
 
-app.use("/api/clientes", authMiddleware, clienteRoutes)
-app.use("/api/contratos", authMiddleware, contratoRoutes)
-app.use("/api/pagamentos", authMiddleware, pagamentoRoutes)
+app.use("/api/clientes", authMiddleware, requireModule("clientes"), clienteRoutes)
+app.use("/api/contratos", authMiddleware, requireModule("contratos"), contratoRoutes)
+app.use("/api/pagamentos", authMiddleware, requireModule("contratos"), pagamentoRoutes)
 app.use("/api/operacoes", authMiddleware, operacoesRoutes)
-app.use("/api/caixa", authMiddleware, caixaRoutes)
-app.use("/api/gastos", authMiddleware, gastoRoutes)
+app.use("/api/caixa", authMiddleware, requireModule("caixa"), caixaRoutes)
+app.use("/api/gastos", authMiddleware, requireModule("gastos"), gastoRoutes)
 
 if (process.env.NODE_ENV === "production") {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))

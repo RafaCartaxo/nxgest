@@ -343,7 +343,8 @@
     "EMAIL_DUPLICATED": "E-mail já cadastrado.",
     "OPERATOR_NOT_FOUND": "Operador não encontrado.",
     "INVALID_CURRENT_PASSWORD": "Senha atual incorreta.",
-    "INTERNAL_ERROR": "Erro interno do servidor. Tente novamente."
+    "INTERNAL_ERROR": "Erro interno do servidor. Tente novamente.",
+    "MODULE_DISABLED": "Este módulo está desativado para a sua empresa."
   },
   "auth": {
     "title": "Entrar",

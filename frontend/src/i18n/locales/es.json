@@ -343,7 +343,8 @@
     "EMAIL_DUPLICATED": "Correo ya registrado.",
     "OPERATOR_NOT_FOUND": "Operador no encontrado.",
     "INVALID_CURRENT_PASSWORD": "Contraseña actual incorrecta.",
-    "INTERNAL_ERROR": "Error interno del servidor. Intente de nuevo."
+    "INTERNAL_ERROR": "Error interno del servidor. Intente de nuevo.",
+    "MODULE_DISABLED": "Este módulo está desactivado para su empresa."
   },
   "auth": {
     "title": "Iniciar Sesión",

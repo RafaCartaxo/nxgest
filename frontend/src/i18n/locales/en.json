@@ -343,7 +343,8 @@
     "EMAIL_DUPLICATED": "Email already registered.",
     "OPERATOR_NOT_FOUND": "Operator not found.",
     "INVALID_CURRENT_PASSWORD": "Current password is incorrect.",
-    "INTERNAL_ERROR": "Internal server error. Please try again."
+    "INTERNAL_ERROR": "Internal server error. Please try again.",
+    "MODULE_DISABLED": "This module is disabled for your company."
   },
   "auth": {
     "title": "Sign In",

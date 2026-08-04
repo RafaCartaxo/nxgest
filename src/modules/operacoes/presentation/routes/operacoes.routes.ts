@@ -1,4 +1,5 @@
 import { Router } from "express"
+import { requireModule } from "../../../../shared/middleware/module.middleware.js"
 import { OperacoesController } from "../controllers/operacoes.controller.js"
 import { ListarCobrancasDoDiaUseCase } from "../../application/use-cases/ListarCobrancasDoDia/ListarCobrancasDoDiaUseCase.js"
 import { ListarPagamentosDoDiaUseCase } from "../../application/use-cases/ListarPagamentosDoDia/ListarPagamentosDoDiaUseCase.js"
@@ -22,7 +23,7 @@ router.get("/cobrancas", controller.cobrancas.bind(controller))
 router.get("/pagamentos-hoje", controller.pagamentosHoje.bind(controller))
 router.get("/parcelas-hoje", controller.parcelasHoje.bind(controller))
 router.get("/parcelas-semana", controller.parcelasSemana.bind(controller))
-router.get("/historico-atrasos", controller.historicoAtrasos.bind(controller))
-router.post("/visitas", controller.visitas.bind(controller))
+router.get("/historico-atrasos", requireModule("cobrancas"), controller.historicoAtrasos.bind(controller))
+router.post("/visitas", requireModule("rota"), controller.visitas.bind(controller))
 
 export { router as operacoesRoutes }
