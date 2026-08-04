@@ -700,7 +700,7 @@ No painel admin, os **KPIs de Operação** (`totalClientes`, `contratosAtivos`, 
 O `super_admin` controla os **módulos ativos de cada empresa** (whitelabel) via `PATCH /api/admin/empresas/:id/modulos`. Cada empresa tem uma lista de módulos (`empresas.modulos`, JSON); módulos possíveis: `clientes`, `contratos`, `caixa`, `gastos`, `rota`, `cobrancas`, `atendidos`.
 
 - Empresa nova nasce com **todos os módulos** ativos (default).
-- **Dependências obrigatórias**: `gastos` requer `caixa`; `rota`, `cobrancas` e `atendidos` requerem `contratos`. Combinação que viole a dependência → 422.
+- **Dependências obrigatórias (validadas de forma transitiva — PLAN-037):** `contratos` requer `clientes`; `gastos` requer `caixa`; `rota`, `cobrancas` e `atendidos` requerem `contratos` (logo, também `clientes`). Combinação que viole a dependência (direta ou transitiva) → 422.
 - Array vazio = apenas o módulo `central` (sempre ativo).
 - Somente `super_admin` pode alterar; `admin` → 403.
 

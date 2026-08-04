@@ -592,10 +592,15 @@ A autenticação multi-usuário e o painel de administração são implementados
 - **PLAN-030** — Visão da equipe no admin: KPIs de Operação com **totais da equipe** (BR-091), `GET /api/admin/equipe`, `ContribuicaoModal`, navbar com Administração/Empresas visíveis.
 - **PLAN-031** — Temas & gradientes (5 por usuário) + **Super Admin whitelabel**: módulos por empresa (BR-092/093), `PATCH /modulos`, gating de UI.
 - **PLAN-036** — Whitelabel **enforcement no backend**: 403 `MODULE_DISABLED` por módulo desativado (P024) — `requireModule` no mount das rotas + por endpoint em `/operacoes`.
+- **PLAN-037** — Coerência do whitelabel: `contratos ⇒ clientes` + validação **transitiva** de combos + **Central se adapta por módulo** (P025) — dado de módulo off nunca aparece.
 
-Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019, P020, P021, P022, P023, P025 pendentes).
+Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019, P020, P021, P022, P023 pendentes).
 
-> **Whitelabel futuro (5.10):** com a infra de temas (blocos `data-theme`) e módulos por empresa prontas, a evolução é: `empresa.tema` (paleta do cliente aplicada a todos os usuários do tenant). Sem coluna/cronograma ainda.
+> **Whitelabel futuro (5.10) — visão multi-negócio:** o princípio de coerência (PLAN-037) é a base para **um app, vários negócios** (cobrança hoje, agendamentos/vendas amanhã). Evolução em fases:
+> - **F2 — Branding por tenant:** `empresa.tema` (paleta padrão do cliente) + nome/logo no login/navbar;
+> - **F3 — URL por tenant:** `empresas.dominio` + resolução do tenant pelo **Host header** + login por URL + Caddy multi-domínio (subdomínio `tenant.app.com.br` e/ou domínio próprio do cliente);
+> - **F4 — Multi-negócio:** templates de negócio (`tipo_negocio` — preset coerente de módulos/labels/ícones) + novos módulos (agenda, vendas) + dashboard que compõe qualquer conjunto de módulos.
+> Sem coluna/cronograma ainda (F2..F4).
 
 ### 5.3 Visualização em mapa
 - Integração com Google Maps (já tem `maps.ts`)

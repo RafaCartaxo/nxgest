@@ -1502,20 +1502,19 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
-### UC-081 — Central se adapta aos módulos off (gap de frontend — follow-up)
+### UC-081 — Central se adapta aos módulos off (PLAN-037)
 
 **Ator:** usuário de empresa com módulos parciais (ex.: "só clientes")
 
 **Ação:** empresa com `modulos: ["clientes"]` (ou `["clientes","contratos"]`); usuário abre a Central (`/`).
 
-**O que DEVE acontecer (esperado, BR-093/UC-058):** a Central **se adapta** — sem "Pendentes do Dia", sem KPIs de caixa (a receber hoje / recebido hoje / clientes pendentes / atrasado / a vencer) quando os módulos `cobrancas`/`caixa` estão off, e **sem disparar chamadas** às rotas do módulo off.
-
-> ⚠️ **Gap atual (follow-up P025):** hoje a Central renderiza "Pendentes do Dia" por *dados* (não por módulo) e os KPIs financeiros são sempre exibidos (`OperacoesDashboard.tsx`), pois `GET /operacoes/cobrancas` é aberto (limite v1 do PLAN-036). Isso contradiz UC-058 — registrar como pendência.
+**O que DEVE acontecer (BR-093/UC-058):** a Central **se adapta** — sem "Pendentes do Dia" e sem o KPI de clientes pendentes quando `cobrancas` off; sem KPIs financeiros (a receber hoje / recebido hoje / resultado do dia / atrasado / a vencer) quando `contratos` off; **sem disparar chamadas** às rotas dos módulos off (`fetch` pula `listarCobrancasDoDia`/`listarPagamentosHoje` quando `contratos` off; `listGastos` quando `gastos` off). Tenant sem módulo operacional ativo vê estado vazio coerente ("Nenhum módulo operacional ativo para este negócio.").
 
 **Conferências:**
-- [ ] Tenant "só clientes" NÃO vê "Pendentes do Dia" nem KPIs de caixa na Central?
-- [ ] A Central não chama a API de módulo off (sem 403 silencioso)?
-- [ ] Rota/Atendidos/Gastos já ocultos (coberto hoje)?
+- [ ] Tenant "só clientes" (`["clientes"]`) NÃO vê KPIs financeiros nem "Pendentes do Dia" na Central — vê o estado vazio?
+- [ ] Tenant `["clientes","contratos"]` vê os KPIs financeiros (dados de contratos) mas NÃO a seção "Pendentes do Dia" nem o KPI de clientes pendentes?
+- [ ] A Central não chama a API de módulo off (sem 403 silencioso nem chamadas inúteis)?
+- [ ] Rota/Atendidos/Gastos continuam ocultos quando off?
 
 **Regras:** BR-093
 

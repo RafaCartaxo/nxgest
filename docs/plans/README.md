@@ -46,4 +46,5 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-034-atraso-card-contrato.md](PLAN-034-atraso-card-contrato.md) | Atraso no card do contrato (lista): linha de atraso "N parcelas · R$ Y · D dias" (BR-099) | Concluído |
 | [PLAN-035-temas-componentes-e-hero-headers.md](PLAN-035-temas-componentes-e-hero-headers.md) | Temas nos componentes (fim das cores fixas da paleta) + hero header nos módulos (`PageHeader`) + guarda `audit:styles` | Concluído |
 | [PLAN-036-whitelabel-enforcement-backend.md](PLAN-036-whitelabel-enforcement-backend.md) | Whitelabel: enforcement de módulos no backend — 403 `MODULE_DISABLED` por módulo desativado (P024) | Concluído |
+| [PLAN-037-coerencia-whitelabel-central-adapta.md](PLAN-037-coerencia-whitelabel-central-adapta.md) | Coerência do whitelabel: `contratos⇒clientes` + validação transitiva de combos + Central se adapta por módulo (P025) | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |

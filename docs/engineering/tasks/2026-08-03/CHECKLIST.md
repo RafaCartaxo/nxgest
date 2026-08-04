@@ -109,3 +109,34 @@
 - [x] Teste real isolado (PORT=3002): off → 403 `MODULE_DISABLED`; ativo → 200; compartilhado → 200; super admin sem/com `?empresaId=`
 - [x] `smoke:api` → **107/107** (MOD-097/098/099 + OPS-040)
 - [x] **Bug de fuso corrigido:** `date(h.createdAt, 'localtime')` no `operacoes.repository.impl.ts` (UTC × local divergia à noite → visita não refletia)
+
+---
+
+# CHECKLIST — Coerência do whitelabel (PLAN-037 / P025)
+
+**Data:** 04/08/2026
+
+**Plano:** plans/PLAN-037-coerencia-whitelabel-central-adapta.md
+
+## Dependências (combos coerentes)
+
+- [x] Backend `modules.ts`: `contratos ⇒ clientes` + `dependenciasFaltantes` (transitivas) no `validateModulos`
+- [x] Frontend `modules.ts`: `contratos` com `dependsOn: ["clientes"]` (propaga ao ModulosModal)
+- [x] Validado: `["contratos"]` → 422 "requer: clientes"; `["rota"]` → 422 "requer: contratos, clientes" (transitiva); `["clientes","contratos"]` → 200
+
+## Central adapta (P025)
+
+- [x] `OperacoesDashboard`: KPIs financeiros gated por `contratos`; "Pendentes do Dia" + clientes pendentes por `cobrancas`; skip de `listarCobrancasDoDia`/`listarPagamentosHoje` (sem contratos) e `listGastos` (sem gastos); estado vazio `centralVazia`
+- [x] `IndicadoresCards`: prop `hideCobrancas`
+- [x] i18n `operacoes.centralVazia` (pt/en/es)
+
+## Documentação
+
+- [x] `PLAN-037` · `BR-092` (dependências transitivas) · `07` (API-CT-117/118) · `06` (UC-081 sem gap) · `BACKLOG.md` (P025) · `plans/README.md` · `04-ROADMAP.md` (visão F2-F4 multi-negócio) · `UPDATES.md`
+
+## Validação
+
+- [x] `npm run build` → OK
+- [x] `npm run docs:audit` → limpo
+- [x] `smoke:api` → **107/107**
+- [x] Teste real isolado: 422 dependência + transitiva; combos válidos → 200

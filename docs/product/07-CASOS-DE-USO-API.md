@@ -1113,6 +1113,12 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 ### API-CT-116 — Super admin com `?empresaId=` inexistente → 404
 **Dado** super admin com `?empresaId=<uuid-invalido>` → **Então** rota gated → **404** `EMPRESA_NOT_FOUND`.
 
+### API-CT-117 — Contratos requer clientes (coerência de combos, PLAN-037)
+**Dado** `PATCH /modulos` com `modulos: ["contratos"]` → **Então** **422** "O módulo \"contratos\" requer: clientes." **Dado** `["clientes","contratos"]` → **Então** **200**.
+
+### API-CT-118 — Dependência transitiva (coerência de combos, PLAN-037)
+**Dado** `PATCH /modulos` com `modulos: ["rota"]` → **Então** **422** "O módulo \"rota\" requer: contratos, clientes." (as dependências transitivas são validadas — `rota ⇒ contratos ⇒ clientes`).
+
 ---
 
 # AUTH — SENHA (PLAN-029)

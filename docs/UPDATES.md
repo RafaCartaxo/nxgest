@@ -2,6 +2,17 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 04/08/2026 — PLAN-037 · Coerência do whitelabel (P025): combos validados + Central adapta
+
+**Adicionado**
+- **`contratos ⇒ clientes`** no grafo de dependências (backend + frontend) e **validação transitiva** de combos — `PATCH modulos ["rota"]` → 422 "requer: contratos, clientes". Combos órfãos são impossíveis (BR-092).
+- **Central se adapta por módulo (P025/UC-081):** KPIs financeiros gated por `contratos`, "Pendentes do Dia"/clientes pendentes por `cobrancas`; skip de fetches de módulos off; estado vazio coerente ("Nenhum módulo operacional ativo"). Princípio-base do multi-negócio: **dado de módulo off nunca aparece**.
+- **CTs API-CT-117/118** (dependência + transitiva) · **UC-081** sem gap · **smoke 107/107**.
+
+**Visão registrada (roadmap 5.10):** evolução para **um app, vários negócios** — F2 branding por tenant (`empresa.tema`), F3 URL por tenant (resolução por Host + Caddy multi-domínio), F4 templates de negócio (`tipo_negocio`).
+
+Referência: [PLAN-037](plans/PLAN-037-coerencia-whitelabel-central-adapta.md)
+
 ## 03/08/2026 — PLAN-036 · Whitelabel: enforcement de módulos no backend (P024)
 
 **Adicionado**
