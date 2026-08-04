@@ -591,6 +591,33 @@ async function main() {
     expect(contratos, 200, "contratos on")
     await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] } })
   })
+  await t("MOD-098", "Sócio respeita módulos + efeito imediato + sem bypass ?empresaId (P024)", async () => {
+    const tenantLogin = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
+    expect(tenantLogin, 200, "login tenant")
+    const socioEmail = `msocio.${Date.now()}@uorak.com`
+    const created = await req("POST", "/api/admin/operadores", { token: tenantLogin.data.token, body: { nome: "Sócio MOD", email: socioEmail, senha: SENHA, role: "socio" } })
+    expect(created, 201, "criar sócio nova empresa")
+    const socioLogin = await req("POST", "/api/auth/login", { body: { email: socioEmail, senha: SENHA } })
+    expect(socioLogin, 200, "login sócio")
+    const socioTok = socioLogin.data.token
+    expect(await req("GET", "/api/caixa", { token: socioTok }), 200, "caixa on (antes)")
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos"] } })
+    const depois = await req("GET", "/api/caixa", { token: socioTok })
+    expect(depois, 403, "sócio: caixa off (efeito imediato, mesmo token)")
+    if (depois.data?.code !== "MODULE_DISABLED") throw new Error(`code=${depois.data?.code}`)
+    expect(await req("GET", `/api/caixa?empresaId=${novaEmpresaId}`, { token: socioTok }), 403, "sócio não contorna com ?empresaId=")
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] } })
+  })
+  await t("MOD-099", "Só central (modulos: []) → 403 em rotas operacionais (P024)", async () => {
+    const tAdmin = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
+    expect(tAdmin, 200, "login tenant")
+    const tok = tAdmin.data.token
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: [] } })
+    expect(await req("GET", "/api/clientes", { token: tok }), 403, "clientes off")
+    expect(await req("GET", "/api/contratos", { token: tok }), 403, "contratos off")
+    expect(await req("GET", "/api/caixa", { token: tok }), 403, "caixa off")
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] } })
+  })
 
   // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------
   let socioId, socioEmail, socioOpId, socioToken
