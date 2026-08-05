@@ -16,7 +16,7 @@ export function SearchBar({ value, onChange, placeholder, onClear }: SearchBarPr
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="block w-full rounded-md border border-border bg-surface py-2 pl-10 pr-3 text-base text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+        className="block min-h-12 w-full rounded-xl border border-border-strong bg-surface py-2 pl-10 pr-3 text-base text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
       />
       {onClear && value && (
         <button

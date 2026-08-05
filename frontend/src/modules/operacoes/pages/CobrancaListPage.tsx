@@ -217,7 +217,7 @@ export function CobrancaListPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-md bg-secondary-light" />
+            <div key={i} className="h-24 animate-pulse rounded-md bg-surface-hover" />
           ))}
         </div>
       ) : pendentes.length === 0 && totalResolvidos > 0 ? (

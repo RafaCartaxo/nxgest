@@ -6,9 +6,6 @@ import {
   X,
   User,
   LogOut,
-  Sun,
-  Moon,
-  Globe,
   LayoutDashboard,
   Users,
   FileText,
@@ -17,24 +14,9 @@ import {
   Building2,
 } from "lucide-react"
 import { Logo } from "../components/Logo.js"
-import { useTheme } from "../theme/useTheme.js"
-import { THEMES } from "../theme/themes.js"
+import { Topbar } from "./Topbar.js"
 import { hasModule } from "../modules/modules.js"
 import { useAuth } from "../auth/AuthContext.js"
-
-const SWATCHES: Record<string, string> = {
-  default: "linear-gradient(135deg,#2563EB,#7C3AED)",
-  aurora: "linear-gradient(135deg,#4F46E5,#DB2777)",
-  ocean: "linear-gradient(135deg,#0EA5E9,#14B8A6)",
-  grape: "linear-gradient(135deg,#7C3AED,#C026D3)",
-  sunset: "linear-gradient(135deg,#F97316,#EC4899)",
-}
-
-const locales = [
-  { code: "pt-BR", label: "PT" },
-  { code: "en", label: "EN" },
-  { code: "es", label: "ES" },
-]
 
 interface NavItem {
   to: string
@@ -80,14 +62,11 @@ function useAdminNavItems(): NavItem[] {
 }
 
 function SidebarContent({ onNavigate, trailing }: { onNavigate?: () => void; trailing?: ReactNode }) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
-  const { palette, isDark, setPalette, toggleDark } = useTheme()
   const navigate = useNavigate()
   const items = useNavItems()
   const adminItems = useAdminNavItems()
-
-  const currentThemeLabel = THEMES.find((th) => th.id === palette)?.labelKey ?? "theme.default"
 
   function handleLogout() {
     logout()
@@ -167,55 +146,6 @@ function SidebarContent({ onNavigate, trailing }: { onNavigate?: () => void; tra
           </div>
         </div>
 
-        <div className="rounded-xl bg-surface px-3 py-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-sidebar-muted">{t("nav.temas")}</span>
-            <span className="text-xs font-medium text-primary-text">{t(currentThemeLabel)}</span>
-          </div>
-          <div className="mt-2 flex items-center justify-between gap-1">
-            {THEMES.map((th) => (
-              <button
-                key={th.id}
-                type="button"
-                title={t(th.labelKey)}
-                aria-label={t(th.labelKey)}
-                onClick={() => setPalette(th.id)}
-                className={`h-7 w-7 rounded-full border transition-transform ${
-                  palette === th.id ? "scale-110 border-primary ring-2 ring-primary/30" : "border-border"
-                }`}
-                style={{ backgroundImage: SWATCHES[th.id] }}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between rounded-xl bg-surface px-3 py-2">
-          <button
-            type="button"
-            onClick={toggleDark}
-            aria-label={isDark ? t("nav.temaClaro") : t("nav.temaEscuro")}
-            title={isDark ? t("nav.temaClaro") : t("nav.temaEscuro")}
-            className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-surface text-sidebar-foreground hover:bg-surface-hover"
-          >
-            {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-          </button>
-          <div className="flex items-center gap-1">
-            <Globe className="size-3.5 text-sidebar-muted" aria-hidden />
-            {locales.map((loc) => (
-              <button
-                key={loc.code}
-                type="button"
-                onClick={() => i18n.changeLanguage(loc.code)}
-                className={`rounded-md px-1.5 py-0.5 text-xs hover:bg-surface-hover ${
-                  i18n.language === loc.code ? "bg-primary-light font-medium text-primary" : "text-sidebar-muted"
-                }`}
-              >
-                {loc.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         <div className="my-1 border-t border-sidebar-border" />
 
         <div className="flex gap-2">
@@ -247,13 +177,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-[100dvh]">
-      {/* barra de topo mobile */}
-      <header className="sticky top-0 z-40 flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-2 py-2 lg:hidden">
+      {/* barra de topo (mobile + desktop) */}
+      <header className="sticky top-0 z-40 flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 py-2">
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
           aria-label={t("nav.configuracoes")}
-          className="grid size-11 place-items-center rounded-xl text-sidebar-foreground hover:bg-surface-hover"
+          className="grid size-11 place-items-center rounded-xl text-sidebar-foreground hover:bg-surface-hover lg:hidden"
         >
           <Menu className="size-5" aria-hidden />
         </button>
@@ -261,6 +191,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <span className="font-display font-semibold text-sidebar-foreground">
           NX <span className="text-brand-gradient">Gestão</span>
         </span>
+        <div className="flex-1" />
+        <Topbar />
       </header>
 
       {/* drawer mobile */}

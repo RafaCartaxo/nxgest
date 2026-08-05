@@ -8,6 +8,8 @@ import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
 import { ChevronDown } from "lucide-react"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 import { ApiError } from "../../../api/client.js"
+import { Field } from "../../../shared/components/Field/Field.js"
+import { Button } from "../../../shared/components/Button.js"
 
 interface GastoFormProps {
   onSuccess: () => void
@@ -80,31 +82,25 @@ export function GastoForm({ onSuccess }: GastoFormProps) {
   }
 
   return (
-    <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-      <div>
-        <label className="mb-1 block text-sm font-medium">{t("gasto.valor")}</label>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={form.watch("valor")}
-          onChange={(e) => {
-            form.setValue("valor", maskMonetario(e.target.value))
-            form.clearErrors("valor")
-          }}
-          placeholder="R$ 0,00"
-          className="block w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
-        />
-        {errors.valor?.message && (
-          <p className="mt-1 text-xs text-danger">{errors.valor.message}</p>
-        )}
-      </div>
+    <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <Field
+        label={t("gasto.valor")}
+        inputMode="decimal"
+        value={form.watch("valor")}
+        onChange={(e) => {
+          form.setValue("valor", maskMonetario(e.target.value))
+          form.clearErrors("valor")
+        }}
+        placeholder="R$ 0,00"
+        error={errors.valor?.message}
+      />
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">{t("gasto.categoria")}</label>
+      <div className="min-w-0">
+        <label className="mb-1.5 block text-sm font-medium text-text-secondary">{t("gasto.categoria")}</label>
         <div className="relative">
-            <select
+          <select
             {...form.register("categoria")}
-            className="block w-full min-w-0 appearance-none rounded-md border border-border bg-surface px-3 py-2 text-text-primary focus:border-primary focus:outline-none"
+            className="min-h-12 w-full min-w-0 appearance-none rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="" disabled hidden>{t("gasto.categoria")}</option>
             {CATEGORIAS_GASTO.map((cat) => (
@@ -116,36 +112,26 @@ export function GastoForm({ onSuccess }: GastoFormProps) {
           <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
         </div>
         {errors.categoria?.message && (
-          <p className="mt-1 text-xs text-danger">{errors.categoria.message}</p>
+          <p className="mt-1 text-xs font-medium text-danger-text">{errors.categoria.message}</p>
         )}
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">{t("gasto.data")}</label>
-        <div className="overflow-hidden rounded-md border border-border">
-          <input
-            type="date"
-            {...form.register("data")}
-            className="block w-full min-w-0 border-0 bg-surface px-3 py-2 text-text-primary focus:outline-none [color-scheme:light]"
-          />
-        </div>
-      </div>
+      <Field
+        label={t("gasto.data")}
+        type="date"
+        {...form.register("data")}
+        error={errors.data?.message}
+      />
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">{t("gasto.observacao")}</label>
-        <input
-          type="text"
-          {...form.register("observacao")}
-          className="block w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
-        />
-      </div>
+      <Field
+        label={t("gasto.observacao")}
+        {...form.register("observacao")}
+        error={errors.observacao?.message}
+      />
 
-      <button
-        type="submit"
-        className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-      >
+      <Button type="submit" className="w-full">
         {t("gasto.registrar")}
-      </button>
+      </Button>
     </form>
   )
 }

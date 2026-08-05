@@ -12,6 +12,7 @@ import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
+import { Button } from "../../../shared/components/Button.js"
 import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 
@@ -99,7 +100,7 @@ export function OperadorDetail() {
       <EstadoTela loading={loading} error={error} onRetry={fetch} empty={!loading && !operador} emptyMessage={t("admin.erroCarregar")}>
         {operador && caixa && (
           <>
-            <div className="mb-4 rounded-md bg-surface-secondary px-3 py-2 text-sm">
+            <div className="mb-4 rounded-xl bg-surface-secondary px-3 py-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-text-secondary">{t("admin.email")}:</span>
                 <span className="font-medium text-text-primary">{operador.email}</span>
@@ -128,30 +129,26 @@ export function OperadorDetail() {
             </div>
 
             <SectionHeader title={t("admin.ajustarCaixaOperador")} />
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex items-center gap-2">
               <input
                 type="text"
                 inputMode="decimal"
                 value={ajusteValor}
                 onChange={(e) => setAjusteValor(maskMonetario(e.target.value))}
                 placeholder="R$ 0,00"
-                className="block w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                className="min-h-12 w-full min-w-0 rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
               />
-<button
-                  type="button"
-                  onClick={handleAjustar}
-                  className="flex-shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-                >
-                  {t("caixa.ajustarSalvar")}
-                </button>
-              </div>
-              <input
-                type="text"
-                value={ajusteMotivo}
-                onChange={(e) => setAjusteMotivo(e.target.value)}
-                placeholder={t("caixa.motivoPlaceholder")}
-                className="mt-2 block w-full rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
-              />
+              <Button type="button" onClick={handleAjustar} className="shrink-0">
+                {t("caixa.ajustarSalvar")}
+              </Button>
+            </div>
+            <input
+              type="text"
+              value={ajusteMotivo}
+              onChange={(e) => setAjusteMotivo(e.target.value)}
+              placeholder={t("caixa.motivoPlaceholder")}
+              className="mt-2 min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+            />
 
             <SectionHeader title={t("caixa.historicoAjustes")} />
             {auditoria.length === 0 ? (
@@ -161,7 +158,7 @@ export function OperadorDetail() {
                 {auditoria.map((a) => (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between rounded-md border border-border-light bg-surface px-3 py-2"
+                    className="flex items-center justify-between rounded-xl border border-border bg-card px-3.5 py-2.5"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-text-primary">

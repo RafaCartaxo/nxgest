@@ -175,9 +175,9 @@ export function ClienteEdit() {
           back={{ onClick: () => navigate(`/clientes/${id}`), title: t("common.back") }}
         />
         <div className="animate-pulse space-y-4">
-          <div className="h-6 w-48 rounded bg-secondary-light" />
-          <div className="h-4 w-96 rounded bg-secondary-light" />
-          <div className="h-4 w-80 rounded bg-secondary-light" />
+          <div className="h-6 w-48 rounded bg-surface-hover" />
+          <div className="h-4 w-96 rounded bg-surface-hover" />
+          <div className="h-4 w-80 rounded bg-surface-hover" />
         </div>
       </div>
     )
@@ -241,7 +241,7 @@ export function ClienteEdit() {
         <SectionHeader title={t("cliente.enderecoComercio")} />
 
         <div className="mt-2">
-          <button
+          <Button
             type="button"
             disabled={geocodingLoading || cooldownRef.current}
             onClick={async () => {
@@ -284,10 +284,9 @@ export function ClienteEdit() {
                 },
               )
             }}
-            className="inline-flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
           >
             {geocodingLoading ? t("pagamento.calculando") : `📍 ${t("cliente.usarLocalAtual")}`}
-          </button>
+          </Button>
         </div>
 
         {comercioExpandido && (

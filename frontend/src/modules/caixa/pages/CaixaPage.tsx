@@ -321,7 +321,7 @@ export function CaixaPage() {
 
           <SectionHeader title={t("caixa.title")} />
           {status.ultimaLiquidacao && (
-            <div className="mb-2 rounded-md bg-surface-secondary px-3 py-2 text-sm">
+            <div className="mb-2 rounded-xl bg-surface-secondary px-3 py-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-text-secondary">{t("caixa.ultimoFechamento")}:</span>
                 <span className="font-medium text-text-primary">
@@ -381,7 +381,7 @@ export function CaixaPage() {
               {auditoria.map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center justify-between rounded-md border border-border-light bg-surface px-3 py-2"
+                  className="flex items-center justify-between rounded-xl border border-border bg-card px-3.5 py-2.5"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-text-primary">
@@ -409,7 +409,7 @@ export function CaixaPage() {
               {movimentacoes.map((m) => (
                 <div
                   key={m.id}
-                  className="flex items-center justify-between gap-2 rounded-md border border-border-light bg-surface px-3 py-2"
+                  className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5"
                 >
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <span className={`shrink-0 text-sm font-medium ${m.tipo === "entrada" ? "text-success-text" : "text-danger-text"}`}>
@@ -417,7 +417,7 @@ export function CaixaPage() {
                 </span>
                 <span className="shrink-0 text-xs text-text-secondary">{m.origem}</span>
                 {m.origem === "Cancelamento" && (
-                  <span className="shrink-0 rounded bg-warning/20 px-1.5 py-0.5 text-xs font-medium text-warning">
+                  <span className="shrink-0 rounded-full bg-warning-light px-2 py-0.5 text-xs font-medium text-warning-text">
                     {t("caixa.estornoLabel")}
                   </span>
                 )}
@@ -444,29 +444,25 @@ export function CaixaPage() {
           {canAdjust && (
             <div className="mt-8">
               <SectionHeader title={t("caixa.ajustar")} />
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 flex items-center gap-2">
                 <input
                   type="text"
                   inputMode="decimal"
                   value={ajusteValor}
                   onChange={(e) => setAjusteValor(maskMonetario(e.target.value))}
                   placeholder="R$ 0,00"
-                  className="block w-full min-w-0 rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                  className="min-h-12 w-full min-w-0 rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                <button
-                  type="button"
-                  onClick={handleAjustar}
-                  className="flex-shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-                >
+                <Button type="button" onClick={handleAjustar} className="shrink-0">
                   {t("caixa.ajustarSalvar")}
-                </button>
+                </Button>
               </div>
               <input
                 type="text"
                 value={ajusteMotivo}
                 onChange={(e) => setAjusteMotivo(e.target.value)}
                 placeholder={t("caixa.ajustarMotivoPlaceholder")}
-                className="mt-2 block w-full rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                className="mt-2 min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           )}

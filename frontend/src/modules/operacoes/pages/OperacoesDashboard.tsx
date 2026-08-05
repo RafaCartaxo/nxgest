@@ -235,10 +235,10 @@ export function OperacoesDashboard() {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-24 animate-pulse rounded-md bg-secondary-light" />
+              <div key={i} className="h-24 animate-pulse rounded-md bg-surface-hover" />
             ))}
           </div>
-          <div className="h-64 animate-pulse rounded-md bg-secondary-light" />
+          <div className="h-64 animate-pulse rounded-md bg-surface-hover" />
         </div>
       ) : data ? (
         <>
@@ -342,7 +342,7 @@ export function OperacoesDashboard() {
           ) : null}
         </>
       ) : !contratosAtivo ? (
-        <div className="rounded-md border border-border-light bg-surface p-6 text-center text-text-secondary">
+        <div className="rounded-xl border border-border bg-card p-6 text-center text-text-secondary">
           <p className="text-sm">{t("operacoes.centralVazia")}</p>
         </div>
       ) : null}

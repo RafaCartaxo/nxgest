@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { Button } from "../../../shared/components/Button.js"
+import { Field } from "../../../shared/components/Field/Field.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { Logo } from "../../../shared/components/Logo.js"
 
@@ -70,29 +71,23 @@ export function LoginPage() {
           <p className="mt-1 mb-5 text-sm text-text-secondary">{t("auth.loginCardSubtitle")}</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-text-primary">{t("auth.email")}</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary"
-                required
-                autoComplete="email"
-              />
-            </div>
+            <Field
+              label={t("auth.email")}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-text-primary">{t("auth.senha")}</label>
-              <div className="relative">
-                <input
-                  type={mostrarSenha ? "text" : "password"}
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  className="w-full rounded-md border border-border px-3 py-2 pr-10 text-base focus:ring-2 focus:ring-primary focus:border-primary"
-                  required
-                  autoComplete="current-password"
-                />
+            <Field
+              label={t("auth.senha")}
+              type={mostrarSenha ? "text" : "password"}
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              required
+              autoComplete="current-password"
+              right={
                 <button
                   type="button"
                   onClick={() => setMostrarSenha((v) => !v)}
@@ -102,8 +97,8 @@ export function LoginPage() {
                 >
                   {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-              </div>
-            </div>
+              }
+            />
 
             {erro && <ErrorBanner message={erro} onDismiss={() => setErro("")} />}
 

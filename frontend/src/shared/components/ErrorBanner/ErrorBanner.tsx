@@ -12,7 +12,7 @@ export function ErrorBanner({ message, onRetry, onDismiss, className = "" }: Err
   const { t } = useTranslation()
 
   return (
-    <div className={`flex items-start gap-2 rounded-md border border-danger bg-danger-light p-3 text-sm text-danger-text ${className}`}>
+    <div className={`flex items-start gap-2 rounded-xl border border-danger bg-danger-light p-3 text-sm text-danger-text ${className}`}>
       <p className="flex-1">{message}</p>
       <div className="flex flex-shrink-0 items-center gap-2">
         {onRetry && (

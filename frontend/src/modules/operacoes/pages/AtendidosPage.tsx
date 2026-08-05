@@ -127,7 +127,7 @@ export function AtendidosPage() {
           const isFirst = clientPayments[0] === p
           if (!isFirst) return null
           return (
-            <div key={p.clienteId} className="rounded-md border bg-surface p-4">
+            <div key={p.clienteId} className="rounded-xl border border-border bg-card p-4">
               <p className="font-semibold">{p.clienteNome}</p>
               <p className="mt-1 text-lg font-bold text-success">
                 R$ {formatCurrency(totalCliente)}
@@ -175,7 +175,7 @@ export function AtendidosPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-md bg-secondary-light" />
+            <div key={i} className="h-24 animate-pulse rounded-md bg-surface-hover" />
           ))}
         </div>
       ) : filtro === "PAGOS" ? (

@@ -435,14 +435,14 @@ export function RotaPage() {
         back={{ onClick: () => navigate("/"), title: t("nav.central") }}
         action={
           <div className="flex items-center gap-2">
-            <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${gpsAtivo ? "bg-white/25 text-white" : "bg-white/10 text-white/80"}`}>
+            <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${gpsAtivo ? "bg-success-light text-success-text" : "bg-surface-secondary text-text-secondary"}`}>
               <MapPin className="h-3 w-3" />
               {"GPS"}
             </span>
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="rounded-md p-2 text-white/80 hover:bg-white/20 hover:text-white"
+              className="rounded-lg p-2 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
               title={t("operacoes.rotaCobranca")}
               aria-label={t("operacoes.rotaCobranca")}
             >
@@ -453,7 +453,7 @@ export function RotaPage() {
       />
 
       {!gpsAtivo && items.length > 0 && (
-        <div className="mb-4 rounded-md border border-border-light bg-surface-secondary px-3 py-2 text-xs text-text-secondary">
+        <div className="mb-4 rounded-xl border border-border bg-surface-secondary px-3 py-2 text-xs text-text-secondary">
           {t("operacoes.gpsIndisponivel")}
         </div>
       )}
@@ -463,7 +463,7 @@ export function RotaPage() {
       )}
 
       {loading ? (
-        <div className="h-64 animate-pulse rounded-md bg-secondary-light" />
+        <div className="h-64 animate-pulse rounded-md bg-surface-hover" />
       ) : sortedItems.length === 0 && (items.length > 0 || routePagos > 0) ? (
         <SuccessState
           title={t("operacoes.todosAtendidos", { total: totalClientesAtendidosHoje })}
@@ -476,7 +476,7 @@ export function RotaPage() {
           <p className="text-sm text-text-secondary">{t("operacoes.nenhumaCobranca")}</p>
         </div>
       ) : !item ? (
-        <div className="h-64 animate-pulse rounded-md bg-secondary-light" />
+        <div className="h-64 animate-pulse rounded-md bg-surface-hover" />
       ) : (
         <>
           <Carousel
@@ -487,7 +487,7 @@ export function RotaPage() {
             hideDots
             itemKey={itemKey}
             renderItem={(slideItem) => (
-              <Card.Root variant="collection">
+              <Card.Root variant="collection" tone={slideItem.situacao === "atrasado" ? "danger" : "info"}>
                 {operando && <div className="h-1 animate-pulse bg-primary" />}
 
                 <CobrancaCard
@@ -560,7 +560,7 @@ export function RotaPage() {
                 type="date"
                 value={dataPromessa}
                 onChange={(e) => setDataPromessa(e.target.value)}
-                className="mb-4 w-full appearance-none rounded-md border border-border px-3 py-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                className="mb-4 min-h-12 w-full appearance-none rounded-xl border border-border-strong bg-surface px-3.5 text-base text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <div className="flex gap-4">
                 <Button

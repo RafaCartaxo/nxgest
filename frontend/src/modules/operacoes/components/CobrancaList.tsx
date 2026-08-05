@@ -20,7 +20,7 @@ export function CobrancaList({ items, operadorLat, operadorLng, onCardClick, emp
 
   if (items.length === 0) {
     return (
-      <div className="rounded-md border border-border-light p-8 text-center text-sm text-text-muted">
+      <div className="rounded-xl border border-border p-8 text-center text-sm text-text-muted">
         {t(emptyMessageKey ?? "operacoes.nenhumaCobranca")}
       </div>
     )

@@ -9,6 +9,7 @@ import { formatarData } from "../../../shared/utils/formatarData.js"
 import { formatCurrency, unmask } from "../../../shared/utils/masks.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { Button, ButtonLink } from "../../../shared/components/Button.js"
+import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { ContratoInfo } from "../components/ContratoInfo.js"
 import { ParcelaList } from "../components/ParcelaList.js"
@@ -282,7 +283,7 @@ export function ContratoDetail() {
             </div>
 
             <div className="mb-6">
-              <h3 className="mb-3 text-xl font-semibold">{t("contrato.parcelasLabel")}</h3>
+              <SectionHeader title={t("contrato.parcelasLabel")} />
               <ParcelaList
                 parcelas={contrato.parcelas || []}
                 onPagar={isAdminContext ? undefined : setPagandoParcela}
@@ -291,22 +292,22 @@ export function ContratoDetail() {
 
             {pagamentosAnteriores.length > 0 && (
               <div className="mb-6">
-                <h3 className="mb-3 text-xl font-semibold">{t("cliente.pagamentos")}</h3>
+                <SectionHeader title={t("cliente.pagamentos")} />
                 <div className="space-y-2">
                   {pagamentosAnteriores.map((p) => (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between rounded-md border p-3 text-sm"
+                      className="flex items-center justify-between rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm"
                     >
                       <span className="text-text-secondary">{formatarData(p.data, t)}</span>
                       <span className={p.estornadoEm ? "line-through opacity-60" : ""}>
                         <span className="text-sm font-medium text-text-secondary">R$</span>{" "}
-                        <span className="font-semibold">{formatCurrency(p.valor)}</span>
+                        <span className="font-semibold text-text-primary">{formatCurrency(p.valor)}</span>
                       </span>
                       <div className="flex flex-col items-end gap-1">
                         {p.estornadoEm ? (
                           <>
-                            <span className="rounded bg-warning-light px-1.5 py-0.5 text-xs font-medium text-warning">
+                            <span className="rounded-full bg-warning-light px-2 py-0.5 text-xs font-medium text-warning-text">
                               {t("pagamento.estornado")}
                             </span>
                             {p.estornoMotivo && (
@@ -322,7 +323,7 @@ export function ContratoDetail() {
                               <button
                                 type="button"
                                 onClick={() => { setEstornandoId(p.id); setEstornoMotivo("") }}
-                                className="flex items-center gap-1 rounded-md border border-border-light px-2 py-1 text-xs font-medium text-text-secondary hover:bg-surface-hover"
+                                className="flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-text-secondary hover:bg-surface-hover"
                               >
                                 <RotateCcw className="h-3 w-3" />
                                 {t("pagamento.estornar")}
@@ -364,7 +365,7 @@ export function ContratoDetail() {
                   onChange={(e) => setEstornoMotivo(e.target.value)}
                   placeholder={t("caixa.motivoPlaceholder")}
                   autoFocus
-                  className="mt-4 w-full rounded-md border border-border bg-surface px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                  className="mt-4 min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <div className="mt-6 flex gap-3">
                   <Button variant="secondary" onClick={() => setEstornandoId(null)} className="flex-1">
@@ -400,12 +401,12 @@ export function ContratoDetail() {
         >
           <div className="flex min-h-screen items-center justify-center p-4">
             <div
-              className="mx-auto w-full max-w-sm rounded-md bg-surface p-4 shadow-lg"
+              className="mx-auto w-full max-w-sm rounded-xl border border-border bg-card p-4 shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
               <canvas
                 ref={canvasRef}
-                className="w-full rounded-md border border-border-light"
+                className="w-full rounded-xl border border-border"
               />
 
               <div className="mt-4 flex gap-4">

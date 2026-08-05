@@ -127,7 +127,7 @@ export function ContratoList() {
           <button
             type="button"
             onClick={() => setFilterOpen(!filterOpen)}
-            className="flex w-full items-center justify-between rounded-md border border-border bg-surface p-2 text-sm"
+            className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-2 text-sm"
           >
             <span className={clienteId ? "" : "text-text-muted"}>
               {clienteId
@@ -139,7 +139,7 @@ export function ContratoList() {
             />
           </button>
           {filterOpen && (
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-border bg-surface shadow-lg">
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-border bg-card shadow-lg">
               <input
                 ref={searchInputRef}
                 type="text"
@@ -152,7 +152,7 @@ export function ContratoList() {
                 <button
                   type="button"
                   onClick={() => { handleClienteFilter(""); setFilterOpen(false); setSearchTerm("") }}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-secondary-light"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-surface-hover"
                 >
                   {t("contrato.todosClientes")}
                 </button>
@@ -161,7 +161,7 @@ export function ContratoList() {
                     key={c.id}
                     type="button"
                     onClick={() => { handleClienteFilter(c.id); setFilterOpen(false); setSearchTerm("") }}
-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-secondary-light ${
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-hover ${
                       c.id === clienteId ? "bg-primary-light font-medium" : ""
                     }`}
                   >

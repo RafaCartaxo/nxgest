@@ -203,7 +203,7 @@ export function ContratoNovo() {
                         key={c.id}
                         type="button"
                         onClick={() => { setClienteId(c.id); setClienteErro(null); setFilterOpen(false); setSearchTerm("") }}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-secondary-light ${
+                        className={`w-full px-3 py-2 text-left text-sm hover:bg-surface-hover ${
                           c.id === clienteId ? "bg-primary-light font-medium" : ""
                         }`}
                       >

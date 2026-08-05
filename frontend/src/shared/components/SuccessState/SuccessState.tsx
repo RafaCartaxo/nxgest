@@ -9,7 +9,7 @@ interface SuccessStateProps {
 
 export function SuccessState({ title, detail, linkLabel, onLinkClick }: SuccessStateProps) {
   return (
-    <div className="rounded-md border border-success-border bg-success-light p-6 text-center">
+    <div className="rounded-xl border border-success-border bg-success-light p-6 text-center">
       <CheckCircle className="mx-auto mb-2 h-8 w-8 text-success" />
       <p className="mb-3 text-base font-medium text-success-text">
         {title}

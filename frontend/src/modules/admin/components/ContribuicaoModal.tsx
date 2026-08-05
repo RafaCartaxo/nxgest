@@ -44,7 +44,7 @@ export function ContribuicaoModal({ open, metric, equipe, empresaId, onClose }: 
         </button>
       </div>
       <div className="max-h-96 overflow-y-auto p-4">
-        <div className="mb-3 flex items-center justify-between rounded-md bg-surface-secondary px-3 py-2 text-sm">
+        <div className="mb-3 flex items-center justify-between rounded-xl bg-surface-secondary px-3.5 py-2 text-sm">
           <span className="text-text-secondary">{t("admin.contribuicaoTotal")}</span>
           <span className="text-base font-semibold text-text-primary">{fmt(total)}</span>
         </div>
@@ -58,7 +58,7 @@ export function ContribuicaoModal({ open, metric, equipe, empresaId, onClose }: 
                 key={op.id}
                 type="button"
                 onClick={() => navigate(`/admin/operadores/${op.id}${empresaId ? `?empresaId=${empresaId}` : ""}`)}
-                className="flex w-full items-center justify-between gap-3 rounded-md border border-border-light bg-surface p-3 text-left hover:border-primary"
+                className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5 text-left transition-colors hover:border-primary"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

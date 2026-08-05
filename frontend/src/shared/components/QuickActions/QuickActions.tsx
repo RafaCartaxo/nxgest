@@ -28,8 +28,14 @@ export function QuickActions({ actions, layout = "horizontal", disabled, size = 
   const padding = size === "md" ? "px-3 py-1.5" : "px-2 py-1"
 
   if (layout === "grid") {
+    const visiveis = actions.filter((a) => a.show !== false && a.icon).length
+    const cols =
+      visiveis === 1 ? "grid-cols-1"
+      : visiveis === 2 ? "grid-cols-2"
+      : visiveis === 3 ? "grid-cols-3"
+      : "grid-cols-2 sm:grid-cols-4"
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className={`grid gap-3 ${cols}`}>
         {actions.map((action) => {
           if (action.show === false) return null
           const Icon = action.icon

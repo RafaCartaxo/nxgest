@@ -134,7 +134,7 @@ export function PagamentoModal({
             value={maskMonetario(rawValor)}
             onChange={(e) => setRawValor(e.target.value.replace(/\D/g, ""))}
             autoFocus
-            className="mt-1 w-full rounded-md border border-border p-3 text-lg font-semibold"
+            className="mt-1 min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-lg font-semibold text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           />
 
           {erro && (
@@ -142,7 +142,7 @@ export function PagamentoModal({
           )}
 
           {(preview || carregandoPreview || valor > 0) ? (
-            <div className="mt-4 rounded-md bg-surface-secondary p-3 text-sm">
+            <div className="mt-4 rounded-xl bg-surface-secondary p-3 text-sm">
               <div className="mb-2 flex items-center gap-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
                   {t("pagamento.previa")}

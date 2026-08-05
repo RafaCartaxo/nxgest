@@ -98,7 +98,7 @@ function CobrancaCard({
   }
 
   return (
-    <div className={`border-b border-border-light border-l-4 p-6 ${situacao === "atrasado" ? "border-l-danger" : "border-l-info"}`}>
+    <div className="p-6">
       <div className="flex items-start gap-4">
         <Card.Dot color={situacao === "atrasado" ? "red" : "blue"} size="md" />
         <Card.Body>

@@ -188,7 +188,7 @@ export function ClienteNovo() {
         <SectionHeader title={t("cliente.enderecoComercio")} />
 
         <div className="mt-2">
-          <button
+          <Button
             type="button"
             disabled={geocodingLoading || cooldownRef.current}
             onClick={async () => {
@@ -231,10 +231,9 @@ export function ClienteNovo() {
                 },
               )
             }}
-            className="inline-flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
           >
             {geocodingLoading ? t("pagamento.calculando") : `📍 ${t("cliente.usarLocalAtual")}`}
-          </button>
+          </Button>
         </div>
 
         {comercioExpandido && (
