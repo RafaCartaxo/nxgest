@@ -10,7 +10,7 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 - **Briefings Lovable** no padrão do `Lovable-Admin-NXGestao.md`: `Lovable-Avatar-NXGestao.md` (041) e `Lovable-Anexos-NXGestao.md` (042).
 - `docs/plans/README.md`: PLAN-038/039/040/041/042 adicionados ao registro (estavam ausentes).
 
-**Status dos planos de identidade:** PLAN-038 Concluído · PLAN-039 Em andamento · PLAN-040/041/042 Planejado.
+**Status dos planos de identidade:** PLAN-038 Concluído · PLAN-039 Em andamento · PLAN-040 Concluído · PLAN-041/042 Planejado.
 
 Referência: [PLAN-041](plans/PLAN-041-avatar-foto.md) · [PLAN-042](plans/PLAN-042-anexos-cliente.md)
 

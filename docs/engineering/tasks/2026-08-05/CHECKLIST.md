@@ -10,7 +10,7 @@
 - [x] `docs/plans/PLAN-042-anexos-cliente.md` — Anexos do cliente: tabela `anexos`, `/data/uploads`, `multer` + limites (imagem ≤1MB / PDF ≤5MB / 413 global), endpoints escopados, **backup inclui uploads**
 - [x] `docs/plans/Lovable-Avatar-NXGestao.md` — briefing (padrão do `Lovable-Admin-NXGestao.md`)
 - [x] `docs/plans/Lovable-Anexos-NXGestao.md` — briefing
-- [x] `docs/plans/README.md` — PLAN-038/039/040/041/042 no registro (status: 038 Concluído · 039 Em andamento · 040/041/042 Planejado)
+- [x] `docs/plans/README.md` — PLAN-038/039/040/041/042 no registro (status: 038 Concluído · 039 Em andamento · 040 Concluído · 041/042 Planejado)
 - [x] `docs/UPDATES.md` — entrada de registro
 
 ## Coerência (verificar quando implementar)

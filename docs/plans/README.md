@@ -49,7 +49,7 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-037-coerencia-whitelabel-central-adapta.md](PLAN-037-coerencia-whitelabel-central-adapta.md) | Coerência do whitelabel: `contratos⇒clientes` + validação transitiva de combos + Central se adapta por módulo (P025) | Concluído |
 | [PLAN-038-identidade-visual-nexus.md](PLAN-038-identidade-visual-nexus.md) | Identidade visual "Nexus": tokens OKLCH, tipografia Sora, logo, sidebar lateral, login redesenhadado | Concluído |
 | [PLAN-039-padronizacao-forms-inputs.md](PLAN-039-padronizacao-forms-inputs.md) | Padronização de Forms & Inputs: token `border-strong`, componente `Field`, avatar no ClienteCard | Em andamento |
-| [PLAN-040-admin-identidade.md](PLAN-040-admin-identidade.md) | Painel Admin na identidade "Nexus": forms com `Field`, `ModulosModal` v2 (switches + dependências), `EmpresaList` com avatar/badges | Planejado |
+| [PLAN-040-admin-identidade.md](PLAN-040-admin-identidade.md) | Painel Admin na identidade "Nexus": forms com `Field`, `ModulosModal` v2 (switches + dependências), `AdminPage`/`EmpresaList` com avatar/badges | Concluído |
 | [PLAN-041-avatar-foto.md](PLAN-041-avatar-foto.md) | Avatar com foto (usuário/operador/cliente): componente `Avatar` + `processarImagem` (data URL ≤200px) + `usuarios.foto`/`clientes.foto` | Planejado |
 | [PLAN-042-anexos-cliente.md](PLAN-042-anexos-cliente.md) | Anexos do cliente: comprovante de residência (foto ou PDF, limites 1MB/5MB), `/data/uploads`, endpoints escopados, backup inclui uploads | Planejado |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |
