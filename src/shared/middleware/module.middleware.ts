@@ -28,18 +28,24 @@ export function requireModule(moduleId: ModuleId) {
       return
     }
 
-    const [empresa] = await db
-      .select({ modulos: empresas.modulos })
-      .from(empresas)
-      .where(eq(empresas.id, empresaId))
-      .limit(1)
+    let modulos: string[] | null
+    try {
+      const [empresa] = await db
+        .select({ modulos: empresas.modulos })
+        .from(empresas)
+        .where(eq(empresas.id, empresaId))
+        .limit(1)
 
-    if (!empresa) {
-      res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
+      if (!empresa) {
+        res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
+        return
+      }
+      modulos = parseModulos(empresa.modulos)
+    } catch (err) {
+      next(err as Error)
       return
     }
 
-    const modulos = parseModulos(empresa.modulos)
     if (modulos !== null && !modulos.includes(moduleId)) {
       res.status(403).json({
         code: "MODULE_DISABLED",

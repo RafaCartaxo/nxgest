@@ -219,13 +219,10 @@ export class AdminController {
   dashboard = async (req: Request, res: Response) => {
     try {
       const scope = await this.resolveScope(req)
-      const isAdminSelf = req.userRole === "admin" && !req.query.empresaId
       const targetEmpresaId = this.resolveEmpresaId(req)
       const stats = scope
         ? await this.dashboardGetter.getDashboardStats(targetEmpresaId ?? null, null, scope)
-        : isAdminSelf
-          ? await this.dashboardGetter.getDashboardStats(req.empresaId ?? null, req.userId!)
-          : await this.dashboardGetter.getDashboardStats(targetEmpresaId)
+        : await this.dashboardGetter.getDashboardStats(targetEmpresaId)
       res.json(stats)
     } catch (err) {
       console.error("Erro ao carregar dashboard admin:", err)

@@ -210,7 +210,7 @@ export class AdminRepository implements IAdminRepository {
       const recebido = await db
         .select({ userId: pagamentos.userId, total: sum(pagamentos.valor) })
         .from(pagamentos)
-        .where(and(eq(pagamentos.data, hoje), ...userIds.map((id) => eq(pagamentos.userId, id))))
+        .where(and(eq(pagamentos.data, hoje), inArray(pagamentos.userId, userIds)))
         .groupBy(pagamentos.userId)
       for (const r of recebido) if (r.userId) recebidoMap.set(r.userId, Number(r.total) || 0)
     }

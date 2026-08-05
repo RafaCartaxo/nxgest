@@ -405,6 +405,11 @@ async function main() {
     const dash = await req("GET", "/api/admin/dashboard", { token: superToken, query: { empresaId: adminLogin.data.usuario.empresaId } })
     expect(dash, 200, "dashboard da empresa")
     if (r.data.totais.totalClientes !== dash.data.totalClientes) throw new Error(`equipe totalClientes=${r.data.totais.totalClientes} × dashboard=${dash.data.totalClientes}`)
+    // BR-091: admin self também agrega a equipe (regressão do PLAN-032 corrigida 05/08)
+    const dashSelf = await req("GET", "/api/admin/dashboard", { token: adminToken })
+    expect(dashSelf, 200, "dashboard admin self")
+    if (dashSelf.data.totalClientes !== r.data.totais.totalClientes) throw new Error(`BR-091: admin self totalClientes=${dashSelf.data.totalClientes} × equipe=${r.data.totais.totalClientes}`)
+    if (Math.abs(dashSelf.data.recebidoHoje - r.data.totais.recebidoHoje) > 0.01) throw new Error(`BR-091: admin self recebidoHoje=${dashSelf.data.recebidoHoje} × equipe=${r.data.totais.recebidoHoje}`)
   })
   await t("EQ-089", "Equipe: operator 403 / super sem empresaId 400", async () => {
     const op = await req("GET", "/api/admin/equipe", { token: opToken })
@@ -573,23 +578,27 @@ async function main() {
     const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: adminToken, body: { modulos: [] } })
     expect(r, 403, "admin sem permissão")
   })
+  const MODULOS_ALL = ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"]
   await t("MOD-097", "Enforcement: módulo off → 403 MODULE_DISABLED; ativo → 200 (P024)", async () => {
     const tenantLogin = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
     expect(tenantLogin, 200, "login tenant")
     const tenantToken = tenantLogin.data.token
-    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos"] } })
-    const caixa = await req("GET", "/api/caixa", { token: tenantToken })
-    expect(caixa, 403, "caixa off")
-    if (caixa.data?.code !== "MODULE_DISABLED") throw new Error(`code=${caixa.data?.code}`)
-    const gastos = await req("GET", "/api/gastos", { token: tenantToken })
-    expect(gastos, 403, "gastos off")
-    const visitas = await req("POST", "/api/operacoes/visitas", { token: tenantToken, body: { clienteId: "x", contratoId: "x", tipo: "visitado" } })
-    expect(visitas, 403, "rota off")
-    const clientes = await req("GET", "/api/clientes", { token: tenantToken })
-    expect(clientes, 200, "clientes on")
-    const contratos = await req("GET", "/api/contratos", { token: tenantToken })
-    expect(contratos, 200, "contratos on")
-    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] } })
+    try {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos"] } })
+      const caixa = await req("GET", "/api/caixa", { token: tenantToken })
+      expect(caixa, 403, "caixa off")
+      if (caixa.data?.code !== "MODULE_DISABLED") throw new Error(`code=${caixa.data?.code}`)
+      const gastos = await req("GET", "/api/gastos", { token: tenantToken })
+      expect(gastos, 403, "gastos off")
+      const visitas = await req("POST", "/api/operacoes/visitas", { token: tenantToken, body: { clienteId: "x", contratoId: "x", tipo: "visitado" } })
+      expect(visitas, 403, "rota off")
+      const clientes = await req("GET", "/api/clientes", { token: tenantToken })
+      expect(clientes, 200, "clientes on")
+      const contratos = await req("GET", "/api/contratos", { token: tenantToken })
+      expect(contratos, 200, "contratos on")
+    } finally {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    }
   })
   await t("MOD-098", "Sócio respeita módulos + efeito imediato + sem bypass ?empresaId (P024)", async () => {
     const tenantLogin = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
@@ -601,22 +610,28 @@ async function main() {
     expect(socioLogin, 200, "login sócio")
     const socioTok = socioLogin.data.token
     expect(await req("GET", "/api/caixa", { token: socioTok }), 200, "caixa on (antes)")
-    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos"] } })
-    const depois = await req("GET", "/api/caixa", { token: socioTok })
-    expect(depois, 403, "sócio: caixa off (efeito imediato, mesmo token)")
-    if (depois.data?.code !== "MODULE_DISABLED") throw new Error(`code=${depois.data?.code}`)
-    expect(await req("GET", `/api/caixa?empresaId=${novaEmpresaId}`, { token: socioTok }), 403, "sócio não contorna com ?empresaId=")
-    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] } })
+    try {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos"] } })
+      const depois = await req("GET", "/api/caixa", { token: socioTok })
+      expect(depois, 403, "sócio: caixa off (efeito imediato, mesmo token)")
+      if (depois.data?.code !== "MODULE_DISABLED") throw new Error(`code=${depois.data?.code}`)
+      expect(await req("GET", `/api/caixa?empresaId=${novaEmpresaId}`, { token: socioTok }), 403, "sócio não contorna com ?empresaId=")
+    } finally {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    }
   })
   await t("MOD-099", "Só central (modulos: []) → 403 em rotas operacionais (P024)", async () => {
     const tAdmin = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
     expect(tAdmin, 200, "login tenant")
     const tok = tAdmin.data.token
-    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: [] } })
-    expect(await req("GET", "/api/clientes", { token: tok }), 403, "clientes off")
-    expect(await req("GET", "/api/contratos", { token: tok }), 403, "contratos off")
-    expect(await req("GET", "/api/caixa", { token: tok }), 403, "caixa off")
-    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] } })
+    try {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: [] } })
+      expect(await req("GET", "/api/clientes", { token: tok }), 403, "clientes off")
+      expect(await req("GET", "/api/contratos", { token: tok }), 403, "contratos off")
+      expect(await req("GET", "/api/caixa", { token: tok }), 403, "caixa off")
+    } finally {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    }
   })
 
   // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------
