@@ -2,6 +2,18 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 05/08/2026 — Planos de identidade visual (038–042) + briefings Lovable
+
+**Registrado**
+- **PLAN-041 — Avatar com foto** (usuário/operador/cliente): componente `Avatar` + `processarImagem` (data URL ≤200px) + `usuarios.foto`/`clientes.foto`; self-service + admin define; foto normalizada na entrada.
+- **PLAN-042 — Anexos do cliente** (comprovante de residência): foto ou PDF, limites rígidos (imagem ≤1MB / PDF ≤5MB / `multer` 5MB → 413), `/data/uploads` no volume, endpoints autenticados/escopados (LGPD), **backup passa a incluir uploads**.
+- **Briefings Lovable** no padrão do `Lovable-Admin-NXGestao.md`: `Lovable-Avatar-NXGestao.md` (041) e `Lovable-Anexos-NXGestao.md` (042).
+- `docs/plans/README.md`: PLAN-038/039/040/041/042 adicionados ao registro (estavam ausentes).
+
+**Status dos planos de identidade:** PLAN-038 Concluído · PLAN-039 Em andamento · PLAN-040/041/042 Planejado.
+
+Referência: [PLAN-041](plans/PLAN-041-avatar-foto.md) · [PLAN-042](plans/PLAN-042-anexos-cliente.md)
+
 ## 05/08/2026 — PLAN-040 · Painel Admin (identidade + UX de módulos/empresas)
 
 **Adicionado / Corrigido**
