@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import { Navbar } from "./shared/components/Navbar.js"
+import { AppLayout } from "./shared/layout/AppLayout.js"
 import { ErrorBoundary } from "./shared/components/ErrorBoundary.js"
 import { FeedbackProvider } from "./shared/feedback/FeedbackProvider.js"
 import { AuthProvider } from "./shared/auth/AuthContext.js"
@@ -35,8 +35,7 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="*" element={
           <ProtectedRoute>
-            <>
-              <Navbar />
+            <AppLayout>
               <ErrorBoundary>
                 <Routes>
                   <Route path="/" element={<OperacoesDashboard />} />
@@ -58,9 +57,9 @@ export function App() {
                    <Route path="/admin/operadores/:id" element={<AdminRoute><OperadorDetail /></AdminRoute>} />
                    <Route path="/admin/empresas" element={<AdminRoute><SuperAdminPage /></AdminRoute>} />
                    <Route path="/admin/empresas/:id" element={<AdminRoute><AdminPage /></AdminRoute>} />
-                </Routes>
+                 </Routes>
               </ErrorBoundary>
-            </>
+            </AppLayout>
           </ProtectedRoute>
         } />
       </Routes>

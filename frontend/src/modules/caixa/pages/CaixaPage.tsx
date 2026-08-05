@@ -409,31 +409,31 @@ export function CaixaPage() {
               {movimentacoes.map((m) => (
                 <div
                   key={m.id}
-                  className="flex items-center justify-between rounded-md border border-border-light bg-surface px-3 py-2"
+                  className="flex items-center justify-between gap-2 rounded-md border border-border-light bg-surface px-3 py-2"
                 >
-              <div className="flex items-center gap-3">
-                <span className={`text-sm font-medium ${m.tipo === "entrada" ? "text-success-text" : "text-danger-text"}`}>
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <span className={`shrink-0 text-sm font-medium ${m.tipo === "entrada" ? "text-success-text" : "text-danger-text"}`}>
                   {m.tipo === "entrada" ? "+" : "-"} R$ {formatCurrency(m.valor)}
                 </span>
-                <span className="text-xs text-text-secondary">{m.origem}</span>
+                <span className="shrink-0 text-xs text-text-secondary">{m.origem}</span>
                 {m.origem === "Cancelamento" && (
-                  <span className="rounded bg-warning/20 px-1.5 py-0.5 text-xs font-medium text-warning">
+                  <span className="shrink-0 rounded bg-warning/20 px-1.5 py-0.5 text-xs font-medium text-warning">
                     {t("caixa.estornoLabel")}
                   </span>
                 )}
                 {m.origem === "Gasto" && m.categoria && (
-                  <span className="text-xs text-text-muted">
+                  <span className="shrink-0 text-xs text-text-muted">
                     {CATEGORIA_ICONES[m.categoria] ?? "📋"} {m.categoria}
                   </span>
                 )}
                 {m.clienteNome && (
-                  <span className="text-xs text-text-muted">{m.clienteNome}</span>
+                  <span className="truncate text-xs text-text-muted">{m.clienteNome}</span>
                 )}
                 {m.descricao && (
                   <span className="truncate text-xs text-text-muted">{m.descricao}</span>
                 )}
               </div>
-                  <span className="text-xs text-text-muted">
+                  <span className="shrink-0 text-xs text-text-muted">
                     {new Date(m.data + "T00:00:00").toLocaleDateString("pt-BR")}
                   </span>
                 </div>

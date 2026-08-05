@@ -12,7 +12,6 @@ import { unmask, formatCurrency } from "../../../shared/utils/masks.js"
 import { buildMapsUrl } from "../../../shared/utils/maps.js"
 import { IndicadoresCards } from "../components/IndicadoresCards.js"
 import { CobrancaCard } from "../components/CobrancaCard.js"
-import { RotaCobrancaSection } from "../components/RotaCobrancaSection.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { Carousel } from "../../../shared/components/Carousel/Carousel.js"
 import { PagamentosHojeModal } from "../components/PagamentosHojeModal.js"
@@ -22,10 +21,11 @@ import { SuccessState } from "../../../shared/components/SuccessState/SuccessSta
 import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
-import { LayoutDashboard } from "lucide-react"
+import { QuickActions } from "../../../shared/components/QuickActions/QuickActions.js"
+import { LayoutDashboard, Banknote, MapPinned, UserPlus, Receipt } from "lucide-react"
 
 export function OperacoesDashboard() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const modulos = user?.modulos
   const contratosAtivo = hasModule(modulos, "contratos")
@@ -132,13 +132,6 @@ export function OperacoesDashboard() {
     ? data.indicadores.recebidoHoje - data.indicadores.aReceberHoje
     : 0
 
-  const distanciaTotal = data?.cobrancas.reduce((sum, item) => {
-    if (lat && lng && item.clienteLat && item.clienteLng) {
-      return sum + calcularDistancia(lat, lng, item.clienteLat, item.clienteLng)
-    }
-    return sum
-  }, 0) ?? 0
-
   const sortedCobrancas = useMemo(
     () => data ? sortByDistance(data.cobrancas, lat, lng) : [],
     [data, lat, lng],
@@ -221,7 +214,18 @@ export function OperacoesDashboard() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <PageHeader icon={LayoutDashboard} title={t("operacoes.title")} subtitle={t("operacoes.subtitle")} />
+      <PageHeader
+        icon={LayoutDashboard}
+        title={t("operacoes.title")}
+        subtitle={t("operacoes.subtitle")}
+        eyebrow={new Date()
+          .toLocaleDateString(i18n.language === "en" ? "en-US" : i18n.language === "es" ? "es-ES" : "pt-BR", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          })
+          .replace(/^\w/, (c) => c.toUpperCase())}
+      />
 
       {error && (
         <ErrorBanner message={error} onRetry={fetch} className="mb-4" />
@@ -259,12 +263,20 @@ export function OperacoesDashboard() {
             onAVencerClick={handleAVencerClick}
             onGastosClick={gastosAtivo ? handleGastosHojeClick : undefined}
           />
-          {rotaAtivo && (
-            <RotaCobrancaSection
-              totalClientes={new Set(itemsOrdenados.map((i) => i.clienteId)).size}
-              distanciaTotal={Math.round(distanciaTotal * 10) / 10}
+
+          <div className="mb-6">
+            <h2 className="mb-3 font-display text-[18px] font-semibold">{t("operacoes.acoesRapidas")}</h2>
+            <QuickActions
+              layout="grid"
+              actions={[
+                { icon: Banknote, label: t("operacoes.receber"), onClick: () => navigate("/cobrancas"), variant: "green", show: cobrancasAtivo },
+                { icon: MapPinned, label: t("operacoes.minhaRota"), onClick: () => navigate("/rota"), variant: "blue", show: rotaAtivo },
+                { icon: UserPlus, label: t("operacoes.novoCliente"), onClick: () => navigate("/clientes/novo"), variant: "blue", show: hasModule(modulos, "clientes") },
+                { icon: Receipt, label: t("operacoes.fecharCaixa"), onClick: () => navigate("/caixa"), variant: "warning", show: hasModule(modulos, "caixa") },
+              ]}
             />
-          )}
+          </div>
+
           {cobrancasAtivo && (itemsOrdenados.length > 0 || totalResolvidos > 0) ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">

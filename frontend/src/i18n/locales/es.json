@@ -49,6 +49,11 @@
   },
   "operacoes": {
     "title": "Centro de Operaciones",
+    "acoesRapidas": "Acciones rápidas",
+    "receber": "Recibir",
+    "minhaRota": "Mi ruta",
+    "novoCliente": "Nuevo cliente",
+    "fecharCaixa": "Cerrar caja",
     "subtitle": "Sigue los cobros del día y el resultado de las operaciones",
     "subtitleCobrancas": "Cola de cobros pendientes y vencidos del día",
     "subtitleRota": "Orden de visita y navegación a los clientes",
@@ -356,7 +361,10 @@
     "erroLogin": "Correo o contraseña inválidos.",
     "tokenExpirado": "Sesión expirada. Inicie sesión nuevamente.",
     "mostrarSenha": "Mostrar contraseña",
-    "ocultarSenha": "Ocultar contraseña"
+    "ocultarSenha": "Ocultar contraseña",
+    "tagline": "Gestión centralizada para tu negocio",
+    "loginCardSubtitle": "Usa las credenciales de tu empresa.",
+    "acessoEmpresa": "Acceso por empresa · perfiles y permisos"
   },
   "perfil": {
     "title": "Mis datos",
@@ -372,6 +380,7 @@
   },
   "admin": {
     "title": "Administración",
+    "painel": "Panel Admin",
     "subtitle": "Equipo, operadores e indicadores de la empresa",
     "operadores": "Operadores",
     "novoOperador": "Nuevo Operador",

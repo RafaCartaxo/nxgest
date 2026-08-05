@@ -100,7 +100,7 @@ export function ClienteDetail() {
             </div>
             <ClienteInfo cliente={cliente} />
             <QuickActions
-              layout="vertical"
+              layout="grid"
               actions={[
                 { icon: Navigation,    label: t("operacoes.navegar"),  onClick: () => handleNavegar(cliente),  variant: "blue", show: !!buildMapsUrl(getMapsTarget(cliente)) },
                 { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(cliente), variant: "green" },

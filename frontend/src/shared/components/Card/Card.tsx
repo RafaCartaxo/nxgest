@@ -6,10 +6,20 @@ import { StatusBadge } from "../StatusBadge/StatusBadge.js"
 
 type CardVariant = "list-item" | "detail" | "collection"
 
+export type CardTone = "info" | "success" | "warning" | "danger" | "neutral"
+
+const toneBar: Record<CardTone, string> = {
+  info: "bg-info",
+  success: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger",
+  neutral: "bg-border-strong",
+}
+
 const rootStyles: Record<CardVariant, string> = {
-  "list-item":  "block rounded-md border border-border-light bg-surface p-4 transition hover:border-primary",
-  "detail":     "rounded-md border bg-surface p-4",
-  "collection": "overflow-hidden rounded-md border border-border-light bg-surface",
+  "list-item":  "relative block rounded-xl border border-border bg-card text-card-foreground p-4 transition hover:border-primary",
+  "detail":     "relative rounded-xl border border-border bg-card text-card-foreground p-4",
+  "collection": "relative overflow-hidden rounded-xl border border-border bg-card text-card-foreground",
 }
 
 interface CardRootProps {
@@ -17,26 +27,36 @@ interface CardRootProps {
   as?: "link" | "button" | "div"
   to?: string
   onClick?: () => void
+  tone?: CardTone
+  interactive?: boolean
   className?: string
   children: ReactNode
 }
 
-function CardRoot({ variant = "detail", as = "div", to, onClick, className = "", children }: CardRootProps) {
-  const base = rootStyles[variant]
+function CardRoot({ variant = "detail", as = "div", to, onClick, tone, interactive, className = "", children }: CardRootProps) {
+  const interactiveCls = interactive ? "cursor-pointer transition-colors hover:bg-surface-hover" : ""
+  const base = `${rootStyles[variant]} ${interactiveCls}`
+
+  const inner = (
+    <>
+      {tone && <span aria-hidden className={`absolute inset-y-0 left-0 w-1 ${toneBar[tone]}`} />}
+      {children}
+    </>
+  )
 
   if (as === "link" && to) {
-    return <Link to={to} className={`${base} ${className}`}>{children}</Link>
+    return <Link to={to} className={`${base} ${className}`}>{inner}</Link>
   }
 
   if (as === "button") {
     return (
       <button type="button" onClick={onClick} className={`${base} text-left ${className}`}>
-        {children}
+        {inner}
       </button>
     )
   }
 
-  return <div className={`${base} ${className}`}>{children}</div>
+  return <div className={`${base} ${className}`}>{inner}</div>
 }
 
 interface CardTitleProps {

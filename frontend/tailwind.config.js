@@ -11,6 +11,13 @@ export default {
         info:      { DEFAULT: "var(--color-info)", light: "var(--color-info-light)", text: "var(--color-info-text)" },
         secondary: { DEFAULT: "var(--color-secondary)", light: "var(--color-secondary-light)" },
         surface:         { DEFAULT: "var(--color-surface)", secondary: "var(--color-surface-secondary)", hover: "var(--color-surface-hover)" },
+        accent:    { DEFAULT: "var(--color-accent)", light: "var(--color-accent-light)", text: "var(--color-accent-text)" },
+        muted:     { DEFAULT: "var(--color-muted)", foreground: "var(--color-muted-foreground)" },
+        card:      { DEFAULT: "var(--color-card)", foreground: "var(--color-card-foreground)" },
+        background:       "var(--color-background)",
+        foreground:       "var(--color-foreground)",
+        ring:             "var(--color-ring)",
+        sidebar:   { DEFAULT: "var(--color-sidebar)", foreground: "var(--color-sidebar-foreground)", muted: "var(--color-sidebar-muted)", active: "var(--color-sidebar-active)", "active-foreground": "var(--color-sidebar-active-foreground)", border: "var(--color-sidebar-border)" },
         "text-primary":  "var(--color-text-primary)",
         "text-secondary":"var(--color-text-secondary)",
         "text-muted":    "var(--color-text-muted)",
@@ -21,6 +28,7 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Sora", "Inter", "system-ui", "sans-serif"],
       },
       borderRadius: {
         md: "12px",

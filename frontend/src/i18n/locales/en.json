@@ -49,6 +49,11 @@
   },
   "operacoes": {
     "title": "Operations Center",
+    "acoesRapidas": "Quick actions",
+    "receber": "Collect",
+    "minhaRota": "My route",
+    "novoCliente": "New client",
+    "fecharCaixa": "Close register",
     "subtitle": "Follow today's collections and operations results",
     "subtitleCobrancas": "Queue of today's pending and overdue collections",
     "subtitleRota": "Visit order and navigation to clients",
@@ -356,7 +361,10 @@
     "erroLogin": "Invalid email or password.",
     "tokenExpirado": "Session expired. Please sign in again.",
     "mostrarSenha": "Show password",
-    "ocultarSenha": "Hide password"
+    "ocultarSenha": "Hide password",
+    "tagline": "Centralized management for your business",
+    "loginCardSubtitle": "Use your company credentials.",
+    "acessoEmpresa": "Per-company access · profiles and permissions"
   },
   "perfil": {
     "title": "My profile",
@@ -372,6 +380,7 @@
   },
   "admin": {
     "title": "Administration",
+    "painel": "Admin Panel",
     "subtitle": "Team, operators and company indicators",
     "operadores": "Operators",
     "novoOperador": "New Operator",
