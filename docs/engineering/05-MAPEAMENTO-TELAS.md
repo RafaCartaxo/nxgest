@@ -270,7 +270,7 @@ App
 
 ---
 ## 2. Rota de Cobrança
-**Header:** PageHeader — banner em gradiente + ícone `Route` + título + subtítulo; status GPS e fechamento no header (PLAN-035).
+**Header:** PageHeader limpo — ícone suave + `Route` + título + subtítulo; status GPS e fechamento no header (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/operacoes/pages/RotaPage.tsx`
 
@@ -316,7 +316,7 @@ App
 
 ---
 ## 2b. Atendidos Hoje
-**Header:** PageHeader — banner em gradiente + ícone `CheckCircle2` + título + subtítulo (PLAN-035).
+**Header:** PageHeader limpo — ícone suave + `CheckCircle2` + título + subtítulo (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/operacoes/pages/AtendidosPage.tsx` · Rota `/atendidos` · Comporta o filtro da lista de cobranças
 
@@ -346,7 +346,7 @@ App
 
 ---
 ## 2c. Cobranças (Pendentes do Dia / Saldo em Atraso)
-**Header:** PageHeader — banner em gradiente + ícone `ClipboardList` + título dinâmico (Pendentes do Dia / Saldo em Atraso) + subtítulo (PLAN-035).
+**Header:** PageHeader limpo — ícone suave + `ClipboardList` + título dinâmico (Pendentes do Dia / Saldo em Atraso) + subtítulo (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/operacoes/pages/CobrancaListPage.tsx` · Rota `/cobrancas` · Filtro `atrasado`
 
@@ -373,7 +373,7 @@ App
 
 ---
 ## 3. Lista de Clientes
-**Header:** PageHeader — banner em gradiente + ícone `Users` + título + subtítulo; ação "Novo Cliente" no header (PLAN-035).
+**Header:** PageHeader limpo — ícone suave + `Users` + título + subtítulo; ação "Novo Cliente" no header (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/cliente/pages/ClienteList.tsx`
 
@@ -501,7 +501,7 @@ App
 
 ---
 ## 7. Lista de Contratos
-**Header:** PageHeader — banner em gradiente + ícone `FileText` + título + subtítulo; ação "Novo Contrato" no header (PLAN-035).
+**Header:** PageHeader limpo — ícone suave + `FileText` + título + subtítulo; ação "Novo Contrato" no header (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/contrato/pages/ContratoList.tsx`
 
@@ -720,7 +720,7 @@ App
 
 ---
 ## 12. Administração (14 — contexto de empresa)
-**Header:** PageHeader — banner em gradiente + ícone `Settings` + título dinâmico (empresa/nome) + subtítulo; badge de papel; voltar quando dentro de empresa (PLAN-035).
+**Header:** PageHeader limpo — ícone suave + `Settings` + título dinâmico (empresa/nome) + subtítulo; badge de papel; voltar quando dentro de empresa (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/admin/pages/AdminPage.tsx`
 
@@ -819,7 +819,7 @@ Modal OperadorForm (criação/edição):
 
 ---
 ## 13. Super Admin — Gestão de Empresas
-**Header:** PageHeader — banner em gradiente + ícone `Building2` + título + subtítulo; ação "Nova Empresa" no header (PLAN-035).
+**Header:** PageHeader limpo — ícone suave + `Building2` + título + subtítulo; ação "Nova Empresa" no header (PLAN-035).
 
  **Arquivo:** `frontend/src/modules/admin/pages/SuperAdminPage.tsx`
 
@@ -828,9 +828,9 @@ Modal OperadorForm (criação/edição):
 **Estrutura Visual:**
 ```
 ┌──────────────────────────────────┐
-│ [Banner em gradiente: título +   │  ← bg-gradient-accent (PLAN-031)
-│  "Gerencie empresas, acessos e   │
-│  módulos" + ícone Building2]     │
+│ [PageHeader limpo: ícone suave +  │  ← PageHeader (PLAN-038)
+│  "Empresas" + subtítulo + ação    │
+│  "Nova Empresa"]                  │
 ├──────────────────────────────────┤
 │ ┌────────┬────────┬────────┐    │
 │ │Empresas│Opers   │Clientes│    │  ← KpiCard × 3 (super admin)
@@ -922,7 +922,7 @@ Modal ModulosModal (ação "Configurar"):
 
 ---
 ## 16. Caixa
-**Header:** PageHeader — banner em gradiente + ícone `Wallet` + título + subtítulo; ação "Fechar Semana" no header (PLAN-035).
+**Header:** PageHeader limpo — ícone suave + `Wallet` + título + subtítulo; ação "Fechar Semana" no header (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/caixa/pages/CaixaPage.tsx` · Rota `/caixa`
 
@@ -983,7 +983,7 @@ Modal ModulosModal (ação "Configurar"):
 
 ---
 ## 17. Gastos
-**Header:** PageHeader — banner em gradiente + ícone `Receipt` + título + subtítulo (PLAN-035).
+**Header:** PageHeader limpo — ícone suave + `Receipt` + título + subtítulo (PLAN-035).
 
 **Arquivo:** `frontend/src/modules/gasto/pages/GastoPage.tsx` · Rota `/gastos`
 
@@ -1058,7 +1058,7 @@ Modal ModulosModal (ação "Configurar"):
 
 **Comportamento:**
 - Troca de senha via `PATCH /api/auth/senha` (BR-089/090): valida a senha atual (422 se incorreta, sem deslogar), exige nova ≥ 6 caracteres e diferente da atual; sessão atual permanece válida após a troca.
-- Acesso pelo menu da engrenagem do Navbar; para o admin, também a partir da aba "Meus dados" do painel (`/admin`).
+- Acesso pela sidebar (item "Meus dados"); para o admin, também a partir da aba "Meus dados" do painel (`/admin`).
 
 ---
 
@@ -1120,7 +1120,7 @@ Escala 8px: `4, 8, 16, 24, 32, 40, 48`
 
 Ao implementar uma nova tela, verificar:
 
-- [ ] Header segue o tipo da tela (PLAN-035): **landing** → `PageHeader` (banner gradiente + ícone + título + subtítulo + ação branca `variant="onDark"`); **novo/editar/detalhe/settings** → compacto `< Back Título [Ação]`
+- [ ] Header segue o tipo da tela (PLAN-038): **landing** → `PageHeader` (título limpo em Sora + ícone em badge suave `bg-primary-light` + subtítulo + `eyebrow` + ação/voltar); **novo/editar/detalhe/settings** → compacto `< Back Título [Ação]`
 - [ ] Inputs usam `rounded-md border px-3 py-2 text-base`
 - [ ] Focus usa `focus:ring-2 focus:ring-primary focus:border-primary` (nunca azul fixo)
 - [ ] Cores usam **apenas tokens** — `primary` (brand) e `danger/success/warning` (semânticos); proibido cor fixa da paleta (checado por `npm run audit:styles`)

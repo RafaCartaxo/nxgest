@@ -375,13 +375,13 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
-### UC-019 — Rota concluída no dashboard
+### UC-019 — Rota concluída
 
 **Ator:** operador
 
-**Ação:** volta ao dashboard depois de atender todos.
+**Ação:** abre a Rota do dia (`/rota`, via ação rápida "Minha rota") depois de atender todos.
 
-**O que DEVE acontecer:** `RotaCobrancaSection` mostra "Rota concluída" (check verde) em vez de "Iniciar Rota", com contador de clientes = 0.
+**O que DEVE acontecer:** a Rota mostra o estado concluído ("Rota concluída" / check verde) em vez de pendentes, com contador de clientes = 0. *(Nota: a antiga `RotaCobrancaSection` no dashboard foi removida no PLAN-038 — a navegação para a rota é pela ação rápida "Minha rota".)*
 
 **Conferências:**
 - [ ] Sem clientes pendentes → "Rota concluída" no lugar do botão?

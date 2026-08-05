@@ -2,6 +2,20 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 05/08/2026 — PLAN-043 · Polimento final da identidade "Nexus"
+
+**Concluído**
+- **Superfícies ANTIGO → padrão canônico:** `GastoForm`/`GastoList` (fluxo de gastos), `SearchBar`, `SuccessState`, `ErrorBanner`.
+- **Inputs → `Field`/canônico + botões → `Button`:** Perfil, Login (com mostrar/ocultar senha), Caixa (ajuste), OperadorDetail, ContratoDetail (estorno), Rota (data promessa), PagamentoModal, "usar local atual".
+- **Rows/listas → `Card`/`rounded-xl bg-card`:** Caixa (histórico de ajustes + movimentações), EquipeModal, ContribuicaoModal, AtendidosPage, ContratoDetail (pagamentos), **CobrancaCard detail (Rota do dia)** — saiu o `border-l-4`.
+- **Skeletons** `bg-secondary-light` → `bg-surface-hover` (7 arquivos).
+- **Navbar com 3 dropdowns** (`Topbar`): **tema claro/escuro** + **paletas (cores)** + **idioma**, no topo mobile e desktop; removidos do rodapé da sidebar.
+- **Fix layout QuickActions:** grade adapta ao nº de ações — os 3 botões (navegar/whatsapp/ligar) do perfil do cliente voltam **lado a lado**.
+- **Gap encontrado e corrigido:** badge **GPS da Rota invisível** (texto branco no PageHeader claro — estilo do banner antigo) → tokens semânticos.
+- **Docs stale corrigidos:** MAPEAMENTO (Header notes, §13 SuperAdmin, Perfil), DS (Header de página — sem banner; "navbar ativo"), TOKEN, 06 (UC-019), `07-FORMS-INPUTS` (mapa **concluído**).
+
+Referência: [PLAN-043](plans/PLAN-043-polimento-final-identidade-nexus.md)
+
 ## 05/08/2026 — Estabilidade: fix BR-091 (admin × movimentação) + hardening do middleware
 
 **Corrigido**

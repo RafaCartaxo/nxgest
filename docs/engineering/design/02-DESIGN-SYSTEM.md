@@ -454,7 +454,7 @@ Mudanças que aumentem complexidade visual deverão ser evitadas.
 
 > **Regra de ouro:** as cores seguem apenas a paleta semântica (tokens), sem `emerald/purple/amber`.
 >
-> **Exceção deliberada:** os **accent gradients** (`.bg-gradient-accent`, `.bg-gradient-page`, `.text-gradient`) são a única exceção — cada tema define os gradientes próprios (`--gradient-*`). Aplicar com moderação: fundo ambiente, botão primário ("brand"), navbar ativo e destaques — nunca "glitter" por tudo.
+> **Exceção deliberada:** os **accent gradients** (`.bg-gradient-accent`, `.bg-gradient-page`, `.text-gradient`) são a única exceção — cada tema define os gradientes próprios (`--gradient-*`). Aplicar com moderação: fundo ambiente, botão primário ("brand") e destaques — nunca "glitter" por tudo.
 
 ---
 
@@ -464,7 +464,7 @@ Mudanças que aumentem complexidade visual deverão ser evitadas.
 >
 > | Uso | Token |
 > |-----|-------|
-> | Brand (foco, links, hover de card, dots, spinner, toast de loading/info, navbar) | `primary` |
+> | Brand (foco, links, hover de card, dots, spinner, toast de loading/info, sidebar ativo) | `primary` |
 > | Erro/validação/asterisco obrigatório | `danger` / `danger-text` |
 > | Sucesso / valores positivos | `success` / `success-text` |
 > | Alerta / avisos | `warning` / `warning-text` |
@@ -476,13 +476,13 @@ Mudanças que aumentem complexidade visual deverão ser evitadas.
 
 ---
 
-# Header de página (PLAN-035)
+# Header de página (PLAN-038)
 
 Duas formas de header, por tipo de tela:
 
 | Tipo de tela | Padrão |
 |--------------|--------|
-| **Landing de módulo** (Central, Clientes, Contratos, Caixa, Gastos, Cobranças, Rota, Atendidos, Administração, Empresas) | `PageHeader` — banner `bg-gradient-accent` com ícone (`LucideIcon`), título, subtítulo, ação opcional (botão branco `variant="onDark"`) e voltar opcional (chevron translúcido). Segue o gradiente do tema e o modo escuro. |
+| **Landing de módulo** (Central, Clientes, Contratos, Caixa, Gastos, Cobranças, Rota, Atendidos, Administração, Empresas) | `PageHeader` — **título limpo em Sora** + ícone em **badge suave** (`bg-primary-light text-primary-text`) + subtítulo + `eyebrow` opcional + ação/voltar. **Sem banner de gradiente.** |
 | **Novo/editar/detalhe/settings** (ClienteNovo, ContratoEdit, OperadorDetail, Perfil, Login) | Header compacto — `< Back Título [Ação]` (`max-w-2xl`). |
 
-Regras do banner: texto branco legível nos 2 modos × 5 paletas; ação como `Button variant="onDark"`; não usar o banner em páginas de fluxo (formulário/detalhe) para não competir com a navegação de voltar.
+> O `PageHeader` foi redesenhado no PLAN-038 (removido o banner `bg-gradient-accent` do PLAN-035). Ação no header usa `Button`/`ButtonLink` padrão (sem `variant="onDark"` — variante removida).

@@ -1,3 +1,30 @@
+# CHECKLIST — Polimento final da identidade "Nexus" (PLAN-043)
+
+**Data:** 05/08/2026
+
+## Frontend (padrão canônico)
+
+- [x] ANTIGO → novo: `GastoForm` (Field + select + Button), `GastoList` (Card + Trash2), `SearchBar`, `SuccessState`, `ErrorBanner`
+- [x] Inputs → Field/canônico: Perfil, Login, Caixa (ajuste), OperadorDetail, ContratoDetail (estorno), Rota (date promessa), PagamentoModal; botões → Button (incl. "usar local atual" em ClienteNovo/Edit)
+- [x] Rows → Card/rounded-xl bg-card: Caixa (auditoria + movimentações), EquipeModal, ContribuicaoModal, AtendidosPage, ContratoDetail (pagamentos), CobrancaCard detail (Rota)
+- [x] Skeletons `bg-secondary-light` → `bg-surface-hover` (7 arquivos)
+- [x] **Navbar 3 dropdowns** (`Topbar`): tema claro/escuro + paletas + idioma (mobile+desktop); removidos do rodapé da sidebar
+- [x] **QuickActions grid adaptativo** (3 ações lado a lado) + fix badge GPS da Rota (texto branco invisível)
+
+## Docs stale
+
+- [x] `05-MAPEAMENTO`: Header notes → PageHeader limpo (sem "banner em gradiente"); §13 SuperAdmin; Perfil (sidebar, sem Navbar)
+- [x] `02-DESIGN-SYSTEM`: seção "Header de página" reescrita; "navbar ativo" → sidebar
+- [x] `05-TOKEN`: `--gradient-accent` sem navbar/banner
+- [x] `06-CASOS`: UC-019 (RotaCobrancaSection removida)
+- [x] `07-FORMS-INPUTS`: mapa **concluído**
+
+## Validação
+
+- [x] `npm run build` · `npm run audit:styles` (100 arquivos) · `npm run docs:audit` · `smoke:api`
+
+---
+
 # CHECKLIST — Estabilidade (fix BR-091 + hardening middleware + anti-flakiness)
 
 **Data:** 05/08/2026

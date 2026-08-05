@@ -52,4 +52,5 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-040-admin-identidade.md](PLAN-040-admin-identidade.md) | Painel Admin na identidade "Nexus": forms com `Field`, `ModulosModal` v2 (switches + dependências), `AdminPage`/`EmpresaList` com avatar/badges | Concluído |
 | [PLAN-041-avatar-foto.md](PLAN-041-avatar-foto.md) | Avatar com foto (usuário/operador/cliente): componente `Avatar` + `processarImagem` (data URL ≤200px) + `usuarios.foto`/`clientes.foto` | Planejado |
 | [PLAN-042-anexos-cliente.md](PLAN-042-anexos-cliente.md) | Anexos do cliente: comprovante de residência (foto ou PDF, limites 1MB/5MB), `/data/uploads`, endpoints escopados, backup inclui uploads | Planejado |
+| [PLAN-043-polimento-final-identidade-nexus.md](PLAN-043-polimento-final-identidade-nexus.md) | Polimento final da identidade "Nexus": forms/listas/inputs no padrão, navbar com 3 dropdowns (tema/cores/idioma), fix QuickActions, docs stale | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |
