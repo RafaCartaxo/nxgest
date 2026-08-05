@@ -9,6 +9,12 @@
     background-color: var(--color-surface);
     color: var(--color-text-primary);
   }
+
+  /* inputs nativos de data têm min-width intrínseco (locale + ícone) que pode
+     estourar telas estreitas — permitir encolher até o container (PLAN-039) */
+  input[type="date"] {
+    min-width: 0;
+  }
 }
 
 html {
@@ -91,6 +97,7 @@ h3 {
 
   --border: oklch(0.92 0.006 250);
   --border-strong: oklch(0.86 0.008 250);
+  --border-strong: oklch(0.86 0.008 250);
   --border-light: oklch(0.94 0.006 250);
   --ring: color-mix(in oklab, var(--primary) 55%, white);
 
@@ -153,6 +160,7 @@ h3 {
   --color-text-muted: var(--subtle-foreground);
   --color-border: var(--border);
   --color-border-light: var(--border-light);
+  --color-border-strong: var(--border-strong);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-card: var(--card);
@@ -207,6 +215,7 @@ h3 {
   --info-text: var(--primary-text);
 
   --border: oklch(1 0 0 / 10%);
+  --border-strong: oklch(1 0 0 / 18%);
   --border-strong: oklch(1 0 0 / 18%);
   --border-light: oklch(1 0 0 / 8%);
   --ring: color-mix(in oklab, var(--primary) 60%, transparent);

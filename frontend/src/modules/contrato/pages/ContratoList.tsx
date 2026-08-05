@@ -119,7 +119,7 @@ export function ContratoList() {
         title={t("contrato.title")}
         subtitle={t("contrato.subtitle")}
         back={{ onClick: () => navigate(temFiltroCliente ? `/clientes/${clienteId}` : "/clientes"), title: t("nav.clientes") }}
-        action={<ButtonLink to={`/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}`} variant="onDark">{t("contrato.novo")}</ButtonLink>}
+        action={<ButtonLink to={`/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}`} variant="primary">{t("contrato.novo")}</ButtonLink>}
       />
 
       <div className="mb-4 flex items-center gap-2">

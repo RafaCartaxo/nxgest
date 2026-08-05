@@ -48,7 +48,7 @@ export function Modal({
       aria-modal="true"
     >
       <div className="flex min-h-full items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
-        <div className={`mx-auto w-full ${maxWidth} rounded-md bg-surface shadow-lg`}>{children}</div>
+        <div className={`mx-auto w-full ${maxWidth} rounded-xl bg-card shadow-lg`}>{children}</div>
       </div>
     </div>
   )

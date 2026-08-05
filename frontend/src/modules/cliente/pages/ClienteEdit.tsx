@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ChevronLeft } from "lucide-react"
-import { useParams, useNavigate, Link } from "react-router-dom"
+import { User } from "lucide-react"
+import { useParams, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { getCliente, updateCliente } from "../services/cliente.service.js"
 import { ApiError } from "../../../api/client.js"
 import { Button } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
+import { Field } from "../../../shared/components/Field/Field.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { maskCpf, maskPhone, unmask } from "../../../shared/utils/masks.js"
 import { getClienteSchema, type ClienteFormData } from "../schemas/cliente.schema.js"
@@ -167,12 +169,11 @@ export function ClienteEdit() {
   if (carregando) {
     return (
       <div className="mx-auto max-w-2xl p-4">
-        <div className="mb-4 flex items-center gap-2">
-          <Link to={`/clientes/${id}`} className="text-text-muted hover:text-text-primary">
-            <ChevronLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="text-3xl font-semibold">{t("cliente.editar")}</h1>
-        </div>
+        <PageHeader
+          icon={User}
+          title={t("cliente.editar")}
+          back={{ onClick: () => navigate(`/clientes/${id}`), title: t("common.back") }}
+        />
         <div className="animate-pulse space-y-4">
           <div className="h-6 w-48 rounded bg-secondary-light" />
           <div className="h-4 w-96 rounded bg-secondary-light" />
@@ -184,71 +185,58 @@ export function ClienteEdit() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-4 flex items-center gap-2">
-        <Link to={`/clientes/${id}`} className="text-text-muted hover:text-text-primary">
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="text-3xl font-semibold">{t("cliente.editar")}</h1>
-      </div>
+      <PageHeader
+        icon={User}
+        title={t("cliente.editar")}
+        back={{ onClick: () => navigate(`/clientes/${id}`), title: t("common.back") }}
+      />
 
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" noValidate>
         <SectionHeader title={t("cliente.dadosCliente")} />
 
-        <div>
-          <label className="block text-sm font-medium">{t("cliente.nome")} <span className="text-danger">*</span></label>
-          <input
-            {...form.register("nome")}
-            autoFocus
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          {errors.nome?.message && <p className="mt-1 text-xs text-danger">{errors.nome.message}</p>}
-        </div>
+        <Field
+          label={t("cliente.nome")}
+          required
+          autoFocus
+          error={errors.nome?.message}
+          {...form.register("nome")}
+        />
 
-        <div>
-          <label className="block text-sm font-medium">{t("cliente.telefone")} <span className="text-danger">*</span></label>
-          <input
-            value={form.watch("telefone")}
-            onChange={(e) => { form.setValue("telefone", maskPhone(e.target.value)); form.clearErrors("telefone") }}
-            type="tel"
-            placeholder={t("cliente.telefonePlaceholder")}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          {errors.telefone?.message && <p className="mt-1 text-xs text-danger">{errors.telefone.message}</p>}
-        </div>
+        <Field
+          label={t("cliente.telefone")}
+          required
+          type="tel"
+          placeholder={t("cliente.telefonePlaceholder")}
+          value={form.watch("telefone")}
+          onChange={(e) => { form.setValue("telefone", maskPhone(e.target.value)); form.clearErrors("telefone") }}
+          error={errors.telefone?.message}
+        />
 
-        <div>
-          <label className="block text-sm font-medium">{t("cliente.cpf")}</label>
-          <input
-            value={form.watch("cpf") ?? ""}
-            onChange={(e) => { form.setValue("cpf", maskCpf(e.target.value)); form.clearErrors("cpf") }}
-            inputMode="numeric"
-            placeholder={t("cliente.cpfPlaceholder")}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          {errors.cpf?.message && <p className="mt-1 text-xs text-danger">{errors.cpf.message}</p>}
-        </div>
+        <Field
+          label={t("cliente.cpf")}
+          inputMode="numeric"
+          placeholder={t("cliente.cpfPlaceholder")}
+          value={form.watch("cpf") ?? ""}
+          onChange={(e) => { form.setValue("cpf", maskCpf(e.target.value)); form.clearErrors("cpf") }}
+          error={errors.cpf?.message}
+        />
 
-        <div>
-          <label className="block text-sm font-medium">{t("cliente.comercio")} <span className="text-danger">*</span></label>
-          <input
-            {...form.register("comercio")}
-            placeholder={t("cliente.comercioPlaceholder")}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          {errors.comercio?.message && <p className="mt-1 text-xs text-danger">{errors.comercio.message}</p>}
-        </div>
+        <Field
+          label={t("cliente.comercio")}
+          required
+          placeholder={t("cliente.comercioPlaceholder")}
+          error={errors.comercio?.message}
+          {...form.register("comercio")}
+        />
 
-        <div>
-          <label className="block text-sm font-medium">{t("cliente.telefoneComercio")}</label>
-          <input
-            value={form.watch("telefoneComercio") ?? ""}
-            onChange={(e) => { form.setValue("telefoneComercio", maskPhone(e.target.value)); form.clearErrors("telefoneComercio") }}
-            type="tel"
-            placeholder={t("cliente.telefonePlaceholder")}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          {errors.telefoneComercio?.message && <p className="mt-1 text-xs text-danger">{errors.telefoneComercio.message}</p>}
-        </div>
+        <Field
+          label={t("cliente.telefoneComercio")}
+          type="tel"
+          placeholder={t("cliente.telefonePlaceholder")}
+          value={form.watch("telefoneComercio") ?? ""}
+          onChange={(e) => { form.setValue("telefoneComercio", maskPhone(e.target.value)); form.clearErrors("telefoneComercio") }}
+          error={errors.telefoneComercio?.message}
+        />
 
         <SectionHeader title={t("cliente.enderecoComercio")} />
 
@@ -306,28 +294,23 @@ export function ClienteEdit() {
           <>
             <div className="mt-4 grid grid-cols-3 gap-4">
               <div className="col-span-2">
-                <label className="block text-sm font-medium">{t("cliente.logradouro")}</label>
-                <input {...form.register("comercioLogradouro")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+                <Field label={t("cliente.logradouro")} {...form.register("comercioLogradouro")} />
               </div>
               <div>
-                <label className="block text-sm font-medium">{t("cliente.numero")}</label>
-                <input {...form.register("comercioNumero")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+                <Field label={t("cliente.numero")} {...form.register("comercioNumero")} />
               </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium">{t("cliente.bairro")}</label>
-                <input {...form.register("comercioBairro")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+                <Field label={t("cliente.bairro")} {...form.register("comercioBairro")} />
               </div>
               <div className="col-span-2">
-                <label className="block text-sm font-medium">{t("cliente.cidade")}</label>
-                <input {...form.register("comercioCidade")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+                <Field label={t("cliente.cidade")} {...form.register("comercioCidade")} />
               </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-4">
               <div className="col-span-2">
-                <label className="block text-sm font-medium">{t("cliente.uf")}</label>
-                <input {...form.register("comercioEstado")} maxLength={2} placeholder={t("cliente.ufPlaceholder")} className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary" />
+                <Field label={t("cliente.uf")} maxLength={2} placeholder={t("cliente.ufPlaceholder")} {...form.register("comercioEstado")} />
               </div>
             </div>
           </>
@@ -346,64 +329,52 @@ export function ClienteEdit() {
 
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2">
-            <label className="block text-sm font-medium">{t("cliente.logradouro")} <span className="text-danger">*</span></label>
-            <input
+            <Field
+              label={t("cliente.logradouro")}
+              required
+              error={errors.logradouro?.message}
               {...form.register("logradouro")}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            {errors.logradouro?.message && <p className="mt-1 text-xs text-danger">{errors.logradouro.message}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium">{t("cliente.numero")}</label>
-            <input
-              {...form.register("numero")}
-              inputMode="numeric"
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <Field label={t("cliente.numero")} inputMode="numeric" {...form.register("numero")} />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2">
-            <label className="block text-sm font-medium">{t("cliente.bairro")}</label>
-            <input
-              {...form.register("bairro")}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <Field label={t("cliente.bairro")} {...form.register("bairro")} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium">{t("cliente.complemento")}</label>
-            <input
-              {...form.register("complemento")}
+            <Field
+              label={t("cliente.complemento")}
               placeholder={t("cliente.complementoPlaceholder")}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              {...form.register("complemento")}
             />
           </div>
         </div>
 
         <div className="grid grid-cols-4 gap-4">
           <div className="col-span-3">
-            <label className="block text-sm font-medium">{t("cliente.cidade")}</label>
-            <input
+            <Field
+              label={t("cliente.cidade")}
+              error={errors.cidade?.message}
               {...form.register("cidade")}
-              onChange={(e) => { form.setValue("cidade", e.target.value); form.clearErrors("cidade") }}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            {errors.cidade?.message && <p className="mt-1 text-xs text-danger">{errors.cidade.message}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium">{t("cliente.uf")}</label>
-            <input
-              value={form.watch("estado") ?? ""}
-              onChange={(e) => { form.setValue("estado", e.target.value.toUpperCase().slice(0, 2)); form.clearErrors("estado") }}
+            <Field
+              label={t("cliente.uf")}
               maxLength={2}
               placeholder={t("cliente.ufPlaceholder")}
-              className="mt-1 block w-full rounded-md border px-3 py-2 text-base   uppercase focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              className="uppercase"
+              value={form.watch("estado") ?? ""}
+              onChange={(e) => { form.setValue("estado", e.target.value.toUpperCase().slice(0, 2)); form.clearErrors("estado") }}
+              error={errors.estado?.message}
             />
-            {errors.estado?.message && <p className="mt-1 text-xs text-danger">{errors.estado.message}</p>}
           </div>
         </div>
 

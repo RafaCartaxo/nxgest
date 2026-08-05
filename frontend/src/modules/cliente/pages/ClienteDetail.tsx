@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { ChevronLeft, ChevronRight, Navigation, MessageCircle, Phone } from "lucide-react"
-import { useParams, Link } from "react-router-dom"
+import { ChevronRight, Navigation, MessageCircle, Phone, User } from "lucide-react"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import { getCliente, type Cliente } from "../services/cliente.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { hasModule } from "../../../shared/modules/modules.js"
@@ -9,6 +9,7 @@ import { ApiError } from "../../../api/client.js"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { ButtonLink } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { QuickActions } from "../../../shared/components/QuickActions/QuickActions.js"
 import { ClienteInfo } from "../components/ClienteInfo.js"
 import { SituacaoFinanceira } from "../components/SituacaoFinanceira.js"
@@ -18,6 +19,7 @@ import { buildMapsUrl } from "../../../shared/utils/maps.js"
 export function ClienteDetail() {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const contratosAtivo = hasModule(user?.modulos, "contratos")
   const [cliente, setCliente] = useState<Cliente | null>(null)
@@ -89,15 +91,12 @@ export function ClienteDetail() {
       >
           {cliente && (
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Link to="/clientes" className="text-text-muted hover:text-text-primary">
-            <ChevronLeft className="h-5 w-5" />
-              </Link>
-              <h1 className="flex-1 text-3xl font-semibold">{cliente.nome}</h1>
-              <ButtonLink to={`/clientes/${cliente.id}/editar`}>
-                {t("common.edit")}
-              </ButtonLink>
-            </div>
+            <PageHeader
+              icon={User}
+              title={cliente.nome}
+              back={{ onClick: () => navigate("/clientes"), title: t("common.back") }}
+              action={<ButtonLink to={`/clientes/${cliente.id}/editar`}>{t("common.edit")}</ButtonLink>}
+            />
             <ClienteInfo cliente={cliente} />
             <QuickActions
               layout="grid"

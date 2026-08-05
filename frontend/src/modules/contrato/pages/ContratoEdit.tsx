@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ChevronLeft } from "lucide-react"
-import { useParams, useNavigate, Link } from "react-router-dom"
+import { FileText } from "lucide-react"
+import { useParams, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { getContrato, updateContrato } from "../services/contrato.service.js"
@@ -12,7 +12,9 @@ import { formatCurrency, maskMonetario, unmaskMonetario } from "../../../shared/
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { Button } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
+import { Field } from "../../../shared/components/Field/Field.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { getContratoSchema, type ContratoFormData } from "../schemas/contrato.schema.js"
 
@@ -126,13 +128,12 @@ export function ContratoEdit() {
   if (temPagamentos) {
     return (
       <div className="mx-auto max-w-2xl p-4">
-        <div className="mb-6 flex items-center gap-2">
-          <Link to={`/contratos/${id}`} className="text-text-muted hover:text-text-primary">
-            <ChevronLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="flex-1 text-3xl font-semibold">{t("contrato.editar")}</h1>
-        </div>
-        <div className="rounded-md border border-warning bg-warning-light p-6 text-center">
+        <PageHeader
+          icon={FileText}
+          title={t("contrato.editar")}
+          back={{ onClick: () => navigate(`/contratos/${id}`), title: t("common.back") }}
+        />
+        <div className="rounded-xl border border-warning bg-warning-light p-6 text-center">
           <p className="font-medium text-warning-text">
             {t("contrato.bloqueioEdicao")}
           </p>
@@ -143,17 +144,16 @@ export function ContratoEdit() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <Link to={`/contratos/${id}`} className="text-text-muted hover:text-text-primary">
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="flex-1 text-3xl font-semibold">{t("contrato.editar")}</h1>
-      </div>
+      <PageHeader
+        icon={FileText}
+        title={t("contrato.editar")}
+        back={{ onClick: () => navigate(`/contratos/${id}`), title: t("common.back") }}
+      />
 
       <EstadoTela loading={loading} error={error} empty={!contrato} onRetry={fetch}>
         <>
           {contrato?.clienteNome && (
-            <div className="mb-4 rounded-md border border-border-light bg-surface p-4 text-sm text-text-primary">
+            <div className="mb-4 rounded-xl border border-border bg-surface p-4 text-sm text-text-primary">
               {t("contrato.clienteLabel")}: <span className="font-medium">{contrato.clienteNome}</span>
             </div>
           )}
@@ -161,78 +161,60 @@ export function ContratoEdit() {
           <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="space-y-4">
             <SectionHeader title={t("contrato.condicoes")} />
 
-            <div>
-              <label className="block text-sm font-medium">
-                {t("contrato.valorEmprestado")} <span className="text-danger">*</span>
-              </label>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={maskMonetario(valorBase)}
-                onChange={(e) => {
-                  form.setValue("valorBase", e.target.value.replace(/\D/g, ""))
-                  form.clearErrors("valorBase")
-                }}
-                className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="0,00"
-              />
-              {errors.valorBase?.message && <p className="mt-1 text-xs text-danger">{errors.valorBase.message}</p>}
-            </div>
+            <Field
+              label={t("contrato.valorEmprestado")}
+              required
+              type="text"
+              inputMode="decimal"
+              placeholder="0,00"
+              value={maskMonetario(valorBase)}
+              onChange={(e) => {
+                form.setValue("valorBase", e.target.value.replace(/\D/g, ""))
+                form.clearErrors("valorBase")
+              }}
+              error={errors.valorBase?.message}
+            />
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium">
-                  {t("contrato.juros")} <span className="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={form.watch("percentualJuros")}
-                  onChange={(e) => {
-                    form.setValue("percentualJuros", e.target.value.replace(/[^0-9.,]/g, ""))
-                    form.clearErrors("percentualJuros")
-                  }}
-                  className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="20"
-                />
-                {errors.percentualJuros?.message && <p className="mt-1 text-xs text-danger">{errors.percentualJuros.message}</p>}
-              </div>
+              <Field
+                label={t("contrato.juros")}
+                required
+                type="text"
+                inputMode="decimal"
+                placeholder="20"
+                value={form.watch("percentualJuros")}
+                onChange={(e) => {
+                  form.setValue("percentualJuros", e.target.value.replace(/[^0-9.,]/g, ""))
+                  form.clearErrors("percentualJuros")
+                }}
+                error={errors.percentualJuros?.message}
+              />
 
-              <div>
-                <label className="block text-sm font-medium">
-                  {t("contrato.quantidadeParcelas")} <span className="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={form.watch("quantidadeParcelas")}
-                  onChange={(e) => {
-                    form.setValue("quantidadeParcelas", e.target.value.replace(/\D/g, ""))
-                    form.clearErrors("quantidadeParcelas")
-                  }}
-                  className="mt-1 block w-full rounded-md border px-3 py-2 text-base   focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="12"
-                />
-                {errors.quantidadeParcelas?.message && <p className="mt-1 text-xs text-danger">{errors.quantidadeParcelas.message}</p>}
-              </div>
+              <Field
+                label={t("contrato.quantidadeParcelas")}
+                required
+                type="text"
+                inputMode="numeric"
+                placeholder="12"
+                value={form.watch("quantidadeParcelas")}
+                onChange={(e) => {
+                  form.setValue("quantidadeParcelas", e.target.value.replace(/\D/g, ""))
+                  form.clearErrors("quantidadeParcelas")
+                }}
+                error={errors.quantidadeParcelas?.message}
+              />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium">
-                {t("contrato.dataInicio")} <span className="text-danger">*</span>
-              </label>
-              <div className="mt-1 overflow-hidden rounded-md border border-border">
-                <input
-                  type="date"
-                  {...form.register("dataInicio")}
-                  className="block w-full border-0 px-3 py-2 text-base  "
-                />
-              </div>
-              {errors.dataInicio?.message && <p className="mt-1 text-xs text-danger">{errors.dataInicio.message}</p>}
-            </div>
+            <Field
+              label={t("contrato.dataInicio")}
+              required
+              type="date"
+              error={errors.dataInicio?.message}
+              {...form.register("dataInicio")}
+            />
 
             {valorBaseNum > 0 && (
-              <div className="rounded-md bg-surface-secondary p-4 text-center">
+              <div className="rounded-xl bg-surface-secondary p-4 text-center">
                 <p className="text-sm text-text-secondary">{t("contrato.totalAReceber")}</p>
                 <p className="text-2xl font-bold text-primary">
                   R$ {formatCurrency(valorFinal)}

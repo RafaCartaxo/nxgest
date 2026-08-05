@@ -74,7 +74,7 @@ export function SuperAdminPage() {
         icon={Building2}
         title={t("superAdmin.title")}
         subtitle={t("superAdmin.subtitle")}
-        action={!formOpen ? <Button variant="onDark" onClick={() => setFormOpen(true)}>{t("superAdmin.novaEmpresa")}</Button> : undefined}
+        action={!formOpen ? <Button variant="primary" onClick={() => setFormOpen(true)}>{t("superAdmin.novaEmpresa")}</Button> : undefined}
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

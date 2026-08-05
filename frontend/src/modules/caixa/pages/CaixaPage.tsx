@@ -207,7 +207,7 @@ export function CaixaPage() {
         title={t("caixa.title")}
         subtitle={t("caixa.subtitle")}
         back={{ onClick: () => navigate(-1), title: t("common.back") }}
-        action={<Button variant="onDark" onClick={() => setLiquidarModalOpen(true)}>{t("caixa.liquidar")}</Button>}
+        action={<Button variant="primary" onClick={() => setLiquidarModalOpen(true)}>{t("caixa.liquidar")}</Button>}
       />
 
       {error && (

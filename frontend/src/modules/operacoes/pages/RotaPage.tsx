@@ -21,6 +21,7 @@ import { SuccessState } from "../../../shared/components/SuccessState/SuccessSta
 import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { PagamentoModal, type PagamentoSuccessData } from "../../pagamento/components/PagamentoModal.js"
+import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 
 function formatarParcelasTexto(pagasRange: { inicio: number; fim: number } | null): string {
@@ -549,47 +550,35 @@ export function RotaPage() {
             />
           )}
 
-          {promessaOpen && (
-            <div
-              className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-black/40"
-              onClick={() => setPromessaOpen(false)}
-            >
-              <div
-                className="flex min-h-screen items-center justify-center p-4"
-              >
-                <div
-                  className="mx-auto w-full max-w-sm rounded-md bg-surface p-6 shadow-lg"
-                  onClick={(e) => e.stopPropagation()}
+          <Modal open={promessaOpen} onClose={() => setPromessaOpen(false)} backdropClose maxWidth="max-w-sm">
+            <div className="p-6">
+              <h3 className="mb-4 text-lg font-semibold text-text-primary">{t("operacoes.promessa")}</h3>
+              <label className="mb-2 block text-sm font-medium text-text-primary">
+                {t("operacoes.dataPromessa")}
+              </label>
+              <input
+                type="date"
+                value={dataPromessa}
+                onChange={(e) => setDataPromessa(e.target.value)}
+                className="mb-4 w-full appearance-none rounded-md border border-border px-3 py-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <div className="flex gap-4">
+                <Button
+                  variant="secondary"
+                  onClick={() => setPromessaOpen(false)}
+                  className="flex-1"
                 >
-                  <h3 className="mb-4 text-lg font-semibold text-text-primary">{t("operacoes.promessa")}</h3>
-                  <label className="mb-2 block text-sm font-medium text-text-primary">
-                    {t("operacoes.dataPromessa")}
-                  </label>
-                  <input
-                    type="date"
-                    value={dataPromessa}
-                    onChange={(e) => setDataPromessa(e.target.value)}
-                    className="mb-4 w-full appearance-none rounded-md border border-border px-3 py-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <div className="flex gap-4">
-                    <Button
-                      variant="secondary"
-                      onClick={() => setPromessaOpen(false)}
-                      className="flex-1"
-                    >
-                      {t("common.cancel")}
-                    </Button>
-                    <Button
-                      onClick={handleConfirmarPromessa}
-                      className="flex-1"
-                    >
-                      {t("common.save")}
-                    </Button>
-                    </div>
-                  </div>
-                </div>
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  onClick={handleConfirmarPromessa}
+                  className="flex-1"
+                >
+                  {t("common.save")}
+                </Button>
               </div>
-            )}
+            </div>
+          </Modal>
         </>
       )}
 

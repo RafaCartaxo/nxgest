@@ -243,6 +243,7 @@
     "parciais": "Partial",
     "pendentes": "Pending",
     "vencidas": "Overdue",
+    "venceEm": "Due {{data}}",
     "pago": "✓ Paid",
     "vencida": "Overdue",
     "venceHoje": "Due Today"

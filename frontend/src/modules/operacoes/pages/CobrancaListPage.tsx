@@ -170,7 +170,7 @@ export function CobrancaListPage() {
         subtitle={t("operacoes.subtitleCobrancas")}
         back={{ onClick: () => navigate(-1), title: t("common.back") }}
         action={!(pendentes.length === 0 && totalResolvidos > 0) ? (
-          <Button variant="onDark" onClick={() => navigate("/rota")}>{t("operacoes.verNaRota")} →</Button>
+          <Button variant="primary" onClick={() => navigate("/rota")}>{t("operacoes.verNaRota")} →</Button>
         ) : undefined}
       />
 
@@ -192,7 +192,7 @@ export function CobrancaListPage() {
       </div>
 
       {atrasadosResumo && atrasadosResumo.clientes > 0 && (
-        <div className="mb-4 rounded-md border border-danger bg-danger-light px-4 py-3">
+        <div className="mb-4 rounded-xl border border-danger bg-danger-light px-4 py-3">
           <span className="block text-sm font-medium text-danger-text">
             {t("operacoes.atrasadosResumo", {
               clientes: atrasadosResumo.clientes,

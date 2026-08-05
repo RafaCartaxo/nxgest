@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { ChevronLeft, ArrowRight } from "lucide-react"
+import { ArrowRight, User } from "lucide-react"
 import { getOperador, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
@@ -11,6 +11,7 @@ import { SectionHeader } from "../../../shared/components/SectionHeader/SectionH
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { Card } from "../../../shared/components/Card/Card.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 
@@ -82,23 +83,18 @@ export function OperadorDetail() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="text-text-muted hover:text-text-primary"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h1 className="flex-1 text-3xl font-semibold">{operador?.nome ?? t("admin.operadorDetail")}</h1>
-        {operador && (
+      <PageHeader
+        icon={User}
+        title={operador?.nome ?? t("admin.operadorDetail")}
+        back={{ onClick: () => navigate(-1), title: t("common.back") }}
+        action={operador ? (
           <StatusBadge
             variant={operador.role === "operator" ? "neutral" : "info"}
             size="sm"
             label={operador.role === "super_admin" ? t("admin.roleSuperAdmin") : operador.role === "admin" ? t("admin.roleAdmin") : t("admin.roleOperator")}
           />
-        )}
-      </div>
+        ) : undefined}
+      />
 
       <EstadoTela loading={loading} error={error} onRetry={fetch} empty={!loading && !operador} emptyMessage={t("admin.erroCarregar")}>
         {operador && caixa && (

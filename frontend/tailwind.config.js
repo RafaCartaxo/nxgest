@@ -21,7 +21,7 @@ export default {
         "text-primary":  "var(--color-text-primary)",
         "text-secondary":"var(--color-text-secondary)",
         "text-muted":    "var(--color-text-muted)",
-        border:          { DEFAULT: "var(--color-border)", light: "var(--color-border-light)" },
+        border:          { DEFAULT: "var(--color-border)", light: "var(--color-border-light)", strong: "var(--color-border-strong)" },
       },
       borderColor: {
         DEFAULT: "var(--color-border)",

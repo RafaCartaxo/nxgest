@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { ChevronLeft } from "lucide-react"
+import { User } from "lucide-react"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { Button } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { alterarSenha } from "../services/auth.service.js"
@@ -51,16 +52,11 @@ export function PerfilPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="text-text-muted hover:text-text-primary"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <h1 className="flex-1 text-3xl font-semibold">{t("perfil.title")}</h1>
-      </div>
+      <PageHeader
+        icon={User}
+        title={t("perfil.title")}
+        back={{ onClick: () => navigate(-1), title: t("common.back") }}
+      />
 
       <div className="mb-6 rounded-md border border-border-light bg-surface p-4">
         <div className="flex items-center justify-between gap-2">

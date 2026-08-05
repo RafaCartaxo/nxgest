@@ -9,12 +9,6 @@ interface ParcelaListProps {
   onPagar?: (parcela: Parcela) => void
 }
 
-const cardEstiloPorEstado: Record<string, string> = {
-  Pendente: "bg-warning-light border-warning",
-  Parcial: "bg-info-light border-info",
-  Paga: "bg-success-light border-success-border",
-}
-
 const dotEstiloPorEstado: Record<string, string> = {
   Pendente: "bg-warning",
   Parcial: "bg-info",
@@ -31,12 +25,6 @@ function isVenceHoje(p: Parcela): boolean {
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)
   return p.estado === "Pendente" && parseDateLocal(p.dataVencimento).getTime() === hoje.getTime()
-}
-
-function getCardEstilo(p: Parcela): string {
-  if (isVencida(p)) return "bg-danger-light border-danger"
-  if (isVenceHoje(p)) return "bg-info-light border-info"
-  return cardEstiloPorEstado[p.estado] || "bg-surface border-border-light"
 }
 
 function getDotEstilo(p: Parcela): string {
@@ -93,66 +81,44 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
           )}
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-      {parcelas.map((p) => (
-        <button
-          type="button"
-          key={p.id}
-          onClick={() => p.estado !== "Paga" && onPagar?.(p)}
-          className={`group flex min-w-0 flex-col overflow-hidden rounded-md border p-3 transition hover:border-primary ${
-            getCardEstilo(p)
-          } ${
-            p.estado !== "Paga" ? "cursor-pointer" : "cursor-default"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="truncate text-xs font-bold tracking-wider text-text-secondary">
-              {String(p.numero).padStart(2, "0")}
-            </span>
-            <span className="truncate text-xs font-medium text-text-muted">
-              {formatarData(p.dataVencimento, t)}
-            </span>
-          </div>
-          {p.estado === "Paga" ? (
-            <p className="mt-1 text-center text-sm font-medium text-success-text">
-              {t("parcela.pago")}
-            </p>
-          ) : p.estado === "Parcial" ? (
-            <>
-              <p className="mt-1 text-center">
-                <span className="text-sm font-medium text-text-secondary">R$</span>{" "}
-                <span className="text-base font-bold">{formatCurrency(p.saldoPendente)}</span>
-              </p>
-              {isVencida(p) && (
-                <p className="mt-0.5 text-center text-[10px] font-medium text-danger-text">
-                  {t("parcela.vencida")}
+      <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+        {parcelas.map((p) => (
+          <li key={p.id}>
+            <button
+              type="button"
+              onClick={() => p.estado !== "Paga" && onPagar?.(p)}
+              className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+                p.estado !== "Paga" ? "cursor-pointer hover:bg-surface-hover" : "cursor-default"
+              }`}
+            >
+              <span aria-hidden className={`size-2 shrink-0 rounded-full ${getDotEstilo(p)}`} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-text-primary">
+                  {String(p.numero).padStart(2, "0")}
                 </p>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="mt-1 text-center">
-                <span className="text-sm font-medium text-text-secondary">R$</span>{" "}
-                <span className="text-lg font-bold">{formatCurrency(p.valorPrevisto)}</span>
-              </p>
-              {isVenceHoje(p) && (
-                <p className="mt-0.5 text-center text-[10px] font-medium text-info-text">
-                  {t("status.venceHoje")}
+                <p className="text-xs text-text-muted">
+                  {t("parcela.venceEm", { data: formatarData(p.dataVencimento, t) })}
                 </p>
-              )}
-              {isVencida(p) && (
-                <p className="mt-0.5 text-center text-[10px] font-medium text-danger-text">
-                  {t("parcela.vencida")}
-                </p>
-              )}
-            </>
-          )}
-          <div className="mt-auto flex justify-center pt-2">
-            <span className={`inline-block h-2 w-2 rounded-full ${getDotEstilo(p)}`} />
-          </div>
-        </button>
-      ))}
-    </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {isVencida(p) && (
+                  <span className="text-xs font-medium text-danger-text">{t("parcela.vencida")}</span>
+                )}
+                {isVenceHoje(p) && (
+                  <span className="text-xs font-medium text-info-text">{t("status.venceHoje")}</span>
+                )}
+                {p.estado === "Paga" ? (
+                  <span className="text-sm font-semibold text-success-text">{t("parcela.pago")}</span>
+                ) : (
+                  <span className="tabular text-sm font-semibold text-text-primary">
+                    R$ {formatCurrency(p.estado === "Parcial" ? p.saldoPendente : p.valorPrevisto)}
+                  </span>
+                )}
+              </div>
+            </button>
+          </li>
+        ))}
+      </ul>
     </>
   )
 }

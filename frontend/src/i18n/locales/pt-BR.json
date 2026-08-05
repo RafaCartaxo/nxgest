@@ -243,6 +243,7 @@
     "parciais": "Parciais",
     "pendentes": "Pendentes",
     "vencidas": "Vencidas",
+    "venceEm": "Vence {{data}}",
     "pago": "✓ Paga",
     "vencida": "Vencida",
     "venceHoje": "Vence Hoje"

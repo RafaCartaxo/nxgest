@@ -60,7 +60,7 @@ export function ClienteList() {
         title={t("cliente.title")}
         subtitle={t("cliente.subtitle")}
         back={{ onClick: () => navigate("/"), title: t("nav.central") }}
-        action={<ButtonLink to="/clientes/novo" variant="onDark">{t("cliente.novo")}</ButtonLink>}
+        action={<ButtonLink to="/clientes/novo" variant="primary">{t("cliente.novo")}</ButtonLink>}
       />
 
       <div className="mb-4">

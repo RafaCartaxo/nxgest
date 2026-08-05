@@ -50,7 +50,7 @@ function CobrancaCard({
 
   if (variant === "compact") {
     return (
-      <Card.Root variant="collection" className="p-4">
+      <Card.Root variant="collection" tone={situacao === "atrasado" ? "danger" : "info"} className="p-4">
         <div className="flex items-start gap-4">
           <Card.Dot color={situacao === "atrasado" ? "red" : "blue"} size="md" />
           <Card.Body>
@@ -98,7 +98,7 @@ function CobrancaCard({
   }
 
   return (
-    <div className="border-b border-border-light p-6">
+    <div className={`border-b border-border-light border-l-4 p-6 ${situacao === "atrasado" ? "border-l-danger" : "border-l-info"}`}>
       <div className="flex items-start gap-4">
         <Card.Dot color={situacao === "atrasado" ? "red" : "blue"} size="md" />
         <Card.Body>

@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom"
+import { useParams, useNavigate, useSearchParams } from "react-router-dom"
 import { getContrato, deleteContrato } from "../services/contrato.service.js"
 import type { Contrato, Parcela } from "../services/contrato.service.js"
-import { ChevronLeft, Share2, MessageCircle, RotateCcw } from "lucide-react"
+import { FileText, Share2, MessageCircle, RotateCcw } from "lucide-react"
 import { ApiError } from "../../../api/client.js"
 import { formatarData } from "../../../shared/utils/formatarData.js"
 import { formatCurrency, unmask } from "../../../shared/utils/masks.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { Button, ButtonLink } from "../../../shared/components/Button.js"
+import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { ContratoInfo } from "../components/ContratoInfo.js"
 import { ParcelaList } from "../components/ParcelaList.js"
 import { PagamentoModal, type PagamentoSuccessData } from "../../pagamento/components/PagamentoModal.js"
@@ -246,24 +247,25 @@ export function ContratoDetail() {
   return (
     <div className="mx-auto max-w-2xl p-4">
       {cliente && (
-        <div className="mb-4 flex items-center gap-2">
-          <Link
-            to={isAdminContext
-              ? `/admin/operadores/${usuarioId}${empresaId ? `?empresaId=${empresaId}` : ""}`
-              : contrato
-                ? `/clientes/${contrato.clienteId}`
-                : "/contratos"}
-            className="text-text-muted hover:text-text-primary"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="flex-1 text-3xl font-semibold">{cliente.nome}</h1>
-          {!isAdminContext && contrato && !temPagamentos && (
+        <PageHeader
+          icon={FileText}
+          title={cliente.nome}
+          back={{
+            onClick: () => navigate(
+              isAdminContext
+                ? `/admin/operadores/${usuarioId}${empresaId ? `?empresaId=${empresaId}` : ""}`
+                : contrato
+                  ? `/clientes/${contrato.clienteId}`
+                  : "/contratos"
+            ),
+            title: t("common.back"),
+          }}
+          action={!isAdminContext && contrato && !temPagamentos ? (
             <ButtonLink to={`/contratos/${contrato.id}/editar`}>
               {t("common.edit")}
             </ButtonLink>
-          )}
-        </div>
+          ) : undefined}
+        />
       )}
 
       <EstadoTela
