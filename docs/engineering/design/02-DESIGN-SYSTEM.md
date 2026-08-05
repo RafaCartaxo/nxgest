@@ -2,7 +2,7 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.1
+**Versão:** 2.0
 
 **Última atualização:** 02/07/2026
 
@@ -139,17 +139,19 @@ Preferências:
 
 # Bordas
 
-Raio padrão:
+Raio padrão (identidade Nexus — PLAN-038):
 
-12px (`rounded-md`, configurado no `tailwind.config.js`)
+- **Cards / Modais / Inputs / Selects:** `rounded-xl` (16px)
+- **Botões:** `rounded-md` (12px)
+- **Badges:** `rounded-full`
 
 Aplicação:
 
 | Componente | Raio | Classe |
 |-----------|------|--------|
-| Cards | 12px | `rounded-md` |
-| Inputs / Selects | 12px | `rounded-md` |
-| Modais | 12px | `rounded-md` |
+| Cards | 16px | `rounded-xl` |
+| Inputs / Selects | 16px | `rounded-xl` |
+| Modais | 16px | `rounded-xl` |
 | Badges | 9999px | `rounded-full` |
 | Botões | 12px | `rounded-md` (herdado do base do Button) |
 
@@ -273,12 +275,15 @@ Botões secundários deverão possuir menor destaque visual.
 
 ## Inputs
 
+**Padrão canônico:** componente compartilhado `Field` (`frontend/src/shared/components/Field/Field.tsx`), com label + input + erro. Todos os formulários devem usar `Field` (mapeamento completo em `engineering/07-FORMS-INPUTS.md`).
+
 Todos os inputs deverão:
 
-- possuir altura confortável para toque;
+- usar o estilo canônico: `min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5` (raiz `rounded-xl` — identidade Nexus, PLAN-038);
+- possuir altura confortável para toque (mín. 44px);
 - utilizar fonte mínima de 16px (`text-base`);
-- apresentar feedback visual ao receber foco com `focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`;
-- exibir mensagens claras de erro;
+- apresentar feedback visual ao receber foco com `focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary` (token, nunca cor fixa);
+- exibir mensagens claras de erro (`text-danger-text`);
 - labels não devem conter dois-pontos (`:`) no final do texto.
 
 ---

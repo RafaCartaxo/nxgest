@@ -2,6 +2,30 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 04/08/2026 — PLAN-039 · Padronização de Forms & Inputs (FOCO) + mapa
+
+**Adicionado / Corrigido**
+- **`Field`** compartilhado (`shared/components/Field/Field.tsx`) — input canônico da identidade: `rounded-xl min-h-12 border-strong` + label + erro.
+- Token **`--border-strong`** (index.css + tailwind `border.strong`).
+- **`ClienteNovo`/`ClienteEdit`** → `PageHeader` + `Field` (dados + endereços).
+- **`ContratoNovo`/`ContratoEdit`** → `PageHeader` + `Field` (+ select de cliente e date em `rounded-xl`).
+- **`ClienteCard`** (lista/detalhe) com **avatar de iniciais** + ícones (prepara a futura **foto do cliente**).
+- **Documentação**: `docs/engineering/07-FORMS-INPUTS.md` (mapa completo dos 16 arquivos de forms) e **DS v2** (seção Inputs + tabela Bordas).
+- **Follow-up mapeado (FU):** OperadorForm, EmpresaForm, GastoForm, PerfilPage, CaixaPage, OperadorDetail, LoginPage, RotaPage, PagamentoModal, ContratoDetail, ContratoList, SearchBar.
+
+Referência: [PLAN-039](plans/PLAN-039-padronizacao-forms-inputs.md) · [07-FORMS-INPUTS](engineering/07-FORMS-INPUTS.md)
+
+## 04/08/2026 — Padronização pós-PLAN-038 (mapa de pendências)
+
+**Corrigido / Padronizado**
+- **Botões `onDark` → `primary`** (5: Novo Cliente, Novo Contrato, Ver na Rota, Liquidar, Nova Empresa) — herança do banner gradiente antigo; variante `onDark` **removida** do `Button`.
+- **Modais de KPI/semana** (`PagamentosHoje`, `PagamentosPeriodo`, `ParcelasHoje`, `GastosPeriodo`, `ContratosSemana`) e o **modal de promessa da Rota** passaram a usar o **`Modal` base** (remove duplicação de overlay/Escape/scroll); cards internos em `rounded-xl bg-card`.
+- **`Modal` base** atualizado para `rounded-xl bg-card` (alinha todos os modais).
+- **`ParcelaList`** no estilo do Lovable: lista `divide-y` com **dot de status** + número/vencimento + valor (tabular) + rótulos Vencida/Vence hoje (mantém clique p/ pagar).
+- **`CobrancaCard`** com **barra de tom** (compact via `tone`, detail via `border-l`).
+- **Detalhes → `PageHeader`**: ClienteDetail, ContratoDetail, OperadorDetail e PerfilPage (título limpo + voltar + ação).
+- Banner de atrasados da CobrançaListPage em `rounded-xl`.
+
 ## 04/08/2026 — PLAN-038 · Refinamentos de identidade (essência do mockup Lovable)
 
 **Adicionado / Corrigido**
