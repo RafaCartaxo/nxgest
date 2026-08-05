@@ -506,5 +506,12 @@ Todo plano de UI, redesign ou **novo módulo do whitelabel** deve fechar com:
 - [ ] Usa **apenas** componentes compartilhados (catálogo `04-UI-COMPONENTS.md` / `UI-COVERAGE.md`)
 - [ ] `npm run audit:ui` limpo (sem padrão legado) — **gate do deploy**
 - [ ] `npm run audit:styles` limpo (sem cor fixa da paleta)
+- [ ] `npm run audit:modules` limpo (Module Manifest coerente — PLAN-045)
 - [ ] `UI-COVERAGE.md` atualizado (telas/componentes/legado)
 - [ ] `npm run docs:audit` limpo (mapeamento/rotas coerentes)
+
+---
+
+# Central composável (PLAN-045)
+
+O dashboard (Central) **compõe widgets dos módulos ativos** a partir do `MODULE_WIDGETS` (`frontend/src/shared/modules/modules.ts`) — cada widget tem **UM módulo dono**. Não adicionar KPI/ação "solto" na Central: registrar o widget no manifest do módulo dono e gatear com `isWidgetActive(modulos, "<widget>")`. Novo módulo → widget entra automaticamente na Central.

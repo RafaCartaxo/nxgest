@@ -54,4 +54,5 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-042-anexos-cliente.md](PLAN-042-anexos-cliente.md) | Anexos do cliente: comprovante de residência (foto ou PDF, limites 1MB/5MB), `/data/uploads`, endpoints escopados, backup inclui uploads | Planejado |
 | [PLAN-043-polimento-final-identidade-nexus.md](PLAN-043-polimento-final-identidade-nexus.md) | Polimento final da identidade "Nexus": forms/listas/inputs no padrão, navbar com 3 dropdowns (tema/cores/idioma), fix QuickActions, docs stale | Concluído |
 | [PLAN-044-governanca-ui-anti-drift.md](PLAN-044-governanca-ui-anti-drift.md) | Governança de UI: `audit:ui` (gate no deploy), inventário `UI-COVERAGE`, protocolo de shared-component, checklist corrigida, ADR-005 | Concluído |
+| [PLAN-045-modularizacao-whitelabel.md](PLAN-045-modularizacao-whitelabel.md) | Modularização pro whitelabel: Module Manifest (`audit:modules`), Central composável por widgets, grafo refinado (rota/atendidos⇒cobrancas), matriz UC×módulo | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |

@@ -13,6 +13,7 @@
     "docs:audit": "node scripts/audit-docs.mjs",
     "audit:styles": "node scripts/audit-styles.mjs",
     "audit:ui": "node scripts/audit-ui.mjs",
+    "audit:modules": "node scripts/audit-modules.mjs",
     "docs:collection": "node scripts/build-collection.mjs",
     "smoke:api": "node scripts/smoke-api.mjs"
   },

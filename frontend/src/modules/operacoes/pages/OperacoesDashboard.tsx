@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { listarCobrancasDoDia, listarPagamentosHoje, listarParcelasHoje, listarParcelasSemana, ResultadoOperacional, type CobrancaDoDiaResult, type PagamentoDoDiaItem, type CobrancaItem, type ParcelaHojeCliente } from "../services/operacoes.service.js"
 import { listGastos, type GastoItem } from "../../gasto/services/gasto.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
-import { hasModule } from "../../../shared/modules/modules.js"
+import { isWidgetActive } from "../../../shared/modules/modules.js"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
 import { calcularDistancia, sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
@@ -28,11 +28,11 @@ export function OperacoesDashboard() {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const modulos = user?.modulos
-  const contratosAtivo = hasModule(modulos, "contratos")
-  const gastosAtivo = hasModule(modulos, "gastos")
-  const rotaAtivo = hasModule(modulos, "rota")
-  const cobrancasAtivo = hasModule(modulos, "cobrancas")
-  const atendidosAtivo = hasModule(modulos, "atendidos")
+  const contratosAtivo = isWidgetActive(modulos, "aReceberHoje")
+  const gastosAtivo = isWidgetActive(modulos, "gastosHoje")
+  const rotaAtivo = isWidgetActive(modulos, "minhaRota")
+  const cobrancasAtivo = isWidgetActive(modulos, "pendentesDia")
+  const atendidosAtivo = isWidgetActive(modulos, "atendidosHoje")
   const [data, setData] = useState<CobrancaDoDiaResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -271,8 +271,8 @@ export function OperacoesDashboard() {
               actions={[
                 { icon: Banknote, label: t("operacoes.receber"), onClick: () => navigate("/cobrancas"), variant: "green", show: cobrancasAtivo },
                 { icon: MapPinned, label: t("operacoes.minhaRota"), onClick: () => navigate("/rota"), variant: "blue", show: rotaAtivo },
-                { icon: UserPlus, label: t("operacoes.novoCliente"), onClick: () => navigate("/clientes/novo"), variant: "blue", show: hasModule(modulos, "clientes") },
-                { icon: Receipt, label: t("operacoes.fecharCaixa"), onClick: () => navigate("/caixa"), variant: "warning", show: hasModule(modulos, "caixa") },
+                { icon: UserPlus, label: t("operacoes.novoCliente"), onClick: () => navigate("/clientes/novo"), variant: "blue", show: isWidgetActive(modulos, "novoCliente") },
+                { icon: Receipt, label: t("operacoes.fecharCaixa"), onClick: () => navigate("/caixa"), variant: "warning", show: isWidgetActive(modulos, "fecharCaixa") },
               ]}
             />
           </div>
@@ -334,8 +334,8 @@ export function OperacoesDashboard() {
                 <SuccessState
                   title={t("operacoes.todosAtendidos", { total: totalResolvidos })}
                   detail={atendidosDetail}
-                  linkLabel={t("operacoes.verResumo")}
-                  onLinkClick={() => navigate("/atendidos")}
+                  linkLabel={atendidosAtivo ? t("operacoes.verResumo") : undefined}
+                  onLinkClick={atendidosAtivo ? () => navigate("/atendidos") : undefined}
                 />
               )}
             </div>

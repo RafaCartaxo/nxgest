@@ -50,6 +50,7 @@ npm run docs:collection  # regenera docs/api-collection.json
 npm run smoke:api        # executa os cenários da 07 (requer instância isolada; ver 07 "Como executar")
 npm run audit:styles     # falha se houver cor fixa da paleta em frontend/src (PLAN-035)
 npm run audit:ui         # falha se houver padrão de UI legado (pré-"Nexus") em frontend/src (PLAN-044)
+npm run audit:modules    # falha se o Module Manifest do whitelabel estiver incoerente (PLAN-045)
 ```
 
 > **Documentação alinhada (SKILL-009):** após qualquer mudança de código, rodar `npm run docs:audit` e aplicar a matriz de propagação — ver `docs/skills/SKILL-009-documentation-sync.md`.

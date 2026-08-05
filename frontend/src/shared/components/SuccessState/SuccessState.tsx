@@ -3,8 +3,8 @@ import { CheckCircle } from "lucide-react"
 interface SuccessStateProps {
   title: string
   detail?: string
-  linkLabel: string
-  onLinkClick: () => void
+  linkLabel?: string
+  onLinkClick?: () => void
 }
 
 export function SuccessState({ title, detail, linkLabel, onLinkClick }: SuccessStateProps) {
@@ -19,13 +19,15 @@ export function SuccessState({ title, detail, linkLabel, onLinkClick }: SuccessS
           {detail}
         </p>
       )}
-      <button
-        type="button"
-        onClick={onLinkClick}
-        className="text-sm font-medium text-primary hover:underline"
-      >
-        {linkLabel}
-      </button>
+      {linkLabel && onLinkClick && (
+        <button
+          type="button"
+          onClick={onLinkClick}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          {linkLabel}
+        </button>
+      )}
     </div>
   )
 }

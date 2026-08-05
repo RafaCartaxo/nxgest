@@ -700,7 +700,8 @@ No painel admin, os **KPIs de Operação** (`totalClientes`, `contratosAtivos`, 
 O `super_admin` controla os **módulos ativos de cada empresa** (whitelabel) via `PATCH /api/admin/empresas/:id/modulos`. Cada empresa tem uma lista de módulos (`empresas.modulos`, JSON); módulos possíveis: `clientes`, `contratos`, `caixa`, `gastos`, `rota`, `cobrancas`, `atendidos`.
 
 - Empresa nova nasce com **todos os módulos** ativos (default).
-- **Dependências obrigatórias (validadas de forma transitiva — PLAN-037):** `contratos` requer `clientes`; `gastos` requer `caixa`; `rota`, `cobrancas` e `atendidos` requerem `contratos` (logo, também `clientes`). Combinação que viole a dependência (direta ou transitiva) → 422.
+- **Dependências obrigatórias (validadas de forma transitiva — PLAN-037/045):** `contratos` requer `clientes`; `gastos` requer `caixa`; `cobrancas` requer `contratos` (logo `clientes`); **`rota` e `atendidos` requerem `cobrancas`** (logo `contratos` e `clientes`). Combinação que viole a dependência (direta ou transitiva) → 422.
+- **Fonte única do grafo:** `MODULE_MANIFEST` (`src/modules/admin/domain/modules.ts`) — `ALL_MODULES`, dependências, widgets, capacidades e UCs derivados dele; checado por `npm run audit:modules`.
 - Array vazio = apenas o módulo `central` (sempre ativo).
 - Somente `super_admin` pode alterar; `admin` → 403.
 
@@ -711,6 +712,7 @@ O `super_admin` controla os **módulos ativos de cada empresa** (whitelabel) via
 Um módulo **desativado** em uma empresa oculta todas as **superfícies** daquele módulo para os usuários da empresa: links de navegação (Navbar), rotas (redirect para `/`), entradas do dashboard (Central) e blocos de dados em outras telas (ex.: blocos de gastos no Caixa; card de contratos no ClienteDetail).
 
 - O módulo `central` (dashboard) é **sempre ativo** — é a landing de todos.
+- **Central composável (PLAN-045):** o dashboard renderiza os **widgets dos módulos ativos** a partir do `MODULE_WIDGETS` (cada widget tem UM módulo dono). Módulo off → widget oculto (KPIs, ações rápidas, pendentes, gastos, atendidos).
 - `modulos` é derivado do `login`/`me`; alteração feita pelo super admin vale para o usuário no **próximo carregamento** (novo `/me`).
 - A ausência de `modulos` (tokens antigos, super admin) equivale a **todos ativos**.
 - **Enforcement no backend (PLAN-036, P024):** além do gating de UI, a API devolve **403 `MODULE_DISABLED`** para as rotas de módulo desativado — via `requireModule` no mount das rotas (`clientes`, `contratos`, `caixa`, `gastos`, `pagamentos`=contratos) e por endpoint em `/operacoes` (`POST /visitas`=rota, `GET /historico-atrasos`=cobrancas). Super admin sem `?empresaId=` não é bloqueado (gestão global); com `?empresaId=` respeita os módulos da empresa-alvo. Endpoints compartilhados com a Central (`/operacoes/cobrancas`, `pagamentos-hoje`, `parcelas-hoje`, `parcelas-semana`) permanecem abertos (limite do v1 — PLAN-036).

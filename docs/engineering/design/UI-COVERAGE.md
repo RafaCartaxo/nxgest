@@ -84,3 +84,16 @@
 
 - `ADR-005` ("Por que o redesign deixou débito") · `02-DESIGN-SYSTEM.md` (DS v2) · `07-FORMS-INPUTS.md`
 - `scripts/audit-ui.mjs` · `scripts/consumers.mjs` · `AGENTS.md`
+
+---
+
+## Como adicionar um módulo (whitelabel — PLAN-045)
+
+Novo módulo de negócio (ex.: `agenda`, `vendas`) segue o **Module Manifest**:
+
+1. **Backend** `src/modules/admin/domain/modules.ts`: entrada em `MODULE_MANIFEST` — `labelKey`, `surfaces`, `dados` (endpoints p/ `requireModule`), `widgets` (dono na Central), `capacidades`, `dependsOn`, `ucs`.
+2. **Frontend** `frontend/src/shared/modules/modules.ts`: espelho (`id`, `dependsOn`, `icon`) + `MODULE_WIDGETS` (widgets que contribui à Central).
+3. **Superfícies**: rotas em `App.tsx` com `RequireModule` + `requireModule` no backend (403) + navbar/sidebar (gated).
+4. **Central composável**: os widgets entram automaticamente (composição por módulo ativo) — sem editar a lógica do dashboard.
+5. **UCs/CTs**: criar em 06/07 com etiqueta de módulo + adicionar à matriz `08-UC-MODULOS.md`.
+6. **Validação**: `npm run audit:modules` + `npm run audit:ui` + `npm run audit:styles` + `docs:audit` — gate do deploy.

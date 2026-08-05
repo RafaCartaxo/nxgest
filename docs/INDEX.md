@@ -18,6 +18,7 @@
 - [05-CONVENTIONS.md](product/05-CONVENTIONS.md) — Convenções de código e nomenclatura
 - [06-CASOS-DE-USO.md](product/06-CASOS-DE-USO.md) — Casos de uso reais de validação por fluxo (o que deve acontecer e onde o dado reflete)
 - [07-CASOS-DE-USO-API.md](product/07-CASOS-DE-USO-API.md) — Casos de uso e cenários de teste da API (request/response + coerência de retornos)
+- [08-UC-MODULOS.md](product/08-UC-MODULOS.md) — Matriz UC/CT × módulo do whitelabel (validação on/off, PLAN-045)
 
 ## Engineering
 

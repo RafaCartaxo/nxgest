@@ -1,3 +1,28 @@
+# CHECKLIST — Modularização pro whitelabel real (PLAN-045)
+
+**Data:** 05/08/2026
+
+## Module Manifest
+
+- [x] Backend `modules.ts`: `MODULE_MANIFEST` (labelKey/surfaces/dados/widgets/capacidades/dependsOn/ucs); ALL_MODULES + DEFAULT_MODULOS + MODULE_DEPENDENCIES derivados; grafo refinado (`rota/atendidos ⇒ cobrancas`)
+- [x] Frontend `modules.ts`: `MODULE_WIDGETS` + `isWidgetActive` + ícones + `dependsOn`
+- [x] `npm run audit:modules` (7 módulos, grafo ok, 13 widgets) — gate no deploy
+
+## Central composável
+
+- [x] `OperacoesDashboard`: KPIs/ações/pendentes/atendidos via `isWidgetActive` (fim do gating manual por `hasModule`)
+- [x] Fix dead-end: `SuccessState` "Ver resumo → /atendidos" só com `atendidos` ativo (link opcional no componente)
+
+## Docs
+
+- [x] `08-UC-MODULOS.md` (matriz UC/CT × módulo) · `ADR-006` (manifest) · BR-092/093 · DS (Central composável) · UI-COVERAGE (template de novo módulo) · PLAN-045 · UPDATES · INDEX
+
+## Validação
+
+- [x] `npm run build` · `audit:ui` · `audit:styles` · `audit:modules` · `docs:audit` · `smoke`
+
+---
+
 # CHECKLIST — Governança de UI / Anti-drift (PLAN-044)
 
 **Data:** 05/08/2026

@@ -2,6 +2,20 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 05/08/2026 — PLAN-045 · Modularização para o whitelabel real (Module Manifest + Central composável)
+
+**Adicionado**
+- **Module Manifest** (`src/modules/admin/domain/modules.ts`): cada módulo declara `labelKey, surfaces, dados, widgets, capacidades, dependsOn, ucs`; `ALL_MODULES`/`DEFAULT_MODULOS`/dependências **derivados** dele. Espelho frontend com `MODULE_WIDGETS` + `isWidgetActive` + ícones.
+- **Grafo refinado:** `rota ⇒ cobrancas` e `atendidos ⇒ cobrancas` (agregadores da fila de cobrança); `pagamentos` = capacidade de `contratos`; `caixa` com 2 formas (isolada × integrada).
+- **Central composável:** o dashboard renderiza os **widgets dos módulos ativos** (KPIs, ações rápidas, pendentes, atendidos) — fim do gating manual por `hasModule`. **Fix do dead-end:** "Ver resumo → /atendidos" só aparece com `atendidos` ativo.
+- **`npm run audit:modules`** — valida o manifest (IDs, deps espelhadas, grafo sem ciclo, widget com 1 dono) — **gate no deploy**.
+- **`docs/product/08-UC-MODULOS.md`** — matriz UC/CT × módulo (validação on/off) · **ADR-006** (manifest) · template de novo módulo (UI-COVERAGE).
+- BR-092/093 atualizadas (grafo + Central composável).
+
+**Por quê:** o whitelabel real (novos negócios plugáveis) precisa de uma **fonte única** do que cada módulo é/expõe. Novo módulo = entrada no manifest + superfícies + widgets + UCs — sem rework.
+
+Referência: [PLAN-045](plans/PLAN-045-modularizacao-whitelabel.md) · [ADR-006](foundation/ADR-006-Module-Manifest.md) · [08-UC-MODULOS](product/08-UC-MODULOS.md)
+
 ## 05/08/2026 — PLAN-044 · Governança de UI / Anti-drift
 
 **Adicionado**
