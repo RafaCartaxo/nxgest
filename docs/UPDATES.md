@@ -2,6 +2,18 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 05/08/2026 — Estabilidade: fix BR-091 (admin × movimentação) + hardening do middleware
+
+**Corrigido**
+- **BR-091 (regressão do PLAN-032):** o dashboard de **admin self** agregava **só os dados do próprio admin** (`admin.controller.ts` passava `req.userId!`) — operador registrava pagamento e o "Recebido Hoje"/Total Clientes/Contratos Ativos do admin **não refletiam**. Corrigido: admin/super agregam a **equipe** por empresa (sócio mantém subárvore). Asserção de regressão no smoke (`EQ-088`).
+- **`equipe` por operador sempre 0 (novo bug encontrado na asserção):** a query do `recebidoHoje` da equipe usava `and(...userIds.map(eq))` → `userId = A AND userId = B AND ...` (sempre falso com >1 usuário) → o breakdown "da equipe · N operadores" e o `EquipeModal` mostravam **R$ 0** para qualquer operador. Corrigido para `inArray(pagamentos.userId, userIds)` (`admin.repository.impl.ts`). É a outra metade do "movimentação não reflete no admin".
+- **`requireModule` sem try/catch:** middleware async do enforcement podia deixar request pendurado + unhandled rejection no Express 4 se a query de `empresas` falhasse. Agora `next(err)` (padrão do `authMiddleware`).
+- **Smoke MOD-097/098/099:** restore dos `modulos` agora em `try/finally` — falha de asserção não deixa a empresa de teste com módulos parciais (anti-flakiness).
+
+**Registrado (BACKLOG P024 — observações de design):** enforcement parcial de `cobrancas`/`atendidos` (dado via endpoint compartilhado permanece aberto) e super admin com `?usuarioId=` sem `?empresaId=` ignora o gating (by design).
+
+**Validação:** `npm run build` ✅ · `smoke:api` **107/107** (inclui novas asserções BR-091 e equipe) · `docs:audit` ✅
+
 ## 05/08/2026 — Planos de identidade visual (038–042) + briefings Lovable
 
 **Registrado**

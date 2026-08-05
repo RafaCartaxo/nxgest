@@ -1,3 +1,25 @@
+# CHECKLIST — Estabilidade (fix BR-091 + hardening middleware + anti-flakiness)
+
+**Data:** 05/08/2026
+
+## Fixes
+
+- [x] **BR-091 (regressão PLAN-032):** `admin.controller.ts` — dashboard de admin self agregava só o próprio (`req.userId!`); corrigido para agregar a **equipe** por empresa. Verificado: admin self → totalClientes=50/contratos=50 (equipe) no seed.
+- [x] **`equipe` recebidoHoje por operador (bug novo):** `admin.repository.impl.ts` usava `and(...userIds.map(eq))` (sempre falso com >1 usuário) → per-operador sempre 0; corrigido para `inArray`.
+- [x] **`requireModule` try/catch:** `module.middleware.ts` — erro de DB → `next(err)` (Express 4 não captura rejeição async; antes deixava request pendurado/unhandled rejection).
+- [x] **Smoke MOD-097/098/099:** restore de `modulos` em `try/finally`.
+- [x] **Smoke EQ-088:** asserções de regressão BR-091 (admin self = equipe agregada; recebidoHoje com tolerância de float).
+
+## Registro
+
+- [x] BACKLOG P024: observações de design (enforcement parcial cobranças/atendidos; super admin `?usuarioId=` sem `?empresaId=`).
+
+## Validação
+
+- [x] `npm run build` · `npm run docs:audit` · `smoke:api` **107/107**
+
+---
+
 # CHECKLIST — Planos de identidade visual (PLAN-041/042) + briefings Lovable
 
 **Data:** 05/08/2026

@@ -345,6 +345,11 @@ Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já cobe
 
 > **Concluído** (PLAN-036). O v1 de módulos era gating de UI; agora módulo desativado devolve **403 `MODULE_DISABLED`** no backend: `requireModule` no mount de `clientes`, `contratos`, `caixa`, `gastos`, `pagamentos` (=contratos) e por endpoint em `/operacoes` (`POST /visitas`=rota, `GET /historico-atrasos`=cobrancas). Super admin sem `?empresaId=` não é bloqueado; com `?empresaId=` respeita a empresa-alvo. Limite do v1: endpoints compartilhados com a Central (`GET /operacoes/cobrancas`, `pagamentos-hoje`, `parcelas-hoje`, `parcelas-semana`) seguem abertos (PLAN-036).
 
+**Limites/observações conhecidas (code review 05/08/2026):**
+- **Enforcement parcial de `cobrancas`/`atendidos`:** o dado principal (`GET /operacoes/cobrancas`, que também alimenta Atendidos) é **compartilhado** e permanece **aberto**; 403 real só em `POST /visitas` (rota) e `GET /historico-atrasos` (cobrancas). Atendidos é **apenas gating de UI** — não há endpoint próprio pra 403. O limite v1 cobre isso, mas o "403 por módulo" não se aplica ao dado de cobranças/atendidos.
+- **Super admin com `?usuarioId=` sem `?empresaId=`:** o `requireModule` resolve a empresa-alvo só por `?empresaId=` (ou o `empresaId` do token); sem ele, o super admin **ignora o gating** (by design — acesso global). Documentado: o gating por empresa só vale quando `?empresaId=` é informado.
+- **Painel admin (BR-091):** corrigido 05/08 — o dashboard de admin self agregava só o próprio (regressão PLAN-032); agora soma a equipe (ver `admin.controller.ts`).
+
 ---
 
 ## P025 — Central se adapta aos módulos off (frontend)
