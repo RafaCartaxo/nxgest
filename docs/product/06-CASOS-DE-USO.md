@@ -42,7 +42,11 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 **Ação:** acessa a tela inicial (`/`).
 
-**O que DEVE acontecer:** os 7 KPIs são exibidos (a receber hoje, recebido hoje, resultado do dia, clientes para cobrar, atrasado, a vencer, gastos hoje), todos consistentes com as listas que abrem ao clicar.
+**O que DEVE acontecer:** a Central segue a hierarquia **KPIs → Ações rápidas → Cobranças do dia**:
+- **Header** com data do dia (eyebrow) + título;
+- os **7 KPIs** (a receber hoje, recebido hoje, resultado do dia, clientes para cobrar, atrasado, a vencer, gastos hoje), todos consistentes com as listas que abrem ao clicar;
+- as **Ações rápidas** (Receber → `/cobrancas`, Minha rota → `/rota`, Novo cliente → `/clientes/novo`, Fechar caixa → `/caixa`) — gated por módulo;
+- as **Cobranças do dia**.
 
 > **"Resultado do dia" (semântica do operador):** é **calculado no front** como `recebidoHoje − aReceberHoje` (`OperacoesDashboard.tsx`), **não** vem da API e **não** é igual ao `resultadoDoDia` do painel admin (que é `entradas − saídas` de movimentações). Diferença documentada; ideia de "bônus" de pagamento a mais → backlog **P021**.
 
@@ -50,6 +54,7 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 - [ ] Cada KPI corresponde à definição do backend (ex.: "atrasado" = saldo de parcelas vencidas antes de hoje)?
 - [ ] Clicar em cada KPI abre a lista/modal coerente com o valor?
 - [ ] O KPI "a vencer" usa a mesma janela da lista que abre (atenção: KPI inclui hoje, modal exclui hoje)?
+- [ ] As Ações rápidas aparecem **após os KPIs** e só as dos módulos ativos?
 
 **Regras:** BR-018 a BR-027
 

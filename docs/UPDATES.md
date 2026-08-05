@@ -2,6 +2,35 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 04/08/2026 — PLAN-038 · Refinamentos de identidade (essência do mockup Lovable)
+
+**Adicionado / Corrigido**
+- **`PageHeader`**: sai o banner gradiente → **título limpo** (Sora) + **badge de ícone suave** + **data no topo** (eyebrow, na Central) — vale para as 10 landings.
+- **`KpiCard`** no estilo Lovable: **barra de tom** à esquerda + `label` + **`value-lg`** (Sora/tabular) + hint; variants → tons.
+- **`Card`**: `rounded-xl bg-card` + props `tone` (barra lateral) e `interactive`.
+- **Ações rápidas na Central**: grade de **cards-ícone** (Receber, Minha rota, Novo cliente, Fechar caixa — gated por módulo); `ClienteDetail` com o mesmo estilo em grade.
+- **Sidebar com seção "Administração"** agrupando **Painel Admin** + **Empresas** (por papel).
+- **Overscroll corrigido**: não arrasta além da tela (`overscroll-behavior-y: none`), gradiente sem `background-attachment: fixed` (quebra no iOS) e alturas em `100dvh`.
+- **Seletor de tema** em **bolinhas de gradiente + nome do tema atual** (compacto, alvo de toque grande) e botão **claro/escuro só com ícone**.
+- **`RotaCobrancaSection` removida da Central** (a ação rápida "Minha rota" cobre a navegação).
+- **Marca no topo do drawer** (Logo + "NX Gestão" + botão X na mesma linha) e barra mobile mais fina; seção **"Administração" visível sem scroll** na sidebar.
+- **Central com nova hierarquia**: **KPIs → Ações rápidas → Cobranças do dia** (estado → ação → fila, alinhado ao mockup). UC-001 e mapeamento §1 atualizados.
+- i18n pt/en/es (`admin.painel`, `operacoes.acoesRapidas` + rótulos).
+
+Referência: [PLAN-038](plans/PLAN-038-identidade-visual-nexus.md)
+
+## 04/08/2026 — PLAN-038 · Identidade Visual "Nexus" + sidebar lateral
+
+**Adicionado**
+- **Logo Nexus** (cérebro em rede neural com hub central): componente `Logo`/`LogoLockup` (variantes lg/sm/mono), `favicon.svg` e `logo-nexus.svg`.
+- **Tokens de identidade** no `index.css` (modelo OKLCH, port do Lovable): brand/accent, estados semânticos soft/text, `--sidebar-*`, gradientes page/brand/text/mesh, `--font-display` (Sora), e o hook **`--tenant-primary`** para whitelabel no tema "default". Aliases `--color-*` mantidos (nada quebra).
+- **Sidebar lateral** (`AppLayout`) substituindo a navbar de topo: **desktop fixa à esquerda** (marca + navegação vertical + usuário/tema/idioma/sair) e **drawer mobile** (hamburger).
+- **Login redesenhado**: logo Nexus grande + "NX Gestão" (texto em gradiente) + tagline "Gestão centralizada para o seu negócio" + card de acesso.
+- Tipografia **Sora** nos títulos (h1-h3) + Inter no corpo; fundo em gradiente de marca; botão primário em gradiente.
+- **Removido:** `Navbar.tsx` (substituído pelo `AppLayout`).
+
+Referência: [PLAN-038](plans/PLAN-038-identidade-visual-nexus.md) · protótipo de referência [site-personality-plus](https://github.com/RafaCartaxo/site-personality-plus)
+
 ## 04/08/2026 — PLAN-037 · Coerência do whitelabel (P025): combos validados + Central adapta
 
 **Adicionado**

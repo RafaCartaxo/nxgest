@@ -2,7 +2,7 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.22
+**Versão:** 1.25
 
 **Última atualização:** 03/08/2026
 
@@ -49,7 +49,7 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 
 ```
 App
-├── Navbar (sticky top, sempre visível) — conteúdo por perfil (PLAN-031)
+├── AppLayout (sidebar lateral desktop + drawer mobile; PLAN-036)
 │   ├── [operator/socio/admin] NavLink: Central (/)
 │   ├── [operator/socio/admin] NavLink: Clientes (/clientes) [módulo clientes]
 │   ├── [operator/socio/admin] NavLink: Contratos (/contratos) [módulo contratos]
@@ -216,30 +216,28 @@ App
 
 # Mapeamento por Tela
 ## 1. Central de Operações (Dashboard)
-**Header:** PageHeader — banner em gradiente + ícone `LayoutDashboard` + título + subtítulo (PLAN-035).
+**Header:** PageHeader limpo — ícone suave (`bg-primary-light`) + título (Sora) + subtítulo + **data do dia (eyebrow)** (PLAN-035/038).
 
 **Arquivo:** `frontend/src/modules/operacoes/pages/OperacoesDashboard.tsx`
 
 **Estrutura Visual:**
 ```
 ┌──────────────────────────────────┐
-│ [Navbar]                          │
+│ [AppLayout · sidebar lateral]    │
 ├──────────────────────────────────┤
-│ Central de Operações (h1)        │
-│ [Erro banner - condicional]       │
+│ Terça, 4 de agosto               │  ← eyebrow (data por idioma)
+│ ● Central de Operações (h1 Sora) │  ← PageHeader (ícone suave + título)
 │                                  │
 │ ┌──────┬──────┬──────┬──────┐   │
-│ │A Rec.│Receb.│Client│Result│   │  ← IndicadoresCards (7 KPIs: aReceberHoje, recebidoHoje,
-│ │ azul │verde │ambar │cinza │   │     clientesParaCobrar, resultadoDoDia, atrasado, aVencer, gastosHoje)
-│ └──────┴──────┴──────┴──────┘   │
-│   ┌──────┬──────┬──────┐         │
-│   │Atras.│A Vinc│Gastos│         │  ← KPIs restantes (navegam /cobrancas, parcelas-semana, gastos)
+│ │A Rec.│Receb.│Result│Client│   │  ← IndicadoresCards (7 KPIs)
+│ │ azul │verde │*     │ambar │   │     (aReceberHoje, recebidoHoje, resultadoDoDia,
+│ └──────┴──────┴──────┴──────┘   │      clientesParaCobrar, atrasado, aVencer, gastosHoje)
+│   ┌──────┬──────┬──────┐         │  ← KPIs restantes (navegam /cobrancas, parcelas-semana, gastos)
+│   │Atras.│A Vinc│Gastos│         │
 │   └──────┴──────┴──────┘         │
 │                                  │
-│ ┌──────────────────────────────┐ │
-│ │ 📍 Rota de Cobrança  [Start]│ │  ← RotaCobrancaSection
-│ │ N clientes · ~X km          │ │
-│ └──────────────────────────────┘ │
+│ Ações rápidas                    │  ← QuickActions (grade de cards-ícone)
+│ [Receber] [Rota] [Novo] [Caixa]  │     gated por módulo (PLAN-038)
 │                                  │
 │ Cobranças do Dia                 │
 │ ┌──────────────────────────────┐ │
@@ -248,23 +246,23 @@ App
 │ │   [Atrasado] [Nav][WA][Tel]  │ │
 │ └──────────────────────────────┘ │
 │ ...                              │
-│                                  │
-│ Visitados                        │
-│ ┌──────────────────────────────┐ │
-│ │ ● Nome Cliente (esmaecido)   │ │
-│ └──────────────────────────────┘ │
 └──────────────────────────────────┘
 ```
+
+**Comportamento:**
+- Ordem: **KPIs → Ações rápidas → Cobranças do dia** (estado → ação → fila).
+- Ações rápidas: Receber → `/cobrancas` · Minha rota → `/rota` · Novo cliente → `/clientes/novo` · Fechar caixa → `/caixa` — cada uma só se o módulo estiver ativo.
+- `RotaCobrancaSection` foi **removida da Central** (a ação "Minha rota" + `/rota` cobrem) — PLAN-038.
 
 **Aderência ao Design System:**
 
 | Regra | Status | Observação |
 |-------|--------|------------|
-| Header Navigation | ✅ Não se aplica (dashboard usa Navbar) | |
-| Tipografia | ✅ `text-3xl font-semibold` no título | |
-| Cores semânticas | ✅ `yellow` nos indicadores conforme token `color-warning` | |
-| Cards | ✅ `rounded-md border p-4` | |
-| Skeleton loading | ✅ `animate-pulse bg-gray-100` | |
+| Header Navigation | ✅ Não se aplica (dashboard usa AppLayout/sidebar) | |
+| Tipografia | ✅ Título em Sora (`font-display`) | |
+| Cores semânticas | ✅ KPIs com barra de tom + `value-lg` (PLAN-038) | |
+| Cards | ✅ `rounded-xl border bg-card` | |
+| Skeleton loading | ✅ `animate-pulse` (sem cor fixa da paleta) | |
 | Espaçamento | ✅ `p-4`, `gap-4` conforme escala 8px | |
 | Sem header `< Back` | ✅ Dashboard é exceção documentada | |
 
@@ -1164,6 +1162,9 @@ Ao implementar uma nova tela, verificar:
 | 03/08/2026 | 1.20 | PLAN-032: papel `socio` (painel escopado à subárvore); navbar inclui sócio nas operacionais + Administração. UCs 064-069 |
 | 03/08/2026 | 1.21 | PLAN-033: ClienteDetail com **Situação Financeira** (grade 2×2: Saldo Devedor · Em atraso · Vence hoje · Lucro previsto + Último pagamento, BR-096..098). View de atrasados mantém banner + lista; bloco "Histórico de atrasos" (snapshot/evolução) **removido** por decisão (dado esparso). UC-071 |
 | 03/08/2026 | 1.22 | PLAN-034: `ContratoCard` (list-item) mostra **linha de atraso** ("N parcelas em atraso · R$ Y · D dias", BR-099) quando o contrato tem parcelas vencidas. UC-072 |
+| 03/08/2026 | 1.23 | **PLAN-038 (identidade "Nexus")**: `Navbar` de topo substituída por **`AppLayout`** (sidebar lateral desktop + drawer mobile) com marca; `LoginPage` redesenhado (logo Nexus + tagline + card); novo **logo Nexus** (`Logo`/`LogoLockup`, favicon) e **tokens de identidade** (OKLCH, gradientes, Sora nos títulos, `--tenant-primary` p/ whitelabel). |
+| 03/08/2026 | 1.24 | PLAN-038 refinamentos (essência Lovable): `PageHeader` com **título limpo + ícone suave + data (eyebrow)**; `KpiCard` com **barra de tom + value-lg**; `Card` com `tone`/`interactive`; **Ações rápidas** na Central (grade de ícones, gated por módulo); sidebar com seção **"Administração"** (Painel Admin + Empresas). |
+| 03/08/2026 | 1.25 | PLAN-038 ajustes: **overscroll** corrigido (`overscroll-behavior-y: none` + sem `background-attachment: fixed` + `100dvh`); seletor de tema em **bolinhas de gradiente + nome do tema atual** (compacto); botão **claro/escuro só ícone**; `RotaCobrancaSection` **removida da Central**; **marca no topo do drawer** (mark + "NX Gestão" + X na mesma linha); seção **"Administração" visível sem scroll**. |
 
 # Referências
 
