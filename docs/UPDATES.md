@@ -2,6 +2,17 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 05/08/2026 — PLAN-046 · Fix do switch de módulos + engrenagem de configurações + coerência do grafo
+
+**Corrigido**
+- **Switch de ativar/desativar módulos:** a bolinha branca "saía" do pill (`rounded-full`) por falta de `overflow-hidden`/`left-0` — corrigido (`ModulosModal`).
+- **Coerência do grafo refinado (PLAN-045):** CT-118 corrigido (`rota ⇒ cobrancas, contratos, clientes`) · CT-119 novo (`atendidos ⇒ cobrancas`) · UC-055 atualizado · **smoke MOD-100/101** (422 das novas deps).
+
+**Melhorado**
+- **Engrenagem única no topo** (`Topbar`): tema (clica e alterna claro/escuro), cores (5 paletas) e idioma (PT/EN/ES) num só dropdown — com o **idioma selecionado visível** no trigger (no lugar do nome do tema). Consistência visual (`rounded-xl` + tokens).
+
+Referência: [PLAN-046](plans/PLAN-046-fix-switch-modulos-engrenagem-coerencia-grafo.md)
+
 ## 05/08/2026 — PLAN-045 · Modularização para o whitelabel real (Module Manifest + Central composável)
 
 **Adicionado**

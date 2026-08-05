@@ -633,6 +633,18 @@ async function main() {
       await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
     }
   })
+  await t("MOD-100", "Dependência rota ⇒ cobrancas (422) (grafo refinado, PLAN-045)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "rota"] } })
+    expect(r, 422, "rota sem cobrancas")
+    if (!(r.data?.message ?? "").includes("cobrancas")) throw new Error(`message=${r.data?.message}`)
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+  })
+  await t("MOD-101", "Dependência atendidos ⇒ cobrancas (422) (grafo refinado, PLAN-045)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["clientes", "contratos", "atendidos"] } })
+    expect(r, 422, "atendidos sem cobrancas")
+    if (!(r.data?.message ?? "").includes("cobrancas")) throw new Error(`message=${r.data?.message}`)
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+  })
 
   // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------
   let socioId, socioEmail, socioOpId, socioToken

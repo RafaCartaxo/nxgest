@@ -1116,8 +1116,11 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 ### API-CT-117 — Contratos requer clientes (coerência de combos, PLAN-037)
 **Dado** `PATCH /modulos` com `modulos: ["contratos"]` → **Então** **422** "O módulo \"contratos\" requer: clientes." **Dado** `["clientes","contratos"]` → **Então** **200**.
 
-### API-CT-118 — Dependência transitiva (coerência de combos, PLAN-037)
-**Dado** `PATCH /modulos` com `modulos: ["rota"]` → **Então** **422** "O módulo \"rota\" requer: contratos, clientes." (as dependências transitivas são validadas — `rota ⇒ contratos ⇒ clientes`).
+### API-CT-118 — Dependência transitiva rota ⇒ cobrancas (grafo refinado, PLAN-045)
+**Dado** `PATCH /modulos` com `modulos: ["rota"]` → **Então** **422** "O módulo \"rota\" requer: cobrancas, contratos, clientes." (transitivo — `rota ⇒ cobrancas ⇒ contratos ⇒ clientes`). **Dado** `["clientes","contratos","cobrancas","rota"]` → **Então** **200**.
+
+### API-CT-119 — Dependência atendidos ⇒ cobrancas (grafo refinado, PLAN-045)
+**Dado** `PATCH /modulos` com `modulos: ["atendidos"]` → **Então** **422** "O módulo \"atendidos\" requer: cobrancas, contratos, clientes." (transitivo). **Dado** `["clientes","contratos","cobrancas","atendidos"]` → **Então** **200**.
 
 ---
 

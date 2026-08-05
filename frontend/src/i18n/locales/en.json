@@ -9,7 +9,8 @@
     "idioma": "Language",
     "temaClaro": "Light theme",
     "temaEscuro": "Dark theme",
-    "temas": "Themes"
+    "temas": "Themes",
+    "cores": "Colors"
   },
   "common": {
     "empty": "No data found.",

@@ -28,12 +28,12 @@ function Switch({ active, disabled, onClick }: { active: boolean; disabled: bool
       aria-checked={active}
       disabled={disabled}
       onClick={onClick}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+      className={`relative h-6 w-11 shrink-0 overflow-hidden rounded-full transition-colors ${
         active ? "bg-primary" : "bg-border-strong"
       } ${disabled ? "opacity-40" : "cursor-pointer"}`}
     >
       <span
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+        className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
           active ? "translate-x-[22px]" : "translate-x-0.5"
         }`}
       />

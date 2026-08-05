@@ -1,3 +1,16 @@
+# CHECKLIST — Fix switch + engrenagem + coerência do grafo (PLAN-046)
+
+**Data:** 05/08/2026
+
+- [x] Switch do ModulosModal: `overflow-hidden` + `left-0` (bolinha não sai do pill)
+- [x] Topbar → engrenagem única (`Settings`): Tema (alterna direto) · Cores (5 paletas) · Idioma (PT/EN/ES, selecionado visível no trigger) · `rounded-xl`/tokens
+- [x] CT-118 corrigido (`rota ⇒ cobrancas`) · CT-119 novo (`atendidos ⇒ cobrancas`)
+- [x] UC-055 atualizado (grafo refinado)
+- [x] Smoke MOD-100/101 (422 novas deps) — **smoke 109/109**
+- [x] `npm run build` · `audit:ui` · `audit:styles` · `audit:modules` · `docs:audit`
+
+---
+
 # CHECKLIST — Modularização pro whitelabel real (PLAN-045)
 
 **Data:** 05/08/2026

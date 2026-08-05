@@ -1034,7 +1034,7 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 **Ação:** em `/admin/empresas`, abre "Configurar" de uma empresa e alterna os módulos (clientes, contratos, caixa, gastos, rota, cobrancas, atendidos).
 
-**O que DEVE acontecer:** toggles refletem o estado atual (todos on por padrão); dependências bloqueadas com aviso (gastos requer caixa; rota/cobrancas/atendidos requerem contratos); salvar → PATCH → 200 e card atualiza.
+**O que DEVE acontecer:** toggles refletem o estado atual (todos on por padrão); dependências bloqueadas com aviso (gastos requer caixa; **cobrancas requer contratos; rota e atendidos requerem cobrancas** — grafo refinado PLAN-045); salvar → PATCH → 200 e card atualiza.
 
 **Conferências:**
 - [ ] Toggles mostram o estado atual (todos on por padrão)?

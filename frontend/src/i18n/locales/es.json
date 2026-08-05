@@ -9,7 +9,8 @@
     "idioma": "Idioma",
     "temaClaro": "Tema claro",
     "temaEscuro": "Tema oscuro",
-    "temas": "Temas"
+    "temas": "Temas",
+    "cores": "Colores"
   },
   "common": {
     "empty": "No se encontraron datos.",
