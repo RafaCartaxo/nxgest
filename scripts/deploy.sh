@@ -18,10 +18,11 @@ else
   echo "!! Script de backup não encontrado (/opt/scripts/backup-nxgestao.sh) — deploy sem snapshot"
 fi
 
-# Gate de UI (PLAN-044): nenhum padrão legado/anti-drift pode ir pra produção
-echo "==> audit:ui + audit:styles"
-node scripts/audit-ui.mjs
-node scripts/audit-styles.mjs
+# Gate de UI (PLAN-044): nenhum padrão legado/anti-drift pode ir pra produção.
+# Node roda via imagem node:20-slim (o host não tem node no PATH; só dentro de containers).
+echo "==> audit:ui + audit:styles (node:20-slim)"
+docker run --rm -v "$(pwd)":/app -w /app node:20-slim node scripts/audit-ui.mjs
+docker run --rm -v "$(pwd)":/app -w /app node:20-slim node scripts/audit-styles.mjs
 
 docker compose -f docker-compose.prod.yml build app
 docker compose -f docker-compose.prod.yml up -d
