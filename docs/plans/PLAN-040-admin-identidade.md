@@ -1,6 +1,6 @@
 # PLAN-040 — Painel Admin: identidade "Nexus" + UX (módulos/empresas)
 
-**Status:** Planejado
+**Status:** Itens 1–4 concluídos · Item 5 (branding) futuro
 
 **Versão:** 1.0
 

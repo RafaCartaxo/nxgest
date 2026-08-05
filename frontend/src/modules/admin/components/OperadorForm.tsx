@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "../../../shared/components/Button.js"
+import { Field } from "../../../shared/components/Field/Field.js"
 import type { OperadorRow } from "../services/admin.service.js"
 
 interface FieldErrors {
@@ -77,71 +78,57 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
         {editing ? t("admin.editarOperador") : t("admin.novoOperador")}
       </h3>
 
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">{t("admin.nome")}</label>
-        <input
-          ref={nomeRef}
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary ${errors.nome ? "border-danger" : "border-border"}`}
-        />
-        {errors.nome && <p className="text-danger text-xs mt-1">{errors.nome}</p>}
-      </div>
+      <Field
+        label={t("admin.nome")}
+        ref={nomeRef}
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+        error={errors.nome}
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">{t("admin.email")}</label>
-        <input
-          ref={emailRef}
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary ${errors.email ? "border-danger" : "border-border"}`}
-        />
-        {errors.email && <p className="text-danger text-xs mt-1">{errors.email}</p>}
-      </div>
+      <Field
+        label={t("admin.email")}
+        type="email"
+        ref={emailRef}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        error={errors.email}
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">{t("admin.senha")}</label>
-        <input
-          ref={senhaRef}
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          placeholder={editing ? t("admin.senhaOpcional") : ""}
-          className={`w-full rounded-md border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary ${errors.senha ? "border-danger" : "border-border"}`}
-        />
-        {errors.senha && <p className="text-danger text-xs mt-1">{errors.senha}</p>}
-      </div>
+      <Field
+        label={t("admin.senha")}
+        type="password"
+        ref={senhaRef}
+        value={senha}
+        onChange={(e) => setSenha(e.target.value)}
+        placeholder={editing ? t("admin.senhaOpcional") : ""}
+        error={errors.senha}
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">{t("admin.role")}</label>
-        {isActorSocio ? (
-          <input
-            type="text"
-            value={t("admin.roleOperator")}
-            disabled
-            className="w-full rounded-md border border-border bg-surface-hover px-3 py-2 text-base text-text-muted"
-          />
-        ) : (
+      {isActorSocio ? (
+        <Field label={t("admin.role")} value={t("admin.roleOperator")} disabled />
+      ) : (
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-text-secondary">{t("admin.role")}</label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as "admin" | "socio" | "operator")}
-            className="w-full rounded-md border border-border px-3 py-2 text-base"
+            className="min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="operator">{t("admin.roleOperator")}</option>
             <option value="socio">{t("admin.roleSocio")}</option>
             <option value="admin">{t("admin.roleAdmin")}</option>
           </select>
-        )}
-      </div>
+        </div>
+      )}
 
       {showChefe && (
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">{t("admin.chefe")}</label>
+          <label className="mb-1.5 block text-sm font-medium text-text-secondary">{t("admin.chefe")}</label>
           <select
             value={chefeId}
             onChange={(e) => setChefeId(e.target.value)}
-            className="w-full rounded-md border border-border px-3 py-2 text-base"
+            className="min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">{t("admin.chefeSem")}</option>
             {chefes.map((c) => (

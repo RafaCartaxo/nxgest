@@ -486,6 +486,12 @@
     "modulosHint": "Active o desactive módulos para esta empresa. Cada cliente ve solo lo que está activo.",
     "modulosAtivo": "Activo",
     "modulosInativo": "Inactivo",
+    "modulosRequer": "Requiere: {{modulos}}",
+    "modulosGrupoBase": "Base",
+    "modulosGrupoFinanceiro": "Financiero",
+    "modulosGrupoCobranca": "Cobranza en campo",
+    "modulosTodos": "Todos activos",
+    "modulosCount": "{{n}} módulos",
     "modulosDependencia": "Requiere otro módulo",
     "modulosSalvo": "Módulos actualizados.",
     "erroModulos": "Error al actualizar módulos."

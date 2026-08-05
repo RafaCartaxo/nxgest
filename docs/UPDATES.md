@@ -2,6 +2,19 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 05/08/2026 — PLAN-040 · Painel Admin (identidade + UX de módulos/empresas)
+
+**Adicionado / Corrigido**
+- **Forms do admin** (`OperadorForm`, `EmpresaForm`) → componente **`Field`** (inputs canônicos `rounded-xl min-h-12 border-strong`; selects no mesmo padrão).
+- **`ModulosModal` v2**: cada módulo vira linha com **switch (toggle)**, **hint de dependência** ("Requer: X", BR-092/093 — bloqueia toggle quando dependência off) e **agrupamento** (Base · Financeiro · Cobrança em campo). Estilo `rounded-xl bg-card`.
+- **`AdminPage`**: abas em **pills da identidade** (`rounded-xl`, ativa `bg-primary-light`) + caixas `rounded-xl`.
+- **`EmpresaList`**: **avatar de iniciais** + badge de módulos ("Todos ativos" / "N módulos").
+- `Field` virou `forwardRef` (suporta `ref` p/ scroll/foco em erro).
+- i18n pt/en/es (grupos de módulos, "Requer", "Todos ativos", contagem).
+- **Deploy em prod** do acúmulo (PLAN-038/039 + admin) — `git push` + `deploy.sh` no VPS.
+
+Referência: [PLAN-040](plans/PLAN-040-admin-identidade.md) · [Lovable-Admin-NXGestao](plans/Lovable-Admin-NXGestao.md)
+
 ## 04/08/2026 — PLAN-039 · Padronização de Forms & Inputs (FOCO) + mapa
 
 **Adicionado / Corrigido**

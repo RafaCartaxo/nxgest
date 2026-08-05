@@ -486,6 +486,12 @@
     "modulosHint": "Enable or disable modules for this company. Each client sees only what is active.",
     "modulosAtivo": "Active",
     "modulosInativo": "Inactive",
+    "modulosRequer": "Requires: {{modulos}}",
+    "modulosGrupoBase": "Base",
+    "modulosGrupoFinanceiro": "Finance",
+    "modulosGrupoCobranca": "Field collections",
+    "modulosTodos": "All active",
+    "modulosCount": "{{n}} modules",
     "modulosDependencia": "Requires another module",
     "modulosSalvo": "Modules updated.",
     "erroModulos": "Error updating modules."

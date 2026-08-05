@@ -144,8 +144,8 @@ export function AdminPage() {
     <button
       type="button"
       onClick={() => setTab(key)}
-      className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-        tab === key ? "bg-primary text-white" : "bg-surface text-text-secondary hover:bg-surface-hover"
+      className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+        tab === key ? "bg-primary-light text-primary-text" : "bg-surface text-text-secondary hover:bg-surface-hover"
       }`}
     >
       {label}
@@ -163,7 +163,7 @@ export function AdminPage() {
       />
 
       {empresaId && empresa?.adminNome && (
-        <div className="mb-4 rounded-md bg-surface-secondary px-3 py-2 text-sm">
+        <div className="mb-4 rounded-xl bg-surface-secondary px-3 py-2 text-sm">
           <div className="flex items-center justify-between">
             <span className="text-text-secondary">{t("admin.adminDaEmpresa")}:</span>
             <span className="font-medium text-text-primary">{empresa.adminNome}</span>
@@ -172,7 +172,7 @@ export function AdminPage() {
       )}
 
       {isAdminSelf && (
-        <div className="flex gap-1 rounded-md bg-surface-secondary p-1">
+        <div className="flex gap-1 rounded-xl bg-surface-secondary p-1">
           {tabButton("equipe", t("admin.tabEquipe"))}
           {tabButton("meusDados", t("admin.tabMeusDados"))}
         </div>

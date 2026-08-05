@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "../../../shared/components/Button.js"
+import { Field } from "../../../shared/components/Field/Field.js"
 
 interface EmpresaFormProps {
   onSubmit: (data: { nome: string; adminNome: string; adminEmail: string; adminSenha: string }) => void
@@ -20,25 +21,38 @@ export function EmpresaForm({ onSubmit, onCancel }: EmpresaFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">{t("superAdmin.nomeEmpresa")}</label>
-        <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary" required />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">{t("superAdmin.adminNome")}</label>
-        <input type="text" value={adminNome} onChange={(e) => setAdminNome(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary" required />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">{t("superAdmin.adminEmail")}</label>
-        <input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary" required />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">{t("superAdmin.adminSenha")}</label>
-        <input type="password" value={adminSenha} onChange={(e) => setAdminSenha(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-base focus:ring-2 focus:ring-primary focus:border-primary" required minLength={6} />
-      </div>
-      <div className="flex gap-2 justify-end">
-        <Button type="button" onClick={onCancel}>{t("common.cancel")}</Button>
+    <form onSubmit={handleSubmit} className="space-y-4 p-4">
+      <Field
+        label={t("superAdmin.nomeEmpresa")}
+        required
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+      />
+      <Field
+        label={t("superAdmin.adminNome")}
+        required
+        value={adminNome}
+        onChange={(e) => setAdminNome(e.target.value)}
+      />
+      <Field
+        label={t("superAdmin.adminEmail")}
+        type="email"
+        required
+        value={adminEmail}
+        onChange={(e) => setAdminEmail(e.target.value)}
+      />
+      <Field
+        label={t("superAdmin.adminSenha")}
+        type="password"
+        required
+        minLength={6}
+        value={adminSenha}
+        onChange={(e) => setAdminSenha(e.target.value)}
+      />
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          {t("common.cancel")}
+        </Button>
         <Button type="submit">{t("superAdmin.criarEmpresa")}</Button>
       </div>
     </form>

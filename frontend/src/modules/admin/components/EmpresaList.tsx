@@ -10,12 +10,16 @@ interface EmpresaListProps {
   onConfigurar: (empresa: EmpresaComStats) => void
 }
 
+function iniciais(nome: string): string {
+  return nome.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
+}
+
 export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
   if (empresas.length === 0) {
-    return <p className="text-center text-text-secondary py-8">{t("common.empty")}</p>
+    return <p className="py-8 text-center text-text-secondary">{t("common.empty")}</p>
   }
 
   return (
@@ -23,8 +27,16 @@ export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
       {empresas.map((empresa) => (
         <Card.Root key={empresa.id} variant="list-item">
           <Card.Header className="flex-wrap">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-light text-sm font-semibold text-primary-text">
+              {iniciais(empresa.nome)}
+            </span>
             <span className="min-w-0 flex-1 truncate text-base font-semibold">{empresa.nome}</span>
             <StatusBadge variant="info" size="sm" label={t("admin.empresaBadge")} />
+            {empresa.modulos == null ? (
+              <StatusBadge variant="success" size="sm" label={t("superAdmin.modulosTodos")} />
+            ) : (
+              <StatusBadge variant="neutral" size="sm" label={t("superAdmin.modulosCount", { n: empresa.modulos.length })} />
+            )}
           </Card.Header>
           <Card.Body>
             <p className="truncate text-sm text-text-secondary">
