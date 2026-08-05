@@ -604,12 +604,12 @@ export function RotaPage() {
             className="flex min-h-screen items-center justify-center p-4"
           >
             <div
-              className="mx-auto w-full max-w-sm rounded-md bg-surface p-4 shadow-lg"
+              className="mx-auto w-full max-w-sm rounded-xl border border-border bg-card p-4 shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
             <canvas
               ref={canvasRef}
-              className="w-full rounded-md border border-border-light"
+              className="w-full rounded-xl border border-border"
             />
 
             <div className="mt-4 flex gap-4">

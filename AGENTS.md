@@ -48,6 +48,8 @@ npm test                 # vitest
 npm run docs:audit       # auditoria de consistência da documentação (SKILL-009)
 npm run docs:collection  # regenera docs/api-collection.json
 npm run smoke:api        # executa os cenários da 07 (requer instância isolada; ver 07 "Como executar")
+npm run audit:styles     # falha se houver cor fixa da paleta em frontend/src (PLAN-035)
+npm run audit:ui         # falha se houver padrão de UI legado (pré-"Nexus") em frontend/src (PLAN-044)
 ```
 
 > **Documentação alinhada (SKILL-009):** após qualquer mudança de código, rodar `npm run docs:audit` e aplicar a matriz de propagação — ver `docs/skills/SKILL-009-documentation-sync.md`.
@@ -70,6 +72,8 @@ Bug reportado "em produção" nem sempre é bug de código. Antes de investigar,
 - Endpoints da API documentados em `docs/engineering/02-API.md` e `docs/api-collection.json`
 - Alterações de features seguem um plano em `docs/plans/` (padrão do projeto)
 - Registro diário de trabalho em `docs/engineering/tasks/YYYY-MM-DD/CHECKLIST.md`
+- **UI (PLAN-044):** novas telas/módulos usam **apenas componentes compartilhados** (PageHeader, Card, KpiCard, Field, Modal, QuickActions, Button, StatusBadge) e tokens — sem padrão legado (`rounded-md` em inputs/rows, `bg-secondary-light`, `border-l-*`, `variant="onDark"`, `RotaCobrancaSection`). Rodar `npm run audit:ui` + `npm run audit:styles` após qualquer mudança visual; atualizar `docs/engineering/design/UI-COVERAGE.md`.
+- **Componente compartilhado mudou? (PLAN-044):** varrer TODOS os consumidores (`node scripts/consumers.mjs <componente>`) e atualizá-los **no mesmo PR**, com `audit:ui` limpo.
 
 ## Agentes do projeto
 

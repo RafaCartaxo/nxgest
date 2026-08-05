@@ -1390,11 +1390,11 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 **Ação:** navega por Central, Clientes, Contratos, Caixa, Gastos, Cobranças, Rota e Atendidos.
 
-**O que DEVE acontecer:** cada landing exibe o banner em gradiente (`bg-gradient-accent`) com ícone, título e subtítulo; a ação principal (Novo Cliente/Novo Contrato, Fechar Semana, Ver na Rota) aparece como botão branco no header; em telas estreitas o header não quebra.
+**O que DEVE acontecer:** cada landing exibe o **`PageHeader` limpo** (título em Sora + ícone em badge suave `bg-primary-light` + subtítulo + `eyebrow`); a ação principal (Novo Cliente/Novo Contrato, Fechar Semana, Ver na Rota) aparece como `Button`/`ButtonLink` padrão no header; em telas estreitas o header não quebra. *(Nota: o banner em gradiente do PLAN-035 foi removido no PLAN-038.)*
 
 **Conferências:**
-- [ ] As 8 telas do operador mostram banner (ícone + título + subtítulo)?
-- [ ] O banner segue o gradiente do tema ativo e o modo escuro?
+- [ ] As 8 telas do operador mostram `PageHeader` (título limpo + ícone em badge)?
+- [ ] O header segue os tokens do tema (sem banner de gradiente)?
 - [ ] As ações no header (novo/fechar/ver na rota) funcionam?
 - [ ] Em mobile, título/ícone/ação não quebram e o alvo de toque segue confortável?
 

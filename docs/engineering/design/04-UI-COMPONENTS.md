@@ -2,9 +2,32 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.5
+**Versão:** 1.6
 
-**Última atualização:** 11/07/2026
+**Última atualização:** 05/08/2026
+
+---
+
+# Componentes canônicos (PLAN-038/044)
+
+> **Fonte da verdade de cobertura:** `UI-COVERAGE.md` (inventário de telas/componentes/legado). Este catálogo detalha os componentes; o inventário é o mapa de quem usa o quê.
+
+Componentes compartilhados ativos da identidade "Nexus" (em `frontend/src/shared/components/`):
+
+| Componente | Status |
+|---|---|
+| `PageHeader` (título limpo + badge de ícone + eyebrow) | ✅ |
+| `Card` (`rounded-xl bg-card` + tone) | ✅ |
+| `KpiCard` (Card-based, `value-lg`) | ✅ |
+| `Field` (input canônico `rounded-xl border-strong`) | ✅ |
+| `Modal` base | ✅ |
+| `QuickActions` (grid adaptativo) | ✅ |
+| `Button` / `ButtonLink` | ✅ |
+| `StatusBadge` · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` | ✅ |
+| `Topbar` (dropdowns tema/cores/idioma, `shared/layout/Topbar.tsx`) | ✅ |
+| `Avatar` (foto \| iniciais) | ⏳ PLAN-041 (Lovable) |
+
+Regras: usar **apenas** estes componentes em telas novas (checklist do MAPEAMENTO) e nunca reintroduzir padrões legado (verificado por `npm run audit:ui`).
 
 ---
 

@@ -1,3 +1,30 @@
+# CHECKLIST — Governança de UI / Anti-drift (PLAN-044)
+
+**Data:** 05/08/2026
+
+## Guardrails
+
+- [x] `scripts/audit-ui.mjs` + `npm run audit:ui` (falha em padrões legado) — gate no `deploy.sh`
+- [x] `scripts/consumers.mjs` (lista consumidores de componente compartilhado)
+- [x] Protocolo de shared-component no DS + AGENTS.md
+- [x] `UI-COVERAGE.md` (inventário canônico: 19 telas, componentes, padrões, legado)
+- [x] Checklist para Novas Telas corrigida (raiz B — `rounded-md` → `Field`/canônico)
+- [x] ADR-005 (5 raízes do débito + guardrails)
+- [x] Template de PLAN de UI/módulo novo (DS — critérios de conclusão)
+
+## Correções imediatas
+
+- [x] RotaPage modal comprovante (`rounded-xl bg-card`)
+- [x] UC-074 (banner em gradiente → PageHeader limpo)
+- [x] `04-UI-COMPONENTS.md` (componentes canônicos + Field/Topbar)
+- [x] `AGENTS.md` (audit:ui/audit:styles + protocolo)
+
+## Validação
+
+- [x] `npm run audit:ui` (100 arquivos, 0 legado) · `npm run audit:styles` · `npm run docs:audit` · `npm run build` · `smoke`
+
+---
+
 # CHECKLIST — Polimento final da identidade "Nexus" (PLAN-043)
 
 **Data:** 05/08/2026

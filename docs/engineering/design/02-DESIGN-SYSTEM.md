@@ -486,3 +486,25 @@ Duas formas de header, por tipo de tela:
 | **Novo/editar/detalhe/settings** (ClienteNovo, ContratoEdit, OperadorDetail, Perfil, Login) | Header compacto — `< Back Título [Ação]` (`max-w-2xl`). |
 
 > O `PageHeader` foi redesenhado no PLAN-038 (removido o banner `bg-gradient-accent` do PLAN-035). Ação no header usa `Button`/`ButtonLink` padrão (sem `variant="onDark"` — variante removida).
+
+---
+
+# Componente compartilhado mudou? (protocolo PLAN-044)
+
+Mudou um componente compartilhado (`PageHeader`, `Card`, `KpiCard`, `Field`, `Modal`, `QuickActions`, `Button`, `StatusBadge`, `SearchBar`, `Topbar`, ...)?
+
+1. Liste os consumidores: `node scripts/consumers.mjs <componente>`.
+2. Atualize **todos** os consumidores **no mesmo PR** (não deixar "adicionados depois" quebrados — precedente do badge GPS da Rota).
+3. Rode `npm run audit:ui` + `npm run audit:styles` + `npm run docs:audit`.
+
+---
+
+# Redesign / novo módulo — critérios de conclusão (PLAN-044)
+
+Todo plano de UI, redesign ou **novo módulo do whitelabel** deve fechar com:
+
+- [ ] Usa **apenas** componentes compartilhados (catálogo `04-UI-COMPONENTS.md` / `UI-COVERAGE.md`)
+- [ ] `npm run audit:ui` limpo (sem padrão legado) — **gate do deploy**
+- [ ] `npm run audit:styles` limpo (sem cor fixa da paleta)
+- [ ] `UI-COVERAGE.md` atualizado (telas/componentes/legado)
+- [ ] `npm run docs:audit` limpo (mapeamento/rotas coerentes)

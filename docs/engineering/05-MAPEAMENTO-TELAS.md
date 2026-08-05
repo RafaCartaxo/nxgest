@@ -1118,10 +1118,15 @@ Escala 8px: `4, 8, 16, 24, 32, 40, 48`
 
 # Checklist para Novas Telas
 
-Ao implementar uma nova tela, verificar:
+Ao implementar uma nova tela, verificar (PLAN-038/039/043/044):
 
 - [ ] Header segue o tipo da tela (PLAN-038): **landing** → `PageHeader` (título limpo em Sora + ícone em badge suave `bg-primary-light` + subtítulo + `eyebrow` + ação/voltar); **novo/editar/detalhe/settings** → compacto `< Back Título [Ação]`
-- [ ] Inputs usam `rounded-md border px-3 py-2 text-base`
+- [ ] Inputs usam **`Field`** (`rounded-xl border-strong min-h-12`) ou o padrão canônico — **nunca** `rounded-md border px-3 py-2` cru
+- [ ] Selects/dates com `min-h-12 rounded-xl border-border-strong` (padrão canônico)
+- [ ] Rows/listas usam `Card.Root` ou `rounded-xl border border-border bg-card` (nunca `rounded-md bg-surface`)
+- [ ] Badges usam `StatusBadge` · botões usam `Button`/`ButtonLink` · ações rápidas usam `QuickActions`
+- [ ] Modais usam o componente `Modal` base (nunca overlay custom cru)
+- [ ] Skeletons usam `bg-surface-hover` (nunca `bg-secondary-light`)
 - [ ] Focus usa `focus:ring-2 focus:ring-primary focus:border-primary` (nunca azul fixo)
 - [ ] Cores usam **apenas tokens** — `primary` (brand) e `danger/success/warning` (semânticos); proibido cor fixa da paleta (checado por `npm run audit:styles`)
 - [ ] Tipografia segue escala definida
@@ -1129,13 +1134,11 @@ Ao implementar uma nova tela, verificar:
 - [ ] Estados tratados: Loading, Error, Empty, Sucesso
 - [ ] Ícones apenas do Lucide React
 - [ ] Labels sem `:` no final
-- [ ] Cards clicáveis usam `hover:border-primary`
-- [ ] Botões usam componente `Button` compartilhado (nunca `<button>` inline)
 - [ ] Strings via `t()` do i18n, nunca hardcoded
 - [ ] Valores financeiros usam `formatCurrency()`
-- [ ] Busca textual segue padrão `Search icon + pl-10`
 - [ ] Layout `max-w-2xl mx-auto p-4`
-- [ ] Registro: adicionar a tela na **tabela da Visão Geral** (rota + número sequencial) e na seção correspondente do Mapeamento por Tela
+- [ ] **Gate (PLAN-044):** `npm run audit:ui` + `npm run audit:styles` limpos
+- [ ] **Registro:** adicionar a tela na **tabela da Visão Geral** (rota + número sequencial), na seção correspondente do Mapeamento por Tela e no **inventário `UI-COVERAGE.md`**
 
 # Histórico de Correções
 

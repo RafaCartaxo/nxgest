@@ -2,6 +2,20 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 05/08/2026 — PLAN-044 · Governança de UI / Anti-drift
+
+**Adicionado**
+- **`npm run audit:ui`** (novo script): falha se padrão legado do pré-"Nexus" voltar (`rounded-md` em módulos, `bg-secondary-light`, `border-l-*`, `variant="onDark"`, `RotaCobrancaSection`, `bg-gradient-accent` fora do Button, grid fixo). **Gate no deploy** (impede subir legado).
+- **`UI-COVERAGE.md`** — inventário canônico (19 telas × shell+superfícies; componentes+consumidores; padrões→canônico; legado rastreado).
+- **`scripts/consumers.mjs`** + protocolo: **componente compartilhado mudou → varre consumidores no mesmo PR**.
+- **Checklist para Novas Telas corrigida** — antes ensinava `rounded-md` (padrão antigo); agora `Field`/canônico + rows/badges/skeletons/modais + gate `audit:ui`.
+- **ADR-005** "Por que o redesign deixou débito" (5 raízes + guardrails).
+- **Correções:** RotaPage modal comprovante (`rounded-xl bg-card`) · UC-074 (banner → PageHeader) · `04-UI-COMPONENTS` (canônicos) · `AGENTS.md` (audit:ui + protocolo).
+
+**Por quê:** o redesign deixou débito invisível por falta de inventário, auditoria só de cor, checklist stale e sem protocolo de shared-component. Com guardrails mecânicas, o whitelabel granular não acumula drift.
+
+Referência: [PLAN-044](plans/PLAN-044-governanca-ui-anti-drift.md) · [ADR-005](foundation/ADR-005-UI-Governance.md)
+
 ## 05/08/2026 — PLAN-043 · Polimento final da identidade "Nexus"
 
 **Concluído**
