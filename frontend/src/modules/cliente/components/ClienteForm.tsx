@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Check, UserRound, Store } from "lucide-react"
+import { AvatarField } from "../../../shared/components/Avatar/Avatar.js"
 import { ApiError } from "../../../api/client.js"
 import { Button } from "../../../shared/components/Button.js"
 import { Card } from "../../../shared/components/Card/Card.js"
@@ -32,7 +33,7 @@ const defaultValues: ClienteFormData = {
   logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
   comercioLogradouro: "", comercioNumero: "", comercioBairro: "", comercioCidade: "", comercioEstado: "",
   comercioLat: undefined, comercioLng: undefined,
-  lat: undefined, lng: undefined,
+  lat: undefined, lng: undefined, foto: undefined,
 }
 
 type BlocoGps = {
@@ -90,6 +91,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       comercioLng: initial.localizacaoComercio?.lng,
       lat: initial.localizacao?.lat,
       lng: initial.localizacao?.lng,
+      foto: initial.foto ?? undefined,
     })
     isGeocodingRef.current = false
   }, [initial, form])
@@ -170,6 +172,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
 
   function buildPayload(data: ClienteFormData): Record<string, unknown> {
     const payload: Record<string, unknown> = {
+      foto: data.foto || (editing ? null : undefined),
       nome: data.nome,
       comercio: data.comercio,
       telefone: unmask(data.telefone),
@@ -311,6 +314,13 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
           <Card.Title>{t("cliente.identificacao")}</Card.Title>
         </Card.Header>
         <div className="grid gap-4 p-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <AvatarField
+              nome={form.watch("nome") || ""}
+              foto={form.watch("foto") ?? null}
+              onChange={(f) => form.setValue("foto", f ?? undefined)}
+            />
+          </div>
           <div className="sm:col-span-2">
             <Field
               label={t("cliente.nome")}

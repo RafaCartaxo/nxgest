@@ -48,6 +48,8 @@ export class UpdateClienteUseCase {
       data.localizacao = input.localizacao ?? null
     }
 
+    if (input.foto !== undefined) data.foto = input.foto
+
     if (input.localizacaoComercio !== undefined) {
       data.localizacaoComercio = input.localizacaoComercio ?? null
     }

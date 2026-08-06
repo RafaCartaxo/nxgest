@@ -12,6 +12,7 @@ import { ButtonLink } from "../../../shared/components/Button.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { QuickActions } from "../../../shared/components/QuickActions/QuickActions.js"
 import { ClienteInfo } from "../components/ClienteInfo.js"
+import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { SituacaoFinanceira } from "../components/SituacaoFinanceira.js"
 import { unmask, formatCurrency } from "../../../shared/utils/masks.js"
 import { buildMapsUrl, resolveAlvoCliente, alvoNavegavel } from "../../../shared/geo/alvo.js"
@@ -84,6 +85,7 @@ export function ClienteDetail() {
               back={{ onClick: () => navigate("/clientes"), title: t("common.back") }}
               action={<ButtonLink to={`/clientes/${cliente.id}/editar`} variant="primary" size="sm"><Pencil className="size-4" /> {t("common.edit")}</ButtonLink>}
             />
+            {cliente.foto && <Avatar foto={cliente.foto} nome={cliente.nome} size="xl" className="mx-auto mb-3" />}
             <ClienteInfo cliente={cliente} />
             <QuickActions
               layout="grid"

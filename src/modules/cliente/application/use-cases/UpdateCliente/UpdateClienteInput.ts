@@ -36,6 +36,7 @@ export const updateClienteSchema = z.object({
     cidade: z.string().optional(),
     estado: z.string().optional(),
   }).optional().nullable(),
+  foto: z.string().optional(),
   localizacao: z
     .object({
       lat: z.number(),

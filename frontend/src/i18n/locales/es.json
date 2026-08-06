@@ -549,5 +549,16 @@
     "sistema": "Sistema",
     "cor": "Color",
     "idioma": "Idioma"
+  },
+  "avatar": {
+    "foto": "Foto",
+    "trocar": "Cambiar foto",
+    "adicionar": "Añadir foto",
+    "remover": "Quitar",
+    "otimizada": "Optimizada a {{px}}px · {{bytes}}",
+    "hint": "JPEG, PNG o WebP hasta {{kb}}KB — reducida a {{px}}px antes de guardar.",
+    "tipo": "Usa una imagen JPEG, PNG o WebP.",
+    "tamanho": "Imagen demasiado grande — elige un archivo menor de {{kb}}KB.",
+    "falha": "No se pudo procesar la imagen. Prueba otra foto."
   }
 }

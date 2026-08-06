@@ -28,6 +28,7 @@ export const createClienteSchema = z.object({
     cidade: z.string().optional(),
     estado: z.string().optional(),
   }).optional(),
+  foto: z.string().optional(),
   localizacao: z
     .object({
       lat: z.number(),

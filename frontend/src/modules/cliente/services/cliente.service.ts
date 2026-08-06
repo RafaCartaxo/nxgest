@@ -24,6 +24,7 @@ export interface Cliente {
   } | null
   localizacao?: { lat: number; lng: number } | null
   localizacaoComercio?: { lat: number; lng: number } | null
+  foto?: string
   totalContratos?: number
   saldoDevedor?: number
   valorEmAtraso?: number

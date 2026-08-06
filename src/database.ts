@@ -35,6 +35,7 @@ export const clientes = sqliteTable("clientes", {
   comercioEstado: text("comercioEstado"),
   comercioLat: real("comercioLat"),
   comercioLng: real("comercioLng"),
+  foto: text("foto"),
   createdAt: text("createdAt").notNull(),
   updatedAt: text("updatedAt").notNull(),
   deletedAt: text("deletedAt"),
@@ -185,6 +186,7 @@ export const usuarios = sqliteTable("usuarios", {
   deletedAt: text("deletedAt"),
   empresaId: text("empresaId"),
   chefeId: text("chefeId"),
+  foto: text("foto"),
 })
 
 export const empresas = sqliteTable("empresas", {
@@ -218,6 +220,7 @@ export async function createTables() {
       comercioEstado TEXT,
       comercioLat REAL,
       comercioLng REAL,
+      foto TEXT,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL,
       deletedAt TEXT,
@@ -395,7 +398,8 @@ export async function createTables() {
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       deletedAt TEXT,
       empresaId TEXT,
-      chefeId TEXT
+      chefeId TEXT,
+      foto TEXT
     );
 
     CREATE TABLE IF NOT EXISTS empresas (
@@ -421,6 +425,7 @@ export async function createTables() {
 
   // Migracao: adicionar coluna empresaId em bancos existentes (ignorar se ja existe)
   try { sqlite.exec("ALTER TABLE usuarios ADD COLUMN empresaId TEXT") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE usuarios ADD COLUMN foto TEXT") } catch { /* ja existe */ }
 
   // Migracao: remover CHECK constraint de role para permitir super_admin
   try {
@@ -511,6 +516,7 @@ export async function createTables() {
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioEstado TEXT") } catch { /* ja existe */ }
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioLat REAL") } catch { /* ja existe */ }
   try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioLng REAL") } catch { /* ja existe */ }
+  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN foto TEXT") } catch { /* ja existe */ }
 
   // Migracao: colunas de estorno de pagamento (PLAN-028)
   try { sqlite.exec("ALTER TABLE pagamentos ADD COLUMN estornadoEm TEXT") } catch { /* ja existe */ }

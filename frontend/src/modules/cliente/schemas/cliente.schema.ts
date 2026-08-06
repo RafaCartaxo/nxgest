@@ -87,6 +87,7 @@ export function getClienteSchema(t: TFunction) {
     comercioLng: z.number().optional(),
     lat: z.number().optional(),
     lng: z.number().optional(),
+    foto: z.string().optional(),
   })
 }
 

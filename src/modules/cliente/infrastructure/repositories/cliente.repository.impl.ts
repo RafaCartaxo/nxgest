@@ -40,6 +40,7 @@ function rowToCliente(row: ClienteRow): Cliente {
       row.lat !== null && row.lng !== null
         ? { lat: row.lat, lng: row.lng }
         : null,
+    foto: row.foto ?? undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt,
@@ -71,6 +72,7 @@ export class ClienteRepository implements IClienteRepository {
       comercioEstado: cliente.enderecoComercio?.estado ?? null,
       comercioLat: cliente.localizacaoComercio?.lat ?? null,
       comercioLng: cliente.localizacaoComercio?.lng ?? null,
+      foto: cliente.foto ?? null,
       createdAt: cliente.createdAt,
       updatedAt: cliente.updatedAt,
       deletedAt: null,
@@ -184,6 +186,7 @@ export class ClienteRepository implements IClienteRepository {
         updateData.lng = data.localizacao.lng
       }
     }
+    if (data.foto !== undefined) updateData.foto = data.foto ?? null
     if (data.localizacaoComercio !== undefined) {
       if (data.localizacaoComercio === null) {
         updateData.comercioLat = null
