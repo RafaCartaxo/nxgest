@@ -526,5 +526,13 @@
     "cobrancas.descricao": "Recebimentos em campo por parcela.",
     "atendidos": "Atendidos",
     "atendidos.descricao": "Histórico de atendimentos do dia."
+  },
+  "geo": {
+    "capturando": "Capturando localização…",
+    "localizacaoCapturada": "Localização capturada",
+    "recapturar": "Recapturar",
+    "capturarLocalizacao": "Capturar localização",
+    "indisponivel": "Geolocalização indisponível neste dispositivo",
+    "erroPermissao": "Não foi possível obter a localização. Verifique a permissão do GPS."
   }
 }

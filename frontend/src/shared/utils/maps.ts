@@ -1,29 +1,14 @@
-interface MapsTarget {
-  clienteLat: number | null
-  clienteLng: number | null
-  clienteLogradouro: string
-  clienteNumero: string | null
-  clienteBairro: string | null
-  clienteCidade: string | null
-  clienteEstado: string | null
-}
+import { buildMapsUrl as buildMapsUrlCanonico, alvoDeItemCobranca } from "../geo/alvo.js"
+import type { TargetNavegacao } from "../geo/types.js"
 
-export function buildMapsUrl(item: MapsTarget): string | null {
-  if (item.clienteLat && item.clienteLng) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${item.clienteLat},${item.clienteLng}`
+/**
+ * SHIM de compatibilidade (PLAN-055) — aceita tanto o alvo canônico (`TargetNavegacao`)
+ * quanto o shape legado `cliente*` (CobrancaItem/ClienteDetail). Migrar consumidores
+ * para `shared/geo` e remover este arquivo depois.
+ */
+export function buildMapsUrl(item: TargetNavegacao | { clienteLat: number | null; clienteLng: number | null; clienteLogradouro: string; clienteNumero: string | null; clienteBairro: string | null; clienteCidade: string | null; clienteEstado: string | null }): string | null {
+  if ("lat" in item) {
+    return buildMapsUrlCanonico(item)
   }
-
-  const parts = [
-    item.clienteLogradouro,
-    item.clienteNumero,
-    item.clienteBairro,
-    item.clienteCidade,
-    item.clienteEstado,
-  ].filter((p): p is string => !!p)
-
-  if (parts.length >= 2) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(parts.join(", "))}`
-  }
-
-  return null
+  return buildMapsUrlCanonico(alvoDeItemCobranca(item))
 }

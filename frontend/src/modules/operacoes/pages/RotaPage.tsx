@@ -9,7 +9,7 @@ import { sortByDistance, sortByDistanceOnly, useWatchPosition } from "../../../s
 import { CobrancaCard } from "../components/CobrancaCard.js"
 import { unmask, formatCurrency } from "../../../shared/utils/masks.js"
 import { gerarComprovante } from "../../../shared/utils/comprovante.js"
-import { buildMapsUrl } from "../../../shared/utils/maps.js"
+import { buildMapsUrl, alvoDeItemCobranca, alvoNavegavel } from "../../../shared/geo/alvo.js"
 import { Button } from "../../../shared/components/Button.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { QuickActions } from "../../../shared/components/QuickActions/QuickActions.js"
@@ -320,7 +320,7 @@ export function RotaPage() {
   }
 
   function handleNavegar(i: CobrancaItem) {
-    const url = buildMapsUrl(i)
+    const url = buildMapsUrl(alvoDeItemCobranca(i))
     if (url) window.open(url, "_blank")
   }
 
@@ -491,7 +491,7 @@ export function RotaPage() {
                       layout="vertical"
                       disabled={operando}
                       actions={[
-                        { icon: Navigation, label: t("operacoes.navegar"), onClick: () => handleNavegar(slideItem), variant: "blue", show: !!buildMapsUrl(slideItem) },
+                        { icon: Navigation, label: t("operacoes.navegar"), onClick: () => handleNavegar(slideItem), variant: "blue", show: alvoNavegavel(alvoDeItemCobranca(slideItem)) },
                         { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(slideItem), variant: "green" },
                         { icon: Phone, label: t("operacoes.ligar"), onClick: () => handleLigar(slideItem), variant: "blue" },
                         { icon: FileText, label: t("operacoes.abrir"), onClick: () => handleAbrirContrato(slideItem), variant: "gray" },

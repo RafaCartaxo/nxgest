@@ -526,5 +526,13 @@
     "cobrancas.descricao": "Field collections per installment.",
     "atendidos": "Attended",
     "atendidos.descricao": "History of today's attendances."
+  },
+  "geo": {
+    "capturando": "Capturing location…",
+    "localizacaoCapturada": "Location captured",
+    "recapturar": "Recapture",
+    "capturarLocalizacao": "Capture location",
+    "indisponivel": "Geolocation unavailable on this device",
+    "erroPermissao": "Could not get the location. Check the GPS permission."
   }
 }

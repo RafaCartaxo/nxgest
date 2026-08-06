@@ -14,7 +14,7 @@ import { QuickActions } from "../../../shared/components/QuickActions/QuickActio
 import { ClienteInfo } from "../components/ClienteInfo.js"
 import { SituacaoFinanceira } from "../components/SituacaoFinanceira.js"
 import { unmask, formatCurrency } from "../../../shared/utils/masks.js"
-import { buildMapsUrl } from "../../../shared/utils/maps.js"
+import { buildMapsUrl, resolveAlvoCliente, alvoNavegavel } from "../../../shared/geo/alvo.js"
 
 export function ClienteDetail() {
   const { t } = useTranslation()
@@ -62,21 +62,8 @@ export function ClienteDetail() {
     window.location.href = `tel:+55${unmask(c.telefone)}`
   }
 
-  function getMapsTarget(c: Cliente) {
-    const endCom = c.enderecoComercio
-    return {
-      clienteLat: c.localizacaoComercio?.lat ?? null,
-      clienteLng: c.localizacaoComercio?.lng ?? null,
-      clienteLogradouro: endCom?.logradouro ?? c.endereco.logradouro,
-      clienteNumero: endCom?.numero ?? c.endereco.numero ?? null,
-      clienteBairro: endCom?.bairro ?? c.endereco.bairro ?? null,
-      clienteCidade: endCom?.cidade ?? c.endereco.cidade ?? null,
-      clienteEstado: endCom?.estado ?? c.endereco.estado ?? null,
-    }
-  }
-
   function handleNavegar(c: Cliente) {
-    const url = buildMapsUrl(getMapsTarget(c))
+    const url = buildMapsUrl(resolveAlvoCliente(c))
     if (url) window.open(url, "_blank")
   }
 
@@ -101,7 +88,7 @@ export function ClienteDetail() {
             <QuickActions
               layout="grid"
               actions={[
-                { icon: Navigation,    label: t("operacoes.navegar"),  onClick: () => handleNavegar(cliente),  variant: "blue", show: !!buildMapsUrl(getMapsTarget(cliente)) },
+                { icon: Navigation,    label: t("operacoes.navegar"),  onClick: () => handleNavegar(cliente),  variant: "blue", show: alvoNavegavel(resolveAlvoCliente(cliente)) },
                 { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(cliente), variant: "green" },
                 { icon: Phone,         label: t("operacoes.ligar"),    onClick: () => handleLigar(cliente),    variant: "blue" },
               ]}

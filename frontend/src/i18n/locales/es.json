@@ -526,5 +526,13 @@
     "cobrancas.descricao": "Cobros en campo por cuota.",
     "atendidos": "Atendidos",
     "atendidos.descricao": "Historial de atenciones del día."
+  },
+  "geo": {
+    "capturando": "Capturando ubicación…",
+    "localizacaoCapturada": "Ubicación capturada",
+    "recapturar": "Recapturar",
+    "capturarLocalizacao": "Capturar ubicación",
+    "indisponivel": "Geolocalización no disponible en este dispositivo",
+    "erroPermissao": "No se pudo obtener la ubicación. Verifica el permiso del GPS."
   }
 }
