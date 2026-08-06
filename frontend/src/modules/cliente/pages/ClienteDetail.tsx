@@ -103,7 +103,7 @@ export function ClienteDetail() {
                     {cliente.totalContratos ?? 0}
                   </p>
                   <div className="mt-3 flex justify-center gap-2">
-                    <ButtonLink to={`/contratos?clienteId=${cliente.id}`} variant="ghost" size="sm">
+                    <ButtonLink to={`/contratos?clienteId=${cliente.id}`} variant="outline" size="sm">
                       {t("cliente.verContratos")} <ChevronRight className="size-4" />
                     </ButtonLink>
                     <ButtonLink to={`/contratos/novo?clienteId=${cliente.id}`} variant="primary" size="sm">
