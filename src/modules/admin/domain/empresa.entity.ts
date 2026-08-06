@@ -2,6 +2,12 @@ export interface Empresa {
   id: string
   nome: string
   createdAt: string
+  /** CNPJ/documento (opcional — não impede cadastro). */
+  documento?: string | null
+  /** Nome fantasia (opcional — usado no card/whitelabel). */
+  nomeFantasia?: string | null
+  /** Situação da empresa (opcional; default ativa). */
+  ativa?: boolean
 }
 
 export interface EmpresaComStats extends Empresa {

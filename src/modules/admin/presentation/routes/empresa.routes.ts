@@ -13,6 +13,7 @@ router.use(superAdminMiddleware)
 router.get("/", controller.list)
 router.get("/:id", controller.getById)
 router.post("/", controller.create)
+router.patch("/:id", controller.update)
 router.patch("/:id/modulos", controller.updateModulos)
 
 export { router as empresaRoutes }

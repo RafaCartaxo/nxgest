@@ -504,7 +504,15 @@
     "modulosCount": "{{n}} módulos",
     "modulosDependencia": "Requer outro módulo",
     "modulosSalvo": "Módulos atualizados.",
-    "erroModulos": "Erro ao atualizar módulos."
+    "erroModulos": "Erro ao atualizar módulos.",
+    "nomeFantasia": "Nome fantasia",
+    "documento": "CNPJ",
+    "situacao": "Situação",
+    "empresaAtiva": "Ativa",
+    "empresaInativa": "Inativa",
+    "operadorUm": "operador",
+    "operadorOutros": "operadores",
+    "modulosButton": "Módulos ({{ativos}}/{{total}})"
   },
   "theme": {
     "default": "Azul",

@@ -44,13 +44,21 @@ export class EmpresaController {
 
   create = async (req: Request, res: Response) => {
     try {
-      const { nome, adminNome, adminEmail, adminSenha } = req.body
+      const { nome, documento, nomeFantasia, ativa, adminNome, adminEmail, adminSenha } = req.body
       if (!nome || !adminNome || !adminEmail || !adminSenha) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Nome, adminNome, adminEmail e adminSenha são obrigatórios." })
         return
       }
       const senhaHash = bcrypt.hashSync(adminSenha, 10)
-      const result = await this.criarUseCase.execute({ nome, adminNome, adminEmail, adminSenhaHash: senhaHash })
+      const result = await this.criarUseCase.execute({
+        nome,
+        documento: typeof documento === "string" && documento.trim() ? documento.trim() : null,
+        nomeFantasia: typeof nomeFantasia === "string" && nomeFantasia.trim() ? nomeFantasia.trim() : null,
+        ativa: typeof ativa === "boolean" ? ativa : true,
+        adminNome,
+        adminEmail,
+        adminSenhaHash: senhaHash,
+      })
       res.status(201).json(result)
     } catch (err: unknown) {
       if (err instanceof EmailDuplicadoError) {
@@ -59,6 +67,27 @@ export class EmpresaController {
       }
       console.error("Erro ao criar empresa:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao criar empresa." })
+    }
+  }
+
+  update = async (req: Request, res: Response) => {
+    try {
+      const { nome, documento, nomeFantasia, ativa } = req.body
+      const data: { nome?: string; documento?: string | null; nomeFantasia?: string | null; ativa?: boolean } = {}
+      if (nome !== undefined && typeof nome === "string" && nome.trim()) data.nome = nome.trim()
+      if (documento !== undefined) data.documento = typeof documento === "string" && documento.trim() ? documento.trim() : null
+      if (nomeFantasia !== undefined) data.nomeFantasia = typeof nomeFantasia === "string" && nomeFantasia.trim() ? nomeFantasia.trim() : null
+      if (ativa !== undefined && typeof ativa === "boolean") data.ativa = ativa
+
+      const result = await this.repository.update(req.params.id, data)
+      if (!result) {
+        res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
+        return
+      }
+      res.json(result)
+    } catch (err) {
+      console.error("Erro ao atualizar empresa:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao atualizar empresa." })
     }
   }
 

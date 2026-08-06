@@ -7,6 +7,9 @@ export class CriarEmpresaUseCase {
   async execute(input: CriarEmpresaInput) {
     return this.empresaRepository.create({
       nome: input.nome,
+      documento: input.documento,
+      nomeFantasia: input.nomeFantasia,
+      ativa: input.ativa,
       adminNome: input.adminNome,
       adminEmail: input.adminEmail,
       adminSenhaHash: input.adminSenhaHash,

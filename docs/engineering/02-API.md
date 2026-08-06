@@ -1562,6 +1562,7 @@ Gestão de empresas. Acesso exclusivo para super administradores (`role = 'super
 | GET | `/api/admin/empresas` | Super Admin | Listar todas as empresas |
 | GET | `/api/admin/empresas/:id` | Super Admin | Buscar empresa por id (com totais) |
 | POST | `/api/admin/empresas` | Super Admin | Criar nova empresa com admin |
+| PATCH | `/api/admin/empresas/:id` | Super Admin | Atualizar dados da empresa (documento/nomeFantasia/ativa/nome) |
 | PATCH | `/api/admin/empresas/:id/modulos` | Super Admin | Ativar/desativar módulos da empresa (PLAN-031) |
 
 ---
@@ -1579,6 +1580,9 @@ Lista todas as empresas cadastradas.
     {
         "id": "a1b2c3d4-...",
         "nome": "Desenvolvimento",
+        "documento": null,
+        "nomeFantasia": null,
+        "ativa": true,
         "createdAt": "2026-07-31T10:00:00.000Z",
         "totalUsuarios": 3,
         "totalClientes": 12,
@@ -1642,6 +1646,9 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
 ```json
 {
     "nome": "Empresa Exemplo",
+    "documento": "00.000.000/0000-00",
+    "nomeFantasia": "Exemplo",
+    "ativa": true,
     "adminNome": "João Administrador",
     "adminEmail": "admin@empresa.com",
     "adminSenha": "senhaSegura123"
@@ -1656,6 +1663,11 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
 | adminNome | Sim | 1 a 100 caracteres |
 | adminEmail | Sim | Email válido |
 | adminSenha | Sim | Mínimo 6 caracteres |
+| documento | Não | CNPJ/documento — **opcional** (não impede cadastro) |
+| nomeFantasia | Não | Nome fantasia — **opcional** (usado no card) |
+| ativa | Não | Booleano, default `true` — **opcional** (situação da empresa) |
+
+> **Decisão (WS5):** `documento`, `nomeFantasia` e `ativa` são **opcionais** de propósito — não bloqueiam o cadastro de empresa/admin inicial.
 
 ## Response 201
 
@@ -1664,6 +1676,9 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
     "empresa": {
         "id": "a1b2c3d4-...",
         "nome": "Empresa Exemplo",
+        "documento": "00.000.000/0000-00",
+        "nomeFantasia": "Exemplo",
+        "ativa": true,
         "createdAt": "2026-07-31T10:00:00.000Z"
     },
     "admin": {
@@ -1681,6 +1696,35 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
 |---------|------|
 | EMAIL_DUPLICATED | 409 |
 | VALIDATION_ERROR | 400 |
+
+---
+
+# PATCH /api/admin/empresas/{id}
+
+Atualiza dados gerais da empresa (diferente do `/modulos`). Campos opcionais; apenas os enviados mudam.
+
+**Auth:** Super Admin (`role = 'super_admin'`)
+
+## Request
+
+```json
+{
+    "nome": "Empresa Exemplo Ltda",
+    "documento": "00.000.000/0000-00",
+    "nomeFantasia": "Exemplo",
+    "ativa": false
+}
+```
+
+## Response 200
+
+Mesma estrutura do `GET /api/admin/empresas/:id` (com `documento`, `nomeFantasia`, `ativa` e totais).
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| EMPRESA_NOT_FOUND | 404 |
 
 ---
 

@@ -504,7 +504,15 @@
     "modulosCount": "{{n}} modules",
     "modulosDependencia": "Requires another module",
     "modulosSalvo": "Modules updated.",
-    "erroModulos": "Error updating modules."
+    "erroModulos": "Error updating modules.",
+    "nomeFantasia": "Trade name",
+    "documento": "CNPJ",
+    "situacao": "Status",
+    "empresaAtiva": "Active",
+    "empresaInativa": "Inactive",
+    "operadorUm": "operator",
+    "operadorOutros": "operators",
+    "modulosButton": "Modules ({{ativos}}/{{total}})"
   },
   "theme": {
     "default": "Blue",

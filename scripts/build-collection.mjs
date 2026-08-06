@@ -185,8 +185,12 @@ const endpoints = [
     req("Listar", "GET", "/api/admin/empresas", { description: "API-UC-038 · 200 · 403 não-super" }),
     req("Detalhe", "GET", "/api/admin/empresas/{{empresaId}}", { description: "API-UC-039 · 200 · 404 inexistente" }),
     req("Criar", "POST", "/api/admin/empresas", {
-      body: { nome: "Empresa Exemplo", adminNome: "João Admin", adminEmail: "admin@empresa.com", adminSenha: "senhaSegura123" },
-      description: "API-UC-040 · 201 empresa+admin atômico · 409 e-mail duplicado",
+      body: { nome: "Empresa Exemplo", documento: "00.000.000/0000-00", nomeFantasia: "Exemplo", ativa: true, adminNome: "João Admin", adminEmail: "admin@empresa.com", adminSenha: "senhaSegura123" },
+      description: "API-UC-040 · 201 empresa+admin atômico · 409 e-mail duplicado · documento/nomeFantasia/ativa opcionais",
+    }),
+    req("Editar dados", "PATCH", "/api/admin/empresas/{{empresaId}}", {
+      body: { nomeFantasia: "Exemplo Atualizado", ativa: false },
+      description: "API-UC-047 · 200 dados atualizados · 404",
     }),
     req("Módulos", "PATCH", "/api/admin/empresas/{{empresaId}}/modulos", {
       body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] },

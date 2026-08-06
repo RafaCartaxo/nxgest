@@ -194,6 +194,9 @@ export const empresas = sqliteTable("empresas", {
   nome: text("nome").notNull(),
   createdAt: text("createdAt").notNull(),
   modulos: text("modulos"),
+  documento: text("documento"),
+  nomeFantasia: text("nomeFantasia"),
+  ativa: integer("ativa").notNull().default(1),
 })
 
 export const anexos = sqliteTable("anexos", {
@@ -418,7 +421,10 @@ export async function createTables() {
       id TEXT PRIMARY KEY,
       nome TEXT NOT NULL,
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-      modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]'
+      modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]',
+      documento TEXT,
+      nomeFantasia TEXT,
+      ativa INTEGER NOT NULL DEFAULT 1
     );
 
     CREATE TABLE IF NOT EXISTS anexos (
@@ -440,6 +446,17 @@ export async function createTables() {
   const empresaCols = sqlite.pragma("table_info(empresas)") as unknown as { name: string }[]
   if (!empresaCols.some((c) => c.name === "modulos")) {
     sqlite.exec(`ALTER TABLE empresas ADD COLUMN modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]'`)
+  }
+
+  // Migração incremental (WS5): campos opcionais de identidade/situação da empresa.
+  if (!empresaCols.some((c) => c.name === "documento")) {
+    sqlite.exec("ALTER TABLE empresas ADD COLUMN documento TEXT")
+  }
+  if (!empresaCols.some((c) => c.name === "nomeFantasia")) {
+    sqlite.exec("ALTER TABLE empresas ADD COLUMN nomeFantasia TEXT")
+  }
+  if (!empresaCols.some((c) => c.name === "ativa")) {
+    sqlite.exec("ALTER TABLE empresas ADD COLUMN ativa INTEGER NOT NULL DEFAULT 1")
   }
 
   // Migração incremental (PLAN-032): coluna `chefeId` (hierarquia de papéis) em usuários existentes.

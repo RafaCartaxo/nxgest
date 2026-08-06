@@ -100,6 +100,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 | 45 | `GET /api/clientes/:id/anexos/:anexoId/file` | API-UC-045 | 093 |
 | 46 | `DELETE /api/clientes/:id/anexos/:anexoId` | API-UC-046 | 094 |
 | 43 | `PATCH /api/admin/empresas/:id/modulos` | API-UC-043 | 091-096 |
+| 47 | `PATCH /api/admin/empresas/:id` | API-UC-047 | 095 |
 
 ---
 
@@ -1103,7 +1104,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Endpoint:** `POST /api/admin/empresas` · **Auth:** super_admin
 
-**Request:** `{ nome, adminNome, adminEmail, adminSenha }`
+**Request:** `{ nome, documento?, nomeFantasia?, ativa?, adminNome, adminEmail, adminSenha }`
 
 **Response 201:** `{ empresa, admin }` — transação atômica (BR-072)
 
@@ -1111,6 +1112,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 - [ ] Empresa **e** admin criados juntos (ou nada)?
 - [ ] Login do admin inicial funciona?
 - [ ] E-mail duplicado → 409?
+- [ ] Cadastro **sem** `documento`/`nomeFantasia`/`ativa` → 201 (campos opcionais, não bloqueiam)?
 
 **Regras:** BR-072, BR-076 · **Postman:** `Empresas > Criar`
 
@@ -1119,6 +1121,15 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### API-CT-074 — E-mail duplicado
 **Dado** `adminEmail` já usado → **Então** 409 e **nenhuma** empresa criada (atômico).
+
+### API-CT-095 — Atualizar dados da empresa
+**Endpoint:** `PATCH /api/admin/empresas/:id` · **Auth:** super_admin
+
+**Request:** parcial `{ nome?, documento?, nomeFantasia?, ativa? }`
+
+- **Dado** `PATCH` com `nomeFantasia`, `documento` e `ativa: false` → **Então** 200 reflete no `GET /:id` e no card (Ativa/Inativa).
+- **Dado** `PATCH` com body vazio ou só campos opcionais → **Então** 200 (nenhuma mudança forçada).
+- **Dado** empresa inexistente → **Então** 404.
 
 ---
 

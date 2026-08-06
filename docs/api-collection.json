@@ -1646,14 +1646,53 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Empresa Exemplo\",\n  \"adminNome\": \"João Admin\",\n  \"adminEmail\": \"admin@empresa.com\",\n  \"adminSenha\": \"senhaSegura123\"\n}",
+              "raw": "{\n  \"nome\": \"Empresa Exemplo\",\n  \"documento\": \"00.000.000/0000-00\",\n  \"nomeFantasia\": \"Exemplo\",\n  \"ativa\": true,\n  \"adminNome\": \"João Admin\",\n  \"adminEmail\": \"admin@empresa.com\",\n  \"adminSenha\": \"senhaSegura123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "API-UC-040 · 201 empresa+admin atômico · 409 e-mail duplicado"
+            "description": "API-UC-040 · 201 empresa+admin atômico · 409 e-mail duplicado · documento/nomeFantasia/ativa opcionais"
+          }
+        },
+        {
+          "name": "Editar dados",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/empresas/{{empresaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "empresas",
+                "{{empresaId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nomeFantasia\": \"Exemplo Atualizado\",\n  \"ativa\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-047 · 200 dados atualizados · 404"
           }
         },
         {

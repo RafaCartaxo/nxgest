@@ -7,11 +7,14 @@ import type { IAuthRepository } from "../../../../modules/auth/application/ports
 import { v4 as uuid } from "uuid"
 import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
 
-const toComStats = (row: { id: string; nome: string; createdAt: string; modulos?: string | null }, stats: Omit<EmpresaComStats, "id" | "nome" | "createdAt" | "modulos">): EmpresaComStats => ({
+const toComStats = (row: { id: string; nome: string; createdAt: string; modulos?: string | null; documento?: string | null; nomeFantasia?: string | null; ativa?: number | boolean | null }, stats: Omit<EmpresaComStats, "id" | "nome" | "createdAt" | "modulos" | "documento" | "nomeFantasia" | "ativa">): EmpresaComStats => ({
   id: row.id,
   nome: row.nome,
   createdAt: row.createdAt,
   modulos: parseModulos(row.modulos ?? null),
+  documento: row.documento ?? null,
+  nomeFantasia: row.nomeFantasia ?? null,
+  ativa: row.ativa == null ? true : Boolean(row.ativa),
   ...stats,
 })
 
@@ -57,7 +60,7 @@ export class EmpresaRepository implements IEmpresaRepository {
     })
   }
 
-  async create(input: { nome: string; adminNome: string; adminEmail: string; adminSenhaHash: string }) {
+  async create(input: { nome: string; documento?: string | null; nomeFantasia?: string | null; ativa?: boolean; adminNome: string; adminEmail: string; adminSenhaHash: string }) {
     const existente = await this.authRepository.findByEmail(input.adminEmail)
     if (existente) {
       throw new EmailDuplicadoError()
@@ -70,6 +73,9 @@ export class EmpresaRepository implements IEmpresaRepository {
       tx.insert(empresas).values({
         id: empresaId,
         nome: input.nome,
+        documento: input.documento ?? null,
+        nomeFantasia: input.nomeFantasia ?? null,
+        ativa: input.ativa === false ? 0 : 1,
         createdAt: new Date().toISOString(),
       }).run()
 
@@ -84,7 +90,7 @@ export class EmpresaRepository implements IEmpresaRepository {
       }).run()
 
       return {
-        empresa: { id: empresaId, nome: input.nome, createdAt: new Date().toISOString(), totalUsuarios: 1, totalClientes: 0, contratosAtivos: 0, modulos: [...DEFAULT_MODULOS] },
+        empresa: { id: empresaId, nome: input.nome, documento: input.documento ?? null, nomeFantasia: input.nomeFantasia ?? null, ativa: input.ativa === false ? false : true, createdAt: new Date().toISOString(), totalUsuarios: 1, totalClientes: 0, contratosAtivos: 0, modulos: [...DEFAULT_MODULOS] },
         admin: { id: adminId, nome: input.adminNome, email: input.adminEmail },
       }
     })
@@ -94,6 +100,20 @@ export class EmpresaRepository implements IEmpresaRepository {
     const [row] = await db.select().from(empresas).where(eq(empresas.id, id)).limit(1)
     if (!row) return null
     await db.update(empresas).set({ modulos: serializeModulos(modulos) }).where(eq(empresas.id, id))
+    return this.findById(id)
+  }
+
+  async update(id: string, data: { nome?: string; documento?: string | null; nomeFantasia?: string | null; ativa?: boolean }): Promise<EmpresaComStats | null> {
+    const [row] = await db.select().from(empresas).where(eq(empresas.id, id)).limit(1)
+    if (!row) return null
+    const set: Record<string, unknown> = {}
+    if (data.nome !== undefined) set.nome = data.nome
+    if (data.documento !== undefined) set.documento = data.documento
+    if (data.nomeFantasia !== undefined) set.nomeFantasia = data.nomeFantasia
+    if (data.ativa !== undefined) set.ativa = data.ativa ? 1 : 0
+    if (Object.keys(set).length > 0) {
+      await db.update(empresas).set(set).where(eq(empresas.id, id))
+    }
     return this.findById(id)
   }
 }

@@ -691,16 +691,30 @@ async function main() {
   })
   let novaEmpresaId
   let novaEmpresaAdminEmail
-  await t("EMP-073", "POST /admin/empresas (201) + login admin novo + dashboard", async () => {
+  await t("EMP-073", "POST /admin/empresas (201, campos opcionais) + login admin novo + dashboard", async () => {
     const nome = `Empresa Smoke ${Date.now()}`
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, adminNome: "Admin Smoke", adminEmail: `smoke.${Date.now()}@empresa.com`, adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, documento: "12.345.678/0001-99", nomeFantasia: "Smoke Fantasia", ativa: true, adminNome: "Admin Smoke", adminEmail: `smoke.${Date.now()}@empresa.com`, adminSenha: SENHA } })
     expect(r, 201, "criar empresa")
     novaEmpresaId = r.data.empresa.id
     novaEmpresaAdminEmail = r.data.admin.email
+    if (r.data.empresa.documento !== "12.345.678/0001-99") throw new Error("documento não persistido")
+    if (r.data.empresa.ativa !== true) throw new Error("ativa não persistido")
     const login = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
     expect(login, 200, "login admin da nova empresa")
     const dash = await req("GET", "/api/admin/dashboard", { token: superToken, query: { empresaId: novaEmpresaId } })
     expect(dash, 200, "dashboard da nova empresa")
+  })
+  await t("EMP-095", "PATCH /admin/empresas/:id (200, opcionais) + GET reflete", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken, body: { nomeFantasia: "Smoke Atualizada", ativa: false } })
+    expect(r, 200, "patch dados")
+    if (r.data.nomeFantasia !== "Smoke Atualizada") throw new Error("nomeFantasia não refletiu")
+    if (r.data.ativa !== false) throw new Error("ativa=false não refletiu")
+    const inexistente = await req("PATCH", "/api/admin/empresas/00000000-0000-4000-8000-000000000000", { token: superToken, body: { ativa: false } })
+    expect(inexistente, 404, "empresa inexistente")
+  })
+  await t("EMP-095b", "POST /admin/empresas SEM opcionais (201, não bloqueia)", async () => {
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Min ${Date.now()}`, adminNome: "Admin Min", adminEmail: `min.${Date.now()}@empresa.com`, adminSenha: SENHA } })
+    expect(r, 201, "empresa sem opcionais")
   })
 
   // ---------- MÓDULOS (PLAN-031, whitelabel) ----------
