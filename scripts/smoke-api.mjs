@@ -315,6 +315,27 @@ async function main() {
     expect(r, 422, "foto inválida")
   })
 
+  // PLAN-058: foto de alta resolução + segurança by-design (allowlist MIME + magic bytes)
+  const b64 = (buf) => Buffer.from(buf).toString("base64")
+  const fotoGrande = `data:image/jpeg;base64,${b64([0xff, 0xd8, 0xff, 0xe0, ...new Array(150 * 1024).fill(0x00)])}`
+  await t("CLI-E6", "PATCH foto grande válida (~150KB decod.) = 200 (cap elevado PLAN-058)", async () => {
+    const r = await req("PATCH", `/api/clientes/${cliEditId}`, { token: opToken, body: { foto: fotoGrande } })
+    expect(r, 200, "foto grande")
+  })
+  await t("CLI-E7", "PATCH foto data:image/svg+xml = 422 (allowlist exclui svg)", async () => {
+    const r = await req("PATCH", `/api/clientes/${cliEditId}`, { token: opToken, body: { foto: "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=" } })
+    expect(r, 422, "svg rejeitado")
+  })
+  await t("CLI-E8", "PATCH foto mascarada (base64 de texto como jpeg) = 422 (magic bytes)", async () => {
+    const r = await req("PATCH", `/api/clientes/${cliEditId}`, { token: opToken, body: { foto: `data:image/jpeg;base64,${b64("isto não é uma imagem de verdade")}` } })
+    expect(r, 422, "conteúdo mascarado rejeitado")
+  })
+  await t("CLI-E9", "PATCH foto > 1MB decodificados = 422 (teto)", async () => {
+    const gigante = `data:image/jpeg;base64,${b64([0xff, 0xd8, 0xff, ...new Array(1100 * 1024).fill(0x00)])}`
+    const r = await req("PATCH", `/api/clientes/${cliEditId}`, { token: opToken, body: { foto: gigante } })
+    expect(r, 422, "foto acima do teto")
+  })
+
   // cliente de OUTRO operador (sofia) → 404 para gabriel
   let sofiaClientId
   await t("CLI-012", "Cliente de outro operador (404)", async () => {
@@ -587,10 +608,28 @@ async function main() {
     const r = await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: "https://exemplo.com/foto.jpg" } })
     expect(r, 422, "tipo inválido")
   })
-  await t("FOT-004", "foto > 500KB (422 FOTO_LIMITE)", async () => {
-    const gigante = "data:image/jpeg;base64," + "A".repeat(700 * 1024)
+  await t("FOT-004", "foto > 1MB decodificados (422 FOTO_LIMITE)", async () => {
+    const gigante = "data:image/jpeg;base64," + Buffer.from([0xff, 0xd8, 0xff, ...new Array(1100 * 1024).fill(0x00)]).toString("base64")
     const r = await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: gigante } })
     expect(r, 422, "limite")
+    if (r.data.code !== "FOTO_LIMITE") throw new Error(`code esperado FOTO_LIMITE, recebi ${r.data.code}`)
+  })
+  await t("FOT-005", "foto grande válida (~150KB decod.) = 200 (cap elevado PLAN-058)", async () => {
+    const grande = "data:image/jpeg;base64," + Buffer.from([0xff, 0xd8, 0xff, 0xe0, ...new Array(150 * 1024).fill(0x00)]).toString("base64")
+    const r = await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: grande } })
+    expect(r, 200, "foto grande")
+    const me = await req("GET", "/api/auth/me", { token: opToken })
+    if (me.data.foto !== grande) throw new Error("me.foto não refletiu")
+    await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: null } })
+  })
+  await t("FOT-006", "foto data:image/svg+xml (422 FOTO_TIPO)", async () => {
+    const r = await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=" } })
+    expect(r, 422, "svg rejeitado")
+    if (r.data.code !== "FOTO_TIPO") throw new Error(`code esperado FOTO_TIPO, recebi ${r.data.code}`)
+  })
+  await t("FOT-007", "foto mascarada (texto como jpeg) (422 FOTO_TIPO)", async () => {
+    const r = await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: `data:image/jpeg;base64,${Buffer.from("isto não é uma imagem de verdade").toString("base64")}` } })
+    expect(r, 422, "conteúdo mascarado rejeitado")
   })
 
   // ---------- ADMIN: dashboard / operadores ----------

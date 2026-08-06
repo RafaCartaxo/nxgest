@@ -2,6 +2,18 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — PLAN-058: foto com qualidade (640px) + lightbox + segurança do upload
+
+**Adicionado / Melhorado**
+- **Resolução:** `processarImagem` 200px → **640px (JPEG q0.8)** — foto de avatar passa de ~20KB para ~80-150KB, nítida em qualquer superfície e com resolução real pra ampliar.
+- **Lightbox:** `Avatar` ganha prop `ampliar` (com foto → clica e abre `Modal` com a imagem `max-h-[75vh]`). Ativo em `ClienteCard` (lista + detalhe), `OperadorDetail`, `AppLayout` (sidebar) e `AvatarField` (Perfil/Forms).
+- **Segurança by-design do upload:** novo `src/shared/utils/foto.ts` (`validarFoto`) — **allowlist de MIME** (`jpeg/png/webp/gif`, **`svg` excluído** — vetor de XSS armazenado), **magic bytes** do base64 (impede conteúdo mascarado) e teto **≤1MB decodificados**. Aplicado em **4 pontos** (create/update cliente, `PATCH /auth/foto`, `PATCH /admin/operadores/:id`) — uma fonte, coerência.
+- **Docs:** `PLAN-058` · `02-API` (caps/MIME) · `BR-101` · `UI-COVERAGE` (corrige `⏳` stale de Avatar/Anexos + registra lightbox e `AnexosSection`).
+
+**QA:** smoke com CTs de foto — clientes CLI-E6..E9 (grande válida 200 · svg 422 · mascarada 422 · >1MB 422) · auth FOT-004..007 (mesmos cenários + FOTO_LIMITE/FOTO_TIPO). Gates verdes.
+
+Referência: [PLAN-058](plans/PLAN-058-foto-qualidade-lightbox.md)
+
 ## 06/08/2026 — P7: GPS na edição do cliente · P8: "dados inválidos" ao editar cliente
 
 **Corrigido**

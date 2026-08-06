@@ -574,7 +574,8 @@
     "tamanho": "Image larger than 50MB.",
     "falha": "Could not process the image. Try another photo.",
     "fotoSalva": "Photo updated.",
-    "fotoRemovida": "Photo removed."
+    "fotoRemovida": "Photo removed.",
+    "verFoto": "View photo"
   },
   "anexos": {
     "title": "Attachments",

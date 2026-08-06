@@ -64,17 +64,16 @@
 | `Button` / `ButtonLink` | ✅ | global — variantes `primary/secondary/soft/outline/ghost/danger/success` + sizes `sm/md/lg/block` (PLAN-056) |
 | `GpsControl` | ✅ | ClienteForm (comércio + residencial) — port Lovable, 3 estados (PLAN-056) |
 | `PreferenciasModal` | ✅ | Topbar (engrenagem) — tema light/dark/system + paletas + idioma (PLAN-056) |
-| `ClienteSelect` | ✅ | (futuro ContratoForm) — seletor de cliente buscável (PLAN-056) |
+| `ClienteSelect` | ✅ | `ContratoForm` (novo) — seletor de cliente buscável (PLAN-056) |
 | `StatusBadge` (pill com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` · `Topbar` | ✅ | — |
-| `Avatar` / `AvatarField` | ✅ | ClienteCard (list-item/detail), ClienteForm, EmpresaList, AppLayout (sidebar) — foto data URL ≤200px (PLAN-057) |
+| `Avatar` / `AvatarField` | ✅ | ClienteCard (list-item/detail), ClienteForm, EmpresaList, AppLayout (sidebar), OperadorDetail, OperadoresList, modais — foto data URL **≤640px** + **lightbox** (`ampliar`: ClienteCard, OperadorDetail, sidebar, AvatarField) (PLAN-057/058) |
+| `AnexosSection` / `AnexoRow` | ✅ | ClienteDetail — upload foto/PDF do cliente (PLAN-042) |
 
 ## 4. Legado conhecido / planejado (rastreado)
 
 | Item | Tipo | Plano | Status |
 |---|---|---|---|
 | Foto no `CobrancaCard` | variante futura | PLAN-041 | ⏳ planejado (nota no 041) |
-| `Avatar` (foto \| iniciais) para usuário/operador/cliente | componente novo | PLAN-041 | ⏳ Lovable |
-| Anexos do cliente (comprovante foto/PDF) | recurso novo | PLAN-042 | ⏳ Lovable |
 | Padrão legado ativo | — | `npm run audit:ui` | ✅ **0 ocorrências** |
 
 ## 5. Gate de conclusão (tela/módulo novo ou redesign)

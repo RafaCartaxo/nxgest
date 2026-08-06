@@ -7,6 +7,7 @@ import { CriarOperadorUseCase } from "../../application/use-cases/CriarOperador/
 import { EditarOperadorUseCase } from "../../application/use-cases/EditarOperador/EditarOperadorUseCase.js"
 import { RemoverOperadorUseCase } from "../../application/use-cases/RemoverOperador/RemoverOperadorUseCase.js"
 import { OperadorNaoEncontradoError, NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, NaoPodeAtribuirSuperAdminError, NaoPodeRebaixarComSubordinadosError } from "../../domain/errors/admin.error.js"
+import { validarFoto } from "../../../../shared/utils/foto.js"
 import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
 
 const ROLES_ADMIN = ["admin", "socio", "operator"] as const
@@ -164,12 +165,17 @@ export class AdminController {
         return
       }
       if (foto !== null && foto !== undefined) {
-        if (typeof foto !== "string" || !foto.startsWith("data:image/")) {
+        if (typeof foto !== "string") {
           res.status(422).json({ code: "FOTO_TIPO", message: "Foto deve ser uma imagem em data URL." })
           return
         }
-        if (Math.round((foto.length * 3) / 4) > 500 * 1024) {
-          res.status(422).json({ code: "FOTO_LIMITE", message: "Foto muito grande (máx. 500KB)." })
+        const v = validarFoto(foto)
+        if (!v.ok) {
+          const ehTamanho = v.motivo === "tamanho"
+          res.status(422).json({
+            code: ehTamanho ? "FOTO_LIMITE" : "FOTO_TIPO",
+            message: ehTamanho ? "Foto muito grande (máx. 1MB)." : "Foto deve ser uma imagem válida (JPEG, PNG, WebP ou GIF).",
+          })
           return
         }
       }

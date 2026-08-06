@@ -339,7 +339,7 @@ Todos os campos são opcionais.
 
 Somente os campos enviados deverão ser alterados.
 
-> **`foto` (P8):** data URL de imagem normalizada (`data:image/...`, ≤50000 caracteres) — `null` **remove** a foto (a coluna é zerada). Valor que não começa com `data:image/` → **422**.
+> **`foto` (P8/PLAN-058):** data URL de imagem normalizada — `data:image/(jpeg|png|webp|gif);base64,...`, **≤1MB decodificados**, com **magic bytes** validados no servidor (conteúdo mascarado ou `svg` → **422**). `null` **remove** a foto (a coluna é zerada).
 
 ## Response 200
 
@@ -1987,7 +1987,7 @@ Altera a **própria senha** do usuário autenticado (BR-089/BR-090). Opera sempr
 
 # PATCH /api/auth/foto
 
-Altera a **própria foto** (avatar) do usuário autenticado (PLAN-041 — BR-101). Opera sempre sobre o `req.userId`. A foto é um **data URL** de imagem normalizada (≤200px, ~≤500KB) — o servidor revalida tipo e tamanho (não confia no front).
+Altera a **própria foto** (avatar) do usuário autenticado (PLAN-041 — BR-101 · PLAN-058: 640px + validação). Opera sempre sobre o `req.userId`. A foto é um **data URL** de imagem normalizada (≤640px, JPEG q0.8, ~80-150KB) — o servidor valida **MIME na allowlist** (`jpeg/png/webp/gif`), **magic bytes** e **≤1MB decodificados** (não confia no front).
 
 **Auth:** Sim (Bearer)
 
@@ -2005,7 +2005,7 @@ Para **remover** a foto, enviar `"foto": null`.
 
 | Campo | Obrigatório | Regra |
 |--------|------------|-------|
-| foto | Não | `null` (remove) ou string `data:image/...` com ≤500KB decodificados |
+| foto | Não | `null` (remove) ou `data:image/(jpeg\|png\|webp\|gif);base64,...` com ≤1MB decodificados e magic bytes válidos |
 
 ## Response 200
 

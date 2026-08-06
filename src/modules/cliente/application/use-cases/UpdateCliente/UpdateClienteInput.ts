@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { isValidCpf } from "../../../../../shared/validators/cpf.js"
+import { validarFoto } from "../../../../../shared/utils/foto.js"
 
 export const updateClienteSchema = z.object({
   nome: z.string().min(3).max(100).optional(),
@@ -36,11 +37,12 @@ export const updateClienteSchema = z.object({
     cidade: z.string().optional(),
     estado: z.string().optional(),
   }).optional().nullable(),
-  // foto: data URL normalizada (processarImagem) — `null` remove. Valida formato (P8).
+  // foto: data URL normalizada (processarImagem) — `null` remove. Allowlist de MIME
+  // + magic bytes + ≤1MB decodificados (PLAN-058). Nunca confiar no cliente.
   foto: z
     .string()
-    .max(50000, "Foto muito grande.")
-    .refine((v) => v.startsWith("data:image/"), "Foto deve ser uma imagem em data URL.")
+    .max(2_000_000, "Foto muito grande.")
+    .refine((v) => validarFoto(v).ok, "Foto inválida (formato/tamanho).")
     .optional()
     .nullable(),
   localizacao: z

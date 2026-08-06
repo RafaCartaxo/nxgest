@@ -92,7 +92,7 @@ export function OperadorDetail() {
         back={{ onClick: () => navigate(-1), title: t("common.back") }}
         action={operador ? (
           <div className="flex items-center gap-2">
-            <Avatar nome={operador.nome} foto={operador.foto ?? null} size="sm" />
+            <Avatar nome={operador.nome} foto={operador.foto ?? null} size="sm" ampliar />
             <StatusBadge
               variant={roleVariant(operador.role)}
               size="sm"

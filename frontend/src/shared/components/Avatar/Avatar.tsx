@@ -2,6 +2,7 @@ import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Camera, Trash2 } from "lucide-react"
 import { Button } from "../Button.js"
+import { Modal } from "../Modal/Modal.js"
 import { formatarBytes, MAX_LADO, processarImagem } from "../../utils/processarImagem.js"
 
 export type AvatarSize = "sm" | "md" | "lg" | "xl"
@@ -41,21 +42,23 @@ interface AvatarProps {
   nome: string
   size?: AvatarSize
   className?: string
+  /** Clicar abre a foto ampliada (lightbox — PLAN-058). Só ativo quando há foto. */
+  ampliar?: boolean
 }
 
 /** Avatar do usuário/cliente — foto (data URL) ou iniciais com tom derivado do nome. */
-export function Avatar({ foto, nome, size = "md", className = "" }: AvatarProps) {
-  if (foto) {
-    return (
-      <img
-        src={foto}
-        alt={`Foto de ${nome}`}
-        loading="lazy"
-        className={`shrink-0 rounded-full border border-border object-cover ${sizeClass[size]} ${className}`}
-      />
-    )
-  }
-  return (
+export function Avatar({ foto, nome, size = "md", className = "", ampliar = false }: AvatarProps) {
+  const { t } = useTranslation()
+  const [aberto, setAberto] = useState(false)
+
+  const img = foto ? (
+    <img
+      src={foto}
+      alt={`Foto de ${nome}`}
+      loading="lazy"
+      className={`shrink-0 rounded-full border border-border object-cover ${sizeClass[size]} ${className}`}
+    />
+  ) : (
     <span
       aria-label={nome}
       role="img"
@@ -64,6 +67,33 @@ export function Avatar({ foto, nome, size = "md", className = "" }: AvatarProps)
       {iniciais(nome)}
     </span>
   )
+
+  if (ampliar && foto) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setAberto(true)}
+          aria-label={t("avatar.verFoto")}
+          title={t("avatar.verFoto")}
+          className="shrink-0 rounded-full transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          {img}
+        </button>
+        <Modal
+          open={aberto}
+          onClose={() => setAberto(false)}
+          backdropClose
+          maxWidth="max-w-lg"
+          title={nome}
+        >
+          <img src={foto} alt={`Foto de ${nome}`} className="mx-auto max-h-[75vh] w-auto rounded-xl" />
+        </Modal>
+      </>
+    )
+  }
+
+  return img
 }
 
 interface AvatarFieldProps {
@@ -98,7 +128,7 @@ export function AvatarField({ nome, foto, onChange, label, size = "xl" }: Avatar
     <div>
       <span className="mb-1.5 block text-sm font-medium text-text-secondary">{label ?? t("avatar.foto")}</span>
       <div className="flex items-center gap-4">
-        <Avatar foto={foto} nome={nome} size={size} />
+        <Avatar foto={foto} nome={nome} size={size} ampliar />
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => input.current?.click()}>
             <Camera className="size-4" aria-hidden />

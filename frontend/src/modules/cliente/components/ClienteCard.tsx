@@ -25,7 +25,7 @@ function ClienteCard({ cliente, variant }: ClienteCardProps) {
     return (
       <Card.Root variant="list-item">
         <div className="flex items-center gap-3">
-          <Avatar nome={cliente.nome} foto={cliente.foto} size="md" />
+          <Avatar nome={cliente.nome} foto={cliente.foto} size="md" ampliar />
           <Card.Body>
             <Card.Title className="mb-0.5">{cliente.nome}</Card.Title>
             {cliente.comercio && (
@@ -66,7 +66,7 @@ function ClienteCard({ cliente, variant }: ClienteCardProps) {
       </Card.Header>
       <Card.Body>
         <div className="flex items-start gap-3">
-          <Avatar nome={cliente.nome} foto={cliente.foto} size="lg" />
+          <Avatar nome={cliente.nome} foto={cliente.foto} size="lg" ampliar />
           <div className="min-w-0 space-y-1">
             {cliente.comercio && (
               <p className="flex items-center gap-1.5 text-sm text-text-secondary">

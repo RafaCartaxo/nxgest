@@ -269,10 +269,13 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 ### API-CT-014 — CPF duplicado excluindo o próprio
 **Dado** CPF de outro cliente do mesmo operador → **Então** 409; **Dado** o próprio CPF mantido → **Então** 200.
 
-### API-CT-132 — Foto do cliente no PATCH (P8)
+### API-CT-132 — Foto do cliente no PATCH (P8/PLAN-058)
 - **Dado** `PATCH` com `foto: null` (+ `enderecoComercio: null`, `localizacao: null`, `localizacaoComercio: null` — cliente sem foto/GPS) → **Então** 200 (antes 422: `foto` não aceitava `null`).
-- **Dado** `PATCH` com `foto: "data:image/jpeg;base64,..."` → **Então** 200 e `GET` reflete a foto.
-- **Dado** `PATCH` com `foto` que **não** começa com `data:image/` → **Então** 422.
+- **Dado** `PATCH` com `foto: "data:image/jpeg;base64,..."` (magic bytes válidos, ≤1MB decodificados) → **Então** 200 e `GET` reflete a foto.
+- **Dado** `PATCH` com foto grande válida (~150KB decodificados, 640px) → **Então** 200 (cap elevado PLAN-058).
+- **Dado** `PATCH` com `data:image/svg+xml` → **Então** 422 (allowlist exclui `svg`).
+- **Dado** `PATCH` com foto mascarada (base64 de texto rotulado `image/jpeg`) → **Então** 422 (magic bytes).
+- **Dado** `PATCH` com foto > 1MB decodificados → **Então** 422.
 - **Dado** `PATCH` com `foto: null` de um cliente com foto → **Então** 200 e `GET` devolve `foto: null` (remoção).
 
 ---

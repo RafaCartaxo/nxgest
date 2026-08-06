@@ -1,6 +1,7 @@
-/** Limites de imagem (PLAN-041/Avatar). */
+/** Limites de imagem (PLAN-041/Avatar · PLAN-058: qualidade + lightbox). */
 export const MAX_ENTRADA_BYTES = 50 * 1024 * 1024 // 50MB — aceita qualquer foto, compacta na saída
-export const MAX_LADO = 200 // px
+export const MAX_LADO = 640 // px — 7-20× o tamanho de exibição; permite "ver maior" no lightbox
+export const JPEG_QUALIDADE = 0.8
 
 export type ErroImagem = "tipo" | "tamanho" | "falha"
 export type ResultadoImagem = { ok: true; dataUrl: string; bytes: number } | { ok: false; erro: ErroImagem }
@@ -8,8 +9,9 @@ export type ResultadoImagem = { ok: true; dataUrl: string; bytes: number } | { o
 const TIPOS_OK = ["image/jpeg", "image/png", "image/webp"]
 
 /**
- * Normaliza uma foto: redimensiona para <= MAX_LADO px, comprime em JPEG q0.7 e
- * devolve data URL (~20KB). Regra (PLAN-041): nunca armazenar o arquivo original.
+ * Normaliza uma foto: redimensiona para <= MAX_LADO px, comprime em JPEG
+ * (q = JPEG_QUALIDADE) e devolve data URL (~80-150KB). Regra (PLAN-041/058):
+ * nunca armazenar o arquivo original.
  */
 export async function processarImagem(file: File): Promise<ResultadoImagem> {
   if (!TIPOS_OK.includes(file.type)) return { ok: false, erro: "tipo" }
@@ -29,7 +31,7 @@ export async function processarImagem(file: File): Promise<ResultadoImagem> {
     ctx.drawImage(bitmap, 0, 0, w, h)
     bitmap.close?.()
 
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.7)
+    const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALIDADE)
     return { ok: true, dataUrl, bytes: Math.round((dataUrl.length * 3) / 4) }
   } catch {
     return { ok: false, erro: "falha" }

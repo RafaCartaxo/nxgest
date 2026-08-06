@@ -574,7 +574,8 @@
     "tamanho": "Imagen mayor de 50MB.",
     "falha": "No se pudo procesar la imagen. Prueba otra foto.",
     "fotoSalva": "Foto actualizada.",
-    "fotoRemovida": "Foto eliminada."
+    "fotoRemovida": "Foto eliminada.",
+    "verFoto": "Ver foto"
   },
   "anexos": {
     "title": "Adjuntos",

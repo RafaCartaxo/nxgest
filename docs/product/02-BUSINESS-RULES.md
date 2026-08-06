@@ -793,7 +793,7 @@ A **lista de contratos** (`GET /api/contratos`) expõe, por contrato, a situaç�
 
 ## BR-101
 
-A **foto** (`foto`, data URL) é opcional em `usuarios`/`clientes`, normalizada na entrada (≤200px, ≤500KB decodificados). O usuário altera a própria via `PATCH /api/auth/foto` (`null` remove); admin/sócio/super_admin definem a foto de operador do escopo via `PATCH /api/admin/operadores/:id`; operador define a foto do próprio cliente. O servidor revalida tipo (`FOTO_TIPO`) e tamanho (`FOTO_LIMITE`) — nunca confia no front.
+A **foto** (`foto`, data URL) é opcional em `usuarios`/`clientes`, normalizada na entrada (≤640px, JPEG q0.8 — PLAN-058). O usuário altera a própria via `PATCH /api/auth/foto` (`null` remove); admin/sócio/super_admin definem a foto de operador do escopo via `PATCH /api/admin/operadores/:id`; operador define a foto do próprio cliente. O servidor valida **allowlist de MIME** (`jpeg/png/webp/gif` — `svg` excluído), **magic bytes** do base64 decodificado e **≤1MB decodificados** (`FOTO_TIPO`/`FOTO_LIMITE`) — nunca confia no front.
 
 ## BR-102
 

@@ -6,6 +6,7 @@ import type { IAuthRepository } from "../../application/ports/auth.repository.js
 import { LoginUseCase } from "../../application/use-cases/Login/LoginUseCase.js"
 import { AlterarSenhaUseCase } from "../../application/use-cases/AlterarSenha/AlterarSenhaUseCase.js"
 import { CredenciaisInvalidasError, SenhaAtualIncorretaError } from "../../domain/errors/auth.error.js"
+import { validarFoto } from "../../../../shared/utils/foto.js"
 
 export class AuthController {
   private loginUseCase: LoginUseCase
@@ -132,13 +133,17 @@ export class AuthController {
       }
 
       if (foto !== null && typeof foto !== "undefined") {
-        if (typeof foto !== "string" || !foto.startsWith("data:image/")) {
+        if (typeof foto !== "string") {
           res.status(422).json({ code: "FOTO_TIPO", message: "Foto deve ser uma imagem em data URL." })
           return
         }
-        const bytes = Math.round((foto.length * 3) / 4)
-        if (bytes > 500 * 1024) {
-          res.status(422).json({ code: "FOTO_LIMITE", message: "Foto muito grande (máx. 500KB)." })
+        const v = validarFoto(foto)
+        if (!v.ok) {
+          const ehTamanho = v.motivo === "tamanho"
+          res.status(422).json({
+            code: ehTamanho ? "FOTO_LIMITE" : "FOTO_TIPO",
+            message: ehTamanho ? "Foto muito grande (máx. 1MB)." : "Foto deve ser uma imagem válida (JPEG, PNG, WebP ou GIF).",
+          })
           return
         }
       }
