@@ -1,130 +1,58 @@
 import { useTranslation } from "react-i18next"
-import { Navigation, MessageCircle, Phone, FileText } from "lucide-react"
-import { Card } from "../../../shared/components/Card/Card.js"
+import { ChevronRight } from "lucide-react"
+import { Card, type CardTone } from "../../../shared/components/Card/Card.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { formatCurrency } from "../../../shared/utils/masks.js"
-import { ResultadoOperacional } from "../../operacoes/services/operacoes.service.js"
+import type { CobrancaItem } from "../services/operacoes.service.js"
 
 interface CobrancaCardProps {
-  clienteNome: string
-  totalPendente: number
-  quantidadeParcelas: number
-  situacao: string
-  resultadoOperacional?: string
-  distancia?: number | null
-  variant: "compact" | "detail"
-  onCardClick?: () => void
-  onNavigate?: () => void
-  onWhatsApp?: () => void
-  onLigar?: () => void
-  onAbrir?: () => void
+  item: CobrancaItem
+  onClick?: () => void
+  className?: string
 }
 
-function CobrancaCard({
-  clienteNome,
-  totalPendente,
-  quantidadeParcelas,
-  situacao,
-  resultadoOperacional = ResultadoOperacional.PENDENTE,
-  distancia,
-  variant,
-  onCardClick,
-  onNavigate,
-  onWhatsApp,
-  onLigar,
-  onAbrir,
-}: CobrancaCardProps) {
+export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProps) {
   const { t } = useTranslation()
+  const tone: CardTone = item.situacao === "atrasado" ? "danger" : "info"
 
-  const situacaoLabel = situacao === "atrasado" ? t("status.atrasado") : t("status.venceHoje")
-  const situacaoVariant = situacao === "atrasado" ? "danger" : "info"
-
-  const resultadoVariant = resultadoOperacional === ResultadoOperacional.VISITADO ? "neutral"
-    : resultadoOperacional === ResultadoOperacional.NAO_ENCONTRADO ? "warning"
-    : "info"
-
-  const resultadoLabelKey = resultadoOperacional === ResultadoOperacional.VISITADO ? "operacoes.resultado.visitado"
-    : resultadoOperacional === ResultadoOperacional.NAO_ENCONTRADO ? "operacoes.resultado.naoEncontrado"
-    : resultadoOperacional === ResultadoOperacional.PROMESSA ? "operacoes.resultado.promessa"
-    : ""
-
-  if (variant === "compact") {
-    return (
-      <Card.Root variant="collection" tone={situacao === "atrasado" ? "danger" : "info"} className="p-4">
-        <div className="flex items-start gap-4">
-          <Card.Dot color={situacao === "atrasado" ? "red" : "blue"} size="md" />
-          <Card.Body>
-            <div
-              onClick={onCardClick}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && onCardClick) { e.preventDefault(); onCardClick() } }}
-              className={`${onCardClick ? "cursor-pointer" : ""}`}
-            >
-              <Card.Header className="justify-between">
-                <Card.Title className="truncate text-text-primary">{clienteNome}</Card.Title>
-                {resultadoOperacional !== ResultadoOperacional.PENDENTE && (
-                  <Card.Badge variant={resultadoVariant} label={t(resultadoLabelKey)} />
-                )}
-              </Card.Header>
-              <p className="mt-1 text-2xl font-bold text-text-primary">
-                R$ {formatCurrency(totalPendente)}
-              </p>
-              <p className="mt-1 text-sm text-text-secondary">
-                {quantidadeParcelas} {t("operacoes.parcelas")}
-                {distancia != null && <span> &middot; ~{distancia} {t("operacoes.distancia")}</span>}
-              </p>
-              <StatusBadge
-                variant={situacaoVariant}
-                label={situacaoLabel}
-                size="md"
-                className="mt-2 mb-3"
-              />
-            </div>
-            <Card.Actions
-              layout="horizontal"
-              size="md"
-              actions={[
-                { icon: Navigation, label: t("operacoes.navegar"), onClick: () => onNavigate?.(), variant: "blue", show: !!onNavigate },
-                { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => onWhatsApp?.(), variant: "green" },
-                { icon: Phone, label: t("operacoes.ligar"), onClick: () => onLigar?.(), variant: "blue" },
-                { icon: FileText, label: t("operacoes.abrir"), onClick: () => onAbrir?.(), variant: "gray" },
-              ]}
-            />
-          </Card.Body>
-        </div>
-      </Card.Root>
-    )
-  }
+  const bairro = item.clienteBairro?.trim() ?? ""
+  const parcela = t("operacoes.parcelaDe", { atual: item.proximaParcela, total: item.totalParcelasContrato })
+  const subtitulo = [bairro, parcela].filter(Boolean).join(" · ")
 
   return (
-    <div className="p-6">
-      <div className="flex items-start gap-4">
-        <Card.Dot color={situacao === "atrasado" ? "red" : "blue"} size="md" />
-        <Card.Body>
-          <Card.Header className="justify-between">
-            <Card.Title className="text-xl font-bold text-text-primary">{clienteNome}</Card.Title>
-            {resultadoOperacional !== ResultadoOperacional.PENDENTE && (
-              <Card.Badge variant={resultadoVariant} label={t(resultadoLabelKey)} />
+    <Card.Root
+      variant="collection"
+      tone={tone}
+      interactive={!!onClick}
+      as={onClick ? "button" : "div"}
+      onClick={onClick}
+      className={`w-full p-4 pl-5 ${className}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-text-primary">{item.clienteNome}</p>
+          <p className="mt-0.5 text-sm text-text-secondary">{subtitulo}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <StatusBadge
+              variant={tone}
+              label={item.situacao === "atrasado" ? t("status.atrasado") : t("status.venceHoje")}
+            />
+            {item.diasEmAtraso > 0 && (
+              <span className="text-xs text-danger-text">
+                {t("operacoes.diasAtraso", { count: item.diasEmAtraso })}
+              </span>
             )}
-          </Card.Header>
-          <p className="mt-1 text-2xl font-bold text-text-primary">
-            R$ {formatCurrency(totalPendente)}
-          </p>
-          <p className="mt-1 text-sm text-text-secondary">
-            {quantidadeParcelas} {t("operacoes.parcelas")}
-            {distancia != null && <span> &middot; ~{distancia} {t("operacoes.distancia")}</span>}
-          </p>
-          <StatusBadge
-            variant={situacaoVariant}
-            label={situacaoLabel}
-            size="md"
-            className="mt-2"
-          />
-        </Card.Body>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-1 text-right">
+          <span className="value-lg text-text-primary">
+            R$ {formatCurrency(item.totalPendente)}
+          </span>
+          {onClick && <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden />}
+        </div>
       </div>
-    </div>
+    </Card.Root>
   )
 }
 
-export { CobrancaCard, type CobrancaCardProps }
+export type { CobrancaCardProps }

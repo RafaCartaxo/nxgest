@@ -13,6 +13,7 @@ export interface CobrancaItem {
   totalPendente: number
   quantidadeParcelas: number
   situacao: "atrasado" | "venceHoje"
+  diasEmAtraso: number
   resultadoOperacional: string
   proximaParcela: number
   proximoNumeroParcela: number

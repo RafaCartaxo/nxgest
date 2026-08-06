@@ -24,6 +24,7 @@ export interface CobrancaItem {
   totalPendente: number
   quantidadeParcelas: number
   situacao: "atrasado" | "venceHoje"
+  diasEmAtraso: number
   resultadoOperacional: ResultadoOperacionalType
   proximaParcela: number
   proximoNumeroParcela: number

@@ -107,6 +107,12 @@ async function main() {
     expect(r, 200, "cobrancas")
     if (!Array.isArray(r.data.cobrancas)) throw new Error("cobrancas não é array")
     if (typeof r.data.indicadores?.aReceberHoje !== "number") throw new Error("indicadores incompletos")
+    if (r.data.cobrancas.length > 0) {
+      const item = r.data.cobrancas[0]
+      if (typeof item.diasEmAtraso !== "number") throw new Error("cobrancas[0].diasEmAtraso ausente (PLAN-047)")
+      if (item.situacao === "atrasado" && item.diasEmAtraso < 1) throw new Error("atrasado sem diasEmAtraso >= 1")
+      if (item.situacao === "venceHoje" && item.diasEmAtraso !== 0) throw new Error("venceHoje com diasEmAtraso != 0")
+    }
   })
   await t("OPS-020", "GET /operacoes/parcelas-hoje (200)", async () => {
     const r = await req("GET", "/api/operacoes/parcelas-hoje", { token: opToken })

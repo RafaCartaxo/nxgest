@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { ArrowRight, User } from "lucide-react"
+import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom"
+import { User } from "lucide-react"
 import { getOperador, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
+import { ContratoCard } from "../../contrato/components/ContratoCard.js"
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
-import { Card } from "../../../shared/components/Card/Card.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { Button } from "../../../shared/components/Button.js"
 import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
@@ -183,28 +183,13 @@ export function OperadorDetail() {
             ) : (
               <div className="mt-2 space-y-3">
                 {contratos.map((c) => (
-                  <Card.Root key={c.id} variant="list-item">
-                    <Card.Body>
-                      <p className="truncate text-sm font-medium text-text-primary">
-                        {c.clienteNome ?? c.clienteId}
-                      </p>
-                      <Card.Indicators>
-                        <Card.Indicator
-                          label={t("cliente.parcelas")}
-                          value={`${c.parcelasPagas ?? 0}/${c.quantidadeParcelas}`}
-                        />
-                      </Card.Indicators>
-                    </Card.Body>
-                    <Card.Actions
-                      actions={[
-                        {
-                          icon: ArrowRight,
-                          label: t("admin.acessar"),
-                          onClick: () => navigate(`/contratos/${c.id}?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`),
-                        },
-                      ]}
-                    />
-                  </Card.Root>
+                  <Link
+                    key={c.id}
+                    to={`/contratos/${c.id}?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`}
+                    className="block"
+                  >
+                    <ContratoCard variant="list-item" contrato={c} />
+                  </Link>
                 ))}
               </div>
             )}

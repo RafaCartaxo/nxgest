@@ -2,7 +2,7 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.6
+**Versão:** 1.7
 
 **Última atualização:** 05/08/2026
 
@@ -19,11 +19,13 @@ Componentes compartilhados ativos da identidade "Nexus" (em `frontend/src/shared
 | `PageHeader` (título limpo + badge de ícone + eyebrow) | ✅ |
 | `Card` (`rounded-xl bg-card` + tone) | ✅ |
 | `KpiCard` (Card-based, `value-lg`) | ✅ |
-| `Field` (input canônico `rounded-xl border-strong`) | ✅ |
-| `Modal` base | ✅ |
+| `Field` · `FieldSelect` · `FieldTextarea` (input/select/textarea canônicos `rounded-xl border-strong`) | ✅ |
+| `Modal` base (assinatura Lovable: `title`/`descricao`/`footer` + bottom-sheet mobile) | ✅ |
+| `Tabs` (pills `rounded-xl border bg-card`, ativa `bg-primary-light`) | ✅ |
+| `Switch` (track `h-7 w-12`, knob centralizado) | ✅ |
 | `QuickActions` (grid adaptativo) | ✅ |
 | `Button` / `ButtonLink` | ✅ |
-| `StatusBadge` · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` | ✅ |
+| `StatusBadge` (pill `rounded-md` com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` | ✅ |
 | `Topbar` (dropdowns tema/cores/idioma, `shared/layout/Topbar.tsx`) | ✅ |
 | `Avatar` (foto \| iniciais) | ⏳ PLAN-041 (Lovable) |
 
@@ -244,7 +246,7 @@ Exemplos:
 
 ## Objetivo
 
-Representar visualmente o estado de uma informação.
+Representar visualmente o estado de uma informação — pill `rounded-md` com **dot** interno (`size-1.5 rounded-full` na cor da variante).
 
 ---
 
@@ -402,13 +404,13 @@ const { theme, toggle } = useTheme()
 
 ## Objetivo
 
-Orientar o operador quando não existirem dados.
+Orientar o operador quando não existirem dados — card `rounded-xl border bg-card` com ícone em círculo `size-11 rounded-full` (`bg-muted text-text-muted`) + título + descrição + ação (padrão Lovable, PLAN-048).
 
 ---
 
 ### Deve conter
 
-- ilustração simples;
+- ícone em círculo soft;
 - mensagem objetiva;
 - ação principal.
 
@@ -420,7 +422,7 @@ Orientar o operador quando não existirem dados.
 
 ## Objetivo
 
-Representar carregamento de conteúdo.
+Representar carregamento de conteúdo — card com spinner `Loader2 animate-spin text-primary` + "Carregando…".
 
 ---
 
@@ -447,6 +449,62 @@ Separar visualmente grupos de conteúdo.
 
 ---
 
+# Field (inputs)
+
+**Status:** ✅ `shared/components/Field/` — `Field` (input), `FieldSelect`, `FieldTextarea`
+
+## Objetivo
+
+Campos de formulário canônicos — todos com o mesmo `fieldControl` (`rounded-xl min-h-12 border-strong` + foco `ring-primary`).
+
+---
+
+### Variantes
+
+- `Field` — `<input>` (label, erro, hint, `right`);
+- `FieldSelect` — `<select>` com `options` e `placeholder` (option vazio disabled/hidden);
+- `FieldTextarea` — `<textarea>` (rows 3).
+
+---
+
+### API
+
+```tsx
+<Field label={t("admin.nome")} value={nome} onChange={...} error={...} />
+<FieldSelect label={t("admin.role")} options={[{ value: "admin", label: "Admin" }]} {...form.register("role")} />
+<FieldTextarea label={t("caixa.motivo")} rows={4} {...form.register("observacao")} />
+```
+
+---
+
+# Switch
+
+**Status:** ✅ `shared/components/Switch/`
+
+## Objetivo
+
+Toggle canônico — track `h-7 w-12` com borda, knob `size-5` centralizado (`translate-x-1`/`translate-x-6`), ativo `bg-primary`, inativo `bg-muted` (padrão Lovable, PLAN-047/048). Suporta `label`, `disabled` e `motivo` (tooltip quando bloqueado).
+
+---
+
+# Tabs
+
+**Status:** ✅ `shared/components/Tabs/`
+
+## Objetivo
+
+Grupo de abas/pills — container `rounded-xl border bg-card p-1`, aba ativa `bg-primary-light text-primary-text`, inativa `text-text-muted hover:bg-surface-hover`.
+
+---
+
+### API
+
+```tsx
+<Tabs value={tab} onChange={setTab} items={[{ value: "equipe", label: "Equipe" }, { value: "meusDados", label: "Meus dados" }]} />
+```
+
+---
+
 # Modal
 
 **Status:** ✅ `Modal` (base compartilhado) + `PagamentoModal`, `ConfirmModal`, `PagamentosHojeModal`, `EquipeModal`, `ContribuicaoModal`
@@ -457,16 +515,18 @@ Executar fluxos secundários.
 
 ## Base compartilhado
 
-`shared/components/Modal/Modal.tsx` provê a mecânica uniforme dos modais (PLAN-026):
+`shared/components/Modal/Modal.tsx` provê a mecânica uniforme dos modais (PLAN-026/048):
 
 - `open`, `onClose` — controle de exibição;
+- `title`, `descricao?`, `footer?` — header padronizado (título `font-display text-[18px]` + X `size-9 rounded-lg`) e rodapé (assinatura Lovable, PLAN-048);
 - `backdropClose` (bool) — clicar fora fecha? **Configurável por instância** (preserva a semântica atual de cada tela);
 - `escapeClose` (bool, padrão `true`) — tecla Escape fecha;
 - `maxWidth` — largura do conteúdo (ex.: `max-w-sm`, `max-w-md`);
+- **Bottom-sheet no mobile**: `items-end sm:items-center` + `rounded-t-xl sm:rounded-xl` + animação `slide-in-from-bottom`; `max-h-[90vh]` com body de scroll interno;
 - overflow do body oculto enquanto aberto;
 - `role="dialog"` + `aria-modal`.
 
-Os modais de domínio (`PagamentoModal`, `ConfirmModal`, `EquipeModal`, `ContribuicaoModal`, `OperadorForm`) usam o base. *(PLAN-030: `ResultadoDiaModal` removido — sem usos.)*
+Os modais de domínio (`PagamentoModal`, `ConfirmModal`, `EquipeModal`, `ContribuicaoModal`, `OperadorForm`/`EmpresaForm` via página, `ModulosModal`, listas de período) usam o base. *(PLAN-030: `ResultadoDiaModal` removido — sem usos.)*
 
 ---
 
@@ -506,7 +566,7 @@ Apresentar mensagens de erro com ação de retry.
 
 # Bottom Sheet
 
-**Status:** ❌ Planejado (futuro — Fase 5)
+**Status:** ✅ Coberto pelo `Modal` (bottom-sheet no mobile — PLAN-048)
 
 ## Objetivo
 

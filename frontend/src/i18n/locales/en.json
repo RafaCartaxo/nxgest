@@ -14,6 +14,7 @@
   },
   "common": {
     "empty": "No data found.",
+    "erroTitulo": "Something went wrong",
     "retry": "Try again",
     "save": "Save",
     "saving": "Saving...",
@@ -70,6 +71,9 @@
     "ligar": "Call",
     "abrir": "Open",
     "parcelas": "installment(s)",
+    "parcelaDe": "Installment {{atual}} of {{total}}",
+    "diasAtraso_one": "{{count}} day overdue",
+    "diasAtraso_other": "{{count}} days overdue",
     "whatsappTemplate": "Hello, {{nome}}.\n\nJust reminding you that today there is an installment of your contract due in the amount of R$ {{valor}}.\n\nIf you have any questions, I'm available.",
     "resultadoDoDia": "Daily Balance",
     "atrasado": "Overdue Balance",
@@ -245,7 +249,7 @@
     "pendentes": "Pending",
     "vencidas": "Overdue",
     "venceEm": "Due {{data}}",
-    "pago": "✓ Paid",
+    "pago": "Paid",
     "vencida": "Overdue",
     "venceHoje": "Due Today"
   },
@@ -487,6 +491,7 @@
     "modulosHint": "Enable or disable modules for this company. Each client sees only what is active.",
     "modulosAtivo": "Active",
     "modulosInativo": "Inactive",
+    "sempreAtivo": "Always active",
     "modulosRequer": "Requires: {{modulos}}",
     "modulosGrupoBase": "Base",
     "modulosGrupoFinanceiro": "Finance",
@@ -505,12 +510,21 @@
     "sunset": "Sunset"
   },
   "modules": {
+    "central": "Dashboard",
+    "central.descricao": "Operator home screen — always available.",
     "clientes": "Clients",
+    "clientes.descricao": "Client registry, profile and address.",
     "contratos": "Contracts",
+    "contratos.descricao": "Contracts, installments and terms.",
     "caixa": "Cash box",
+    "caixa.descricao": "Opening, movements and closing of the cash box.",
     "gastos": "Expenses",
+    "gastos.descricao": "Operation expenses posted to the cash box.",
     "rota": "Collection route",
+    "rota.descricao": "Daily visit order by neighborhood.",
     "cobrancas": "Collections",
-    "atendidos": "Attended"
+    "cobrancas.descricao": "Field collections per installment.",
+    "atendidos": "Attended",
+    "atendidos.descricao": "History of today's attendances."
   }
 }

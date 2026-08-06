@@ -80,9 +80,10 @@ git pull                      # puxa o novo código (senha/token via chave SSH d
 O `scripts/deploy.sh`:
 1. Exige `.env` presente (senão aborta)
 2. **Backup pré-deploy** — chama `/opt/scripts/backup-nxgestao.sh` (snapshot do banco antes do build; se o script estiver ausente, avisa e segue)
-3. `docker compose -f docker-compose.prod.yml build app`
-4. `docker compose -f docker-compose.prod.yml up -d`
-5. `docker image prune -f`
+3. **Gates de UI** — roda `audit:ui`, `audit:styles` e `audit:modules` via `docker run node:20-slim` (o host não tem node no PATH); **aborta o deploy se qualquer gate falhar**
+4. `docker compose -f docker-compose.prod.yml build app`
+5. `docker compose -f docker-compose.prod.yml up -d`
+6. `docker image prune -f`
 
 **Dados:** o volume `nxgestao_nxgestao_data` sobrevive a builds e `up`/`down` — o banco não é recriado.
 

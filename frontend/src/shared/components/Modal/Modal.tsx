@@ -1,23 +1,28 @@
 import { useEffect, type ReactNode } from "react"
+import { X } from "lucide-react"
 
 interface ModalProps {
   open: boolean
   onClose: () => void
-  children: ReactNode
+  title?: string
+  descricao?: string
+  footer?: ReactNode
+  children?: ReactNode
   backdropClose?: boolean
   escapeClose?: boolean
   maxWidth?: string
-  className?: string
 }
 
 export function Modal({
   open,
   onClose,
+  title,
+  descricao,
+  footer,
   children,
   backdropClose = false,
   escapeClose = true,
   maxWidth = "max-w-sm",
-  className,
 }: ModalProps) {
   useEffect(() => {
     if (!open) return
@@ -41,14 +46,36 @@ export function Modal({
   if (!open) return null
 
   return (
-    <div
-      className={`fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-black/40 ${className ?? ""}`}
-      onClick={backdropClose ? onClose : undefined}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="flex min-h-full items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
-        <div className={`mx-auto w-full ${maxWidth} rounded-xl bg-card shadow-lg`}>{children}</div>
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+        onClick={backdropClose ? onClose : undefined}
+        aria-hidden
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className={`animate-slide-in-from-bottom relative flex max-h-[90vh] w-full ${maxWidth} flex-col overflow-hidden rounded-t-xl border border-border bg-card sm:rounded-xl sm:animate-none`}
+      >
+        {(title || descricao) && (
+          <div className="flex items-start gap-3 border-b border-border px-4 py-3.5">
+            <div className="min-w-0 flex-1">
+              <h2 className="font-display text-[18px] font-semibold text-text-primary">{title}</h2>
+              {descricao && <p className="mt-0.5 text-sm text-text-secondary">{descricao}</p>}
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar"
+              className="grid size-9 shrink-0 place-items-center rounded-lg text-text-muted hover:bg-surface-hover"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+        )}
+        <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
+        {footer && <div className="flex justify-end gap-2 border-t border-border px-4 py-3">{footer}</div>}
       </div>
     </div>
   )

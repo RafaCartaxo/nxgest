@@ -7,9 +7,7 @@ import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { isWidgetActive } from "../../../shared/modules/modules.js"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
-import { calcularDistancia, sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
-import { unmask, formatCurrency } from "../../../shared/utils/masks.js"
-import { buildMapsUrl } from "../../../shared/utils/maps.js"
+import { sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
 import { IndicadoresCards } from "../components/IndicadoresCards.js"
 import { CobrancaCard } from "../components/CobrancaCard.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
@@ -153,28 +151,6 @@ export function OperacoesDashboard() {
 
   const navigate = useNavigate()
 
-  function calcularDistanciaParaItem(item: CobrancaItem): number | null {
-    return lat && lng && item.clienteLat && item.clienteLng
-      ? calcularDistancia(lat, lng, item.clienteLat, item.clienteLng)
-      : null
-  }
-
-  function handleWhatsApp(item: CobrancaItem) {
-    const tel = unmask(item.clienteTelefone)
-    const msg = encodeURIComponent(
-      t("operacoes.whatsappTemplate", { nome: item.clienteNome, valor: formatCurrency(item.totalPendente) })
-    )
-    window.open(`https://wa.me/55${tel}?text=${msg}`, "_blank")
-  }
-
-  function handleLigar(item: CobrancaItem) {
-    window.location.href = `tel:+55${unmask(item.clienteTelefone)}`
-  }
-
-  function handleAbrirContrato(item: CobrancaItem) {
-    navigate(`/contratos/${item.contratoId}`)
-  }
-
   function handleGastosHojeClick() {
     const hoje = getLocalDateString(new Date())
     setGastosHojeLoading(true)
@@ -201,11 +177,6 @@ export function OperacoesDashboard() {
       .then(setParcelasSemana)
       .catch(() => setParcelasSemana([]))
       .finally(() => setParcelasSemanaLoading(false))
-  }
-
-  function handleNavegar(item: CobrancaItem) {
-    const url = buildMapsUrl(item)
-    if (url) window.open(url, "_blank")
   }
 
   function handleCardClick(item: CobrancaItem) {
@@ -314,20 +285,7 @@ export function OperacoesDashboard() {
                   items={itemsOrdenados}
                   maxDots={5}
                   renderItem={(item) => (
-                    <CobrancaCard
-                      variant="compact"
-                      clienteNome={item.clienteNome}
-                      totalPendente={item.totalPendente}
-                      quantidadeParcelas={item.quantidadeParcelas}
-                      situacao={item.situacao}
-                      resultadoOperacional={item.resultadoOperacional}
-                      distancia={calcularDistanciaParaItem(item)}
-                      onCardClick={() => handleCardClick(item)}
-                      onNavigate={() => handleNavegar(item)}
-                      onWhatsApp={() => handleWhatsApp(item)}
-                      onLigar={() => handleLigar(item)}
-                      onAbrir={() => handleAbrirContrato(item)}
-                    />
+                    <CobrancaCard item={item} onClick={() => handleCardClick(item)} />
                   )}
                 />
               ) : (

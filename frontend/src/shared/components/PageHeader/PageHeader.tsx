@@ -28,15 +28,15 @@ export function PageHeader({ icon: Icon, title, subtitle, eyebrow, action, back 
         </button>
       )}
       {eyebrow && <p className="text-sm text-text-muted">{eyebrow}</p>}
-      <div className="mt-1 flex items-center gap-3">
-        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary-light text-primary-text">
+      <div className="mt-1 flex items-start gap-3">
+        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary-light text-primary-text">
           <Icon className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-[24px] font-semibold leading-tight sm:text-[28px]">{title}</h1>
+          <h1 className="font-display truncate text-[28px] font-semibold leading-tight text-text-primary">{title}</h1>
           {subtitle && <p className="mt-0.5 text-sm text-text-secondary">{subtitle}</p>}
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        {action && <div className="shrink-0 pt-1">{action}</div>}
       </div>
     </div>
   )

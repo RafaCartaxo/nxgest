@@ -230,8 +230,6 @@ export function CobrancaListPage() {
       ) : (
         <CobrancaList
           items={pendentes}
-          operadorLat={lat}
-          operadorLng={lng}
           onCardClick={handleCardClick}
         />
       )}

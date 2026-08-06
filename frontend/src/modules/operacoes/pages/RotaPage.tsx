@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { Navigation, MessageCircle, Phone, FileText, X, Share2, UserCheck, MapPinOff, CalendarClock, MapPin, Route } from "lucide-react"
 import { listarCobrancasDoDia, listarPagamentosHoje, registrarVisita, ResultadoOperacional, type CobrancaItem, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
 import { ApiError } from "../../../api/client.js"
-import { calcularDistancia, sortByDistance, sortByDistanceOnly, useWatchPosition } from "../../../shared/utils/distance.js"
+import { sortByDistance, sortByDistanceOnly, useWatchPosition } from "../../../shared/utils/distance.js"
 import { CobrancaCard } from "../components/CobrancaCard.js"
 import { unmask, formatCurrency } from "../../../shared/utils/masks.js"
 import { gerarComprovante } from "../../../shared/utils/comprovante.js"
@@ -221,13 +221,6 @@ export function RotaPage() {
     }
     itemKeyAntesFetchRef.current = currentKey
   }, [currentKey])
-
-  function getDistancia(i: CobrancaItem): number | null {
-    if (operadorLat && operadorLng && i.clienteLat && i.clienteLng) {
-      return calcularDistancia(operadorLat, operadorLng, i.clienteLat, i.clienteLng)
-    }
-    return null
-  }
 
   async function handleVisitado(i: CobrancaItem) {
     setOperando(true)
@@ -487,54 +480,48 @@ export function RotaPage() {
             hideDots
             itemKey={itemKey}
             renderItem={(slideItem) => (
-              <Card.Root variant="collection" tone={slideItem.situacao === "atrasado" ? "danger" : "info"}>
-                {operando && <div className="h-1 animate-pulse bg-primary" />}
+              <div className="space-y-3">
+                <CobrancaCard item={slideItem} />
 
-                <CobrancaCard
-                  variant="detail"
-                  clienteNome={slideItem.clienteNome}
-                  totalPendente={slideItem.totalPendente}
-                  quantidadeParcelas={slideItem.quantidadeParcelas}
-                  situacao={slideItem.situacao}
-                  resultadoOperacional={slideItem.resultadoOperacional}
-                  distancia={getDistancia(slideItem)}
-                />
+                <Card.Root variant="collection">
+                  {operando && <div className="h-1 animate-pulse bg-primary" />}
 
-                <div className="border-b border-border-light px-6 py-4">
-                  <QuickActions
-                    layout="vertical"
-                    disabled={operando}
-                    actions={[
-                      { icon: Navigation, label: t("operacoes.navegar"), onClick: () => handleNavegar(slideItem), variant: "blue", show: !!buildMapsUrl(slideItem) },
-                      { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(slideItem), variant: "green" },
-                      { icon: Phone, label: t("operacoes.ligar"), onClick: () => handleLigar(slideItem), variant: "blue" },
-                      { icon: FileText, label: t("operacoes.abrir"), onClick: () => handleAbrirContrato(slideItem), variant: "gray" },
-                    ]}
-                  />
-                </div>
+                  <div className="border-b border-border-light px-6 py-4">
+                    <QuickActions
+                      layout="vertical"
+                      disabled={operando}
+                      actions={[
+                        { icon: Navigation, label: t("operacoes.navegar"), onClick: () => handleNavegar(slideItem), variant: "blue", show: !!buildMapsUrl(slideItem) },
+                        { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(slideItem), variant: "green" },
+                        { icon: Phone, label: t("operacoes.ligar"), onClick: () => handleLigar(slideItem), variant: "blue" },
+                        { icon: FileText, label: t("operacoes.abrir"), onClick: () => handleAbrirContrato(slideItem), variant: "gray" },
+                      ]}
+                    />
+                  </div>
 
-                <div className="px-6 py-4">
-                  <Button
-                    onClick={() => setPagamentoOpen(true)}
-                    disabled={operando}
-                    className="w-full bg-success text-white hover:bg-success-hover shadow-sm"
-                  >
-                    {t("operacoes.pagar")}
-                  </Button>
-                </div>
+                  <div className="px-6 py-4">
+                    <Button
+                      onClick={() => setPagamentoOpen(true)}
+                      disabled={operando}
+                      className="w-full bg-success text-white hover:bg-success-hover shadow-sm"
+                    >
+                      {t("operacoes.pagar")}
+                    </Button>
+                  </div>
 
-                <div className="border-t border-border-light px-6 py-4">
-                  <QuickActions
-                    layout="vertical"
-                    disabled={operando}
-                    actions={[
-                      { icon: UserCheck, label: t("operacoes.visitado"), onClick: () => handleVisitado(slideItem), variant: "gray", show: slideItem.resultadoOperacional !== ResultadoOperacional.VISITADO },
-                      { icon: MapPinOff, label: t("operacoes.naoEncontrado"), onClick: () => handleNaoEncontrado(slideItem), variant: "gray", show: slideItem.resultadoOperacional !== ResultadoOperacional.NAO_ENCONTRADO },
-                      { icon: CalendarClock, label: t("operacoes.promessa"), onClick: handleAbrirPromessa, variant: "warning", show: slideItem.resultadoOperacional !== ResultadoOperacional.PROMESSA },
-                    ]}
-                  />
-                </div>
-              </Card.Root>
+                  <div className="border-t border-border-light px-6 py-4">
+                    <QuickActions
+                      layout="vertical"
+                      disabled={operando}
+                      actions={[
+                        { icon: UserCheck, label: t("operacoes.visitado"), onClick: () => handleVisitado(slideItem), variant: "gray", show: slideItem.resultadoOperacional !== ResultadoOperacional.VISITADO },
+                        { icon: MapPinOff, label: t("operacoes.naoEncontrado"), onClick: () => handleNaoEncontrado(slideItem), variant: "gray", show: slideItem.resultadoOperacional !== ResultadoOperacional.NAO_ENCONTRADO },
+                        { icon: CalendarClock, label: t("operacoes.promessa"), onClick: handleAbrirPromessa, variant: "warning", show: slideItem.resultadoOperacional !== ResultadoOperacional.PROMESSA },
+                      ]}
+                    />
+                  </div>
+                </Card.Root>
+              </div>
             )}
           />
  
@@ -550,19 +537,14 @@ export function RotaPage() {
             />
           )}
 
-          <Modal open={promessaOpen} onClose={() => setPromessaOpen(false)} backdropClose maxWidth="max-w-sm">
-            <div className="p-6">
-              <h3 className="mb-4 text-lg font-semibold text-text-primary">{t("operacoes.promessa")}</h3>
-              <label className="mb-2 block text-sm font-medium text-text-primary">
-                {t("operacoes.dataPromessa")}
-              </label>
-              <input
-                type="date"
-                value={dataPromessa}
-                onChange={(e) => setDataPromessa(e.target.value)}
-                className="mb-4 min-h-12 w-full appearance-none rounded-xl border border-border-strong bg-surface px-3.5 text-base text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <div className="flex gap-4">
+          <Modal
+            open={promessaOpen}
+            onClose={() => setPromessaOpen(false)}
+            backdropClose
+            maxWidth="max-w-sm"
+            title={t("operacoes.promessa")}
+            footer={
+              <div className="flex w-full gap-4">
                 <Button
                   variant="secondary"
                   onClick={() => setPromessaOpen(false)}
@@ -577,7 +559,17 @@ export function RotaPage() {
                   {t("common.save")}
                 </Button>
               </div>
-            </div>
+            }
+          >
+            <label className="mb-2 block text-sm font-medium text-text-primary">
+              {t("operacoes.dataPromessa")}
+            </label>
+            <input
+              type="date"
+              value={dataPromessa}
+              onChange={(e) => setDataPromessa(e.target.value)}
+              className="min-h-12 w-full appearance-none rounded-xl border border-border-strong bg-surface px-3.5 text-base text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+            />
           </Modal>
         </>
       )}

@@ -86,7 +86,7 @@ export function SuperAdminPage() {
       <SectionHeader title={t("superAdmin.empresas")} />
 
       {formOpen && (
-        <Modal open onClose={() => setFormOpen(false)} maxWidth="max-w-md">
+        <Modal open onClose={() => setFormOpen(false)} title={t("superAdmin.novaEmpresa")} maxWidth="max-w-md">
           <EmpresaForm onSubmit={handleCreate} onCancel={() => setFormOpen(false)} />
         </Modal>
       )}

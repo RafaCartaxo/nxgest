@@ -1,13 +1,13 @@
 /**
- * Auditoria de UI (PLAN-044) — falha se padrões legado do pré-"Nexus" aparecerem.
+ * Auditoria de UI (PLAN-044/048/049) — falha se padrões legado ou fora-do-canônico aparecerem.
  *
- * O redesign (PLAN-038/039/040/043) migrou para componentes canônicos e tokens
- * (PageHeader limpo, Card rounded-xl bg-card, Field/inputs rounded-xl border-strong,
- * QuickActions adaptativo, skeleton bg-surface-hover). Estes padrões ANTIGOS não
- * podem voltar — este script é a regressão mecânica do anti-drift.
+ * O redesign (PLAN-038/039/040/043/047/048) migrou para componentes canônicos e tokens
+ * (PageHeader limpo, Card rounded-xl bg-card, Field/FieldSelect/FieldTextarea rounded-xl border-strong,
+ * Modal com title/descricao/footer, Tabs, Switch, StatusBadge com dot). Padrões ANTIGOS ou
+ * divergentes não podem voltar — este script é a regressão mecânica do anti-drift.
  *
  * Uso: node scripts/audit-ui.mjs
- * Exit 0 = limpo. Exit 1 = padrão legado encontrado.
+ * Exit 0 = limpo. Exit 1 = padrão legado/fora-do-canônico encontrado.
  */
 import { readdirSync, readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
@@ -42,6 +42,8 @@ function check(file, re, msg, lineFilter) {
 const inModules = (f) => f.includes(`${join("frontend", "src", "modules")}`) || f.includes("frontend/src/modules")
 const notSkeleton = (line) => !line.includes("animate-pulse")
 const notButtonFile = (f) => !f.includes("shared/components/Button.tsx")
+const notTabsFile = (f) => !f.includes("shared/components/Tabs/")
+const notFieldDir = (f) => !f.includes("shared/components/Field/")
 
 for (const file of files) {
   // 1) rounded-md fora de skeleton em módulos (inputs/rows antigos)
@@ -64,13 +66,37 @@ for (const file of files) {
 
   // 7) grid fixo antigo do QuickActions
   check(file, /grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4/, "grid fixo antigo do QuickActions — usar grade adaptativa")
+
+  // 8) select/textarea cru fora do Field (PLAN-048)
+  if (inModules(file) && notFieldDir(file)) {
+    check(file, /<select\b/, "<select> cru — usar FieldSelect (PLAN-048)")
+    check(file, /<textarea\b/, "<textarea> cru — usar FieldTextarea (PLAN-048)")
+  }
+
+  // 9) header inline de modal (PLAN-048) — title/descricao/footer são do Modal
+  check(file, /flex items-center justify-between border-b border-border-light px-4 py-3/, "header inline de modal — usar title do Modal (PLAN-048)")
+
+  // 10) pills cruas fora do Tabs (PLAN-048)
+  if (notTabsFile(file)) check(file, /role="tab"/, "role=\"tab\" fora do Tabs — usar Tabs (PLAN-048)")
+}
+
+// 11) <Modal> sem title (PLAN-048) — assinatura Lovable obrigatória
+for (const file of files) {
+  if (file.includes("shared/components/Modal/Modal.tsx")) continue
+  const lines = readFileSync(file, "utf8").split("\n")
+  lines.forEach((line, i) => {
+    if (!line.includes("<Modal")) return
+    const window = lines.slice(i, i + 12).join("\n")
+    if (!window.includes("title=")) matches.push(`${rel(file)}:${i + 1} → <Modal> sem title (PLAN-048)`)
+  })
 }
 
 if (matches.length > 0) {
-  console.error(`✗ audit:ui — ${matches.length} ocorrência(s) de padrão legado (PLAN-044):\n`)
+  console.error(`✗ audit:ui — ${matches.length} ocorrência(s) de padrão legado/fora-do-canônico:\n`)
   for (const m of matches) console.error(`  ${m}`)
-  console.error("\n→ Migre para o padrão canônico (Card/Field/rounded-xl/tokens). Ver docs/engineering/design/UI-COVERAGE.md.")
+  console.error("\n→ Migre para o padrão canônico (Card/Field/FieldSelect/Modal title/Tabs/Switch). Ver docs/engineering/design/UI-COVERAGE.md.")
   process.exit(1)
 }
 
-console.log(`✓ audit:ui — ${files.length} arquivos varridos, nenhum padrão legado (PLAN-044)`)
+console.log(`✓ audit:ui — ${files.length} arquivos varridos, nenhum padrão legado/fora-do-canônico (PLAN-044/048/049)`)
+

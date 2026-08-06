@@ -1,19 +1,15 @@
-import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react"
+import { forwardRef, type TextareaHTMLAttributes } from "react"
 import { fieldControl, fieldError } from "./fieldClasses.js"
 
-interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
+interface FieldTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string
   error?: string
   hint?: string
-  right?: ReactNode
 }
 
-/**
- * Campo de entrada canônico (DS v2 / PLAN-039).
- * Input `rounded-xl min-h-12 border-strong` + label + erro. Usar em todos os formulários.
- */
-export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
-  { label, error, hint, right, className, ...props },
+/** Campo textarea canônico — mesmo visual do `Field` (rounded-xl min-h-12 border-strong). */
+export const FieldTextarea = forwardRef<HTMLTextAreaElement, FieldTextareaProps>(function FieldTextarea(
+  { label, error, hint, className, rows = 3, ...props },
   ref,
 ) {
   return (
@@ -23,12 +19,12 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
         {props.required && <span className="ml-0.5 text-danger">*</span>}
       </label>
       <div className="relative min-w-0">
-        <input
+        <textarea
           ref={ref}
+          rows={rows}
           {...props}
-          className={`${fieldControl} ${error ? fieldError : ""} ${className ?? ""}`}
+          className={`${fieldControl} ${error ? fieldError : ""} py-2.5 ${className ?? ""}`}
         />
-        {right}
       </div>
       {hint && <span className="mt-1 block text-xs text-text-muted">{hint}</span>}
       {error && <span className="mt-1 block text-xs font-medium text-danger-text">{error}</span>}

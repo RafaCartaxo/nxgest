@@ -9,6 +9,7 @@ import { SearchBar } from "../../../shared/components/SearchBar/SearchBar.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
+import { Tabs } from "../../../shared/components/Tabs/Tabs.js"
 import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { Button } from "../../../shared/components/Button.js"
@@ -140,18 +141,6 @@ export function AdminPage() {
 
   const emptyMessage = search ? undefined : t("admin.emptyMessage")
 
-  const tabButton = (key: Tab, label: string) => (
-    <button
-      type="button"
-      onClick={() => setTab(key)}
-      className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-        tab === key ? "bg-primary-light text-primary-text" : "bg-surface text-text-secondary hover:bg-surface-hover"
-      }`}
-    >
-      {label}
-    </button>
-  )
-
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
       <PageHeader
@@ -172,10 +161,14 @@ export function AdminPage() {
       )}
 
       {isAdminSelf && (
-        <div className="flex gap-1 rounded-xl bg-surface-secondary p-1">
-          {tabButton("equipe", t("admin.tabEquipe"))}
-          {tabButton("meusDados", t("admin.tabMeusDados"))}
-        </div>
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: "equipe", label: t("admin.tabEquipe") },
+            { value: "meusDados", label: t("admin.tabMeusDados") },
+          ]}
+        />
       )}
 
       {tab === "equipe" || !isAdminSelf ? (
@@ -205,7 +198,12 @@ export function AdminPage() {
           />
 
           {(formOpen || editingOp) && (
-            <Modal open onClose={() => { setFormOpen(false); setEditingOp(null) }} maxWidth="max-w-md">
+            <Modal
+              open
+              onClose={() => { setFormOpen(false); setEditingOp(null) }}
+              title={editingOp ? t("admin.editarOperador") : t("admin.novoOperador")}
+              maxWidth="max-w-md"
+            >
                 <OperadorForm
                   editing={editingOp}
                   chefes={operadores.filter((op) => op.role === "admin" || op.role === "socio")}

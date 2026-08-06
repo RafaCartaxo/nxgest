@@ -21,7 +21,7 @@ export function EmpresaForm({ onSubmit, onCancel }: EmpresaFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Field
         label={t("superAdmin.nomeEmpresa")}
         required

@@ -14,6 +14,7 @@
   },
   "common": {
     "empty": "No se encontraron datos.",
+    "erroTitulo": "Algo salió mal",
     "retry": "Intentar de nuevo",
     "save": "Guardar",
     "saving": "Guardando...",
@@ -70,6 +71,9 @@
     "ligar": "Llamar",
     "abrir": "Abrir",
     "parcelas": "cuota(s)",
+    "parcelaDe": "Cuota {{atual}} de {{total}}",
+    "diasAtraso_one": "{{count}} día de retraso",
+    "diasAtraso_other": "{{count}} días de retraso",
     "whatsappTemplate": "Hola, {{nome}}.\n\nLe recuerdo que hoy tiene una cuota de su contrato prevista para pago por valor de R$ {{valor}}.\n\nSi tiene alguna duda, estoy a disposición.",
     "resultadoDoDia": "Saldo del Día",
     "atrasado": "Saldo en Mora",
@@ -245,7 +249,7 @@
     "pendentes": "Pendientes",
     "vencidas": "Vencidas",
     "venceEm": "Vence {{data}}",
-    "pago": "✓ Pagada",
+    "pago": "Pagada",
     "vencida": "Vencida",
     "venceHoje": "Vence Hoy"
   },
@@ -487,6 +491,7 @@
     "modulosHint": "Active o desactive módulos para esta empresa. Cada cliente ve solo lo que está activo.",
     "modulosAtivo": "Activo",
     "modulosInativo": "Inactivo",
+    "sempreAtivo": "Siempre activo",
     "modulosRequer": "Requiere: {{modulos}}",
     "modulosGrupoBase": "Base",
     "modulosGrupoFinanceiro": "Financiero",
@@ -505,12 +510,21 @@
     "sunset": "Atardecer"
   },
   "modules": {
+    "central": "Central",
+    "central.descricao": "Pantalla inicial del operador — siempre disponible.",
     "clientes": "Clientes",
+    "clientes.descricao": "Registro, ficha y dirección del cliente.",
     "contratos": "Contratos",
+    "contratos.descricao": "Contratos, cuotas y condiciones.",
     "caixa": "Caja",
+    "caixa.descricao": "Apertura, movimientos y cierre de caja.",
     "gastos": "Gastos",
+    "gastos.descricao": "Gastos de la operación registrados en caja.",
     "rota": "Ruta de cobro",
+    "rota.descricao": "Orden de visita del día por barrio.",
     "cobrancas": "Cobros",
-    "atendidos": "Atendidos"
+    "cobrancas.descricao": "Cobros en campo por cuota.",
+    "atendidos": "Atendidos",
+    "atendidos.descricao": "Historial de atenciones del día."
   }
 }

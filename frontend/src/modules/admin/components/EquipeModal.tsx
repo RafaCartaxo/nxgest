@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { X, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import type { OperadorRow } from "../services/admin.service.js"
@@ -24,20 +24,17 @@ export function EquipeModal({ open, role, operadores, empresaId, onClose }: Equi
     .sort((a, b) => a.nome.localeCompare(b.nome))
 
   return (
-    <Modal open={open} onClose={onClose} maxWidth="max-w-md">
-      <div className="flex items-center justify-between border-b border-border-light px-4 py-3">
-        <h3 className="text-lg font-semibold">
-          {role === "admin" ? t("admin.modalAdmins") : t("admin.modalOperadores")}
-        </h3>
-        <button type="button" onClick={onClose} className="text-text-muted hover:text-text-primary">
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="max-h-80 overflow-y-auto p-4">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={role === "admin" ? t("admin.modalAdmins") : t("admin.modalOperadores")}
+      maxWidth="max-w-md"
+    >
+      <div className="space-y-2">
         {filtered.length === 0 ? (
           <p className="py-8 text-center text-sm text-text-muted">{t("common.empty")}</p>
         ) : (
-          <div className="space-y-2">
+          <>
             {filtered.map((op) => (
               <button
                 key={op.id}
@@ -62,7 +59,7 @@ export function EquipeModal({ open, role, operadores, empresaId, onClose }: Equi
                 <ArrowRight className="h-4 w-4 shrink-0 text-text-muted" />
               </button>
             ))}
-          </div>
+          </>
         )}
       </div>
     </Modal>

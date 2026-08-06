@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "../../../shared/components/Button.js"
 import { Field } from "../../../shared/components/Field/Field.js"
+import { FieldSelect } from "../../../shared/components/Field/FieldSelect.js"
 import type { OperadorRow } from "../services/admin.service.js"
 
 interface FieldErrors {
@@ -73,11 +74,7 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
   const showChefe = !isActorSocio && (role === "operator" || role === "socio")
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4">
-      <h3 className="font-medium text-text-primary text-lg">
-        {editing ? t("admin.editarOperador") : t("admin.novoOperador")}
-      </h3>
-
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Field
         label={t("admin.nome")}
         ref={nomeRef}
@@ -108,36 +105,31 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
       {isActorSocio ? (
         <Field label={t("admin.role")} value={t("admin.roleOperator")} disabled />
       ) : (
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-text-secondary">{t("admin.role")}</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as "admin" | "socio" | "operator")}
-            className="min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="operator">{t("admin.roleOperator")}</option>
-            <option value="socio">{t("admin.roleSocio")}</option>
-            <option value="admin">{t("admin.roleAdmin")}</option>
-          </select>
-        </div>
+        <FieldSelect
+          label={t("admin.role")}
+          value={role}
+          onChange={(e) => setRole(e.target.value as "admin" | "socio" | "operator")}
+          options={[
+            { value: "operator", label: t("admin.roleOperator") },
+            { value: "socio", label: t("admin.roleSocio") },
+            { value: "admin", label: t("admin.roleAdmin") },
+          ]}
+        />
       )}
 
       {showChefe && (
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-text-secondary">{t("admin.chefe")}</label>
-          <select
-            value={chefeId}
-            onChange={(e) => setChefeId(e.target.value)}
-            className="min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">{t("admin.chefeSem")}</option>
-            {chefes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome} · {c.role === "socio" ? t("admin.roleSocio") : t("admin.roleAdmin")}
-              </option>
-            ))}
-          </select>
-        </div>
+        <FieldSelect
+          label={t("admin.chefe")}
+          value={chefeId}
+          onChange={(e) => setChefeId(e.target.value)}
+          options={[
+            { value: "", label: t("admin.chefeSem") },
+            ...chefes.map((c) => ({
+              value: c.id,
+              label: `${c.nome} · ${c.role === "socio" ? t("admin.roleSocio") : t("admin.roleAdmin")}`,
+            })),
+          ]}
+        />
       )}
 
       <div className="flex gap-2 justify-end pt-2">

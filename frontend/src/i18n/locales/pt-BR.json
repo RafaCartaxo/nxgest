@@ -14,6 +14,7 @@
   },
   "common": {
     "empty": "Nenhum dado encontrado.",
+    "erroTitulo": "Algo deu errado",
     "retry": "Tentar novamente",
     "save": "Salvar",
     "saving": "Salvando...",
@@ -70,6 +71,9 @@
     "ligar": "Ligar",
     "abrir": "Abrir",
     "parcelas": "parcela(s)",
+    "parcelaDe": "Parcela {{atual}} de {{total}}",
+    "diasAtraso_one": "{{count}} dia de atraso",
+    "diasAtraso_other": "{{count}} dias de atraso",
     "whatsappTemplate": "Olá, {{nome}}.\n\nPassando para lembrar que hoje existe uma parcela do seu contrato prevista para pagamento no valor de R$ {{valor}}.\n\nQualquer dúvida estou à disposição.",
     "resultadoDoDia": "Saldo do Dia",
     "atrasado": "Saldo em Atraso",
@@ -245,7 +249,7 @@
     "pendentes": "Pendentes",
     "vencidas": "Vencidas",
     "venceEm": "Vence {{data}}",
-    "pago": "✓ Paga",
+    "pago": "Paga",
     "vencida": "Vencida",
     "venceHoje": "Vence Hoje"
   },
@@ -487,6 +491,7 @@
     "modulosHint": "Ative ou desative módulos para esta empresa. Cada cliente vê apenas o que está ativo.",
     "modulosAtivo": "Ativo",
     "modulosInativo": "Inativo",
+    "sempreAtivo": "Sempre ativo",
     "modulosRequer": "Requer: {{modulos}}",
     "modulosGrupoBase": "Base",
     "modulosGrupoFinanceiro": "Financeiro",
@@ -505,12 +510,21 @@
     "sunset": "Pôr do sol"
   },
   "modules": {
+    "central": "Central",
+    "central.descricao": "Painel inicial do operador — sempre disponível.",
     "clientes": "Clientes",
+    "clientes.descricao": "Cadastro, ficha e endereço do cliente.",
     "contratos": "Contratos",
+    "contratos.descricao": "Contratos, parcelas e condições.",
     "caixa": "Caixa",
+    "caixa.descricao": "Abertura, movimentos e fechamento do caixa.",
     "gastos": "Gastos",
+    "gastos.descricao": "Despesas da operação lançadas no caixa.",
     "rota": "Rota de cobrança",
+    "rota.descricao": "Ordem de visita do dia por bairro.",
     "cobrancas": "Cobranças",
-    "atendidos": "Atendidos"
+    "cobrancas.descricao": "Recebimentos em campo por parcela.",
+    "atendidos": "Atendidos",
+    "atendidos.descricao": "Histórico de atendimentos do dia."
   }
 }

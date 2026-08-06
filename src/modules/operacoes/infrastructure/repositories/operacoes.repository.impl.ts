@@ -40,6 +40,7 @@ interface CobrancaRow {
   totalPendente: number
   quantidadeParcelas: number
   situacao: "atrasado" | "venceHoje"
+  diasEmAtraso: number
   visitadoEm: string | null
   resultadoOperacional: string | null
   proximaParcela: number
@@ -97,7 +98,15 @@ export class OperacoesRepository implements IOperacoesRepository {
             AND p2.deletedAt IS NULL
           ORDER BY p2.dataVencimento ASC
           LIMIT 1
-        ), 0) AS proximaParcela
+        ), 0) AS proximaParcela,
+        COALESCE((
+          SELECT CAST(julianday(?) - julianday(MIN(p2.dataVencimento)) AS INTEGER)
+          FROM parcelas p2
+          WHERE p2.contratoId = ct.id
+            AND p2.saldoPendente > 0
+            AND p2.dataVencimento < ?
+            AND p2.deletedAt IS NULL
+        ), 0) AS diasEmAtraso
       FROM parcelas p
       JOIN contratos ct ON ct.id = p.contratoId
       JOIN clientes c ON c.id = ct.clienteId
@@ -126,7 +135,7 @@ LEFT JOIN (
         situacao DESC,
         MIN(p.dataVencimento) ASC,
         ct.createdAt ASC
-    `).all(hoje, hoje, userId, hoje, userId, hoje, userId) as CobrancaRow[]
+    `).all(hoje, hoje, hoje, hoje, userId, hoje, userId, hoje, userId) as CobrancaRow[]
 
     const aReceberHojeRow = sqlite.prepare(`
       SELECT COALESCE(SUM(p.saldoPendente), 0) AS total
@@ -225,6 +234,7 @@ LEFT JOIN (
       totalPendente: r.totalPendente,
       quantidadeParcelas: r.quantidadeParcelas,
       situacao: r.situacao,
+      diasEmAtraso: r.diasEmAtraso,
       resultadoOperacional: r.resultadoOperacional === null ? "PENDENTE"
         : r.resultadoOperacional === "visitado" ? "VISITADO"
         : r.resultadoOperacional === "nao_localizado" ? "NAO_ENCONTRADO"

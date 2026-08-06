@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next"
 import { formatarData } from "../../../shared/utils/formatarData.js"
 import { parseDateLocal } from "../../../shared/utils/parseDateLocal.js"
 import { formatCurrency } from "../../../shared/utils/masks.js"
+import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import type { Parcela } from "../services/contrato.service.js"
 
 interface ParcelaListProps {
@@ -45,6 +46,14 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
   const pagas = parcelas.filter((p) => p.estado === "Paga").length
   const vencidas = parcelas.filter((p) => isVencida(p)).length
 
+  function getStatus(p: Parcela): { variant: "success" | "warning" | "danger" | "info" | "neutral"; label: string } {
+    if (isVencida(p)) return { variant: "danger", label: t("parcela.vencida") }
+    if (isVenceHoje(p)) return { variant: "info", label: t("status.venceHoje") }
+    if (p.estado === "Paga") return { variant: "success", label: t("parcela.pago") }
+    if (p.estado === "Parcial") return { variant: "info", label: t("status.parcial") }
+    return { variant: "warning", label: t("status.pendente") }
+  }
+
   return (
     <>
       {(pagas > 0 || parciais > 0 || pendentes > 0 || venceHoje > 0) && (
@@ -82,42 +91,34 @@ export function ParcelaList({ parcelas, onPagar }: ParcelaListProps) {
         </div>
       )}
       <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-        {parcelas.map((p) => (
-          <li key={p.id}>
-            <button
-              type="button"
-              onClick={() => p.estado !== "Paga" && onPagar?.(p)}
-              className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
-                p.estado !== "Paga" ? "cursor-pointer hover:bg-surface-hover" : "cursor-default"
-              }`}
-            >
-              <span aria-hidden className={`size-2 shrink-0 rounded-full ${getDotEstilo(p)}`} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-text-primary">
-                  {String(p.numero).padStart(2, "0")}
-                </p>
-                <p className="text-xs text-text-muted">
-                  {t("parcela.venceEm", { data: formatarData(p.dataVencimento, t) })}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {isVencida(p) && (
-                  <span className="text-xs font-medium text-danger-text">{t("parcela.vencida")}</span>
-                )}
-                {isVenceHoje(p) && (
-                  <span className="text-xs font-medium text-info-text">{t("status.venceHoje")}</span>
-                )}
-                {p.estado === "Paga" ? (
-                  <span className="text-sm font-semibold text-success-text">{t("parcela.pago")}</span>
-                ) : (
-                  <span className="tabular text-sm font-semibold text-text-primary">
-                    R$ {formatCurrency(p.estado === "Parcial" ? p.saldoPendente : p.valorPrevisto)}
-                  </span>
-                )}
-              </div>
-            </button>
-          </li>
-        ))}
+        {parcelas.map((p) => {
+          const status = getStatus(p)
+          return (
+            <li key={p.id}>
+              <button
+                type="button"
+                onClick={() => p.estado !== "Paga" && onPagar?.(p)}
+                className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+                  p.estado !== "Paga" ? "cursor-pointer hover:bg-surface-hover" : "cursor-default"
+                }`}
+              >
+                <span aria-hidden className={`size-2 shrink-0 rounded-full ${getDotEstilo(p)}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-text-primary">
+                    {String(p.numero).padStart(2, "0")}
+                  </p>
+                  <p className="text-xs text-text-muted">
+                    {t("parcela.venceEm", { data: formatarData(p.dataVencimento, t) })}
+                  </p>
+                </div>
+                <span className="tabular shrink-0 text-sm font-semibold text-text-primary">
+                  R$ {formatCurrency(p.estado === "Parcial" ? p.saldoPendente : p.valorPrevisto)}
+                </span>
+                <StatusBadge variant={status.variant} label={status.label} />
+              </button>
+            </li>
+          )
+        })}
       </ul>
     </>
   )

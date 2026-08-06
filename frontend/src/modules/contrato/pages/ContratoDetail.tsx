@@ -355,19 +355,13 @@ export function ContratoDetail() {
               onCancel={() => setConfirmOpen(false)}
             />
 
-            <Modal open={!!estornandoId} onClose={() => setEstornandoId(null)}>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold">{t("pagamento.estornarTitle")}</h3>
-                <p className="mt-2 text-sm text-text-secondary">{t("pagamento.estornarMessage")}</p>
-                <input
-                  type="text"
-                  value={estornoMotivo}
-                  onChange={(e) => setEstornoMotivo(e.target.value)}
-                  placeholder={t("caixa.motivoPlaceholder")}
-                  autoFocus
-                  className="mt-4 min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <div className="mt-6 flex gap-3">
+            <Modal
+              open={!!estornandoId}
+              onClose={() => setEstornandoId(null)}
+              title={t("pagamento.estornarTitle")}
+              descricao={t("pagamento.estornarMessage")}
+              footer={
+                <div className="flex w-full gap-3">
                   <Button variant="secondary" onClick={() => setEstornandoId(null)} className="flex-1">
                     {t("common.cancel")}
                   </Button>
@@ -375,7 +369,16 @@ export function ContratoDetail() {
                     {t("pagamento.estornar")}
                   </Button>
                 </div>
-              </div>
+              }
+            >
+              <input
+                type="text"
+                value={estornoMotivo}
+                onChange={(e) => setEstornoMotivo(e.target.value)}
+                placeholder={t("caixa.motivoPlaceholder")}
+                autoFocus
+                className="min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              />
             </Modal>
 
             {pagandoParcela && contrato && (

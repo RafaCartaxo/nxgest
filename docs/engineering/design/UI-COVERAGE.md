@@ -56,11 +56,13 @@
 | `PageHeader` | ✅ | 19 telas (`node scripts/consumers.mjs PageHeader`) |
 | `Card` | ✅ | listas/cards/rows |
 | `KpiCard` | ✅ | dashboards/relatórios |
-| `Field` | ✅ | 16 forms/inputs |
-| `Modal` | ✅ | modais (KPI, admin, estorno...) |
+| `Field` · `FieldSelect` · `FieldTextarea` | ✅ | forms/inputs/selects (16+; `node scripts/consumers.mjs Field`) |
+| `Modal` | ✅ | modais (KPI, admin, estorno...) — assinatura Lovable + bottom-sheet (PLAN-048) |
+| `Switch` | ✅ | ModulosModal (módulos) |
+| `Tabs` | ✅ | AdminPage (equipe/meus dados) |
 | `QuickActions` | ✅ | Central, ClienteDetail, Rota, cards |
 | `Button` / `ButtonLink` | ✅ | global |
-| `StatusBadge` · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` · `Topbar` | ✅ | — |
+| `StatusBadge` (pill com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` · `Topbar` | ✅ | — |
 | `Avatar` | ⏳ **Planejado** (PLAN-041, Lovable) | — |
 
 ## 4. Legado conhecido / planejado (rastreado)

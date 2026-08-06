@@ -1,5 +1,12 @@
 # NX Gestão — Redesign de Identidade Visual (briefing para IA)
 
+> [!warning] **SUPERSEDED — breve desatualizado**
+> Este briefing é a **primeira versão** da identidade (pré-redesign "Nexus" e anterior à referência de UI viva).
+> **Fonte viva:** `docs/plans/Lovable-Admin-NXGestao.md` (identidade do admin) e o repo de referência
+> **`RafaCartaxo/site-personality-plus`** (`src/components/nx/` — kit/ui/cobranca/ModulosModal) + a documentação
+> de engenharia (`docs/engineering/design/02-DESIGN-SYSTEM.md`, `04-UI-COMPONENTS.md`, `05-TOKEN.md`).
+> Mantido apenas como histórico — não usar como referência de implementação.
+
 ## 1. O produto
 
 **NX Gestão** ("Nexus Gestão") é uma plataforma de **gestão multi-negócio (whitelabel)**.

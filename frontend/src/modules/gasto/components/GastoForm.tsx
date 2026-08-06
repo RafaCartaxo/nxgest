@@ -5,10 +5,10 @@ import { getGastoSchema, CATEGORIAS_GASTO, CATEGORIA_ICONES, type GastoFormData 
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { createGasto, type CreateGastoInput } from "../services/gasto.service.js"
 import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
-import { ChevronDown } from "lucide-react"
+import { Field } from "../../../shared/components/Field/Field.js"
+import { FieldSelect } from "../../../shared/components/Field/FieldSelect.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 import { ApiError } from "../../../api/client.js"
-import { Field } from "../../../shared/components/Field/Field.js"
 import { Button } from "../../../shared/components/Button.js"
 
 interface GastoFormProps {
@@ -95,26 +95,13 @@ export function GastoForm({ onSuccess }: GastoFormProps) {
         error={errors.valor?.message}
       />
 
-      <div className="min-w-0">
-        <label className="mb-1.5 block text-sm font-medium text-text-secondary">{t("gasto.categoria")}</label>
-        <div className="relative">
-          <select
-            {...form.register("categoria")}
-            className="min-h-12 w-full min-w-0 appearance-none rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="" disabled hidden>{t("gasto.categoria")}</option>
-            {CATEGORIAS_GASTO.map((cat) => (
-              <option key={cat} value={cat}>
-                {CATEGORIA_ICONES[cat]} {cat}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-        </div>
-        {errors.categoria?.message && (
-          <p className="mt-1 text-xs font-medium text-danger-text">{errors.categoria.message}</p>
-        )}
-      </div>
+      <FieldSelect
+        label={t("gasto.categoria")}
+        placeholder={t("gasto.categoria")}
+        options={CATEGORIAS_GASTO.map((cat) => ({ value: cat, label: `${CATEGORIA_ICONES[cat]} ${cat}` }))}
+        error={errors.categoria?.message}
+        {...form.register("categoria")}
+      />
 
       <Field
         label={t("gasto.data")}

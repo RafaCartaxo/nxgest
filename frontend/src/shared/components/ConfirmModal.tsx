@@ -26,12 +26,13 @@ export function ConfirmModal({
   const { t } = useTranslation()
 
   return (
-    <Modal open={open} onClose={onCancel}>
-      <div className="p-6">
-        <h3 className="text-xl font-semibold">{title}</h3>
-        <p className="mt-2 text-sm text-text-secondary">{message}</p>
-
-        <div className="mt-6 flex gap-3">
+    <Modal
+      open={open}
+      onClose={onCancel}
+      title={title}
+      descricao={message}
+      footer={
+        <>
           <Button
             variant="secondary"
             onClick={onCancel}
@@ -46,8 +47,8 @@ export function ConfirmModal({
           >
             {confirmLabel ?? t("common.confirmDelete")}
           </Button>
-        </div>
-      </div>
-    </Modal>
+        </>
+      }
+    />
   )
 }

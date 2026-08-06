@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next"
+import { Loader2, AlertTriangle, Inbox } from "lucide-react"
 import { ApiError } from "../../api/client.js"
 import { Button, ButtonLink } from "./Button.js"
 
@@ -26,23 +27,25 @@ export function EstadoTela({
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-4 p-4">
-        <div className="h-6 w-48 rounded bg-surface-hover" />
-        <div className="h-4 w-96 rounded bg-surface-hover" />
-        <div className="h-4 w-80 rounded bg-surface-hover" />
-        <div className="h-4 w-64 rounded bg-surface-hover" />
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-6 py-10 text-center">
+        <Loader2 className="size-5 animate-spin text-primary" aria-hidden />
+        <p className="text-sm text-text-secondary">{t("common.loading")}</p>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-4 p-8 text-center">
-        <p className="text-danger font-medium">{error}</p>
+      <div className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card px-6 py-10 text-center">
+        <span className="mb-1 grid size-11 place-items-center rounded-full bg-danger-light text-danger-text">
+          <AlertTriangle className="size-5" aria-hidden />
+        </span>
+        <p className="font-semibold text-text-primary">{t("common.erroTitulo")}</p>
+        <p className="max-w-sm text-sm text-text-secondary">{error}</p>
         {onRetry && (
-          <Button onClick={onRetry}>
-            {t("common.retry")}
-          </Button>
+          <div className="mt-3">
+            <Button onClick={onRetry}>{t("common.retry")}</Button>
+          </div>
         )}
       </div>
     )
@@ -50,12 +53,16 @@ export function EstadoTela({
 
   if (empty) {
     return (
-      <div className="flex flex-col items-center gap-4 p-8 text-center">
-        <p className="text-text-secondary">{emptyMessage ?? t("common.empty")}</p>
+      <div className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card px-6 py-10 text-center">
+        <span className="mb-1 grid size-11 place-items-center rounded-full bg-muted text-text-muted">
+          <Inbox className="size-5" aria-hidden />
+        </span>
+        <p className="font-semibold text-text-primary">{t("common.empty")}</p>
+        {emptyMessage && <p className="max-w-sm text-sm text-text-secondary">{emptyMessage}</p>}
         {emptyAction && (
-          <ButtonLink to={emptyAction.to}>
-            {emptyAction.label}
-          </ButtonLink>
+          <div className="mt-3">
+            <ButtonLink to={emptyAction.to}>{emptyAction.label}</ButtonLink>
+          </div>
         )}
       </div>
     )

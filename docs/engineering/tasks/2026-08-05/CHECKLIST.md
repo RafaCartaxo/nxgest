@@ -140,3 +140,54 @@
 
 - [ ] `multer` no `package.json` · `Dockerfile` cria `/data/uploads`
 - [ ] **Backup**: `/opt/scripts/backup-nxgestao.sh` + `deploy.sh` incluem `/data/uploads` · `06-PRODUCAO.md`
+
+---
+
+# CHECKLIST — Card cobrança do dia + badges + modais (PLAN-047)
+
+**Data:** 05/08/2026
+
+## Card de cobrança (referência Lovable)
+- [x] `CobrancaCard` display: tone bar + nome + `bairro · Parcela X de Y` + `StatusBadge` + "N dias de atraso" + `value-lg` + chevron (interativo só com `onClick`); **sem avatar**
+- [x] Fila/Central: display + clique → rota (ações só na Rota — decisão de produto)
+- [x] i18n `operacoes.parcelaDe` + `operacoes.diasAtraso_*` (pt/en/es)
+- [x] Backend `diasEmAtraso` no `CobrancaItem` (subquery julianday) + CT OPS-018 estendido
+
+## Switch / ModulosModal v2
+- [x] `Switch` canônico (`shared/components/Switch`) — track h-7 w-12, knob centralizado, inativo bg-muted
+- [x] ModulosModal: `descricaoKey` por módulo · linha Central sempre ativa (badge) · **auto-completar deps na abertura** · **cascata-off** no toggle off
+
+## Contrato do admin
+- [x] `OperadorDetail` → `ContratoCard list-item` navegável (`?usuarioId=&empresaId=`)
+
+---
+
+# CHECKLIST — Polimento referências Lovable + docs finais (PLAN-048)
+
+**Data:** 05/08/2026
+
+## Modal (assinatura Lovable + bottom-sheet)
+- [x] `Modal`: `title`/`descricao`/`footer` + bottom-sheet mobile (`items-end sm:items-center`, `rounded-t-xl sm:rounded-xl`, `max-h-[90vh]`) + keyframe `slideInFromBottom`
+- [x] **Sweep de 14 consumidores** (header/footer inline → props do Modal)
+- [x] `ConfirmModal` e estorno ganham X de fechar padrão (comportamento novo)
+
+## Componentes canônicos
+- [x] `FieldSelect` + `FieldTextarea` (fieldControl compartilhado) · migrados 3 `<select>` (OperadorForm, GastoForm)
+- [x] `Tabs` compartilhado · migradas pills do AdminPage
+- [x] `EstadoTela` unificado (loading spinner card; erro/vazio com ícone em círculo)
+- [x] `PageHeader` (icon size-11 rounded-xl, título 28px) · `SectionHeader` (font-display 22px)
+- [x] `StatusBadge` com dot (pill rounded-md) · `ParcelaList` usa StatusBadge (Vencida/Vence hoje/Paga/Parcial/Pendente)
+
+## Docs
+- [x] `04-UI-COMPONENTS.md` v1.7 · `06-PRODUCAO.md` (gates) · `Lovable-NXGestao.md` superseded · `UI-COVERAGE.md` · `PLAN-047/048`
+
+---
+
+# CHECKLIST — Anti-drift novo padrão de UI (PLAN-049)
+
+**Data:** 05/08/2026
+
+- [x] `audit:ui` estendido: `<select>`/`<textarea>` cru · header inline de modal · `role="tab"` fora do Tabs · `<Modal>` sem `title`
+- [x] Fix de revisão: `Card.Root` da Rota voltou a `variant="collection"` (padding duplo com `p-4` do default)
+- [x] `AGENTS.md` (descrição do audit + convenção de UI) · `PLAN-049` criado
+- [x] `npm run audit:ui` limpo (105 arquivos)

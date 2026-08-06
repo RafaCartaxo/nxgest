@@ -192,8 +192,6 @@ export function AtendidosPage() {
             {completosSemPagos.length > 0 && (
               <CobrancaList
                 items={completosSemPagos}
-                operadorLat={lat}
-                operadorLng={lng}
                 emptyMessageKey="operacoes.nenhumAtendimento"
               />
             )}
@@ -203,8 +201,6 @@ export function AtendidosPage() {
       ) : (
         <CobrancaList
           items={filteredItems}
-          operadorLat={lat}
-          operadorLng={lng}
           emptyMessageKey="operacoes.nenhumAtendimento"
         />
       )}

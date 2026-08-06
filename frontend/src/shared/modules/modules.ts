@@ -2,13 +2,13 @@ import { Users, FileText, Wallet, Receipt, MapPinned, ClipboardList, CheckCircle
 import type { LucideIcon } from "lucide-react"
 
 export const MODULES = [
-  { id: "clientes", labelKey: "modules.clientes", dependsOn: [] as string[], icon: Users },
-  { id: "contratos", labelKey: "modules.contratos", dependsOn: ["clientes"] as string[], icon: FileText },
-  { id: "caixa", labelKey: "modules.caixa", dependsOn: [] as string[], icon: Wallet },
-  { id: "gastos", labelKey: "modules.gastos", dependsOn: ["caixa"] as string[], icon: Receipt },
-  { id: "rota", labelKey: "modules.rota", dependsOn: ["cobrancas"] as string[], icon: MapPinned },
-  { id: "cobrancas", labelKey: "modules.cobrancas", dependsOn: ["contratos"] as string[], icon: ClipboardList },
-  { id: "atendidos", labelKey: "modules.atendidos", dependsOn: ["cobrancas"] as string[], icon: CheckCircle2 },
+  { id: "clientes", labelKey: "modules.clientes", descricaoKey: "modules.clientes.descricao", dependsOn: [] as string[], icon: Users },
+  { id: "contratos", labelKey: "modules.contratos", descricaoKey: "modules.contratos.descricao", dependsOn: ["clientes"] as string[], icon: FileText },
+  { id: "caixa", labelKey: "modules.caixa", descricaoKey: "modules.caixa.descricao", dependsOn: [] as string[], icon: Wallet },
+  { id: "gastos", labelKey: "modules.gastos", descricaoKey: "modules.gastos.descricao", dependsOn: ["caixa"] as string[], icon: Receipt },
+  { id: "rota", labelKey: "modules.rota", descricaoKey: "modules.rota.descricao", dependsOn: ["cobrancas"] as string[], icon: MapPinned },
+  { id: "cobrancas", labelKey: "modules.cobrancas", descricaoKey: "modules.cobrancas.descricao", dependsOn: ["contratos"] as string[], icon: ClipboardList },
+  { id: "atendidos", labelKey: "modules.atendidos", descricaoKey: "modules.atendidos.descricao", dependsOn: ["cobrancas"] as string[], icon: CheckCircle2 },
 ] as const
 
 export type ModuleId = (typeof MODULES)[number]["id"]

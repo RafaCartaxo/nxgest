@@ -33,7 +33,7 @@ if (backendDeps.size === 0) fail("backend: MODULE_MANIFEST não parseado (estrut
 
 // 2) Frontend: id -> dependsOn (do MODULES)
 const frontendDeps = new Map()
-for (const m of frontend.matchAll(/\{ id: "(\w+)", labelKey: "[^"]+", dependsOn: \[([^\]]*)\]/g)) {
+for (const m of frontend.matchAll(/\{ id: "(\w+)", labelKey: "[^"]+", descricaoKey: "[^"]+", dependsOn: \[([^\]]*)\]/g)) {
   frontendDeps.set(m[1], m[2].split(",").map((s) => s.trim().replace(/["']/g, "")).filter(Boolean))
 }
 if (frontendDeps.size === 0) fail("frontend: MODULES não parseado (estrutura mudou?)")

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { X, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { formatCurrency } from "../../../shared/utils/masks.js"
@@ -36,15 +36,9 @@ export function ContribuicaoModal({ open, metric, equipe, empresaId, onClose }: 
   const sorted = equipe ? [...equipe.operadores].sort((a, b) => valueOf(b) - valueOf(a) || a.nome.localeCompare(b.nome)) : []
 
   return (
-    <Modal open={open} onClose={onClose} maxWidth="max-w-md">
-      <div className="flex items-center justify-between border-b border-border-light px-4 py-3">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <button type="button" onClick={onClose} className="text-text-muted hover:text-text-primary">
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="max-h-96 overflow-y-auto p-4">
-        <div className="mb-3 flex items-center justify-between rounded-xl bg-surface-secondary px-3.5 py-2 text-sm">
+    <Modal open={open} onClose={onClose} title={title} maxWidth="max-w-md">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-xl bg-surface-secondary px-3.5 py-2 text-sm">
           <span className="text-text-secondary">{t("admin.contribuicaoTotal")}</span>
           <span className="text-base font-semibold text-text-primary">{fmt(total)}</span>
         </div>
