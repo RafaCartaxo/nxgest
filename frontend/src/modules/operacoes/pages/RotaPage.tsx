@@ -501,9 +501,10 @@ export function RotaPage() {
 
                   <div className="px-6 py-4">
                     <Button
+                      variant="success"
                       onClick={() => setPagamentoOpen(true)}
                       disabled={operando}
-                      className="w-full bg-success text-white hover:bg-success-hover shadow-sm"
+                      className="w-full shadow-sm"
                     >
                       {t("operacoes.pagar")}
                     </Button>

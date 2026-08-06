@@ -187,7 +187,9 @@
       "enderecoInvalido": "Enter a valid address.",
       "cidadeMinimo": "City must be at least 2 characters.",
       "ufInvalida": "Invalid state."
-    }
+    },
+    "identificacao": "Identification",
+    "nomeComercio": "Business name"
   },
   "contrato": {
     "title": "Contracts",
@@ -526,13 +528,16 @@
     "atendidos": "Attended",
     "atendidos.descricao": "History of today's attendances."
   },
-  "geo": {
-    "capturando": "Capturing location…",
-    "localizacaoCapturada": "Location captured",
+  "gps": {
+    "capturar": "Capture location",
+    "capturando": "Capturing…",
+    "capturada": "Location captured",
+    "naoCapturada": "Not captured",
     "recapturar": "Recapture",
-    "capturarLocalizacao": "Capture location",
-    "indisponivel": "Geolocation unavailable on this device",
+    "descartada": "Address edited — location discarded. Recapture to update.",
+    "cooldown": "Wait 2 seconds to capture again.",
+    "avisoGeocode": "Coordinates captured, but the address could not be obtained. Fill it in manually.",
     "erroPermissao": "Could not get the location. Check the GPS permission.",
-    "localizacaoDescartada": "Address edited — location discarded. Recapture to update."
+    "indisponivel": "Geolocation unavailable on this device."
   }
 }

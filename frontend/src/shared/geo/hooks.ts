@@ -29,7 +29,7 @@ export function useGeolocation(): UseGeolocationReturn {
   const capturar = useCallback(async () => {
     if (cooldownRef.current) return null
     if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
-      setErro("geo.indisponivel")
+      setErro("gps.indisponivel")
       return null
     }
 
@@ -53,7 +53,7 @@ export function useGeolocation(): UseGeolocationReturn {
         return { localizacao, endereco: {}, origem: "gps" as const }
       }
     } catch {
-      setErro("geo.erroPermissao")
+      setErro("gps.erroPermissao")
       return null
     } finally {
       setCapturando(false)

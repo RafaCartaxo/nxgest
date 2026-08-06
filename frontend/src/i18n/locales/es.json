@@ -187,7 +187,9 @@
       "enderecoInvalido": "Ingrese una dirección válida.",
       "cidadeMinimo": "La ciudad debe tener al menos 2 caracteres.",
       "ufInvalida": "UF inválida."
-    }
+    },
+    "identificacao": "Identificación",
+    "nomeComercio": "Nombre del comercio"
   },
   "contrato": {
     "title": "Contratos",
@@ -526,13 +528,16 @@
     "atendidos": "Atendidos",
     "atendidos.descricao": "Historial de atenciones del día."
   },
-  "geo": {
-    "capturando": "Capturando ubicación…",
-    "localizacaoCapturada": "Ubicación capturada",
+  "gps": {
+    "capturar": "Capturar ubicación",
+    "capturando": "Capturando…",
+    "capturada": "Ubicación capturada",
+    "naoCapturada": "No capturada",
     "recapturar": "Recapturar",
-    "capturarLocalizacao": "Capturar ubicación",
-    "indisponivel": "Geolocalización no disponible en este dispositivo",
+    "descartada": "Dirección editada — ubicación descartada. Recapturar para actualizar.",
+    "cooldown": "Espera 2 segundos para capturar de nuevo.",
+    "avisoGeocode": "Coordenadas capturadas, pero no se pudo obtener la dirección. Complétala manualmente.",
     "erroPermissao": "No se pudo obtener la ubicación. Verifica el permiso del GPS.",
-    "localizacaoDescartada": "Dirección editada — ubicación descartada. Recapturar para actualizar."
+    "indisponivel": "Geolocalización no disponible en este dispositivo."
   }
 }

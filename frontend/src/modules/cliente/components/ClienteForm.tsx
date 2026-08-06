@@ -2,16 +2,18 @@ import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { UserRound, Store } from "lucide-react"
 import { ApiError } from "../../../api/client.js"
 import { Button } from "../../../shared/components/Button.js"
-import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
+import { Card } from "../../../shared/components/Card/Card.js"
 import { Field } from "../../../shared/components/Field/Field.js"
+import { FieldSelect } from "../../../shared/components/Field/FieldSelect.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { maskCpf, maskPhone, unmask } from "../../../shared/utils/masks.js"
-import { getClienteSchema, type ClienteFormData } from "../schemas/cliente.schema.js"
+import { getClienteSchema, UFS, type ClienteFormData } from "../schemas/cliente.schema.js"
 import type { Cliente } from "../services/cliente.service.js"
 import { useGeolocation, type UseGeolocationReturn } from "../../../shared/geo/hooks.js"
-import { CapturaLocalizacao } from "../../../shared/geo/CapturaLocalizacao.js"
+import { GpsControl, type GpsEstado } from "../../../shared/geo/GpsControl.js"
 import type { EnderecoTexto } from "../../../shared/geo/types.js"
 
 interface ClienteFormProps {
@@ -33,7 +35,17 @@ const defaultValues: ClienteFormData = {
   lat: undefined, lng: undefined,
 }
 
-/** Form de cliente compartilhado (PLAN-055) — extrai ClienteNovo/ClienteEdit. */
+type BlocoGps = {
+  coords: { lat: number; lng: number } | null
+  estado: GpsEstado
+  aviso: string | null
+}
+
+/**
+ * Form de cliente compartilhado (PLAN-055/056) — 4 Cards (Identificação · Comércio ·
+ * Localização do comércio · Endereço residencial), controle de GPS por bloco e o fix:
+ * editar o texto do endereço descarta as coordenadas daquele bloco.
+ */
 export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormProps) {
   const { t } = useTranslation()
   const feedback = useFeedback()
@@ -45,9 +57,8 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
     defaultValues,
   })
 
-  const [comercioExpandido, setComercioExpandido] = useState(false)
-  const [comercioDescartada, setComercioDescartada] = useState(false)
-  const [principalDescartada, setPrincipalDescartada] = useState(false)
+  const [gpsComercio, setGpsComercio] = useState<BlocoGps>({ coords: null, estado: "vazio", aviso: null })
+  const [gpsPrincipal, setGpsPrincipal] = useState<BlocoGps>({ coords: null, estado: "vazio", aviso: null })
   const isGeocodingRef = useRef(false)
   const geoComercio = useGeolocation()
   const geoPrincipal = useGeolocation()
@@ -80,12 +91,10 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       lat: initial.localizacao?.lat,
       lng: initial.localizacao?.lng,
     })
-    setComercioExpandido(!!initial.enderecoComercio?.logradouro || !!initial.localizacaoComercio)
     isGeocodingRef.current = false
   }, [initial, form])
 
-  // FIX do endereço (PLAN-055): editar o texto do endereço descarta as coordenadas
-  // (a localização capturada fica inválida; recapturar depois se quiser).
+  // FIX do endereço (PLAN-055): editar o texto descarta as coordenadas daquele bloco.
   useEffect(() => {
     const sub = form.watch((value, { name }) => {
       if (isGeocodingRef.current || !name) return
@@ -93,66 +102,71 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
         if (value.comercioLat != null || value.comercioLng != null) {
           form.setValue("comercioLat", undefined)
           form.setValue("comercioLng", undefined)
-          setComercioDescartada(true)
+          setGpsComercio((p) => ({ ...p, coords: null, estado: "invalidada" }))
         }
       } else if (camposPrincipal.includes(name)) {
         if (value.lat != null || value.lng != null) {
           form.setValue("lat", undefined)
           form.setValue("lng", undefined)
-          setPrincipalDescartada(true)
+          setGpsPrincipal((p) => ({ ...p, coords: null, estado: "invalidada" }))
         }
       }
     })
     return () => sub.unsubscribe()
   }, [form])
 
-  function aplicarEndereco(
+  async function capturarBloco(
     geo: UseGeolocationReturn,
     aplicarCoords: (lat: number, lng: number) => void,
     aplicarTexto: (end: Partial<EnderecoTexto>) => void,
+    setBloco: (updater: (p: BlocoGps) => BlocoGps) => void,
   ) {
-    return async () => {
-      const r = await geo.capturar()
-      if (!r) return
-      isGeocodingRef.current = true
-      aplicarCoords(r.localizacao.lat, r.localizacao.lng)
-      aplicarTexto(r.endereco)
-      isGeocodingRef.current = false
-    }
+    const r = await geo.capturar()
+    if (!r) return
+    isGeocodingRef.current = true
+    aplicarCoords(r.localizacao.lat, r.localizacao.lng)
+    aplicarTexto(r.endereco)
+    isGeocodingRef.current = false
+    setBloco(() => ({
+      coords: r.localizacao,
+      estado: "capturada",
+      aviso: r.origem === "gps" ? t("gps.avisoGeocode") : null,
+    }))
   }
 
-  const capturarComercio = aplicarEndereco(
-    geoComercio,
-    (lat, lng) => {
-      form.setValue("comercioLat", lat)
-      form.setValue("comercioLng", lng)
-      setComercioDescartada(false)
-    },
-    (end) => {
-      if (end.logradouro) form.setValue("comercioLogradouro", end.logradouro)
-      if (end.numero) form.setValue("comercioNumero", end.numero)
-      if (end.bairro) form.setValue("comercioBairro", end.bairro)
-      if (end.cidade) form.setValue("comercioCidade", end.cidade)
-      if (end.estado) form.setValue("comercioEstado", end.estado)
-      setComercioExpandido(true)
-    },
-  )
+  const capturarComercio = () =>
+    capturarBloco(
+      geoComercio,
+      (lat, lng) => {
+        form.setValue("comercioLat", lat)
+        form.setValue("comercioLng", lng)
+      },
+      (end) => {
+        if (end.logradouro) form.setValue("comercioLogradouro", end.logradouro)
+        if (end.numero) form.setValue("comercioNumero", end.numero)
+        if (end.bairro) form.setValue("comercioBairro", end.bairro)
+        if (end.cidade) form.setValue("comercioCidade", end.cidade)
+        if (end.estado) form.setValue("comercioEstado", end.estado)
+      },
+      setGpsComercio,
+    )
 
-  const capturarPrincipal = aplicarEndereco(
-    geoPrincipal,
-    (lat, lng) => {
-      form.setValue("lat", lat)
-      form.setValue("lng", lng)
-      setPrincipalDescartada(false)
-    },
-    (end) => {
-      if (end.logradouro) form.setValue("logradouro", end.logradouro)
-      if (end.numero) form.setValue("numero", end.numero)
-      if (end.bairro) form.setValue("bairro", end.bairro)
-      if (end.cidade) form.setValue("cidade", end.cidade)
-      if (end.estado) form.setValue("estado", end.estado)
-    },
-  )
+  const capturarPrincipal = () =>
+    capturarBloco(
+      geoPrincipal,
+      (lat, lng) => {
+        form.setValue("lat", lat)
+        form.setValue("lng", lng)
+      },
+      (end) => {
+        if (end.logradouro) form.setValue("logradouro", end.logradouro)
+        if (end.numero) form.setValue("numero", end.numero)
+        if (end.bairro) form.setValue("bairro", end.bairro)
+        if (end.cidade) form.setValue("cidade", end.cidade)
+        if (end.estado) form.setValue("estado", end.estado)
+      },
+      setGpsPrincipal,
+    )
 
   function buildPayload(data: ClienteFormData): Record<string, unknown> {
     const payload: Record<string, unknown> = {
@@ -248,164 +262,143 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
     })
   }
 
-  const comercioCapturada = form.watch("comercioLat") != null
-  const principalCapturada = form.watch("lat") != null
+  function blocoComercio(prefix: "comercio" | ""): Record<"logradouro" | "numero" | "bairro" | "cidade" | "uf", keyof ClienteFormData> {
+    return {
+      logradouro: prefix ? "comercioLogradouro" : "logradouro",
+      numero: prefix ? "comercioNumero" : "numero",
+      bairro: prefix ? "comercioBairro" : "bairro",
+      cidade: prefix ? "comercioCidade" : "cidade",
+      uf: prefix ? "comercioEstado" : "estado",
+    }
+  }
+
+  function EnderecoFields({ prefix, comComplemento }: { prefix: "comercio" | ""; comComplemento: boolean }) {
+    const f = blocoComercio(prefix)
+    return (
+      <div className="grid gap-4 p-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Field
+            label={t("cliente.logradouro")}
+            required={!prefix}
+            error={!prefix ? errors.logradouro?.message : undefined}
+            {...form.register(f.logradouro)}
+          />
+        </div>
+        <Field label={t("cliente.numero")} inputMode="numeric" {...form.register(f.numero)} />
+        {comComplemento && <Field label={t("cliente.complemento")} placeholder={t("cliente.complementoPlaceholder")} {...form.register("complemento")} />}
+        <Field label={t("cliente.bairro")} {...form.register(f.bairro)} />
+        <Field
+          label={t("cliente.cidade")}
+          error={!prefix ? errors.cidade?.message : undefined}
+          {...form.register(f.cidade)}
+        />
+        <FieldSelect
+          label={t("cliente.uf")}
+          placeholder={t("cliente.ufPlaceholder")}
+          options={UFS.map((u) => ({ value: u, label: u }))}
+          error={!prefix ? errors.estado?.message : undefined}
+          {...form.register(f.uf)}
+        />
+      </div>
+    )
+  }
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" noValidate>
-      <SectionHeader title={t("cliente.dadosCliente")} />
-
-      <Field
-        label={t("cliente.nome")}
-        required
-        autoFocus
-        error={errors.nome?.message}
-        {...form.register("nome")}
-      />
-
-      <Field
-        label={t("cliente.telefone")}
-        required
-        type="tel"
-        placeholder={t("cliente.telefonePlaceholder")}
-        value={form.watch("telefone")}
-        onChange={(e) => { form.setValue("telefone", maskPhone(e.target.value)); form.clearErrors("telefone") }}
-        error={errors.telefone?.message}
-      />
-
-      <Field
-        label={t("cliente.cpf")}
-        inputMode="numeric"
-        placeholder={t("cliente.cpfPlaceholder")}
-        value={form.watch("cpf") ?? ""}
-        onChange={(e) => { form.setValue("cpf", maskCpf(e.target.value)); form.clearErrors("cpf") }}
-        error={errors.cpf?.message}
-      />
-
-      <Field
-        label={t("cliente.comercio")}
-        required
-        placeholder={t("cliente.comercioPlaceholder")}
-        error={errors.comercio?.message}
-        {...form.register("comercio")}
-      />
-
-      <Field
-        label={t("cliente.telefoneComercio")}
-        type="tel"
-        placeholder={t("cliente.telefonePlaceholder")}
-        value={form.watch("telefoneComercio") ?? ""}
-        onChange={(e) => { form.setValue("telefoneComercio", maskPhone(e.target.value)); form.clearErrors("telefoneComercio") }}
-        error={errors.telefoneComercio?.message}
-      />
-
-      <SectionHeader title={t("cliente.enderecoComercio")} />
-
-      <CapturaLocalizacao
-        capturando={geoComercio.capturando}
-        capturada={comercioCapturada}
-        descartada={comercioDescartada}
-        onCapturar={capturarComercio}
-        onRecapturar={capturarComercio}
-        erro={geoComercio.erro}
-      />
-
-      {comercioExpandido && (
-        <>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2">
-              <Field label={t("cliente.logradouro")} {...form.register("comercioLogradouro")} />
-            </div>
-            <div>
-              <Field label={t("cliente.numero")} {...form.register("comercioNumero")} />
-            </div>
+      <Card.Root variant="detail">
+        <Card.Header className="border-b border-border-light pb-3">
+          <UserRound className="size-4 text-primary-text" aria-hidden />
+          <Card.Title>{t("cliente.identificacao")}</Card.Title>
+        </Card.Header>
+        <div className="grid gap-4 p-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Field
+              label={t("cliente.nome")}
+              required
+              autoFocus
+              error={errors.nome?.message}
+              {...form.register("nome")}
+            />
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Field label={t("cliente.bairro")} {...form.register("comercioBairro")} />
-            </div>
-            <div className="col-span-2">
-              <Field label={t("cliente.cidade")} {...form.register("comercioCidade")} />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-2">
-              <Field label={t("cliente.uf")} maxLength={2} placeholder={t("cliente.ufPlaceholder")} {...form.register("comercioEstado")} />
-            </div>
-          </div>
-        </>
-      )}
-      {!comercioExpandido && (
-        <button
-          type="button"
-          onClick={() => setComercioExpandido(true)}
-          className="mt-2 text-sm text-primary hover:underline"
-        >
-          {t("cliente.expandirEndereco")}
-        </button>
-      )}
-
-      <SectionHeader title={t("cliente.endereco")} />
-
-      <CapturaLocalizacao
-        capturando={geoPrincipal.capturando}
-        capturada={principalCapturada}
-        descartada={principalDescartada}
-        onCapturar={capturarPrincipal}
-        onRecapturar={capturarPrincipal}
-        erro={geoPrincipal.erro}
-      />
-
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2">
           <Field
-            label={t("cliente.logradouro")}
+            label={t("cliente.telefone")}
             required
-            error={errors.logradouro?.message}
-            {...form.register("logradouro")}
+            type="tel"
+            placeholder={t("cliente.telefonePlaceholder")}
+            value={form.watch("telefone")}
+            onChange={(e) => { form.setValue("telefone", maskPhone(e.target.value)); form.clearErrors("telefone") }}
+            error={errors.telefone?.message}
           />
-        </div>
-
-        <div>
-          <Field label={t("cliente.numero")} inputMode="numeric" {...form.register("numero")} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2">
-          <Field label={t("cliente.bairro")} {...form.register("bairro")} />
-        </div>
-
-        <div>
           <Field
-            label={t("cliente.complemento")}
-            placeholder={t("cliente.complementoPlaceholder")}
-            {...form.register("complemento")}
+            label={t("cliente.cpf")}
+            inputMode="numeric"
+            placeholder={t("cliente.cpfPlaceholder")}
+            value={form.watch("cpf") ?? ""}
+            onChange={(e) => { form.setValue("cpf", maskCpf(e.target.value)); form.clearErrors("cpf") }}
+            error={errors.cpf?.message}
           />
         </div>
-      </div>
+      </Card.Root>
 
-      <div className="grid grid-cols-4 gap-4">
-        <div className="col-span-3">
+      <Card.Root variant="detail">
+        <Card.Header className="border-b border-border-light pb-3">
+          <Store className="size-4 text-primary-text" aria-hidden />
+          <Card.Title>{t("cliente.comercio")}</Card.Title>
+        </Card.Header>
+        <div className="grid gap-4 p-4 sm:grid-cols-2">
           <Field
-            label={t("cliente.cidade")}
-            error={errors.cidade?.message}
-            {...form.register("cidade")}
+            label={t("cliente.nomeComercio")}
+            required
+            placeholder={t("cliente.comercioPlaceholder")}
+            error={errors.comercio?.message}
+            {...form.register("comercio")}
+          />
+          <Field
+            label={t("cliente.telefoneComercio")}
+            type="tel"
+            placeholder={t("cliente.telefonePlaceholder")}
+            value={form.watch("telefoneComercio") ?? ""}
+            onChange={(e) => { form.setValue("telefoneComercio", maskPhone(e.target.value)); form.clearErrors("telefoneComercio") }}
+            error={errors.telefoneComercio?.message}
           />
         </div>
+      </Card.Root>
 
-        <div>
-          <Field
-            label={t("cliente.uf")}
-            maxLength={2}
-            placeholder={t("cliente.ufPlaceholder")}
-            className="uppercase"
-            value={form.watch("estado") ?? ""}
-            onChange={(e) => { form.setValue("estado", e.target.value.toUpperCase().slice(0, 2)); form.clearErrors("estado") }}
-            error={errors.estado?.message}
+      <Card.Root variant="detail">
+        <Card.Header className="border-b border-border-light pb-3">
+          <Store className="size-4 text-primary-text" aria-hidden />
+          <Card.Title>{t("cliente.enderecoComercio")}</Card.Title>
+        </Card.Header>
+        <div className="p-4">
+          <GpsControl
+            coords={gpsComercio.coords}
+            estado={gpsComercio.estado}
+            capturando={geoComercio.capturando}
+            erro={geoComercio.erro ? t(geoComercio.erro) : null}
+            aviso={gpsComercio.aviso}
+            onCapturar={capturarComercio}
           />
+          <EnderecoFields prefix="comercio" comComplemento={false} />
         </div>
-      </div>
+      </Card.Root>
+
+      <Card.Root variant="detail">
+        <Card.Header className="border-b border-border-light pb-3">
+          <UserRound className="size-4 text-primary-text" aria-hidden />
+          <Card.Title>{t("cliente.endereco")}</Card.Title>
+        </Card.Header>
+        <div className="p-4">
+          <GpsControl
+            coords={gpsPrincipal.coords}
+            estado={gpsPrincipal.estado}
+            capturando={geoPrincipal.capturando}
+            erro={geoPrincipal.erro ? t(geoPrincipal.erro) : null}
+            aviso={gpsPrincipal.aviso}
+            onCapturar={capturarPrincipal}
+          />
+          <EnderecoFields prefix="" comComplemento />
+        </div>
+      </Card.Root>
 
       <div className="flex gap-4">
         <Button type="submit" className="flex-1">

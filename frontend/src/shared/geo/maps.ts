@@ -1,5 +1,10 @@
 import type { TargetNavegacao } from "./types.js"
 
+/** Formata coordenadas para exibição curta (ex.: "-23.55050, -46.63330"). */
+export function formatarCoords(c: { lat: number; lng: number }): string {
+  return `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`
+}
+
 /**
  * Gera a URL de navegação (Google Maps "Directions") para um alvo.
  * Prioridade: coordenadas (precisão) → texto do endereço (fallback, mínimo 2 partes).
