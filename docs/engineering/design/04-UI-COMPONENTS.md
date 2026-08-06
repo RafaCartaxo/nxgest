@@ -477,6 +477,59 @@ Campos de formulário canônicos — todos com o mesmo `fieldControl` (`rounded-
 
 ---
 
+# Button
+
+**Status:** ✅ `shared/components/Button.tsx` (variantes completas — PLAN-056)
+
+## Objetivo
+
+Ação primária/contextual do sistema. Variantes: `primary` (com gradiente de marca), `secondary`, `soft`, `outline`, `ghost`, `danger`, `success`; sizes `sm | md | lg | block`. Base `rounded-xl min-h-11` (toque confortável). `ButtonLink` espelha as mesmas variantes/sizes com `to`.
+
+## Vocabulário único por tipo de ação
+
+| Ação | Componente |
+|---|---|
+| Criar (ex.: "Novo cliente") | `ButtonLink primary` no `PageHeader action` |
+| Ação contextual (Central) | chip `QuickActions` |
+| Ver (ex.: "Ver rota") | `Button ghost size="sm"` + `ChevronRight` |
+| Enviar form ("Salvar") | `Button primary` (block no mobile) |
+| Ação positiva ("Registrar pagamento") | `Button success` |
+| Cancelar | `Button ghost` |
+
+Regras: sem seta literal "→" (usar `ChevronRight`); sem `<Link>` cru; sem classe de cor crua.
+
+---
+
+# GpsControl
+
+**Status:** ✅ `shared/geo/GpsControl.tsx` (port Lovable — PLAN-056)
+
+## Objetivo
+
+Controle de GPS/localização de um endereço — **controlado** pelo form. 3 estados: `vazio` (Capturar) · `capturada` (badge + coords + Recapturar) · `invalidada` (texto editado — coords descartadas). `role="group"` + `aria-live`. Usado no `ClienteForm` (comércio e residencial).
+
+---
+
+# PreferenciasModal
+
+**Status:** ✅ `shared/theme/PreferenciasModal.tsx` (port Lovable — PLAN-056)
+
+## Objetivo
+
+Preferências do app num modal (aberto pela engrenagem da Topbar): **Modo** (Tabs claro/escuro/sistema) · **Cores** (swatches das 5 paletas) · **Idioma** (PT/EN/ES). Depende do `ThemeProvider` com `mode`.
+
+---
+
+# ClienteSelect
+
+**Status:** ✅ `modules/contrato/components/ClienteSelect.tsx` (port Lovable — PLAN-056)
+
+## Objetivo
+
+Seletor de cliente **buscável** (nome/telefone/bairro, `role="listbox"`, vazio "Nenhum cliente encontrado"). Prop-driven (`clientes` + `value`/`onChange`). Pronto para o `ContratoForm`.
+
+---
+
 # Switch
 
 **Status:** ✅ `shared/components/Switch/`

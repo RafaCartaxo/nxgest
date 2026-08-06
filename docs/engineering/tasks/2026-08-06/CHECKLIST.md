@@ -55,3 +55,20 @@
 - [x] Limpeza: shim morto `shared/utils/maps.ts` removido · chave i18n órfã `cliente.usarLocalAtual` removida (3 locales)
 - [x] Coerência UX: estado "Localização descartada" (aviso + botão Capturar) ao editar texto pós-captura (comércio + principal)
 - [x] `tsc` · `audit:ui/styles` · vitest 18 · `docs:audit` · `build`
+
+---
+
+# CHECKLIST — Port do material Lovable (PLAN-056)
+
+**Data:** 06/08/2026
+
+- [x] F1: `Button` variantes soft/outline/success + size (base rounded-xl min-h-11) · "Registrar pagamento" → success · `GpsControl` (port) + `formatarCoords` + i18n gps.*
+- [x] F2: `ClienteForm` em 4 Cards + UF FieldSelect (UFS) + GpsControl (fix preservado)
+- [x] F3: vocabulário — sem "→" (i18n), "Ver rota" ghost sm + ChevronRight, ClienteDetail ButtonLink
+- [x] F4: `ClienteSelect` (port prop-driven)
+- [x] F5: `ThemeProvider` mode light/dark/system + `PreferenciasModal` + Topbar engrenagem→modal
+- [x] Docs: PLAN-056 · plans README · UI-COVERAGE · 04-UI-COMPONENTS · UPDATES
+- [x] Gates: build · audit:ui/styles · vitest 18 · docs:audit
+
+## Pendência registrada (Lovable)
+- [ ] `ContratoForm` · `/rota` · wiring das telas (`central`/`clientes`) — solicitar ao Lovable

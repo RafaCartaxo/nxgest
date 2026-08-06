@@ -59,9 +59,12 @@
 | `Field` · `FieldSelect` · `FieldTextarea` | ✅ | forms/inputs/selects (16+; `node scripts/consumers.mjs Field`) |
 | `Modal` | ✅ | modais (KPI, admin, estorno...) — assinatura Lovable + bottom-sheet (PLAN-047) |
 | `Switch` | ✅ | ModulosModal (módulos) |
-| `Tabs` | ✅ | AdminPage (equipe/meus dados) |
+| `Tabs` | ✅ | AdminPage (equipe/meus dados), PreferenciasModal (modo) |
 | `QuickActions` | ✅ | Central, ClienteDetail, Rota, cards |
-| `Button` / `ButtonLink` | ✅ | global |
+| `Button` / `ButtonLink` | ✅ | global — variantes `primary/secondary/soft/outline/ghost/danger/success` + sizes `sm/md/lg/block` (PLAN-056) |
+| `GpsControl` | ✅ | ClienteForm (comércio + residencial) — port Lovable, 3 estados (PLAN-056) |
+| `PreferenciasModal` | ✅ | Topbar (engrenagem) — tema light/dark/system + paletas + idioma (PLAN-056) |
+| `ClienteSelect` | ✅ | (futuro ContratoForm) — seletor de cliente buscável (PLAN-056) |
 | `StatusBadge` (pill com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` · `Topbar` | ✅ | — |
 | `Avatar` | ⏳ **Planejado** (PLAN-041, Lovable) | — |
 

@@ -423,3 +423,19 @@ Referência: [PLAN-021](plans/PLAN-021-admin-contexto-kpis.md) · [PLAN-022](pla
 **Por quê:** correção de dado (navegador ia pro endereço errado) + camada de base para o redesign visual dos cadastros (briefing `Lovable-Cadastro-Rota-NXGestao.md`).
 
 Referência: [PLAN-055](plans/PLAN-055-modulo-localizacao-navegacao-fix-endereco.md)
+
+## 06/08/2026 — PLAN-056 · Port do material Lovable (botões + GPS + form + Preferências)
+
+**Adicionado / Melhorado**
+- **`Button`/`ButtonLink` com variantes completas** (`soft`/`outline`/`success` + sizes `sm/md/lg/block`, base `rounded-xl min-h-11`) — o verde de "Registrar pagamento" agora usa `variant="success"` (sem classe crua).
+- **`GpsControl`** (port do Lovable): controle de GPS com 3 estados (Capturar · Capturada+Recapturar · Não capturada/invalidada), acessível, usado no form do cliente (comércio + residencial).
+- **`ClienteForm` em 4 Cards** (Identificação · Comércio · Localização do comércio · Endereço residencial) com UF como select — sobre a lógica do PLAN-055 (fix do endereço preservado).
+- **Vocabulário único de botões**: sem setas "→" literais; "Ver rota" → `ghost sm` + `ChevronRight`; `ClienteDetail` sem `<Link>` cru.
+- **`ClienteSelect`** (seletor de cliente buscável) — pronto para o `ContratoForm`.
+- **Preferências em modal** (substitui os dropdowns da Topbar): Modo (claro/escuro/**sistema**) · Cores (paletas) · Idioma. `ThemeProvider` ganhou `mode` persistido (compat com chaves antigas).
+
+**Pendente do Lovable:** `ContratoForm` · tela de Rota (`/rota`) · wiring das telas (`central`/`clientes` usarem o vocabulário novo).
+
+**Por quê:** aplicar o material da rodada nova do Lovable (identidade) sobre a camada geo pronta (PLAN-055).
+
+Referência: [PLAN-056](plans/PLAN-056-port-material-lovable-botoes-gps-form-preferencias.md)
