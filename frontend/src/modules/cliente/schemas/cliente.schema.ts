@@ -80,6 +80,8 @@ export function getClienteSchema(t: TFunction) {
     comercioEstado: z.string().optional(),
     comercioLat: z.number().optional(),
     comercioLng: z.number().optional(),
+    lat: z.number().optional(),
+    lng: z.number().optional(),
   })
 }
 
