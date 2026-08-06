@@ -33,3 +33,15 @@
 - [x] `min-w-0 truncate` no texto (trunca só no carousel estreito)
 - [x] Coluna direita volta a ter só o valor; altura uniforme mantida
 - [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
+
+---
+
+# CHECKLIST — Card de cobrança: linhas full-width (PLAN-053)
+
+**Data:** 06/08/2026
+
+- [x] Causa raiz: coluna do valor `shrink-0` encolhia todas as linhas (dias sumia no carousel ~90px)
+- [x] Só a linha 1 é 2 colunas (nome + valor); linhas 2–4 full-width
+- [x] Bairro/parcela/"dias de atraso" passam a usar os 252px do card → não trunca no carousel/mobile
+- [x] Mantidos: 4 linhas uniformes · dias centralizado com o badge · valor à direita
+- [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
