@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Check, ChevronDown, Search } from "lucide-react"
 import { fieldControl } from "../../../shared/components/Field/fieldClasses.js"
@@ -22,7 +22,22 @@ export function ClienteSelect({ value, onChange, clientes, error }: ClienteSelec
   const { t } = useTranslation()
   const [busca, setBusca] = useState("")
   const [aberto, setAberto] = useState(false)
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null)
   const boxRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  // O dropdown usa position:fixed p/ escapar de ancestrais com overflow-hidden
+  // (ex.: Card) — P5. Fecha em scroll/resize p/ não "flutuar" fora do lugar.
+  useEffect(() => {
+    if (!aberto) return
+    const fechar = () => setAberto(false)
+    window.addEventListener("scroll", fechar, true)
+    window.addEventListener("resize", fechar)
+    return () => {
+      window.removeEventListener("scroll", fechar, true)
+      window.removeEventListener("resize", fechar)
+    }
+  }, [aberto])
 
   const selecionado = clientes.find((c) => c.id === value) ?? null
 
@@ -33,6 +48,16 @@ export function ClienteSelect({ value, onChange, clientes, error }: ClienteSelec
       `${c.nome} ${c.telefone ?? ""} ${c.bairro ?? ""}`.toLowerCase().includes(q),
     )
   }, [busca, clientes])
+
+  function alternar() {
+    if (aberto) {
+      setAberto(false)
+      return
+    }
+    const rect = triggerRef.current?.getBoundingClientRect()
+    if (rect) setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width })
+    setAberto(true)
+  }
 
   const escolher = (c: ClienteResumoSelect) => {
     onChange(c.id)
@@ -49,8 +74,9 @@ export function ClienteSelect({ value, onChange, clientes, error }: ClienteSelec
       }}
     >
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setAberto((o) => !o)}
+        onClick={alternar}
         aria-haspopup="listbox"
         aria-expanded={aberto}
         className={`${fieldControl} flex items-center justify-between gap-2 text-left`}
@@ -63,10 +89,11 @@ export function ClienteSelect({ value, onChange, clientes, error }: ClienteSelec
 
       {error && <span className="mt-1 block text-xs font-medium text-danger-text">{error}</span>}
 
-      {aberto && (
+      {aberto && pos && (
         <div
           role="listbox"
-          className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-card p-1 shadow-lg"
+          style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width, zIndex: 50 }}
+          className="rounded-xl border border-border bg-card p-1 shadow-lg"
         >
           <div className="relative p-1">
             <Search

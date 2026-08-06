@@ -11,9 +11,17 @@
   }
 
   /* inputs nativos de data têm min-width intrínseco (locale + ícone) que pode
-     estourar telas estreitas — permitir encolher até o container (PLAN-039) */
+     estourar telas estreitas — normalizar com appearance:none faz o input
+     respeitar width:100% como um text field (P4; o ícone nativo é restaurado
+     abaixo via ::-webkit-calendar-picker-indicator). */
   input[type="date"] {
     min-width: 0;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
   }
 }
 

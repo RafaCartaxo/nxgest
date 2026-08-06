@@ -2,6 +2,22 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — WS7: transições de papel blindadas + fixes de UI (date, dropdown, labels)
+
+**Corrigido (segurança/consistência)**
+- **Sócio promovendo via `PATCH`:** o `create` já bloqueava (403) sócio criando admin/sócio, mas o `update` não — um sócio podia promover operadores da subárvore a `admin`/`socio` pela API. Guard espelhado no `update` (`role` ≠ `operator` → 403).
+- **Chefe órfão no rebaixamento:** rebaixar `admin→operator`/`sócio→operator` (ou `admin→sócio` com subordinado sócio) deixava subordinados com chefe inválido (`validarChefe` proíbe). Agora **bloqueado (422)** com contagem de subordinados ativos dentro da mesma transação (`NaoPodeRebaixarComSubordinadosError`).
+- **Higiene de chefe:** ao virar `admin`, `chefeId` é zerado (admin não tem chefe).
+
+**UI (pontos de verificação)**
+- **P4 — date fields:** `input[type="date"]` normalizado com `appearance: none` + `min-width: 0` (ContratoForm/GastoForm/Rota) — o campo respeita `width: 100%` e não estoura para a direita; ícone de calendário restaurado via `::-webkit-calendar-picker-indicator`.
+- **P5 — dropdown ClienteSelect:** posicionamento `absolute` era **cortado pelo `overflow-hidden` do `Card`** (novo contrato); agora `position: fixed` calculado do trigger (escapa do clip) + fecha em scroll/resize.
+- **P6 — labels de contrato:** "Quantidade de Parcelas"/"Number of Installments" quebravam o label no grid 2 col em pt/en (es curto alinhava). Labels encurtados: pt "Parcelas" · en "Installments" · es "Cuotas".
+
+**QA:** smoke ~**140** (CTs de transição 120-131 + regressões) · gates verdes (build, audits, docs, vitest).
+
+Referência: [07-CASOS-DE-USO-API](product/07-CASOS-DE-USO-API.md) (matriz de transições) · BR-103
+
 ## 06/08/2026 — Roles (sócio) + foto do usuário + Anexos + Empresa + ContratoForm/Rota
 
 Lote de fechamento de material pendente (identidade "Nexus" + PLAN-041/042 + Lovable):

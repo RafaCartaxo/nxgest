@@ -1283,6 +1283,60 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+# ADMIN — TRANSIÇÕES DE PAPEL (WS7)
+
+Matriz de transições via `PATCH /api/admin/operadores/:id` (papel-alvo). Ator sócio **não promove** (mesma regra do create); rebaixar com subordinados é **bloqueado** (chefe órfão).
+
+| Transição | Ator admin/super | Ator sócio | Observação |
+|---|---|---|---|
+| operator → sócio | 200 | 403 | chefe de sócio deve ser admin |
+| operator → admin | 200 | 403 | chefe vira `null` (higiene) |
+| sócio → admin | 200 | n/a | escopo vira a empresa toda |
+| sócio → operator | 200 (ou 422 se tiver subordinados) | n/a | token antigo → 403 |
+| admin → sócio | 200 (422 se tiver subordinado sócio) | n/a | — |
+| admin → operator | 200 (422 se tiver subordinados) | n/a | token antigo → 403 |
+| → super_admin (alvo) | 403 | 403 | `NaoPodeAlterarSuperAdminError` |
+| role = super_admin (body) | 400 | 400 | fora de `ROLES_ADMIN` |
+| trocar o próprio papel | 403 | 403 | `NaoPodeAutoModificarError` |
+
+### API-CT-120 — Promover operator→sócio (admin)
+**Dado** admin → **Quando** `PATCH .../operadores/:id` com `role: "socio"` (chefe = admin) → **Então** 200; login do promovido reflete `socio`.
+
+### API-CT-121 — Promover operator→admin (admin)
+**Dado** admin promovendo operator → **Então** 200 com `chefeId: null`; o **mesmo token antigo** passa a acessar `/admin/equipe` (role resolvida do banco).
+
+### API-CT-122 — Promover sócio→admin (admin)
+**Dado** admin promovendo sócio → **Então** 200; a equipe do promovido passa a ser a **empresa inteira** (mesmo token antigo).
+
+### API-CT-123 — Rebaixar sócio→operator
+**Dado** sócio **com subordinado** → **Então** 422 (chefe órfão). Após reatribuir o subordinado, rebaixa → 200; token antigo → 403 em `/admin/equipe`.
+
+### API-CT-124 — Rebaixar admin→sócio
+**Dado** admin → **Então** 200 com chefe = admin (ou null); login reflete `socio`.
+
+### API-CT-125 — Rebaixar admin→operator
+**Dado** admin → **Então** 200; token antigo → 403 em `/admin/equipe`.
+
+### API-CT-126 — Sócio não promove (PATCH)
+**Dado** sócio → `PATCH` de operador da subárvore com `role: "admin"` ou `"socio"` → **Então** 403; mantendo `"operator"` → 200; alterar o próprio papel → 403.
+
+### API-CT-127 — Chefe órfão bloqueia rebaixamento
+**Dado** admin/sócio **com subordinados ativos** → rebaixar para `operator` → **Então** 422. Após reatribuir/rebaixar os subordinados → 200. (Subordinados `deletedAt` não contam.)
+
+### API-CT-128 — Chefe de sócio deve ser admin
+**Dado** operador com chefe **sócio** promovido a sócio **sem trocar o chefe** → **Então** 422.
+
+### API-CT-129 — Super admin como alvo
+**Dado** `PATCH` de um usuário `super_admin` → **Então** 403.
+
+### API-CT-130 — role super_admin no body
+**Dado** `PATCH` com `role: "super_admin"` → **Então** 400.
+
+### API-CT-131 — Cross-tenant no PATCH
+**Dado** admin tentando mudar o papel de operador de **outra empresa** → **Então** 404.
+
+---
+
 # Referências
 
 - `engineering/02-API.md` — contrato completo (request/response JSON, validações, erros)

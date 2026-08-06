@@ -799,6 +799,10 @@ A **foto** (`foto`, data URL) é opcional em `usuarios`/`clientes`, normalizada 
 
 **Anexos por cliente** (`POST/GET/DELETE /api/clientes/:id/anexos*`): imagem (JPEG/PNG/WebP, ≤1MB e ≤1600px via compressão no front) ou PDF (≤5MB); guarda global `multer` de 5MB (413); tipo fora da allowlist → 422 `ANEXO_TIPO`; imagem >1MB → 422 `ANEXO_LIMITE`. O servidor valida o **MIME real** (magic bytes). Acesso escopado (operador: clientes próprios; admin/sócio: empresa/subárvore via `?usuarioId=`; super_admin: `?empresaId=`). Remoção registra quem/quando (coluna `criadoPor`). Dado sensível (LGPD) — nunca servido publicamente; `file` é autenticado e escopado. Arquivos em `UPLOADS_DIR/<clienteId>/` (ao lado do banco; `/data/uploads` no Docker) e **incluídos no backup**.
 
+## BR-103
+
+**Transições de papel** (`PATCH /api/admin/operadores/:id`): um **sócio** só pode gerenciar **operadores** — não pode definir `role` `admin`/`socio` (403, mesma regra do create). Admin **não tem chefe** (`chefeId` é zerado ao virar admin). **Rebaixamento com subordinados** é bloqueado (422): para `operator`, se houver qualquer subordinado ativo; para `socio` (a partir de admin), se houver subordinado `socio` ativo — evita chefe órfão (chefe inválido por `validarChefe`). Subordinados soft-deletados não contam. Regras de alvo/seleção: `super_admin` como alvo → 403; `role: "super_admin"` no body → 400; auto-alteração → 403; cross-tenant → 404.
+
 ---
 
 # Referências

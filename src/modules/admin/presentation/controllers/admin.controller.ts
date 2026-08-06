@@ -6,7 +6,7 @@ import { ListarEquipeUseCase } from "../../application/use-cases/ListarEquipe/Li
 import { CriarOperadorUseCase } from "../../application/use-cases/CriarOperador/CriarOperadorUseCase.js"
 import { EditarOperadorUseCase } from "../../application/use-cases/EditarOperador/EditarOperadorUseCase.js"
 import { RemoverOperadorUseCase } from "../../application/use-cases/RemoverOperador/RemoverOperadorUseCase.js"
-import { OperadorNaoEncontradoError, NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, NaoPodeAtribuirSuperAdminError } from "../../domain/errors/admin.error.js"
+import { OperadorNaoEncontradoError, NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, NaoPodeAtribuirSuperAdminError, NaoPodeRebaixarComSubordinadosError } from "../../domain/errors/admin.error.js"
 import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
 
 const ROLES_ADMIN = ["admin", "socio", "operator"] as const
@@ -173,6 +173,11 @@ export class AdminController {
           return
         }
       }
+      // Sócio gerencia apenas operadores (mesma regra do create — WS7).
+      if (req.userRole === "socio" && role !== undefined && role !== "operator") {
+        res.status(403).json({ code: "FORBIDDEN", message: "Sócio só pode gerenciar operadores." })
+        return
+      }
       const targetRole = role ?? existing.role
       if (chefeId !== undefined) {
         const chefeOk = await this.validarChefe(chefeId, targetEmpresaId, targetRole, req.params.id)
@@ -187,7 +192,9 @@ export class AdminController {
       if (email !== undefined) data.email = email
       if (role !== undefined) data.role = role
       if (senha !== undefined) data.senhaHash = await bcrypt.hash(senha, 10)
-      if (chefeId !== undefined) data.chefeId = chefeId
+      // Higiene (WS7): admin não tem chefe — zera mesmo quando o body não envia.
+      if (role === "admin" || targetRole === "admin") data.chefeId = null
+      else if (chefeId !== undefined) data.chefeId = chefeId
       if (foto !== undefined) data.foto = foto
 
       const operador = await this.editarUseCase.execute(req.params.id, data, userId, targetEmpresaId, scope)
@@ -195,6 +202,10 @@ export class AdminController {
     } catch (err) {
       if (err instanceof OperadorNaoEncontradoError) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: err.message })
+        return
+      }
+      if (err instanceof NaoPodeRebaixarComSubordinadosError) {
+        res.status(422).json({ code: "VALIDATION_ERROR", message: err.message })
         return
       }
       if (err instanceof NaoPodeAutoModificarError || err instanceof NaoPodeAlterarSuperAdminError || err instanceof NaoPodeAtribuirSuperAdminError) {

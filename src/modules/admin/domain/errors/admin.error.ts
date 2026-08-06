@@ -25,3 +25,10 @@ export class NaoPodeAtribuirSuperAdminError extends Error {
     this.name = "NaoPodeAtribuirSuperAdminError"
   }
 }
+
+export class NaoPodeRebaixarComSubordinadosError extends Error {
+  constructor(message = "Rebaixe/reatribua os subordinados antes de rebaixar este usuário.") {
+    super(message)
+    this.name = "NaoPodeRebaixarComSubordinadosError"
+  }
+}

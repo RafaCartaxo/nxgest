@@ -215,7 +215,7 @@
     "valorEmprestado": "Loan Amount",
     "juros": "Interest (%)",
     "jurosLabel": "Interest",
-    "quantidadeParcelas": "Number of Installments",
+    "quantidadeParcelas": "Installments",
     "dataInicio": "Start Date",
     "totalAReceber": "Total Receivable",
     "termino": "End",

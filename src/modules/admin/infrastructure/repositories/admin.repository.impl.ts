@@ -2,7 +2,7 @@ import { eq, and, count, isNull, ne, sum, inArray } from "drizzle-orm"
 import { db, usuarios, clientes, contratos, pagamentos, movimentacoesFinanceiras } from "../../../../database.js"
 import type { IAdminRepository, OperadorRow, AdminDashboardStats, EquipeItem } from "../../application/ports/admin.repository.js"
 import { v4 as uuid } from "uuid"
-import { NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, OperadorNaoEncontradoError } from "../../domain/errors/admin.error.js"
+import { NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, OperadorNaoEncontradoError, NaoPodeRebaixarComSubordinadosError } from "../../domain/errors/admin.error.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
 const SCOPE_NOT_SUPER = [isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin")]
@@ -112,15 +112,34 @@ export class AdminRepository implements IAdminRepository {
       throw new NaoPodeAlterarSuperAdminError()
     }
 
-    const updateData: Record<string, unknown> = {}
-    if (data.nome !== undefined) updateData.nome = data.nome
-    if (data.email !== undefined) updateData.email = data.email
-    if (data.role !== undefined) updateData.role = data.role
-    if (data.senhaHash !== undefined) updateData.senhaHash = data.senhaHash
-    if (data.chefeId !== undefined) updateData.chefeId = data.chefeId
-    if (data.foto !== undefined) updateData.foto = data.foto
+    // Bloqueio de "chefe órfão" (WS7): rebaixar pode deixar subordinados com chefe inválido.
+    const demoteToOperator = data.role === "operator" && existing.role !== "operator"
+    const demoteToSocio = data.role === "socio" && existing.role === "admin"
 
-    await db.update(usuarios).set(updateData).where(eq(usuarios.id, id))
+    db.transaction((tx) => {
+      if (demoteToOperator) {
+        const sub = tx.select({ total: count() }).from(usuarios).where(and(eq(usuarios.chefeId, id), isNull(usuarios.deletedAt))).get()
+        if ((sub?.total ?? 0) > 0) {
+          throw new NaoPodeRebaixarComSubordinadosError("Rebaixe/reatribua os operadores antes de rebaixar para operador.")
+        }
+      }
+      if (demoteToSocio) {
+        const sub = tx.select({ total: count() }).from(usuarios).where(and(eq(usuarios.chefeId, id), eq(usuarios.role, "socio"), isNull(usuarios.deletedAt))).get()
+        if ((sub?.total ?? 0) > 0) {
+          throw new NaoPodeRebaixarComSubordinadosError("Rebaixe/reatribua os sócios antes de rebaixar para sócio.")
+        }
+      }
+
+      const updateData: Record<string, unknown> = {}
+      if (data.nome !== undefined) updateData.nome = data.nome
+      if (data.email !== undefined) updateData.email = data.email
+      if (data.role !== undefined) updateData.role = data.role
+      if (data.senhaHash !== undefined) updateData.senhaHash = data.senhaHash
+      if (data.chefeId !== undefined) updateData.chefeId = data.chefeId
+      if (data.foto !== undefined) updateData.foto = data.foto
+
+      tx.update(usuarios).set(updateData).where(eq(usuarios.id, id)).run()
+    })
 
     return this.findById(id, empresaId, scopeUserIds)
   }
