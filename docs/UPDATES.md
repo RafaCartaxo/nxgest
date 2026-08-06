@@ -408,3 +408,18 @@ Referência: [PLAN-023](plans/PLAN-023-ajustes-pos-validacao.md)
 - Resultado do Dia em módulo com cor verde/vermelha + tooltip de composição; header indica o nível (admin/empresa + badge); idioma movido para a engrenagem.
 
 Referência: [PLAN-021](plans/PLAN-021-admin-contexto-kpis.md) · [PLAN-022](plans/PLAN-022-admin-kpis-ajuste.md)
+
+## 06/08/2026 — PLAN-055 · Módulo de localização/navegação + fix do endereço
+
+**Corrigido**
+- **Bug de navegação (endereço × GPS):** editar o texto do endereço (comércio OU principal) **não descartava** as coordenadas capturadas → o "Navegar" abria o mapa no ponto antigo. Agora o form **descarta as coords ao editar o texto** (indicador "Localização não capturada" + botão **Recapturar**) e o navegador passa a usar o endereço novo.
+
+**Adicionado / Melhorado**
+- **Módulo `shared/geo/`** (modulação do GPS/navegar, sem quebrar a rota): `montarAlvo` (coords > texto, sem misturar endereços) · `resolveAlvoCliente` (alvo = **comércio padrão** → principal fallback) · `alvoNavegavel` · `buildMapsUrl` (regra idêntica) · `useGeolocation` (captura + reverse geocode, cooldown) · `CapturaLocalizacao` (3 estados). **18 testes unitários** (N1–N12).
+- **GPS no endereço principal** (colunas `lat`/`lng` que eram mortas): backend `localizacao` (Create/Update + repo) + botão no form do cliente.
+- **`ClienteForm` compartilhado** (extrai ClienteNovo/ClienteEdit duplicados) com o fix embutido.
+- **Smoke +7 CTs (GEO-001..007, total 116/116)** · UC-080 (06) · API-CT-100..105 (07).
+
+**Por quê:** correção de dado (navegador ia pro endereço errado) + camada de base para o redesign visual dos cadastros (briefing `Lovable-Cadastro-Rota-NXGestao.md`).
+
+Referência: [PLAN-055](plans/PLAN-055-modulo-localizacao-navegacao-fix-endereco.md)

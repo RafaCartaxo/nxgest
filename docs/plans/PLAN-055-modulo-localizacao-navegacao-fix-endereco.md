@@ -1,6 +1,6 @@
 # PLAN-055 — Módulo de localização/navegação + fix do endereço (base p/ o redesign visual)
 
-**Status:** Em andamento
+**Status:** Concluído
 
 **Versão:** 1.0
 
