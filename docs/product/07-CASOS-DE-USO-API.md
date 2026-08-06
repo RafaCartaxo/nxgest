@@ -95,6 +95,10 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 | 40 | `POST /api/admin/empresas` | API-UC-040 | 073-074 |
 | 41 | `PATCH /api/auth/senha` | API-UC-041 | 075-077 |
 | 42 | `PATCH /api/auth/foto` | API-UC-042 | 088 |
+| 43 | `POST /api/clientes/:id/anexos` | API-UC-043 | 089-092 |
+| 44 | `GET /api/clientes/:id/anexos` | API-UC-044 | 089 |
+| 45 | `GET /api/clientes/:id/anexos/:anexoId/file` | API-UC-045 | 093 |
+| 46 | `DELETE /api/clientes/:id/anexos/:anexoId` | API-UC-046 | 094 |
 | 43 | `PATCH /api/admin/empresas/:id/modulos` | API-UC-043 | 091-096 |
 
 ---
@@ -283,6 +287,63 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### API-CT-016 — Excluir cliente com contratos
 **Dado** cliente com contrato ativo → **Então** 409 (contratos ativos impedem exclusão).
+
+---
+
+## ANEXOS (PLAN-042)
+
+## API-UC-043 — Enviar anexo
+
+**Endpoint:** `POST /api/clientes/:id/anexos` · **Auth:** Bearer + escopo · **Multipart:** campo `arquivo` + opcional `tipo`
+
+**Response 201:** `{ id, nome, tipo, mime, tamanho, createdAt }`
+
+**Coerência:**
+- [ ] Imagem JPEG/PNG/WebP pós-compressão ≤1MB → 201; >1MB → **422 `ANEXO_LIMITE`**?
+- [ ] PDF ≤5MB → 201; >5MB → **413** (multer)?
+- [ ] Tipo real fora da allowlist (ex.: arquivo `.exe` renomeado) → **422 `ANEXO_TIPO`**?
+- [ ] Cliente de outro operador / fora da subárvore → **404**?
+- [ ] Aparece no `GET /api/clientes/:id/anexos`?
+
+**Regras:** BR-102 · **Postman:** `Clientes > Enviar anexo`
+
+### API-CT-089 — Upload imagem válida
+**Dado** operador com um cliente próprio → **Quando** `POST .../anexos` com JPEG ≤1MB → **Então** 201 e o item aparece na lista.
+
+### API-CT-090 — Upload PDF válido
+**Dado** PDF ≤5MB → **Então** 201; o `file` serve com `Content-Type: application/pdf`.
+
+### API-CT-091 — Limites
+**Dado** imagem >1MB → **Então** 422 `ANEXO_LIMITE`; **Dado** arquivo >5MB → **Então** 413.
+
+### API-CT-092 — Tipo inválido (MIME real)
+**Dado** arquivo com extensão/`content-type` falso, mas conteúdo fora da allowlist → **Então** 422 `ANEXO_TIPO`.
+
+## API-UC-044 — Listar anexos
+
+**Endpoint:** `GET /api/clientes/:id/anexos` · **Auth:** Bearer + escopo
+
+**Response 200:** array de metadados (sem bytes).
+
+## API-UC-045 — Baixar anexo
+
+**Endpoint:** `GET /api/clientes/:id/anexos/:anexoId/file` · **Auth:** Bearer + escopo
+
+**Response 200:** binário do arquivo (`Content-Type` do MIME real, `Content-Disposition: inline`).
+
+### API-CT-093 — Lista e stream escopados
+**Dado** `GET .../anexos` de cliente do escopo → **Então** 200 com metadados; `GET .../anexos/:id/file` → **Então** 200 binário. **Dado** anexo de cliente fora do escopo (outro operador, `?usuarioId=` de outra subárvore) → **Então** 404.
+
+## API-UC-046 — Remover anexo
+
+**Endpoint:** `DELETE /api/clientes/:id/anexos/:anexoId` · **Auth:** Bearer + escopo
+
+**Response 204:** arquivo apagado de `UPLOADS_DIR` + linha removida.
+
+### API-CT-094 — Remoção
+**Dado** anexo do escopo → **Então** 204 e some da lista e do `file` (404). **Dado** anexo inexistente ou fora do escopo → **Então** 404.
+
+---
 
 ---
 

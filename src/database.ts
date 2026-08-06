@@ -196,6 +196,18 @@ export const empresas = sqliteTable("empresas", {
   modulos: text("modulos"),
 })
 
+export const anexos = sqliteTable("anexos", {
+  id: text("id").primaryKey(),
+  clienteId: text("clienteId").notNull(),
+  tipo: text("tipo").notNull().default("outro"),
+  nomeOriginal: text("nomeOriginal").notNull(),
+  mime: text("mime").notNull(),
+  tamanho: integer("tamanho").notNull(),
+  caminho: text("caminho").notNull(),
+  criadoPor: text("criadoPor").notNull(),
+  createdAt: text("createdAt").notNull(),
+})
+
 export async function createTables() {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS clientes (
@@ -407,6 +419,19 @@ export async function createTables() {
       nome TEXT NOT NULL,
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]'
+    );
+
+    CREATE TABLE IF NOT EXISTS anexos (
+      id TEXT PRIMARY KEY,
+      clienteId TEXT NOT NULL,
+      tipo TEXT NOT NULL DEFAULT 'outro',
+      nomeOriginal TEXT NOT NULL,
+      mime TEXT NOT NULL,
+      tamanho INTEGER NOT NULL,
+      caminho TEXT NOT NULL,
+      criadoPor TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      FOREIGN KEY (clienteId) REFERENCES clientes(id)
     );
 
   `)

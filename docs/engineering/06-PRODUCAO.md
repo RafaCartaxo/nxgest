@@ -110,11 +110,13 @@ O banco roda em **WAL mode**: os dados vivos ficam no arquivo `.db-wal` (~1MB) e
 |------|-------|
 | Script | `/opt/scripts/backup-nxgestao.sh` (fora do repo) |
 | Cron | `0 */12 * * *` (a cada 12h) |
-| Destino | `/opt/backups/gestao-YYYYMMDD-HHMMSS.db` |
+| Destino | `/opt/backups/gestao-YYYYMMDD-HHMMSS.db` + `uploads-YYYYMMDD-HHMMSS.tar.gz` |
 | Retenção | 14 dias (limpeza automática no script) |
 | Validação | Embutida — backup vazio é renomeado `.invalid` e o script falha |
 
 **Backup pré-deploy:** `scripts/deploy.sh` (no repo) chama o script de backup **antes** do build — cada deploy gera snapshot do estado anterior (ver seção 4).
+
+> **Anexos (PLAN-042):** desde a implementação dos uploads, o backup **inclui `/data/uploads`** (tar.gz). Anexo perdido no desastre = dado perdido — nunca restaurar só o `.db`.
 
 Script (para referência/recriação):
 
@@ -127,6 +129,8 @@ CONTAINER=nxgestao-app-1
 DB_PATH=/data/gestao.db
 TMP_DB=/data/backup-$STAMP.db
 OUT=$BACKUP_DIR/gestao-$STAMP.db
+UPLOADS_TAR=/data/uploads-$STAMP.tar.gz
+OUT_UPLOADS=$BACKUP_DIR/uploads-$STAMP.tar.gz
 mkdir -p $BACKUP_DIR
 # 1) Checkpoint WAL (materializa dados do .db-wal no arquivo principal)
 docker exec $CONTAINER node -e "
@@ -144,9 +148,13 @@ if docker exec $CONTAINER node -e "
 else
   docker exec $CONTAINER rm -f $TMP_DB; echo "ERRO: backup inválido" >&2; exit 1
 fi
+# 3) Anexos (/data/uploads) em tar.gz (PLAN-042)
+docker exec $CONTAINER sh -c "cd /data && tar czf $UPLOADS_TAR uploads 2>/dev/null || tar czf $UPLOADS_TAR --files-from /dev/null" || true
 docker cp $CONTAINER:$TMP_DB $OUT
-docker exec $CONTAINER rm -f $TMP_DB
+docker cp $CONTAINER:$UPLOADS_TAR $OUT_UPLOADS
+docker exec $CONTAINER rm -f $TMP_DB $UPLOADS_TAR
 find $BACKUP_DIR -name "gestao-*.db" -mtime +14 -delete
+find $BACKUP_DIR -name "uploads-*.tar.gz" -mtime +14 -delete
 ls -lh $BACKUP_DIR | tail -4
 ```
 
@@ -154,9 +162,12 @@ ls -lh $BACKUP_DIR | tail -4
 
 ```bash
 scp root@172.245.152.223:/opt/backups/gestao-<DATA>.db ~/.config/nxgestao/backups/backup-offsite-gestao.db
+scp root@172.245.152.223:/opt/backups/uploads-<DATA>.tar.gz ~/.config/nxgestao/backups/backup-offsite-uploads.tar.gz
 ```
 
 > **Corrigido em 02/08/2026:** a cópia off-site anterior estava **vazia** (4KB, gerada do `gestao.db` cru sem WAL). Substituída pelo backup consistente (`gestao-20260802-115822.db`, 241KB, 5 usuários). O `scp` deve sempre baixar um backup **válido** de `/opt/backups/` (nunca o `gestao.db` cru do volume).
+>
+> **Desde PLAN-042:** baixar também o `uploads-<DATA>.tar.gz` (anexos). 
 >
 > Se o VPS for perdido por completo (falha de hardware/provedor), a cópia off-site é a única via de recuperação.
 
@@ -170,10 +181,14 @@ docker compose -f docker-compose.prod.yml stop app
 # 2. Copiar o backup para dentro do volume
 docker cp ./gestao-<DATA>.db nxgestao-app-1:/data/gestao.db
 
-# 3. Subir de novo
+# 3. Restaurar anexos (PLAN-042), se houver uploads-<DATA>.tar.gz
+docker cp ./uploads-<DATA>.tar.gz nxgestao-app-1:/data/uploads-<DATA>.tar.gz
+docker exec nxgestao-app-1 sh -c "cd /data && rm -rf uploads && tar xzf uploads-<DATA>.tar.gz && rm -f uploads-<DATA>.tar.gz"
+
+# 4. Subir de novo
 docker compose -f docker-compose.prod.yml start app
 
-# 4. Validar
+# 5. Validar
 curl -s https://nxgestao.duckdns.org/api/health
 ```
 

@@ -53,11 +53,35 @@ function realBackendRoutes() {
   }
   walk(routesDir)
 
-  const out = new Set()
+  // nome exportado → src (p/ resolver mounts aninhados via router.use)
+  const srcByVar = new Map()
   for (const file of files) {
     const src = readFileSync(file, "utf8")
-    const exportedName = src.match(/export\s*\{\s*router\s+as\s+(\w+Routes)\s*\}/)?.[1]
-    const mount = mountByVar.get(exportedName ?? "")
+    const name = src.match(/export\s*\{\s*router\s+as\s+(\w+Routes)\s*\}/)?.[1]
+    if (name) srcByVar.set(name, src)
+  }
+
+  // Sub-routers montados com `router.use(<path>, <NameRoutes>)` dentro de outro
+  // router (ex.: anexoRoutes sob `/api/clientes/:id/anexos`). Propaga os mounts.
+  let changed = true
+  while (changed) {
+    changed = false
+    for (const [name, src] of srcByVar) {
+      const mount = mountByVar.get(name)
+      if (!mount) continue
+      for (const m of src.matchAll(/router\.use\(\s*"([^"]+)",\s*(\w+Routes)\)/g)) {
+        const childMount = norm(mount + m[1])
+        if (mountByVar.get(m[2]) !== childMount) {
+          mountByVar.set(m[2], childMount)
+          changed = true
+        }
+      }
+    }
+  }
+
+  const out = new Set()
+  for (const [name, src] of srcByVar) {
+    const mount = mountByVar.get(name)
     if (!mount) continue
     const pats = [...src.matchAll(/router\.(get|post|put|patch|delete)\(\s*["']([^"']+)["']/g)]
     for (const [, method, path] of pats) {

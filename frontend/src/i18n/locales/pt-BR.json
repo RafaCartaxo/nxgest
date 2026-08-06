@@ -564,5 +564,25 @@
     "falha": "Não foi possível processar a imagem. Tente outra foto.",
     "fotoSalva": "Foto atualizada.",
     "fotoRemovida": "Foto removida."
+  },
+  "anexos": {
+    "title": "Anexos",
+    "anexar": "Anexar",
+    "preparando": "Preparando…",
+    "vazio": "Nenhum anexo",
+    "vazioDescricao": "Anexe o comprovante de residência do cliente — foto pelo celular ou PDF.",
+    "abrir": "Abrir",
+    "remover": "Remover",
+    "tipoComprovante": "Comprovante de residência",
+    "tipoDocumento": "Documento",
+    "tipoOutro": "Outro",
+    "tipoErro": "Formato não aceito. Envie JPEG, PNG, WebP ou PDF.",
+    "limiteErro": "Arquivo acima do limite (imagem 1MB · PDF 5MB).",
+    "falha": "Não foi possível preparar o arquivo. Tente novamente.",
+    "erroCarregar": "Não foi possível carregar os anexos.",
+    "erroServidor": "Não foi possível enviar o anexo.",
+    "anexado": "Anexo enviado.",
+    "removido": "Anexo removido.",
+    "hint": "Imagem até 1MB (reduzida para 1600px antes do envio) · PDF até 5MB. Arquivos são servidos apenas por endpoint autenticado."
   }
 }

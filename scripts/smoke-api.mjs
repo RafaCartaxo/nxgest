@@ -46,6 +46,20 @@ async function req(method, path, { token, body, query } = {}) {
   return { status: res.status, data }
 }
 
+/** Requisição multipart (formdata) — uploads de anexos. */
+async function reqForm(path, { token, fields }) {
+  const form = new FormData()
+  for (const f of fields) {
+    if (f.buffer) form.append(f.key, new Blob([f.buffer], { type: f.type }), f.filename)
+    else form.append(f.key, f.value)
+  }
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+  const res = await fetch(BASE + path, { method: "POST", headers, body: form })
+  let data = null
+  try { data = await res.json() } catch { /* empty */ }
+  return { status: res.status, data }
+}
+
 function expect(r, status, ctx) {
   if (r.status !== status) {
     throw new Error(`${ctx}: esperava ${status}, recebi ${r.status} ${JSON.stringify(r.data)?.slice(0, 200)}`)
@@ -273,6 +287,68 @@ async function main() {
     const r = await req("DELETE", `/api/clientes/${cobranca.clienteId}`, { token: opToken })
     expect(r, 409, "delete cliente com contrato")
   })
+
+  // ---------- ANEXOS (PLAN-042) ----------
+  const jpegBuffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01])
+  const pdfBuffer = Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(512, 0x20)])
+  let anexoId
+  await t("ANE-089", "POST anexo imagem (201) + lista reflete", async () => {
+    const r = await reqForm(`/api/clientes/${clienteId}/anexos`, {
+      token: opToken,
+      fields: [
+        { key: "arquivo", filename: "comprovante.jpg", type: "image/jpeg", buffer: jpegBuffer },
+        { key: "tipo", value: "comprovante-residencia" },
+      ],
+    })
+    expect(r, 201, "upload imagem")
+    anexoId = r.data.id
+    if (r.data.mime !== "image/jpeg") throw new Error("mime real não detectado")
+    const lista = await req("GET", `/api/clientes/${clienteId}/anexos`, { token: opToken })
+    expect(lista, 200, "listar anexos")
+    if (!lista.data.some((a) => a.id === anexoId)) throw new Error("anexo não está na lista")
+  })
+  await t("ANE-090", "POST anexo PDF (201)", async () => {
+    const r = await reqForm(`/api/clientes/${clienteId}/anexos`, {
+      token: opToken,
+      fields: [{ key: "arquivo", filename: "conta.pdf", type: "application/pdf", buffer: pdfBuffer }],
+    })
+    expect(r, 201, "upload pdf")
+    if (r.data.mime !== "application/pdf") throw new Error("mime pdf não detectado")
+  })
+  await t("ANE-092", "Tipo inválido por MIME real (422 ANEXO_TIPO)", async () => {
+    const r = await reqForm(`/api/clientes/${clienteId}/anexos`, {
+      token: opToken,
+      fields: [{ key: "arquivo", filename: "fake.exe", type: "application/octet-stream", buffer: Buffer.from("MZ\x90\x00") }],
+    })
+    expect(r, 422, "tipo inválido")
+    if (r.data.code !== "ANEXO_TIPO") throw new Error("code esperado ANEXO_TIPO")
+  })
+  await t("ANE-091", "Imagem >1MB (422 ANEXO_LIMITE)", async () => {
+    const big = Buffer.concat([jpegBuffer, Buffer.alloc(2 * 1024 * 1024, 0x00)])
+    const r = await reqForm(`/api/clientes/${clienteId}/anexos`, {
+      token: opToken,
+      fields: [{ key: "arquivo", filename: "gigante.jpg", type: "image/jpeg", buffer: big }],
+    })
+    expect(r, 422, "limite imagem")
+    if (r.data.code !== "ANEXO_LIMITE") throw new Error("code esperado ANEXO_LIMITE")
+  })
+  await t("ANE-093", "GET file autenticado (200) + DELETE (204)", async () => {
+    const res = await fetch(`${BASE}/api/clientes/${clienteId}/anexos/${anexoId}/file`, {
+      headers: { Authorization: `Bearer ${opToken}` },
+    })
+    if (res.status !== 200) throw new Error(`file: esperava 200, recebi ${res.status}`)
+    const del = await req("DELETE", `/api/clientes/${clienteId}/anexos/${anexoId}`, { token: opToken })
+    expect(del, 204, "remover anexo")
+    const depois = await req("GET", `/api/clientes/${clienteId}/anexos`, { token: opToken })
+    if (depois.data.some((a) => a.id === anexoId)) throw new Error("anexo não foi removido")
+  })
+  await t("ANE-X1", "Escopo: anexos de cliente de outro operador (404)", async () => {
+    const sofia = await req("POST", "/api/auth/login", { body: { email: "sofia.nx@uorak.com", senha: SENHA } })
+    expect(sofia, 200, "login sofia")
+    const r = await req("GET", `/api/clientes/${clienteId}/anexos`, { token: sofia.data.token })
+    expect(r, 404, "fora do escopo")
+  })
+
   await t("CLI-015", "DELETE cliente sem contratos (204)", async () => {
     const r = await req("DELETE", `/api/clientes/${clienteSemContrato}`, { token: opToken })
     expect(r, 204, "delete cliente sem contrato")

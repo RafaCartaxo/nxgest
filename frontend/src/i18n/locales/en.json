@@ -564,5 +564,25 @@
     "falha": "Could not process the image. Try another photo.",
     "fotoSalva": "Photo updated.",
     "fotoRemovida": "Photo removed."
+  },
+  "anexos": {
+    "title": "Attachments",
+    "anexar": "Attach",
+    "preparando": "Preparing…",
+    "vazio": "No attachments",
+    "vazioDescricao": "Attach the customer's proof of residence — photo from your phone or PDF.",
+    "abrir": "Open",
+    "remover": "Remove",
+    "tipoComprovante": "Proof of residence",
+    "tipoDocumento": "Document",
+    "tipoOutro": "Other",
+    "tipoErro": "Format not accepted. Send JPEG, PNG, WebP or PDF.",
+    "limiteErro": "File above the limit (image 1MB · PDF 5MB).",
+    "falha": "Could not prepare the file. Try again.",
+    "erroCarregar": "Could not load the attachments.",
+    "erroServidor": "Could not upload the attachment.",
+    "anexado": "Attachment uploaded.",
+    "removido": "Attachment removed.",
+    "hint": "Image up to 1MB (reduced to 1600px before upload) · PDF up to 5MB. Files are served only through an authenticated endpoint."
   }
 }

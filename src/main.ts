@@ -16,8 +16,10 @@ import { operacoesRoutes } from "./modules/operacoes/presentation/routes/operaco
 import { caixaRoutes } from "./modules/caixa/presentation/routes/caixa.routes.js"
 import { empresaRoutes } from "./modules/admin/presentation/routes/empresa.routes.js"
 import { gastoRoutes } from "./modules/gasto/presentation/routes/gasto.routes.js"
+import { garantirUploadsDir } from "./shared/utils/uploads.js"
 
 await createTables()
+garantirUploadsDir()
 
 const app = express()
 

@@ -24,6 +24,6 @@ COPY --from=build /app/frontend/dist/ ./frontend/dist/
 
 EXPOSE 8080
 ENV NODE_ENV=production
-RUN mkdir -p /data && chown node:node /data && chown node:node /app
+RUN mkdir -p /data/uploads && chown node:node /data /data/uploads && chown node:node /app
 USER node
 CMD ["node", "dist/main.js"]

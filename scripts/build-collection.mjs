@@ -18,7 +18,7 @@ const PUBLIC = "public"
 
 /** Define um request da collection. */
 function req(name, method, path, opts = {}) {
-  const { auth = AUTH, body, query, description } = opts
+  const { auth = AUTH, body, form, query, description } = opts
   const pathSegments = path.split("/").filter(Boolean)
   const r = {
     method,
@@ -37,6 +37,16 @@ function req(name, method, path, opts = {}) {
   }
   if (body) {
     r.body = { mode: "raw", raw: JSON.stringify(body, null, 2), options: { raw: { language: "json" } } }
+  }
+  if (form) {
+    r.body = {
+      mode: "formdata",
+      formdata: form.map((f) =>
+        f.type === "file"
+          ? { key: f.key, type: "file", src: f.src }
+          : { key: f.key, value: f.value ?? "", type: "text" }
+      ),
+    }
   }
   if (description) {
     r.description = description
@@ -83,6 +93,13 @@ const endpoints = [
       description: "API-UC-007 · 200 · 409 CPF de outro cliente",
     }),
     req("Excluir", "DELETE", "/api/clientes/{{clienteId}}", { description: "API-UC-008 · 204 · 409 com contratos ativos" }),
+    req("Listar anexos", "GET", "/api/clientes/{{clienteId}}/anexos", { description: "API-UC-044 · 200 metadados (sem bytes)" }),
+    req("Enviar anexo", "POST", "/api/clientes/{{clienteId}}/anexos", {
+      form: [{ key: "arquivo", type: "file", src: "/tmp/exemplo.jpg" }, { key: "tipo", value: "comprovante-residencia" }],
+      description: "API-UC-043 · 201 · 422 ANEXO_TIPO/ANEXO_LIMITE · 413 >5MB (BR-102, PLAN-042)",
+    }),
+    req("Baixar anexo", "GET", "/api/clientes/{{clienteId}}/anexos/{{anexoId}}/file", { description: "API-UC-045 · 200 binário (autenticado e escopado)" }),
+    req("Remover anexo", "DELETE", "/api/clientes/{{clienteId}}/anexos/{{anexoId}}", { description: "API-UC-046 · 204 · 404" }),
   ]),
 
   mod("Contratos", "CRUD de contratos", [

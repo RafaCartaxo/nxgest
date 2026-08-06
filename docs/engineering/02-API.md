@@ -368,6 +368,114 @@ Remove um cliente.
 
 ---
 
+# Anexos do cliente (PLAN-042)
+
+Anexos (comprovante de residência, foto/PDF) escopados ao cliente. Acesso segue a mesma regra do restante do módulo (`resolveUsuarioAlvo`): operador → clientes próprios; admin/sócio → `?usuarioId=` dentro da empresa/subárvore; super admin → `?empresaId=`.
+
+## Endpoints
+
+| Método | Endpoint | Auth | Descrição |
+|---------|----------|------|-----------|
+| POST | `/api/clientes/:id/anexos` | Bearer + escopo | Upload multipart (campo `arquivo`, opcional `tipo`) |
+| GET | `/api/clientes/:id/anexos` | Bearer + escopo | Listar metadados (sem bytes) |
+| GET | `/api/clientes/:id/anexos/:anexoId/file` | Bearer + escopo | Stream do arquivo |
+| DELETE | `/api/clientes/:id/anexos/:anexoId` | Bearer + escopo | Remover anexo (arquivo + linha) |
+
+---
+
+# POST /api/clientes/{id}/anexos
+
+Envia um anexo do cliente. **Multipart/form-data**, campo `arquivo` (obrigatório) + opcional `tipo` (`comprovante-residencia` | `documento` | `outro`, default `outro`).
+
+**Limites:** imagem (JPEG/PNG/WebP) ≤ **1MB** (422 `ANEXO_LIMITE`); PDF ≤ **5MB** (413 — guarda global do `multer` também em 5MB); tipo fora da allowlist → 422 `ANEXO_TIPO`. O servidor valida o **MIME real** (magic bytes), não o `content-type` do cliente.
+
+## Response 201
+
+```json
+{
+    "id": "b7c2...",
+    "nome": "conta-energia.jpg",
+    "tipo": "comprovante-residencia",
+    "mime": "image/jpeg",
+    "tamanho": 186400,
+    "createdAt": "2026-08-06T12:00:00.000Z"
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| ANEXO_VAZIO | 400 |
+| ANEXO_TIPO | 422 |
+| ANEXO_LIMITE | 413/422 |
+| CLIENT_NOT_FOUND | 404 |
+
+---
+
+# GET /api/clientes/{id}/anexos
+
+Lista os metadados dos anexos do cliente (sem os bytes).
+
+## Response 200
+
+```json
+[
+    {
+        "id": "b7c2...",
+        "nome": "conta-energia.jpg",
+        "tipo": "comprovante-residencia",
+        "mime": "image/jpeg",
+        "tamanho": 186400,
+        "createdAt": "2026-08-06T12:00:00.000Z"
+    }
+]
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| CLIENT_NOT_FOUND | 404 |
+
+---
+
+# GET /api/clientes/{id}/anexos/{anexoId}/file
+
+Serve o arquivo (stream). Autenticado e escopado — nunca estático público. `Content-Disposition: inline`.
+
+## Response 200
+
+Binário do arquivo (`Content-Type` do MIME real).
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| CLIENT_NOT_FOUND | 404 |
+| ANEXO_NOT_FOUND | 404 |
+
+---
+
+# DELETE /api/clientes/{id}/anexos/{anexoId}
+
+Remove o anexo (apaga o arquivo de `UPLOADS_DIR` + a linha em `anexos`).
+
+## Response
+
+```text
+204 No Content
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| CLIENT_NOT_FOUND | 404 |
+| ANEXO_NOT_FOUND | 404 |
+
+---
+
 # Módulo Contrato
 
 ## Endpoints

@@ -795,6 +795,10 @@ A **lista de contratos** (`GET /api/contratos`) expõe, por contrato, a situaç�
 
 A **foto** (`foto`, data URL) é opcional em `usuarios`/`clientes`, normalizada na entrada (≤200px, ≤500KB decodificados). O usuário altera a própria via `PATCH /api/auth/foto` (`null` remove); admin/sócio/super_admin definem a foto de operador do escopo via `PATCH /api/admin/operadores/:id`; operador define a foto do próprio cliente. O servidor revalida tipo (`FOTO_TIPO`) e tamanho (`FOTO_LIMITE`) — nunca confia no front.
 
+## BR-102
+
+**Anexos por cliente** (`POST/GET/DELETE /api/clientes/:id/anexos*`): imagem (JPEG/PNG/WebP, ≤1MB e ≤1600px via compressão no front) ou PDF (≤5MB); guarda global `multer` de 5MB (413); tipo fora da allowlist → 422 `ANEXO_TIPO`; imagem >1MB → 422 `ANEXO_LIMITE`. O servidor valida o **MIME real** (magic bytes). Acesso escopado (operador: clientes próprios; admin/sócio: empresa/subárvore via `?usuarioId=`; super_admin: `?empresaId=`). Remoção registra quem/quando (coluna `criadoPor`). Dado sensível (LGPD) — nunca servido publicamente; `file` é autenticado e escopado. Arquivos em `UPLOADS_DIR/<clienteId>/` (ao lado do banco; `/data/uploads` no Docker) e **incluídos no backup**.
+
 ---
 
 # Referências
