@@ -11,6 +11,7 @@ export interface LoginResponse {
     empresaNome?: string | null
     modulos?: string[] | null
     chefeId?: string | null
+    foto?: string | null
   }
 }
 
@@ -23,6 +24,7 @@ export interface MeResponse {
   empresaNome?: string | null
   modulos?: string[] | null
   chefeId?: string | null
+  foto?: string | null
 }
 
 export async function login(email: string, senha: string): Promise<LoginResponse> {
@@ -35,4 +37,8 @@ export async function getMe(): Promise<MeResponse> {
 
 export async function alterarSenha(senhaAtual: string, novaSenha: string): Promise<{ ok: boolean }> {
   return apiRequest<{ ok: boolean }>("PATCH", "/auth/senha", { senhaAtual, novaSenha })
+}
+
+export async function alterarFoto(foto: string | null): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>("PATCH", "/auth/foto", { foto })
 }

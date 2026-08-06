@@ -5,7 +5,7 @@ export class EditarOperadorUseCase {
 
   async execute(
     id: string,
-    data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null },
+    data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null },
     currentUserId: string,
     empresaId?: string | null,
     scopeUserIds?: string[]

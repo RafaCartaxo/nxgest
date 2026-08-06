@@ -94,6 +94,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 | 39 | `GET /api/admin/empresas/:id` | API-UC-039 | 071-072 |
 | 40 | `POST /api/admin/empresas` | API-UC-040 | 073-074 |
 | 41 | `PATCH /api/auth/senha` | API-UC-041 | 075-077 |
+| 42 | `PATCH /api/auth/foto` | API-UC-042 | 088 |
 | 43 | `PATCH /api/admin/empresas/:id/modulos` | API-UC-043 | 091-096 |
 
 ---
@@ -1174,6 +1175,20 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### API-CT-077 — Nova senha inválida
 **Dado** `novaSenha` com menos de 6 caracteres, ou igual à atual → **Então** 422 e nada é alterado.
+
+### API-CT-088 — Foto própria (atualizar/remover) — PLAN-041
+**Endpoint:** `PATCH /api/auth/foto` · **Auth:** Bearer (qualquer perfil)
+
+**Request:** `{ foto: "data:image/jpeg;base64,..." }` (ou `null` para remover)
+
+**Response 200:** `{ ok: true, foto: <dataURL|null> }`
+
+- **Dado** `foto` data URL JPEG válida ≤500KB → **Então** 200 e `GET /api/auth/me` reflete o novo `foto`.
+- **Dado** `foto: null` → **Então** 200 e `me` devolve `foto: null`.
+- **Dado** string que não começa com `data:image/` → **Então** 422 `FOTO_TIPO`.
+- **Dado** data URL >500KB decodificados → **Então** 422 `FOTO_LIMITE`.
+
+**Regras:** BR-101 · **Postman:** `Auth > Alterar foto`
 
 ---
 

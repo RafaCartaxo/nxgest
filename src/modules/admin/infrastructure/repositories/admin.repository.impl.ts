@@ -35,6 +35,7 @@ export class AdminRepository implements IAdminRepository {
         contratosAtivos: contratosCount[0].total,
         empresaId: row.empresaId ?? null,
         chefeId: row.chefeId ?? null,
+        foto: row.foto ?? null,
       })
     }
     return result
@@ -62,6 +63,7 @@ export class AdminRepository implements IAdminRepository {
       contratosAtivos: contratosCount[0].total,
       empresaId: row.empresaId ?? null,
       chefeId: row.chefeId ?? null,
+      foto: row.foto ?? null,
     }
   }
 
@@ -80,6 +82,7 @@ export class AdminRepository implements IAdminRepository {
       contratosAtivos: contratosCount[0].total,
       empresaId: row.empresaId ?? null,
       chefeId: row.chefeId ?? null,
+      foto: row.foto ?? null,
     }
   }
 
@@ -95,10 +98,10 @@ export class AdminRepository implements IAdminRepository {
       chefeId: input.chefeId ?? null,
       createdAt: new Date().toISOString(),
     })
-    return { id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, chefeId: input.chefeId ?? null, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0 }
+    return { id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, chefeId: input.chefeId ?? null, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0, foto: null }
   }
 
-  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
+  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
     if (id === currentUserId && data.role !== undefined) {
       throw new NaoPodeAutoModificarError("Você não pode alterar seu próprio papel.")
     }
@@ -115,6 +118,7 @@ export class AdminRepository implements IAdminRepository {
     if (data.role !== undefined) updateData.role = data.role
     if (data.senhaHash !== undefined) updateData.senhaHash = data.senhaHash
     if (data.chefeId !== undefined) updateData.chefeId = data.chefeId
+    if (data.foto !== undefined) updateData.foto = data.foto
 
     await db.update(usuarios).set(updateData).where(eq(usuarios.id, id))
 
@@ -231,6 +235,7 @@ export class AdminRepository implements IAdminRepository {
         totalClientes: clientesCount[0].total,
         contratosAtivos: contratosCount[0].total,
         recebidoHoje: recebidoMap.get(row.id) ?? 0,
+        foto: row.foto ?? null,
       })
     }
     return result

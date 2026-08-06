@@ -791,6 +791,10 @@ O **lucro previsto** do cliente é a soma de `(valorFinal − valorBase)` dos co
 
 A **lista de contratos** (`GET /api/contratos`) expõe, por contrato, a situação de atraso com os mesmos critérios da BR-096 **escopados ao contrato**: `emAtraso` (Σ `saldoPendente` de parcelas com `dataVencimento < hoje`), `parcelasEmAtraso` (quantidade dessas parcelas) e `diasEmAtraso` (dias desde o vencimento mais antigo em aberto do contrato — 0 se nenhuma). Parcelas `Parcial` vencidas contam.
 
+## BR-101
+
+A **foto** (`foto`, data URL) é opcional em `usuarios`/`clientes`, normalizada na entrada (≤200px, ≤500KB decodificados). O usuário altera a própria via `PATCH /api/auth/foto` (`null` remove); admin/sócio/super_admin definem a foto de operador do escopo via `PATCH /api/admin/operadores/:id`; operador define a foto do próprio cliente. O servidor revalida tipo (`FOTO_TIPO`) e tamanho (`FOTO_LIMITE`) — nunca confia no front.
+
 ---
 
 # Referências

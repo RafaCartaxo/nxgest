@@ -140,6 +140,44 @@
             },
             "description": "API-UC-041 · 200 {ok} · 422 senha atual incorreta/nova inválida (BR-089/090, PLAN-029)"
           }
+        },
+        {
+          "name": "Alterar foto",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/foto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "foto"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foto\": \"data:image/jpeg;base64,/9j/...\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-UC-042 · 200 {ok, foto} · 422 FOTO_TIPO/FOTO_LIMITE · null remove (BR-101, PLAN-041)"
+          }
         }
       ]
     },

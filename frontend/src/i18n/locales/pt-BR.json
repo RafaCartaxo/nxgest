@@ -561,6 +561,8 @@
     "hint": "Qualquer tamanho — a imagem é reduzida para {{px}}px antes de salvar.",
     "tipo": "Use uma imagem JPEG, PNG ou WebP.",
     "tamanho": "Imagem acima de 50MB.",
-    "falha": "Não foi possível processar a imagem. Tente outra foto."
+    "falha": "Não foi possível processar a imagem. Tente outra foto.",
+    "fotoSalva": "Foto atualizada.",
+    "fotoRemovida": "Foto removida."
   }
 }

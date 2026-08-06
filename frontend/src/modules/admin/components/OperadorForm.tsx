@@ -4,6 +4,7 @@ import { Check } from "lucide-react"
 import { Button } from "../../../shared/components/Button.js"
 import { Field } from "../../../shared/components/Field/Field.js"
 import { FieldSelect } from "../../../shared/components/Field/FieldSelect.js"
+import { AvatarField } from "../../../shared/components/Avatar/Avatar.js"
 import type { OperadorRow } from "../services/admin.service.js"
 
 interface FieldErrors {
@@ -18,7 +19,7 @@ interface Props {
   chefes?: OperadorRow[]
   /** Role de quem está criando/gerenciando (admin/socio/super_admin). */
   actorRole?: "admin" | "socio" | "super_admin"
-  onSubmit: (data: { nome: string; email: string; role: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null }) => Promise<void>
+  onSubmit: (data: { nome: string; email: string; role: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null }) => Promise<void>
   onCancel: () => void
 }
 
@@ -29,6 +30,7 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
   const [senha, setSenha] = useState("")
   const [role, setRole] = useState<"admin" | "socio" | "operator">(editing && editing.role !== "super_admin" ? editing.role : "operator")
   const [chefeId, setChefeId] = useState<string>(editing?.chefeId ?? "")
+  const [foto, setFoto] = useState<string | null>(editing?.foto ?? null)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [loading, setLoading] = useState(false)
   const nomeRef = useRef<HTMLInputElement>(null)
@@ -64,6 +66,7 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
         email: email.trim(),
         role,
         senha: senha || undefined,
+        foto: editing ? foto : undefined,
         // Sócio: chefe é ele mesmo; admin/super: chefe selecionado (ou null = sob o admin)
         chefeId: isActorSocio ? undefined : role === "admin" ? null : chefeId || null,
       })
@@ -101,6 +104,14 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
         onChange={(e) => setSenha(e.target.value)}
         placeholder={editing ? t("admin.senhaOpcional") : ""}
         error={errors.senha}
+      />
+
+      <AvatarField
+        nome={nome}
+        foto={foto}
+        label={t("avatar.foto")}
+        size="lg"
+        onChange={(f) => setFoto(f)}
       />
 
       {isActorSocio ? (

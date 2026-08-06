@@ -65,6 +65,10 @@ const endpoints = [
       body: { senhaAtual: "teste123!", novaSenha: "novaSenha123" },
       description: "API-UC-041 · 200 {ok} · 422 senha atual incorreta/nova inválida (BR-089/090, PLAN-029)",
     }),
+    req("Alterar foto", "PATCH", "/api/auth/foto", {
+      body: { foto: "data:image/jpeg;base64,/9j/..." },
+      description: "API-UC-042 · 200 {ok, foto} · 422 FOTO_TIPO/FOTO_LIMITE · null remove (BR-101, PLAN-041)",
+    }),
   ]),
 
   mod("Clientes", "CRUD de clientes (escopo por operador)", [

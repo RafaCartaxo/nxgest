@@ -19,5 +19,6 @@ const loginLimiter = rateLimit({
 router.post("/login", loginLimiter, controller.login)
 router.get("/me", authMiddleware, controller.me)
 router.patch("/senha", authMiddleware, controller.alterarSenha)
+router.patch("/foto", authMiddleware, controller.alterarFoto)
 
 export { router as authRoutes }

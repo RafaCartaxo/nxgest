@@ -4,6 +4,7 @@ import { ArrowRight, Edit3, Trash2 } from "lucide-react"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
+import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
 import type { OperadorRow } from "../services/admin.service.js"
 
@@ -60,6 +61,7 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Prop
               return (
                 <Card.Root key={op.id} variant="list-item">
                   <Card.Header className="flex-wrap">
+                    <Avatar nome={op.nome} foto={op.foto ?? null} size="md" />
                     <span className="min-w-0 flex-1 truncate text-base font-semibold">{op.nome}</span>
                     {isSelf && <StatusBadge variant="success" size="sm" label={t("admin.eu")} />}
                     <StatusBadge

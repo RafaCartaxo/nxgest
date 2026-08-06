@@ -148,7 +148,7 @@ export class AdminController {
       const targetEmpresaId = this.resolveEmpresaId(req)
       const scope = await this.resolveScope(req)
       const userId = req.userId!
-      const { nome, email, role, senha, chefeId } = req.body
+      const { nome, email, role, senha, chefeId, foto } = req.body
 
       const existing = await this.repository.findById(req.params.id, targetEmpresaId, scope)
       if (!existing) {
@@ -163,6 +163,16 @@ export class AdminController {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
         return
       }
+      if (foto !== null && foto !== undefined) {
+        if (typeof foto !== "string" || !foto.startsWith("data:image/")) {
+          res.status(422).json({ code: "FOTO_TIPO", message: "Foto deve ser uma imagem em data URL." })
+          return
+        }
+        if (Math.round((foto.length * 3) / 4) > 500 * 1024) {
+          res.status(422).json({ code: "FOTO_LIMITE", message: "Foto muito grande (máx. 500KB)." })
+          return
+        }
+      }
       const targetRole = role ?? existing.role
       if (chefeId !== undefined) {
         const chefeOk = await this.validarChefe(chefeId, targetEmpresaId, targetRole, req.params.id)
@@ -172,12 +182,13 @@ export class AdminController {
         }
       }
 
-      const data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null } = {}
+      const data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null } = {}
       if (nome !== undefined) data.nome = nome
       if (email !== undefined) data.email = email
       if (role !== undefined) data.role = role
       if (senha !== undefined) data.senhaHash = await bcrypt.hash(senha, 10)
       if (chefeId !== undefined) data.chefeId = chefeId
+      if (foto !== undefined) data.foto = foto
 
       const operador = await this.editarUseCase.execute(req.params.id, data, userId, targetEmpresaId, scope)
       res.json(operador)

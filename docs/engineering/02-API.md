@@ -1426,7 +1426,10 @@ Retorna os dados do operador autenticado.
     "email": "admin@cobranca.com",
     "role": "admin",
     "empresaId": null,
-    "empresaNome": null
+    "empresaNome": null,
+    "chefeId": null,
+    "modulos": null,
+    "foto": null
 }
 ```
 
@@ -1825,5 +1828,46 @@ Altera a **própria senha** do usuário autenticado (BR-089/BR-090). Opera sempr
 | UNAUTHORIZED | 401 |
 
 > **Nota (PLAN-029):** senha atual incorreta responde **422** (não 401) para não disparar o logout automático do cliente. Após a troca, o token atual permanece válido (BR-090).
+
+---
+
+# PATCH /api/auth/foto
+
+Altera a **própria foto** (avatar) do usuário autenticado (PLAN-041 — BR-101). Opera sempre sobre o `req.userId`. A foto é um **data URL** de imagem normalizada (≤200px, ~≤500KB) — o servidor revalida tipo e tamanho (não confia no front).
+
+**Auth:** Sim (Bearer)
+
+## Request
+
+```json
+{
+    "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ..."
+}
+```
+
+Para **remover** a foto, enviar `"foto": null`.
+
+## Validações
+
+| Campo | Obrigatório | Regra |
+|--------|------------|-------|
+| foto | Não | `null` (remove) ou string `data:image/...` com ≤500KB decodificados |
+
+## Response 200
+
+```json
+{
+    "ok": true,
+    "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ..."
+}
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| FOTO_TIPO | 422 |
+| FOTO_LIMITE | 422 |
+| UNAUTHORIZED | 401 |
 
 ---

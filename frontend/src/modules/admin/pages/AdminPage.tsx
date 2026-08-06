@@ -116,7 +116,7 @@ export function AdminPage() {
     fetchData()
   }
 
-  async function handleUpdate(data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null }) {
+  async function handleUpdate(data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null }) {
     if (!editingOp) return
     await feedback.run({
       action: async () => { await updateOperador(editingOp.id, data, empresaId) },

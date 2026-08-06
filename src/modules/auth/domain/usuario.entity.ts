@@ -8,4 +8,5 @@ export interface Usuario {
   deletedAt: string | null
   empresaId: string | null
   chefeId: string | null
+  foto: string | null
 }

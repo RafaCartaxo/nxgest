@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
-import { login as loginService, getMe, type LoginResponse } from "../../modules/auth/services/auth.service.js"
+import { login as loginService, getMe, type LoginResponse, type MeResponse } from "../../modules/auth/services/auth.service.js"
 
 export interface AuthUser {
   id: string
@@ -10,6 +10,7 @@ export interface AuthUser {
   empresaNome?: string | null
   modulos?: string[] | null
   chefeId?: string | null
+  foto?: string | null
 }
 
 interface AuthContextType {
@@ -18,6 +19,8 @@ interface AuthContextType {
   login: (email: string, senha: string) => Promise<LoginResponse>
   logout: () => void
   loading: boolean
+  /** Refaz GET /me e atualiza o usuário (ex.: após trocar a foto no Perfil). */
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -29,6 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY))
   const [loading, setLoading] = useState(true)
 
+  const applyMe = useCallback((me: MeResponse) => {
+    setUser({ id: me.id, nome: me.nome, email: me.email, role: me.role, empresaId: me.empresaId, empresaNome: me.empresaNome, modulos: me.modulos ?? null, chefeId: me.chefeId ?? null, foto: me.foto ?? null })
+  }, [])
+
   useEffect(() => {
     if (!token) {
       setLoading(false)
@@ -36,15 +43,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     getMe()
-      .then((me) => {
-        setUser({ id: me.id, nome: me.nome, email: me.email, role: me.role, empresaId: me.empresaId, empresaNome: me.empresaNome, modulos: me.modulos ?? null, chefeId: me.chefeId ?? null })
-      })
+      .then(applyMe)
       .catch(() => {
         localStorage.removeItem(TOKEN_KEY)
         setToken(null)
       })
       .finally(() => setLoading(false))
-  }, [token])
+  }, [token, applyMe])
+
+  const refreshUser = useCallback(async () => {
+    const me = await getMe()
+    applyMe(me)
+  }, [applyMe])
 
   const login = useCallback(async (email: string, senha: string) => {
     const response: LoginResponse = await loginService(email, senha)
@@ -61,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

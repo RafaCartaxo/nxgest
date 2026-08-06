@@ -33,6 +33,7 @@ export class LoginUseCase {
         role: usuario.role,
         empresaId: usuario.empresaId,
         chefeId: usuario.chefeId,
+        foto: usuario.foto,
       },
     }
   }

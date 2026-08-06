@@ -11,6 +11,7 @@ import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { Button } from "../../../shared/components/Button.js"
 import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
@@ -90,11 +91,14 @@ export function OperadorDetail() {
         title={operador?.nome ?? t("admin.operadorDetail")}
         back={{ onClick: () => navigate(-1), title: t("common.back") }}
         action={operador ? (
-          <StatusBadge
-            variant={roleVariant(operador.role)}
-            size="sm"
-            label={roleLabel(operador.role, t)}
-          />
+          <div className="flex items-center gap-2">
+            <Avatar nome={operador.nome} foto={operador.foto ?? null} size="sm" />
+            <StatusBadge
+              variant={roleVariant(operador.role)}
+              size="sm"
+              label={roleLabel(operador.role, t)}
+            />
+          </div>
         ) : undefined}
       />
 

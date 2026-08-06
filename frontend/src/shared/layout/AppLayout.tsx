@@ -132,7 +132,7 @@ function SidebarContent({ onNavigate, trailing }: { onNavigate?: () => void; tra
 
       <div className="space-y-2 border-t border-sidebar-border p-3">
         <div className="flex items-center gap-3 rounded-xl px-2 py-2">
-          <Avatar nome={user?.nome ?? "?"} size="sm" />
+          <Avatar nome={user?.nome ?? "?"} foto={user?.foto ?? null} size="sm" />
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-semibold text-sidebar-foreground">{user?.nome}</p>
             <p className="truncate text-xs text-sidebar-muted">{roleLabel(user?.role, t)}</p>

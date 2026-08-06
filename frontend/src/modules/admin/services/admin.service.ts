@@ -10,6 +10,7 @@ export interface OperadorRow {
   totalClientes: number
   contratosAtivos: number
   chefeId?: string | null
+  foto?: string | null
 }
 
 export interface AdminDashboardStats {
@@ -30,6 +31,7 @@ export interface EquipeItem {
   totalClientes: number
   contratosAtivos: number
   recebidoHoje: number
+  foto?: string | null
 }
 
 export interface EquipeResult {
@@ -55,7 +57,7 @@ export async function createOperador(data: { nome: string; email: string; senha:
   return apiRequest<OperadorRow>("POST", `/admin/operadores${params}`, body)
 }
 
-export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null }, empresaId?: string): Promise<OperadorRow> {
+export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null }, empresaId?: string): Promise<OperadorRow> {
   const params = empresaId ? `?empresaId=${empresaId}` : ""
   return apiRequest<OperadorRow>("PATCH", `/admin/operadores/${id}${params}`, data)
 }

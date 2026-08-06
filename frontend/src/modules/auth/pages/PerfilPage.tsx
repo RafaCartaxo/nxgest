@@ -9,19 +9,37 @@ import { Field } from "../../../shared/components/Field/Field.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { AvatarField } from "../../../shared/components/Avatar/Avatar.js"
 import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
-import { alterarSenha } from "../services/auth.service.js"
+import { alterarSenha, alterarFoto } from "../services/auth.service.js"
 
 export function PerfilPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const feedback = useFeedback()
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
 
   const [senhaAtual, setSenhaAtual] = useState("")
   const [novaSenha, setNovaSenha] = useState("")
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [erros, setErros] = useState<{ senhaAtual?: string; novaSenha?: string; confirmarSenha?: string }>({})
+
+  const [foto, setFoto] = useState<string | null>(user?.foto ?? null)
+  const [enviandoFoto, setEnviandoFoto] = useState(false)
+
+  async function handleFoto(novaFoto: string | null) {
+    setEnviandoFoto(true)
+    try {
+      await alterarFoto(novaFoto)
+      setFoto(novaFoto)
+      await refreshUser()
+      feedback.show({ status: "success", message: novaFoto ? t("avatar.fotoSalva") : t("avatar.fotoRemovida") })
+    } catch {
+      feedback.show({ status: "error", message: t("avatar.falha") })
+    } finally {
+      setEnviandoFoto(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -60,6 +78,13 @@ export function PerfilPage() {
             <p className="truncate text-sm text-text-secondary">{user?.email}</p>
           </div>
           <StatusBadge variant={roleVariant(user?.role)} size="sm" label={roleLabel(user?.role, t)} />
+        </div>
+        <div className="mt-4">
+          <AvatarField
+            nome={user?.nome ?? ""}
+            foto={foto}
+            onChange={(f) => void handleFoto(f)}
+          />
         </div>
       </div>
 

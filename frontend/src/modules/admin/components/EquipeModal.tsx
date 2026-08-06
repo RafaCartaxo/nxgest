@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
 import type { OperadorRow } from "../services/admin.service.js"
@@ -48,6 +49,7 @@ export function EquipeModal({ open, role, operadores, empresaId, onClose }: Equi
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
+                    <Avatar nome={op.nome} foto={op.foto ?? null} size="sm" />
                     <p className="truncate text-sm font-medium text-text-primary">{op.nome}</p>
                     <StatusBadge
                       variant={roleVariant(op.role)}

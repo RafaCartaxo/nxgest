@@ -75,6 +75,7 @@ export class AuthController {
         empresaNome,
         modulos,
         chefeId: usuario.chefeId,
+        foto: usuario.foto,
       })
     } catch (err) {
       console.error("Erro no me:", err)
@@ -115,6 +116,37 @@ export class AuthController {
         return
       }
       console.error("Erro ao alterar senha:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
+    }
+  }
+
+  /** Foto própria (PLAN-041/WS3): data URL normalizada (≤500KB) ou null para remover. */
+  alterarFoto = async (req: Request, res: Response) => {
+    try {
+      const userId = req.userId
+      const { foto } = req.body ?? {}
+
+      if (!userId) {
+        res.status(401).json({ code: "UNAUTHORIZED", message: "Token de autenticação ausente." })
+        return
+      }
+
+      if (foto !== null && typeof foto !== "undefined") {
+        if (typeof foto !== "string" || !foto.startsWith("data:image/")) {
+          res.status(422).json({ code: "FOTO_TIPO", message: "Foto deve ser uma imagem em data URL." })
+          return
+        }
+        const bytes = Math.round((foto.length * 3) / 4)
+        if (bytes > 500 * 1024) {
+          res.status(422).json({ code: "FOTO_LIMITE", message: "Foto muito grande (máx. 500KB)." })
+          return
+        }
+      }
+
+      await this.repository.updateFoto(userId, foto ?? null)
+      res.json({ ok: true, foto: foto ?? null })
+    } catch (err) {
+      console.error("Erro ao atualizar foto:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
     }
   }

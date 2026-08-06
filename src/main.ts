@@ -24,7 +24,9 @@ const app = express()
 const corsOrigin = process.env.CORS_ORIGIN
 app.use(cors(corsOrigin ? { origin: corsOrigin } : {}))
 
-app.use(express.json())
+// Limite maior de body: fotos/avatares chegam como data URL base64 (PLAN-041).
+// Fotos normalizadas ≤500KB decodificados (~667KB de texto) — 2mb cobre com folga.
+app.use(express.json({ limit: "2mb" }))
 
 app.use("/api/health", healthRoutes)
 app.use("/api/auth", authRoutes)
@@ -48,6 +50,10 @@ if (process.env.NODE_ENV === "production") {
 }
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if ((err as { type?: string }).type === "entity.too.large") {
+    res.status(413).json({ code: "PAYLOAD_TOO_LARGE", message: "Corpo da requisição muito grande." })
+    return
+  }
   console.error("Erro não tratado:", err)
   res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
 })

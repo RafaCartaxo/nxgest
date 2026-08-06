@@ -445,6 +445,31 @@ async function main() {
     expect(r, 422, "senha curta")
   })
 
+  // ---------- FOTO (PLAN-041) ----------
+  const fotoDataUrl = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA=="
+  await t("FOT-001", "PATCH /auth/foto com data URL (200) + me reflete", async () => {
+    const r = await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: fotoDataUrl } })
+    expect(r, 200, "salvar foto")
+    const me = await req("GET", "/api/auth/me", { token: opToken })
+    expect(me, 200, "me")
+    if (me.data.foto !== fotoDataUrl) throw new Error("me.foto não refletiu a foto")
+  })
+  await t("FOT-002", "PATCH /auth/foto null remove (200)", async () => {
+    const r = await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: null } })
+    expect(r, 200, "remover foto")
+    const me = await req("GET", "/api/auth/me", { token: opToken })
+    if (me.data.foto !== null) throw new Error("me.foto não foi removida")
+  })
+  await t("FOT-003", "foto fora de data:image (422 FOTO_TIPO)", async () => {
+    const r = await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: "https://exemplo.com/foto.jpg" } })
+    expect(r, 422, "tipo inválido")
+  })
+  await t("FOT-004", "foto > 500KB (422 FOTO_LIMITE)", async () => {
+    const gigante = "data:image/jpeg;base64," + "A".repeat(700 * 1024)
+    const r = await req("PATCH", "/api/auth/foto", { token: opToken, body: { foto: gigante } })
+    expect(r, 422, "limite")
+  })
+
   // ---------- ADMIN: dashboard / operadores ----------
   await t("ADM-037", "GET /admin/dashboard (200)", async () => {
     const r = await req("GET", "/api/admin/dashboard", { token: adminToken })
