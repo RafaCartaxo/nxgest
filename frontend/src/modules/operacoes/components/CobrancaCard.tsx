@@ -12,10 +12,14 @@ interface CobrancaCardProps {
 }
 
 /**
- * Card de cobrança (PLAN-047/050) — estrutura fixa de 3 linhas para altura uniforme:
- *   1. Nome (primário) + Valor (value-lg, nowrap)
- *   2. Bairro · Parcela X de Y (secundário, truncate)
- *   3. StatusBadge + dias de atraso (terciário, 1 linha fixa)
+ * Card de cobrança (PLAN-047/050/051) — estrutura fixa de 4 linhas para altura uniforme:
+ *   1. Nome (primário) + Valor (value-lg, nowrap) + [dias de atraso sob o valor]
+ *   2. Bairro (secundário, truncate)
+ *   3. Parcela X de Y (secundário, truncate)
+ *   4. StatusBadge (terciário, 1 linha fixa)
+ * Bairro e parcela em linhas próprias (sem truncamento mútuo); "N dias de atraso"
+ * alocado na coluna direita (linha própria, nunca trunca) e a coluna esquerda
+ * (sempre mais alta) garante altura idêntica entre atrasado e vence hoje.
  */
 export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProps) {
   const { t } = useTranslation()
@@ -26,7 +30,6 @@ export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProp
   const parcela = parcelaNumero > 0
     ? t("operacoes.parcelaDe", { atual: parcelaNumero, total: item.totalParcelasContrato })
     : ""
-  const subtitulo = [bairro, parcela].filter(Boolean).join(" · ")
 
   return (
     <Card.Root
@@ -40,25 +43,28 @@ export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProp
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold text-text-primary">{item.clienteNome}</p>
-          <p className="mt-0.5 truncate text-sm text-text-secondary">{subtitulo}</p>
-          <div className="mt-2 flex min-h-6 items-center gap-2">
+          <p className="mt-0.5 truncate text-sm text-text-secondary">{bairro}</p>
+          <p className="mt-0.5 truncate text-sm text-text-secondary">{parcela}</p>
+          <div className="mt-2 flex min-h-6 items-center">
             <StatusBadge
               variant={tone}
               label={item.situacao === "atrasado" ? t("status.atrasado") : t("status.venceHoje")}
               className="shrink-0"
             />
-            {item.diasEmAtraso > 0 && (
-              <span className="truncate text-xs text-danger-text">
-                {t("operacoes.diasAtraso", { count: item.diasEmAtraso })}
-              </span>
-            )}
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1 text-right">
-          <span className="value-lg whitespace-nowrap text-text-primary">
-            R$ {formatCurrency(item.totalPendente)}
-          </span>
-          {onClick && <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden />}
+        <div className="flex shrink-0 flex-col items-end text-right">
+          <div className="flex items-center gap-1">
+            <span className="value-lg whitespace-nowrap text-text-primary">
+              R$ {formatCurrency(item.totalPendente)}
+            </span>
+            {onClick && <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden />}
+          </div>
+          {item.diasEmAtraso > 0 && (
+            <span className="mt-0.5 text-xs text-danger-text">
+              {t("operacoes.diasAtraso", { count: item.diasEmAtraso })}
+            </span>
+          )}
         </div>
       </div>
     </Card.Root>
