@@ -3,15 +3,12 @@ import { useNavigate } from "react-router-dom"
 import { ArrowRight, SlidersHorizontal } from "lucide-react"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import type { EmpresaComStats } from "../services/empresa.service.js"
 
 interface EmpresaListProps {
   empresas: EmpresaComStats[]
   onConfigurar: (empresa: EmpresaComStats) => void
-}
-
-function iniciais(nome: string): string {
-  return nome.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
 }
 
 export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
@@ -27,9 +24,7 @@ export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
       {empresas.map((empresa) => (
         <Card.Root key={empresa.id} variant="list-item">
           <Card.Header className="flex-wrap">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-light text-sm font-semibold text-primary-text">
-              {iniciais(empresa.nome)}
-            </span>
+            <Avatar nome={empresa.nome} size="md" />
             <span className="min-w-0 flex-1 truncate text-base font-semibold">{empresa.nome}</span>
             <StatusBadge variant="info" size="sm" label={t("admin.empresaBadge")} />
             {empresa.modulos == null ? (

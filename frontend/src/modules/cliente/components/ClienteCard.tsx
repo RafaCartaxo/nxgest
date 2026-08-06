@@ -1,16 +1,13 @@
 import { useTranslation } from "react-i18next"
 import { Phone, Store, MapPin } from "lucide-react"
 import { Card } from "../../../shared/components/Card/Card.js"
+import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { maskCpf, maskPhone } from "../../../shared/utils/masks.js"
 import type { Cliente } from "../services/cliente.service.js"
 
 interface ClienteCardProps {
   cliente: Cliente
   variant: "list-item" | "detail"
-}
-
-function iniciais(nome: string): string {
-  return nome.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
 }
 
 function montarEndereco(endereco: Cliente["endereco"]): string {
@@ -28,9 +25,7 @@ function ClienteCard({ cliente, variant }: ClienteCardProps) {
     return (
       <Card.Root variant="list-item">
         <div className="flex items-center gap-3">
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary-light text-sm font-semibold text-primary-text">
-            {iniciais(cliente.nome)}
-          </span>
+          <Avatar nome={cliente.nome} foto={cliente.foto} size="md" />
           <Card.Body>
             <Card.Title className="mb-0.5">{cliente.nome}</Card.Title>
             {cliente.comercio && (
@@ -71,9 +66,7 @@ function ClienteCard({ cliente, variant }: ClienteCardProps) {
       </Card.Header>
       <Card.Body>
         <div className="flex items-start gap-3">
-          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-primary-light text-lg font-semibold text-primary-text">
-            {iniciais(cliente.nome)}
-          </span>
+          <Avatar nome={cliente.nome} foto={cliente.foto} size="lg" />
           <div className="min-w-0 space-y-1">
             {cliente.comercio && (
               <p className="flex items-center gap-1.5 text-sm text-text-secondary">

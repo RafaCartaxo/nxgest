@@ -27,7 +27,7 @@ Componentes compartilhados ativos da identidade "Nexus" (em `frontend/src/shared
 | `Button` / `ButtonLink` | ✅ |
 | `StatusBadge` (pill `rounded-md` com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` | ✅ |
 | `Topbar` (dropdowns tema/cores/idioma, `shared/layout/Topbar.tsx`) | ✅ |
-| `Avatar` (foto \| iniciais) | ⏳ PLAN-041 (Lovable) |
+| `Avatar` (foto \| iniciais, data URL ≤200px) · `AvatarField` | ✅ PLAN-057 |
 
 Regras: usar **apenas** estes componentes em telas novas (checklist do MAPEAMENTO) e nunca reintroduzir padrões legado (verificado por `npm run audit:ui`).
 

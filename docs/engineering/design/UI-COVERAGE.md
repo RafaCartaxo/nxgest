@@ -66,7 +66,7 @@
 | `PreferenciasModal` | ✅ | Topbar (engrenagem) — tema light/dark/system + paletas + idioma (PLAN-056) |
 | `ClienteSelect` | ✅ | (futuro ContratoForm) — seletor de cliente buscável (PLAN-056) |
 | `StatusBadge` (pill com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` · `Topbar` | ✅ | — |
-| `Avatar` | ⏳ **Planejado** (PLAN-041, Lovable) | — |
+| `Avatar` / `AvatarField` | ✅ | ClienteCard (list-item/detail), ClienteForm, EmpresaList, AppLayout (sidebar) — foto data URL ≤200px (PLAN-057) |
 
 ## 4. Legado conhecido / planejado (rastreado)
 

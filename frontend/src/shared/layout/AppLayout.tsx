@@ -14,6 +14,7 @@ import {
   Building2,
 } from "lucide-react"
 import { Logo } from "../components/Logo.js"
+import { Avatar } from "../components/Avatar/Avatar.js"
 import { Topbar } from "./Topbar.js"
 import { hasModule } from "../modules/modules.js"
 import { useAuth } from "../auth/AuthContext.js"
@@ -137,9 +138,7 @@ function SidebarContent({ onNavigate, trailing }: { onNavigate?: () => void; tra
 
       <div className="space-y-2 border-t border-sidebar-border p-3">
         <div className="flex items-center gap-3 rounded-xl px-2 py-2">
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-light text-sm font-semibold text-primary-text">
-            {(user?.nome ?? "?").split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()}
-          </span>
+          <Avatar nome={user?.nome ?? "?"} size="sm" />
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-semibold text-sidebar-foreground">{user?.nome}</p>
             <p className="truncate text-xs text-sidebar-muted">{roleLabel(user?.role, t)}</p>
