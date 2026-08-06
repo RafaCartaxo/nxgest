@@ -233,6 +233,12 @@ h3 {
     color-mix(in oklab, var(--brand-1) 14%, oklch(0.18 0.02 262)) 55%,
     color-mix(in oklab, var(--brand-far) 16%, oklch(0.17 0.02 285))
   );
+  /* gradiente da marca no escuro (primary adapta ao tema — PLAN-056) */
+  --gradient-brand: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--brand-1) 82%, white),
+    color-mix(in oklab, var(--brand-far) 60%, var(--brand-1))
+  );
   --gradient-mesh: radial-gradient(
     120% 90% at 15% 0%,
     color-mix(in oklab, var(--brand-1) 30%, transparent),
