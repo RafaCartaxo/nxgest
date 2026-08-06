@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Navigation, MessageCircle, Phone, FileText, X, Share2, UserCheck, MapPinOff, CalendarClock, MapPin, Route } from "lucide-react"
+import { Navigation, MessageCircle, Phone, FileText, Share2, UserCheck, MapPinOff, CalendarClock, Route } from "lucide-react"
 import { listarCobrancasDoDia, listarPagamentosHoje, registrarVisita, ResultadoOperacional, type CobrancaItem, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
 import { ApiError } from "../../../api/client.js"
 import { sortByDistance, sortByDistanceOnly, useWatchPosition } from "../../../shared/utils/distance.js"
@@ -11,8 +11,10 @@ import { unmask, formatCurrency } from "../../../shared/utils/masks.js"
 import { gerarComprovante } from "../../../shared/utils/comprovante.js"
 import { buildMapsUrl, alvoDeItemCobranca, alvoNavegavel } from "../../../shared/geo/alvo.js"
 import { Button } from "../../../shared/components/Button.js"
-import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { QuickActions } from "../../../shared/components/QuickActions/QuickActions.js"
+import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { Field } from "../../../shared/components/Field/Field.js"
+import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 import { RouteProgress } from "../components/RouteProgress.js"
 import { Card } from "../../../shared/components/Card/Card.js"
@@ -404,21 +406,6 @@ export function RotaPage() {
     if (ctx) ctx.drawImage(comprovante.canvas, 0, 0)
   }, [comprovante])
 
-  useEffect(() => {
-    const locked = promessaOpen || !!comprovante
-    if (locked) {
-      document.documentElement.style.overflow = "hidden"
-      document.body.style.overflow = "hidden"
-    } else {
-      document.documentElement.style.overflow = ""
-      document.body.style.overflow = ""
-    }
-    return () => {
-      document.documentElement.style.overflow = ""
-      document.body.style.overflow = ""
-    }
-  }, [promessaOpen, comprovante])
-
   return (
     <div className="mx-auto max-w-2xl p-4">
       <PageHeader
@@ -427,21 +414,11 @@ export function RotaPage() {
         subtitle={t("operacoes.subtitleRota")}
         back={{ onClick: () => navigate("/"), title: t("nav.central") }}
         action={
-          <div className="flex items-center gap-2">
-            <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${gpsAtivo ? "bg-success-light text-success-text" : "bg-surface-secondary text-text-secondary"}`}>
-              <MapPin className="h-3 w-3" />
-              {"GPS"}
-            </span>
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="rounded-lg p-2 text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
-              title={t("operacoes.rotaCobranca")}
-              aria-label={t("operacoes.rotaCobranca")}
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <StatusBadge
+            variant={gpsAtivo ? "success" : "neutral"}
+            size="sm"
+            label={gpsAtivo ? t("operacoes.gpsAtivo") : t("operacoes.gpsInativo")}
+          />
         }
       />
 
@@ -451,26 +428,21 @@ export function RotaPage() {
         </div>
       )}
 
-      {error && (
-        <ErrorBanner message={error} onRetry={fetch} className="mb-4" />
-      )}
-
-      {loading ? (
-        <div className="h-64 animate-pulse rounded-md bg-surface-hover" />
-      ) : sortedItems.length === 0 && (items.length > 0 || routePagos > 0) ? (
-        <SuccessState
-          title={t("operacoes.todosAtendidos", { total: totalClientesAtendidosHoje })}
-          detail={atendidosDetailRota}
-          linkLabel={t("operacoes.verResumo")}
-          onLinkClick={() => navigate("/atendidos")}
-        />
-      ) : sortedItems.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 p-8 text-center">
-          <p className="text-sm text-text-secondary">{t("operacoes.nenhumaCobranca")}</p>
-        </div>
-      ) : !item ? (
-        <div className="h-64 animate-pulse rounded-md bg-surface-hover" />
-      ) : (
+      <EstadoTela loading={loading} error={error} onRetry={fetch} empty={false}>
+        {sortedItems.length === 0 && (items.length > 0 || routePagos > 0) ? (
+          <SuccessState
+            title={t("operacoes.todosAtendidos", { total: totalClientesAtendidosHoje })}
+            detail={atendidosDetailRota}
+            linkLabel={t("operacoes.verResumo")}
+            onLinkClick={() => navigate("/atendidos")}
+          />
+        ) : sortedItems.length === 0 ? (
+          <div className="flex flex-col items-center gap-4 p-8 text-center">
+            <p className="text-sm text-text-secondary">{t("operacoes.nenhumaCobranca")}</p>
+          </div>
+        ) : !item ? (
+          <div className="h-64 animate-pulse rounded-xl bg-surface-hover" />
+        ) : (
         <>
           <Carousel
             mode="slide"
@@ -529,15 +501,17 @@ export function RotaPage() {
           />
  
           {items.length > 0 && (
-            <RouteProgress
-              total={routeTotal}
-              completed={routeCompleted}
-              pending={routePending}
-              visitados={routeVisitados}
-              promessas={routePromessas}
-              naoEncontrados={routeNaoEncontrados}
-              pagos={routePagos}
-            />
+            <Card.Root variant="detail">
+              <RouteProgress
+                total={routeTotal}
+                completed={routeCompleted}
+                pending={routePending}
+                visitados={routeVisitados}
+                promessas={routePromessas}
+                naoEncontrados={routeNaoEncontrados}
+                pagos={routePagos}
+              />
+            </Card.Root>
           )}
 
           <Modal
@@ -564,18 +538,17 @@ export function RotaPage() {
               </div>
             }
           >
-            <label className="mb-2 block text-sm font-medium text-text-primary">
-              {t("operacoes.dataPromessa")}
-            </label>
-            <input
+            <Field
+              label={t("operacoes.dataPromessa")}
+              required
               type="date"
               value={dataPromessa}
               onChange={(e) => setDataPromessa(e.target.value)}
-              className="min-h-12 w-full appearance-none rounded-xl border border-border-strong bg-surface px-3.5 text-base text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </Modal>
         </>
-      )}
+        )}
+      </EstadoTela>
 
       {pagamentoOpen && item && (
         <PagamentoModal
@@ -591,50 +564,32 @@ export function RotaPage() {
       )}
 
       {comprovante && (
-        <div
-          className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-black/40"
-          onClick={() => setComprovante(null)}
+        <Modal
+          open
+          onClose={() => setComprovante(null)}
+          backdropClose
+          maxWidth="max-w-sm"
+          title={t("operacoes.comprovanteTitulo")}
         >
-          <div
-            className="flex min-h-screen items-center justify-center p-4"
-          >
-            <div
-              className="mx-auto w-full max-w-sm rounded-xl border border-border bg-card p-4 shadow-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
-            <canvas
-              ref={canvasRef}
-              className="w-full rounded-xl border border-border"
-            />
-
-            <div className="mt-4 flex gap-4">
-              <Button
-                onClick={handleCompartilharComprovante}
-                className="flex flex-1 items-center justify-center gap-1"
-              >
-                <Share2 className="h-4 w-4" />
-                Compartilhar
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleWhatsAppComprovante}
-                className="flex flex-1 items-center justify-center gap-1"
-              >
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp
-              </Button>
-            </div>
-            <Button
-               variant="ghost"
-               onClick={() => setComprovante(null)}
-               className="mt-2 w-full"
-             >
-               {t("common.cancel")}
-             </Button>
-           </div>
-         </div>
-       </div>
-       )}
+          <canvas
+            ref={canvasRef}
+            className="w-full rounded-xl border border-border"
+          />
+          <div className="mt-4 flex gap-4">
+            <Button onClick={handleCompartilharComprovante} className="flex flex-1 items-center justify-center gap-1">
+              <Share2 className="h-4 w-4" />
+              Compartilhar
+            </Button>
+            <Button variant="secondary" onClick={handleWhatsAppComprovante} className="flex flex-1 items-center justify-center gap-1">
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </Button>
+          </div>
+          <Button variant="ghost" onClick={() => setComprovante(null)} className="mt-2 w-full">
+            {t("common.cancel")}
+          </Button>
+        </Modal>
+      )}
     </div>
   )
 }
