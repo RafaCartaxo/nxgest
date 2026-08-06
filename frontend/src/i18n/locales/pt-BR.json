@@ -540,5 +540,14 @@
     "avisoGeocode": "Coordenadas capturadas, mas não foi possível obter o endereço. Preencha manualmente.",
     "erroPermissao": "Não foi possível obter a localização. Verifique a permissão do GPS.",
     "indisponivel": "Geolocalização indisponível neste dispositivo."
+  },
+  "prefs": {
+    "titulo": "Preferências",
+    "modo": "Modo",
+    "claro": "Claro",
+    "escuro": "Escuro",
+    "sistema": "Sistema",
+    "cor": "Cor",
+    "idioma": "Idioma"
   }
 }

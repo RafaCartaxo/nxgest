@@ -540,5 +540,14 @@
     "avisoGeocode": "Coordinates captured, but the address could not be obtained. Fill it in manually.",
     "erroPermissao": "Could not get the location. Check the GPS permission.",
     "indisponivel": "Geolocation unavailable on this device."
+  },
+  "prefs": {
+    "titulo": "Preferences",
+    "modo": "Mode",
+    "claro": "Light",
+    "escuro": "Dark",
+    "sistema": "System",
+    "cor": "Color",
+    "idioma": "Language"
   }
 }

@@ -1,23 +1,44 @@
 import { createContext, useCallback, useEffect, useState, type ReactNode } from "react"
 import { isThemeId, type ThemeId } from "./themes.js"
 
+export type ThemeMode = "light" | "dark" | "system"
+
 const PALETTE_KEY = "nxgestao_palette"
-const DARK_KEY = "nxgestao_dark"
+const MODE_KEY = "nxgestao_mode"
 
 interface ThemeContextValue {
   /** Paleta ativa (default/aurora/ocean/grape/sunset). */
   palette: ThemeId
+  /** Modo de tema: claro/escuro/sistema (preferência do SO). */
+  mode: ThemeMode
+  /** Escuro efetivo (derivado do modo). */
   isDark: boolean
   setPalette: (id: ThemeId) => void
+  setMode: (m: ThemeMode) => void
   toggleDark: () => void
 }
 
 export const ThemeContext = createContext<ThemeContextValue>({
   palette: "default",
+  mode: "system",
   isDark: false,
   setPalette: () => {},
+  setMode: () => {},
   toggleDark: () => {},
 })
+
+function systemIsDark(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
+}
+
+function getInitialMode(): ThemeMode {
+  const stored = localStorage.getItem(MODE_KEY)
+  if (stored === "light" || stored === "dark" || stored === "system") return stored
+  // compat com as chaves antigas de tema (PLAN-013/PLAN-046)
+  const legacy = localStorage.getItem("nxgestao_dark") ?? localStorage.getItem("theme")
+  if (legacy === "dark" || legacy === "light") return legacy
+  return "system"
+}
 
 function getInitialPalette(): ThemeId {
   const stored = localStorage.getItem(PALETTE_KEY)
@@ -25,23 +46,10 @@ function getInitialPalette(): ThemeId {
   return "default"
 }
 
-function getInitialDark(): boolean {
-  const stored = localStorage.getItem(DARK_KEY)
-  if (stored === "dark" || stored === "light") return stored === "dark"
-  // compat com a chave antiga de tema (PLAN-013)
-  const legacy = localStorage.getItem("theme")
-  if (legacy === "dark" || legacy === "light") return legacy === "dark"
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-}
-
 function applyTheme(palette: ThemeId, isDark: boolean) {
   const root = document.documentElement
   root.dataset.theme = palette
-  if (isDark) {
-    root.classList.add("dark")
-  } else {
-    root.classList.remove("dark")
-  }
+  root.classList.toggle("dark", isDark)
 }
 
 interface ThemeProviderProps {
@@ -50,29 +58,37 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [palette, setPaletteState] = useState<ThemeId>(getInitialPalette)
-  const [isDark, setIsDark] = useState<boolean>(getInitialDark)
+  const [mode, setModeState] = useState<ThemeMode>(getInitialMode)
+  const [systemDark, setSystemDark] = useState<boolean>(systemIsDark)
+
+  const isDark = mode === "dark" ? true : mode === "light" ? false : systemDark
 
   useEffect(() => {
     applyTheme(palette, isDark)
     localStorage.setItem(PALETTE_KEY, palette)
-    localStorage.setItem(DARK_KEY, isDark ? "dark" : "light")
-  }, [palette, isDark])
+    localStorage.setItem(MODE_KEY, mode)
+  }, [palette, mode, isDark])
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)")
     function handleChange(e: MediaQueryListEvent) {
-      const stored = localStorage.getItem(DARK_KEY)
-      if (!stored) setIsDark(e.matches)
+      setSystemDark(e.matches)
     }
     mq.addEventListener("change", handleChange)
     return () => mq.removeEventListener("change", handleChange)
   }, [])
 
   const setPalette = useCallback((id: ThemeId) => setPaletteState(id), [])
-  const toggleDark = useCallback(() => setIsDark((prev) => !prev), [])
+  const setMode = useCallback((m: ThemeMode) => setModeState(m), [])
+  const toggleDark = useCallback(() => {
+    setModeState((prev) => {
+      const darkNow = prev === "dark" || (prev === "system" && systemDark)
+      return darkNow ? "light" : "dark"
+    })
+  }, [systemDark])
 
   return (
-    <ThemeContext.Provider value={{ palette, isDark, setPalette, toggleDark }}>
+    <ThemeContext.Provider value={{ palette, mode, isDark, setPalette, setMode, toggleDark }}>
       {children}
     </ThemeContext.Provider>
   )
