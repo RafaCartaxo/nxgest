@@ -12,7 +12,7 @@
 
 | Módulo | Deps | UCs (06) | API-UCs (07) | Validação "off" |
 |---|---|---|---|---|
-| **clientes** | — | 015, 017, 047, 048, 071 | 004–008 | CRUD → 403; Central sem "Novo cliente" |
+| **clientes** | — | 015, 017, 047, 048, 071, 080 | 004–008 | CRUD → 403; Central sem "Novo cliente" |
 | **contratos** | clientes | 006, 007, 008, 016, 017, 022, 029, 030, 033, 035, 049, 050, 072 | 009–017 | CRUD + pagamentos → 403; KPIs financeiros ocultos na Central |
 | **caixa** | — | 012, 013, 014, 025, 026 | 024–028 | API → 403; Central sem "Fechar caixa"; (KPIs de parcela zeram sem contratos) |
 | **gastos** | caixa | 011, 051 | 029–031 | API → 403; Central sem "Gastos hoje" |

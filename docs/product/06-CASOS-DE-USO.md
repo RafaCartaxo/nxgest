@@ -1525,6 +1525,33 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+### UC-080 — Endereço, localização (GPS) e navegação do cliente
+
+**Ator:** operador (cadastro) e operador em campo (navegação)
+
+**Ação:** no cadastro/edição do cliente, o endereço do **comércio** e o **principal** podem ter **localização (GPS)** capturada (botão "Capturar localização" + reverse geocode) além do texto. Na ficha e na rota, o botão **"Navegar"** abre o Google Maps para o alvo do cliente.
+
+**Regras (PLAN-055):**
+- Alvo de navegação = **comércio (padrão)** → fallback **endereço principal**.
+- Coordenadas têm prioridade sobre o texto na URL (`buildMapsUrl`); sem coordenadas, usa o texto (mín. 2 partes).
+- **Editar o texto do endereço descarta as coordenadas** (a localização capturada fica inválida; botão Recapturar disponível) — o navegador passa a usar o texto novo.
+- **Limpar o endereço limpa as coordenadas**.
+- Coords sem texto são válidas (S7 — navegação por ponto).
+- "Navegar" **não aparece** quando não há alvo utilizável.
+
+**Conferências:**
+- [ ] Captura GPS no comércio preenche endereço + marca "Localização capturada"?
+- [ ] Captura GPS no endereço principal idem?
+- [ ] Editar texto → indicador "Não capturada" + botão Recapturar; navegação usa o texto novo?
+- [ ] Limpar endereço → coords zeradas (sem alvo)?
+- [ ] Permissão negada → erro visível, nada gravado?
+- [ ] Reverse geocode sem rede → coords mantidas + aviso "preencha manualmente"?
+- [ ] "Navegar" some quando sem endereço?
+
+**Regras:** decisões PLAN-055 · testes unitários N1–N12 (`frontend/src/shared/geo`) · API-CT-100..105 (`07`)
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)

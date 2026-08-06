@@ -285,6 +285,30 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+## PLAN-055 — Localização (GPS) e navegação — persistência
+
+**Regras (decisões PLAN-055):** `localizacao` (principal) e `localizacaoComercio` são `{lat, lng}` opcionais. Semântica de `PATCH`: **ausente = mantém**, **`null` = limpa** (o frontend envia `null` quando o texto do endereço é editado — fix do endereço). `enderecoComercio: null` limpa o texto. Coords sem texto são permitidas (S7 — navega por ponto).
+
+### API-CT-100 — Criar com `localizacao` (principal) + `localizacaoComercio` (GEO-001)
+**Dado** payload com `localizacao` e `localizacaoComercio` → **Quando** `POST /api/clientes` → **Então** 201 e o `GET :id` reflete ambos (GEO-002).
+
+### API-CT-101 — PATCH texto do comércio sem `localizacaoComercio` (GEO-003)
+**Dado** cliente com coords do comércio → **Quando** `PATCH /api/clientes/:id` alterando só o texto do comércio → **Então** 200 e as **coords são mantidas** (a limpeza é responsabilidade do frontend, enviando `localizacaoComercio: null`).
+
+### API-CT-102 — PATCH `localizacaoComercio: null` zera coords do comércio (GEO-004)
+**Quando** `PATCH /api/clientes/:id` com `{ localizacaoComercio: null }` → **Então** `GET :id` retorna `localizacaoComercio: null`.
+
+### API-CT-103 — PATCH `localizacao: null` zera coords do principal (GEO-005)
+**Quando** `PATCH /api/clientes/:id` com `{ localizacao: null }` → **Então** `GET :id` retorna `localizacao: null`.
+
+### API-CT-104 — PATCH só `localizacaoComercio` nova substitui e mantém texto (GEO-006)
+**Quando** `PATCH /api/clientes/:id` com `{ localizacaoComercio: {lat, lng} }` → **Então** coords substituídas e `enderecoComercio` inalterado.
+
+### API-CT-105 — Criar com `localizacaoComercio` sem texto do comércio é permitido (GEO-007)
+**Dado** payload com coords do comércio e **sem** `enderecoComercio` → **Então** 201 (navegação por ponto, S7).
+
+---
+
 # CONTRATOS
 
 ## API-UC-009 — Criar contrato
