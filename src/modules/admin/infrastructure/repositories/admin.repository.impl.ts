@@ -168,8 +168,9 @@ export class AdminRepository implements IAdminRepository {
       ? db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje), eq(movimentacoesFinanceiras.userId, userId)))
       : db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).innerJoin(usuarios, eq(movimentacoesFinanceiras.userId, usuarios.id)).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje), ...usuarioScope()))
 
-    const [totalAdminsResult, totalOps, totalClientesResult, contratosResult, recebidoResult, entradasResult, saidasResult] = await Promise.all([
+    const [totalAdminsResult, totalSociosResult, totalOps, totalClientesResult, contratosResult, recebidoResult, entradasResult, saidasResult] = await Promise.all([
       countRole("admin"),
+      countRole("socio"),
       countRole("operator"),
       countClientes,
       countContratos,
@@ -183,6 +184,7 @@ export class AdminRepository implements IAdminRepository {
 
     return {
       totalAdmins: totalAdminsResult[0].total,
+      totalSocios: totalSociosResult[0].total,
       totalOperadores: totalOps[0].total,
       totalClientes: totalClientesResult[0].total,
       contratosAtivos: contratosResult[0].total,

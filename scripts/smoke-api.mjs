@@ -449,7 +449,7 @@ async function main() {
   await t("ADM-037", "GET /admin/dashboard (200)", async () => {
     const r = await req("GET", "/api/admin/dashboard", { token: adminToken })
     expect(r, 200, "dashboard")
-    for (const k of ["totalAdmins", "totalOperadores", "totalClientes", "contratosAtivos"]) {
+    for (const k of ["totalAdmins", "totalSocios", "totalOperadores", "totalClientes", "contratosAtivos"]) {
       if (typeof r.data[k] !== "number") throw new Error(`dashboard sem ${k}`)
     }
   })

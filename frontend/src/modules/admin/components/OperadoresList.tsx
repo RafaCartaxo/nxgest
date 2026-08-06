@@ -4,6 +4,7 @@ import { ArrowRight, Edit3, Trash2 } from "lucide-react"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
+import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
 import type { OperadorRow } from "../services/admin.service.js"
 
 interface Props {
@@ -14,13 +15,6 @@ interface Props {
 }
 
 const roleRank: Record<string, number> = { super_admin: 0, admin: 1, socio: 2, operator: 3 }
-
-function roleLabel(t: (k: string) => string, role: OperadorRow["role"]): string {
-  if (role === "super_admin") return t("admin.roleSuperAdmin")
-  if (role === "admin") return t("admin.roleAdmin")
-  if (role === "socio") return t("admin.roleSocio")
-  return t("admin.roleOperator")
-}
 
 function isAdminRole(role: OperadorRow["role"]): boolean {
   return role === "super_admin" || role === "admin"
@@ -69,9 +63,9 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Prop
                     <span className="min-w-0 flex-1 truncate text-base font-semibold">{op.nome}</span>
                     {isSelf && <StatusBadge variant="success" size="sm" label={t("admin.eu")} />}
                     <StatusBadge
-                      variant={op.role === "operator" ? "neutral" : "info"}
+                      variant={roleVariant(op.role)}
                       size="sm"
-                      label={roleLabel(t, op.role)}
+                      label={roleLabel(op.role, t)}
                     />
                   </Card.Header>
                   <Card.Body>

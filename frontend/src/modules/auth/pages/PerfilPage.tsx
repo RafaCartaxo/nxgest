@@ -9,6 +9,7 @@ import { Field } from "../../../shared/components/Field/Field.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
 import { alterarSenha } from "../services/auth.service.js"
 
 export function PerfilPage() {
@@ -21,13 +22,6 @@ export function PerfilPage() {
   const [novaSenha, setNovaSenha] = useState("")
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [erros, setErros] = useState<{ senhaAtual?: string; novaSenha?: string; confirmarSenha?: string }>({})
-
-  const roleLabel =
-    user?.role === "super_admin"
-      ? t("admin.roleSuperAdmin")
-      : user?.role === "admin"
-        ? t("admin.roleAdmin")
-        : t("admin.roleOperator")
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -65,7 +59,7 @@ export function PerfilPage() {
             <p className="truncate text-base font-semibold text-text-primary">{user?.nome}</p>
             <p className="truncate text-sm text-text-secondary">{user?.email}</p>
           </div>
-          <StatusBadge variant={user?.role === "operator" ? "neutral" : "info"} size="sm" label={roleLabel} />
+          <StatusBadge variant={roleVariant(user?.role)} size="sm" label={roleLabel(user?.role, t)} />
         </div>
       </div>
 

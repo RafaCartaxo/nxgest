@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
+import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
 import type { OperadorRow } from "../services/admin.service.js"
 
 interface EquipeModalProps {
   open: boolean
-  role: "admin" | "operator"
+  role: "admin" | "operator" | "socio"
   operadores: OperadorRow[]
   empresaId?: string
   onClose: () => void
@@ -23,11 +24,14 @@ export function EquipeModal({ open, role, operadores, empresaId, onClose }: Equi
     .filter((op) => op.role === role)
     .sort((a, b) => a.nome.localeCompare(b.nome))
 
+  const titleKey =
+    role === "admin" ? "admin.modalAdmins" : role === "socio" ? "admin.modalSocios" : "admin.modalOperadores"
+
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={role === "admin" ? t("admin.modalAdmins") : t("admin.modalOperadores")}
+      title={t(titleKey)}
       maxWidth="max-w-md"
     >
       <div className="space-y-2">
@@ -46,9 +50,9 @@ export function EquipeModal({ open, role, operadores, empresaId, onClose }: Equi
                   <div className="flex items-center gap-2">
                     <p className="truncate text-sm font-medium text-text-primary">{op.nome}</p>
                     <StatusBadge
-                      variant={role === "admin" ? "info" : "neutral"}
+                      variant={roleVariant(op.role)}
                       size="sm"
-                      label={role === "admin" ? t("admin.roleAdmin") : t("admin.roleOperator")}
+                      label={roleLabel(op.role, t)}
                     />
                   </div>
                   <p className="truncate text-xs text-text-muted">{op.email}</p>

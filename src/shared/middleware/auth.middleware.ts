@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express"
-import { verifyToken } from "../utils/jwt.js"
+import { verifyToken, type JwtPayload } from "../utils/jwt.js"
 import { db, usuarios } from "../../database.js"
 import { eq, and, isNull } from "drizzle-orm"
 
@@ -24,9 +24,11 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       return
     }
 
-    req.userId = payload.userId
-    req.userRole = payload.role
-    req.empresaId = payload.empresaId
+    // Role/empresa resolvidos do BANCO, não da claim do token (que pode estar stale
+    // até 7 dias após promoção/rebaixamento — PLAN "roles"). A claim ainda autentica.
+    req.userId = usuario.id
+    req.userRole = usuario.role as JwtPayload["role"]
+    req.empresaId = usuario.empresaId
 
     next()
   } catch {

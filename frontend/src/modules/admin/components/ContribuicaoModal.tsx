@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { formatCurrency } from "../../../shared/utils/masks.js"
+import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
 import type { EquipeResult, ContribuicaoMetric } from "../services/admin.service.js"
 
 interface Props {
@@ -58,9 +59,9 @@ export function ContribuicaoModal({ open, metric, equipe, empresaId, onClose }: 
                   <div className="flex items-center gap-2">
                     <p className="truncate text-sm font-medium text-text-primary">{op.nome}</p>
                     <StatusBadge
-                      variant={op.role === "admin" ? "info" : "neutral"}
+                      variant={roleVariant(op.role)}
                       size="sm"
-                      label={op.role === "admin" ? t("admin.roleAdmin") : t("admin.roleOperator")}
+                      label={roleLabel(op.role, t)}
                     />
                   </div>
                   <p className="truncate text-xs text-text-muted">{op.email}</p>

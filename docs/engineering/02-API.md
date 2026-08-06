@@ -1705,6 +1705,7 @@ KPIs consolidados. Comportamento por nível (PLAN-024 / BR-087):
 ```json
 {
     "totalAdmins": 1,
+    "totalSocios": 2,
     "totalOperadores": 3,
     "totalClientes": 45,
     "contratosAtivos": 12,
@@ -1714,6 +1715,7 @@ KPIs consolidados. Comportamento por nível (PLAN-024 / BR-087):
 ```
 
 - `totalAdmins`: usuários com `role = 'admin'` (PLAN-021 / BR-082)
+- `totalSocios`: usuários com `role = 'socio'` (roles — KPI Sócios)
 - `totalOperadores`: usuários com `role = 'operator'` (PLAN-021 / BR-082)
 - `contratosAtivos`: contratos com `estado = 'Ativo'` (não apenas não-deletados) — PLAN-022 / BR-085
 - `resultadoDoDia`: entradas − saídas do dia (movimentações financeiras)
@@ -1744,7 +1746,7 @@ KPIs consolidados. Comportamento por nível (PLAN-024 / BR-087):
 | BR-079 | Operador não pode ajustar o Caixa Base próprio (403). ~~Revogado pelo PLAN-021~~ — **reativado pelo PLAN-025** (regra exclusiva de admin/super_admin) |
 | BR-080 | Admin visualiza os KPIs do caixa de um operador (`GET /api/caixa?usuarioId=`), validado dentro da empresa |
 | BR-081 | Login roteado por perfil: `operator` → `/`, `admin` → `/admin`, `super_admin` → `/admin/empresas`; `/admin` de super_admin redireciona para `/admin/empresas` |
-| BR-082 | Dashboard admin com KPIs separados: `totalAdmins` (role `admin`) e `totalOperadores` (role `operator`), agrupados em `Equipe` e `Operação` |
+| BR-082 | Dashboard admin com KPIs separados: `totalAdmins` (role `admin`), `totalSocios` (role `socio`) e `totalOperadores` (role `operator`), agrupados em `Equipe` e `Operação` |
 | BR-083 | Card de empresa (super admin) mostra `totalUsuarios` (admin + operator) |
 | BR-084 | ~~Operador pode ajustar o próprio Caixa Base (`POST /api/caixa/ajuste` sem `usuarioId`); `usuarioId` é sempre ignorado para operator~~ — **revogado pelo PLAN-025** (volta à BR-079: operador bloqueado no ajuste) |
 | BR-085 | Contratos ativos (KPIs admin/empresa) contam apenas `estado = 'Ativo'`; `Finalizado`/`Cancelado` não entram |

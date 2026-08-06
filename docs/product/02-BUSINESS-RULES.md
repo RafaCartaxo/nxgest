@@ -427,7 +427,7 @@ Login roteado por perfil: `operator` → `/`, `admin` → `/admin`, `socio` → 
 
 ## BR-082
 
-O dashboard do admin (`GET /api/admin/dashboard`) separa a contagem por papel: `totalAdmins` conta apenas usuários com `role = 'admin'` e `totalOperadores` apenas `role = 'operator'`. Os KPIs são agrupados em `Equipe` (Admins × Operadores) e `Operação` (Clientes, Contratos, Resultado do dia).
+O dashboard do admin (`GET /api/admin/dashboard`) separa a contagem por papel: `totalAdmins` conta apenas usuários com `role = 'admin'`, `totalSocios` apenas `role = 'socio'` e `totalOperadores` apenas `role = 'operator'`. Os KPIs são agrupados em `Equipe` (Admins × Sócios × Operadores) e `Operação` (Clientes, Contratos, Resultado do dia).
 
 ---
 

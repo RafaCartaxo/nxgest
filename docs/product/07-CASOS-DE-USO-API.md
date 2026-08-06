@@ -951,7 +951,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Query:** `empresaId?`
 
-**Response 200:** `{ totalAdmins, totalOperadores, totalClientes, contratosAtivos, recebidoHoje, resultadoDoDia }`
+**Response 200:** `{ totalAdmins, totalSocios, totalOperadores, totalClientes, contratosAtivos, recebidoHoje, resultadoDoDia }`
 
 **Coerência:**
 - [ ] Admin self → KPIs de Operação escopados ao próprio usuário (BR-087)?

@@ -14,6 +14,7 @@ export interface OperadorRow {
 
 export interface AdminDashboardStats {
   totalAdmins: number
+  totalSocios: number
   totalOperadores: number
   totalClientes: number
   contratosAtivos: number
@@ -25,7 +26,7 @@ export interface EquipeItem {
   id: string
   nome: string
   email: string
-  role: "admin" | "operator"
+  role: "admin" | "operator" | "socio"
   totalClientes: number
   contratosAtivos: number
   recebidoHoje: number

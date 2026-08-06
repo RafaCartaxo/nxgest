@@ -18,19 +18,13 @@ import { Avatar } from "../components/Avatar/Avatar.js"
 import { Topbar } from "./Topbar.js"
 import { hasModule } from "../modules/modules.js"
 import { useAuth } from "../auth/AuthContext.js"
+import { roleLabel } from "../utils/role.js"
 
 interface NavItem {
   to: string
   label: string
   icon: typeof Users
   end?: boolean
-}
-
-function roleLabel(role: string | undefined, t: (k: string) => string): string {
-  if (role === "super_admin") return t("admin.roleSuperAdmin")
-  if (role === "admin") return t("admin.roleAdmin")
-  if (role === "socio") return t("admin.roleSocio")
-  return t("admin.roleOperator")
 }
 
 function useNavItems() {

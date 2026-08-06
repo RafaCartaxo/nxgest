@@ -14,6 +14,7 @@ import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { Button } from "../../../shared/components/Button.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
+import { roleLabel } from "../../../shared/utils/role.js"
 import { OperadoresList } from "../components/OperadoresList.js"
 import { OperadorForm } from "../components/OperadorForm.js"
 import { EquipeModal } from "../components/EquipeModal.js"
@@ -38,7 +39,7 @@ export function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const [stats, setStats] = useState({ totalAdmins: 0, totalOperadores: 0 })
+  const [stats, setStats] = useState({ totalAdmins: 0, totalSocios: 0, totalOperadores: 0 })
   const [equipe, setEquipe] = useState<EquipeResult | null>(null)
   const [empresa, setEmpresa] = useState<EmpresaComStats | null>(null)
   const [meuCaixa, setMeuCaixa] = useState<CaixaStatus | null>(null)
@@ -46,10 +47,10 @@ export function AdminPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingOp, setEditingOp] = useState<OperadorRow | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [equipeModal, setEquipeModal] = useState<"admin" | "operator" | null>(null)
+  const [equipeModal, setEquipeModal] = useState<"admin" | "operator" | "socio" | null>(null)
   const [contribuicaoMetric, setContribuicaoMetric] = useState<ContribuicaoMetric | null>(null)
 
-  const isAdminSelf = user?.role === "admin" && !empresaId
+  const isAdminSelf = (user?.role === "admin" || user?.role === "socio") && !empresaId
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -57,7 +58,7 @@ export function AdminPage() {
     try {
       const [ops, dash, eq] = await Promise.all([listOperadores(empresaId), getDashboard(empresaId), getEquipe(empresaId)])
       setOperadores(ops)
-      setStats({ totalAdmins: dash.totalAdmins, totalOperadores: dash.totalOperadores })
+      setStats({ totalAdmins: dash.totalAdmins, totalSocios: dash.totalSocios, totalOperadores: dash.totalOperadores })
       setEquipe(eq)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("admin.erroCarregar"))
@@ -95,7 +96,7 @@ export function AdminPage() {
 
   const empresaNome = empresa?.nome ?? null
   const tituloHeader = isAdminSelf ? (user?.nome ?? null) : empresaNome
-  const headerBadge = isAdminSelf ? t("admin.roleAdmin") : t("admin.roleSuperAdmin")
+  const headerBadge = isAdminSelf ? roleLabel(user?.role, t) : t("admin.roleSuperAdmin")
   const daEquipe = equipe ? t("admin.daEquipe", { n: equipe.operadores.length }) : undefined
 
   const filtered = operadores.filter((op) =>
@@ -176,6 +177,7 @@ export function AdminPage() {
           <SectionHeader title={t("admin.secaoEquipe")} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <KpiCard title={t("admin.totalAdmins")} value={stats.totalAdmins.toString()} variant="blue" onClick={() => setEquipeModal("admin")} />
+            <KpiCard title={t("admin.totalSocios")} value={stats.totalSocios.toString()} variant="info" onClick={() => setEquipeModal("socio")} />
             <KpiCard title={t("admin.totalOperadores")} value={stats.totalOperadores.toString()} variant="info" onClick={() => setEquipeModal("operator")} />
           </div>
 

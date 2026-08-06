@@ -14,6 +14,7 @@ import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { Button } from "../../../shared/components/Button.js"
 import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
+import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 
 export function OperadorDetail() {
@@ -90,9 +91,9 @@ export function OperadorDetail() {
         back={{ onClick: () => navigate(-1), title: t("common.back") }}
         action={operador ? (
           <StatusBadge
-            variant={operador.role === "operator" ? "neutral" : "info"}
+            variant={roleVariant(operador.role)}
             size="sm"
-            label={operador.role === "super_admin" ? t("admin.roleSuperAdmin") : operador.role === "admin" ? t("admin.roleAdmin") : t("admin.roleOperator")}
+            label={roleLabel(operador.role, t)}
           />
         ) : undefined}
       />
