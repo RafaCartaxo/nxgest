@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { Check } from "lucide-react"
 import { Button } from "../../../shared/components/Button.js"
 import { Field } from "../../../shared/components/Field/Field.js"
 import { FieldSelect } from "../../../shared/components/Field/FieldSelect.js"
@@ -137,7 +138,7 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
           {t("common.cancel")}
         </Button>
         <Button type="submit" disabled={loading}>
-          {loading ? t("common.saving") : t("common.save")}
+          <Check className="size-4" /> {loading ? t("common.saving") : t("common.save")}
         </Button>
       </div>
     </form>

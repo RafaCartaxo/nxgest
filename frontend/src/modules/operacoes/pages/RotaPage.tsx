@@ -547,7 +547,7 @@ export function RotaPage() {
             footer={
               <div className="flex w-full gap-4">
                 <Button
-                  variant="secondary"
+                  variant="ghost"
                   onClick={() => setPromessaOpen(false)}
                   className="flex-1"
                 >
@@ -623,7 +623,7 @@ export function RotaPage() {
               </Button>
             </div>
             <Button
-               variant="secondary"
+               variant="ghost"
                onClick={() => setComprovante(null)}
                className="mt-2 w-full"
              >

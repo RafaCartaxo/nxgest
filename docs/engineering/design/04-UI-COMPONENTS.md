@@ -483,20 +483,32 @@ Campos de formulário canônicos — todos com o mesmo `fieldControl` (`rounded-
 
 ## Objetivo
 
-Ação primária/contextual do sistema. Variantes: `primary` (com gradiente de marca), `secondary`, `soft`, `outline`, `ghost`, `danger`, `success`; sizes `sm | md | lg | block`. Base `rounded-xl min-h-11` (toque confortável). `ButtonLink` espelha as mesmas variantes/sizes com `to`.
+Ação primária/contextual do sistema. Variantes: `primary`, `secondary`, `soft`, `outline`, `ghost`, `danger`, `success`; sizes `sm | md | lg | block`. Base `rounded-xl min-h-11` (toque confortável). `ButtonLink` espelha as mesmas variantes/sizes com `to`.
+
+## Texto segue o tema (PLAN-056)
+
+Nenhum botão usa `text-white` fixo — o texto segue o tema via tokens de foreground:
+- `primary` → `text-primary-foreground` (branco no claro · **escuro no escuro**);
+- `success`/`danger` → `text-success-foreground`/`text-danger-foreground`;
+- `soft`/`secondary`/`ghost` → `text-primary-text`/`text-text-primary`/`text-text-secondary`.
+
+Assim todos os botões **mudam junto com o tema** (claro/escuro/paletas) com contraste correto.
 
 ## Vocabulário único por tipo de ação
 
 | Ação | Componente |
 |---|---|
-| Criar (ex.: "Novo cliente") | `ButtonLink primary` no `PageHeader action` |
-| Ação contextual (Central) | chip `QuickActions` |
-| Ver (ex.: "Ver rota") | `Button ghost size="sm"` + `ChevronRight` |
-| Enviar form ("Salvar") | `Button primary` (block no mobile) |
-| Ação positiva ("Registrar pagamento") | `Button success` |
-| Cancelar | `Button ghost` |
+| Criar/editar (ex.: "Novo cliente", "Novo contrato", "Fechar semana", "Nova empresa", "Editar") | `Button/ButtonLink primary size="sm"` + **ícone** (`Plus`/`Pencil`/`Wallet`/`Building2`) no `PageHeader action` |
+| Contextual (ex.: "Ver contratos", "Novo contrato" na ficha, "Anexar") | `Button soft size="sm"` + ícone |
+| Ver/abrir (ex.: "Ver rota") | `Button ghost size="sm"` + `ChevronRight` |
+| Enviar form ("Salvar", "Registrar", "Criar empresa", "Confirmar", "Salvar módulos") | `Button primary` (flex-1/block) + `Check` |
+| Ação positiva de destaque ("Registrar pagamento") | `Button success` |
+| Destrutivo ("Estornar", "Excluir") | `Button danger` |
+| Cancelar / Fechar (forms e modais) | `Button ghost` |
+| Navegação secundária (paginação, WhatsApp do comprovante) | `Button secondary` |
+| Remover (listas) | botão ícone com `aria-label` + hover `danger` |
 
-Regras: sem seta literal "→" (usar `ChevronRight`); sem `<Link>` cru; sem classe de cor crua.
+Regras: sem seta literal "→" (usar `ChevronRight`); sem `<Link>` cru; sem classe de cor crua; **todo** botão de ação principal/contextual tem ícone.
 
 ---
 

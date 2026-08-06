@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom"
-import { User } from "lucide-react"
+import { Check, User } from "lucide-react"
 import { getOperador, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
@@ -138,8 +138,8 @@ export function OperadorDetail() {
                 placeholder="R$ 0,00"
                 className="min-h-12 w-full min-w-0 rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
               />
-              <Button type="button" onClick={handleAjustar} className="shrink-0">
-                {t("caixa.ajustarSalvar")}
+              <Button type="button" variant="soft" size="sm" onClick={handleAjustar} className="shrink-0">
+                <Check className="size-4" /> {t("caixa.ajustarSalvar")}
               </Button>
             </div>
             <input

@@ -72,3 +72,19 @@
 
 ## Pendência registrada (Lovable)
 - [ ] `ContratoForm` · `/rota` · wiring das telas (`central`/`clientes`) — solicitar ao Lovable
+
+---
+
+# CHECKLIST — Alinhamento completo dos botões (padrão Lovable + tema)
+
+**Data:** 06/08/2026
+
+- [x] ClienteDetail "Ver contratos"/"Novo contrato" → `soft sm` + ícones (ChevronRight/Plus), iguais ao "Anexar"
+- [x] `primary` plano (`bg-primary text-primary-foreground`) — texto segue o tema (sem `text-white`); `.dark --gradient-brand` claro (logo legível)
+- [x] Tokens `--success-foreground`/`--danger-foreground` + `text-*-foreground` no `success`/`danger` (dark com contraste)
+- [x] Cancelar → `ghost` (todos forms/modais) · paginação/WhatsApp mantidos `secondary`
+- [x] CTAs de header → `primary sm` + ícone (Plus/Pencil/Wallet/Building2) · Salvar/Registrar → `Check`
+- [x] "Meus dados" → `soft` + User · "Ajustar" → `soft sm` + Check
+- [x] 5 micro-usos: Criar empresa/Salvar módulos/Confirmar pagamento + Check · Registrar gasto + Receipt · Ver cliente → soft
+- [x] Vocabulário documentado em `04-UI-COMPONENTS.md`
+- [x] tsc · audit:ui/styles · build

@@ -85,12 +85,14 @@ h3 {
   --success: oklch(0.6 0.15 149);
   --success-soft: oklch(0.95 0.04 149);
   --success-text: oklch(0.44 0.12 149);
+  --success-foreground: oklch(0.99 0.002 250);
   --warning: oklch(0.7 0.14 82);
   --warning-soft: oklch(0.96 0.05 92);
   --warning-text: oklch(0.5 0.11 82);
   --danger: oklch(0.58 0.21 27);
   --danger-soft: oklch(0.95 0.03 27);
   --danger-text: oklch(0.48 0.19 27);
+  --danger-foreground: oklch(0.99 0.002 250);
   --info: var(--brand-1);
   --info-soft: color-mix(in oklab, var(--brand-1) 12%, white);
   --info-text: color-mix(in oklab, var(--brand-1) 75%, black);
@@ -139,6 +141,7 @@ h3 {
   --color-success-hover: color-mix(in oklab, var(--success) 88%, black);
   --color-success-light: var(--success-soft);
   --color-success-text: var(--success-text);
+  --color-success-foreground: var(--success-foreground);
   --color-success-border: var(--success);
   --color-warning: var(--warning);
   --color-warning-light: var(--warning-soft);
@@ -147,6 +150,7 @@ h3 {
   --color-danger-hover: color-mix(in oklab, var(--danger) 86%, black);
   --color-danger-light: var(--danger-soft);
   --color-danger-text: var(--danger-text);
+  --color-danger-foreground: var(--danger-foreground);
   --color-info: var(--info);
   --color-info-light: var(--info-soft);
   --color-info-text: var(--info-text);
@@ -204,12 +208,14 @@ h3 {
   --success: oklch(0.72 0.16 150);
   --success-soft: oklch(0.32 0.07 150);
   --success-text: oklch(0.86 0.13 150);
+  --success-foreground: oklch(0.16 0.02 260);
   --warning: oklch(0.8 0.15 85);
   --warning-soft: oklch(0.34 0.07 85);
   --warning-text: oklch(0.9 0.13 88);
   --danger: oklch(0.68 0.19 25);
   --danger-soft: oklch(0.33 0.09 25);
   --danger-text: oklch(0.85 0.13 25);
+  --danger-foreground: oklch(0.16 0.02 260);
   --info: var(--primary);
   --info-soft: var(--primary-soft);
   --info-text: var(--primary-text);
@@ -233,7 +239,7 @@ h3 {
     color-mix(in oklab, var(--brand-1) 14%, oklch(0.18 0.02 262)) 55%,
     color-mix(in oklab, var(--brand-far) 16%, oklch(0.17 0.02 285))
   );
-  /* gradiente da marca no escuro (primary adapta ao tema — PLAN-056) */
+  /* gradiente da marca no escuro (elementos de marca — logo/sidebar) */
   --gradient-brand: linear-gradient(
     135deg,
     color-mix(in oklab, var(--brand-1) 82%, white),

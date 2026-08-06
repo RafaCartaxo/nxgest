@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Lock } from "lucide-react"
+import { Check, Lock } from "lucide-react"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { Button } from "../../../shared/components/Button.js"
 import { Switch } from "../../../shared/components/Switch/Switch.js"
@@ -88,7 +88,7 @@ export function ModulosModal({ open, empresaNome, initial, saving, onSave, onClo
             {t("common.cancel")}
           </Button>
           <Button type="button" disabled={saving} onClick={() => onSave(current)}>
-            {saving ? t("common.saving") : t("common.save")}
+            <Check className="size-4" /> {saving ? t("common.saving") : t("common.save")}
           </Button>
         </>
       }

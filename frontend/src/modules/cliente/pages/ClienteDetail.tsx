@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { ChevronRight, Navigation, MessageCircle, Phone, User } from "lucide-react"
+import { ChevronRight, Plus, Pencil, Navigation, MessageCircle, Phone, User } from "lucide-react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getCliente, type Cliente } from "../services/cliente.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
@@ -82,7 +82,7 @@ export function ClienteDetail() {
               icon={User}
               title={cliente.nome}
               back={{ onClick: () => navigate("/clientes"), title: t("common.back") }}
-              action={<ButtonLink to={`/clientes/${cliente.id}/editar`}>{t("common.edit")}</ButtonLink>}
+              action={<ButtonLink to={`/clientes/${cliente.id}/editar`} variant="primary" size="sm"><Pencil className="size-4" /> {t("common.edit")}</ButtonLink>}
             />
             <ClienteInfo cliente={cliente} />
             <QuickActions
@@ -103,11 +103,11 @@ export function ClienteDetail() {
                     {cliente.totalContratos ?? 0}
                   </p>
                   <div className="mt-3 flex justify-center gap-2">
-                    <ButtonLink to={`/contratos?clienteId=${cliente.id}`} variant="outline" size="sm">
-                      {t("cliente.verContratos")} <ChevronRight className="size-4" />
+                    <ButtonLink to={`/contratos?clienteId=${cliente.id}`} variant="soft" size="sm">
+                      <ChevronRight className="size-4" /> {t("cliente.verContratos")}
                     </ButtonLink>
-                    <ButtonLink to={`/contratos/novo?clienteId=${cliente.id}`} variant="primary" size="sm">
-                      {t("cliente.novoContrato")} <ChevronRight className="size-4" />
+                    <ButtonLink to={`/contratos/novo?clienteId=${cliente.id}`} variant="soft" size="sm">
+                      <Plus className="size-4" /> {t("cliente.novoContrato")}
                     </ButtonLink>
                   </div>
                 </Card.Body>

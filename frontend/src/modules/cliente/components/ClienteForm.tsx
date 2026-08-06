@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { UserRound, Store } from "lucide-react"
+import { Check, UserRound, Store } from "lucide-react"
 import { ApiError } from "../../../api/client.js"
 import { Button } from "../../../shared/components/Button.js"
 import { Card } from "../../../shared/components/Card/Card.js"
@@ -402,9 +402,9 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
 
       <div className="flex gap-4">
         <Button type="submit" className="flex-1">
-          {t("common.save")}
+          <Check className="size-4" /> {t("common.save")}
         </Button>
-        <Button variant="secondary" type="button" onClick={onCancel} className="flex-1">
+        <Button variant="ghost" type="button" onClick={onCancel} className="flex-1">
           {t("common.cancel")}
         </Button>
       </div>

@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslation } from "react-i18next"
+import { Check } from "lucide-react"
 import { getGastoSchema, CATEGORIAS_GASTO, CATEGORIA_ICONES, type GastoFormData } from "../schemas/gasto.schema.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { createGasto, type CreateGastoInput } from "../services/gasto.service.js"
@@ -117,7 +118,7 @@ export function GastoForm({ onSuccess }: GastoFormProps) {
       />
 
       <Button type="submit" className="w-full">
-        {t("gasto.registrar")}
+        <Check className="size-4" /> {t("gasto.registrar")}
       </Button>
     </form>
   )

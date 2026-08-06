@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { User } from "lucide-react"
+import { Check, User } from "lucide-react"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { Button } from "../../../shared/components/Button.js"
@@ -100,7 +100,7 @@ export function PerfilPage() {
         />
 
         <div className="flex gap-2 justify-end pt-2">
-          <Button type="submit">{t("common.save")}</Button>
+          <Button type="submit"><Check className="size-4" /> {t("common.save")}</Button>
         </div>
       </form>
     </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { Users } from "lucide-react"
+import { Plus, Users } from "lucide-react"
 import { SearchBar } from "../../../shared/components/SearchBar/SearchBar.js"
 import { Link, useNavigate } from "react-router-dom"
 import { ClienteCard } from "../components/ClienteCard.js"
@@ -60,7 +60,7 @@ export function ClienteList() {
         title={t("cliente.title")}
         subtitle={t("cliente.subtitle")}
         back={{ onClick: () => navigate("/"), title: t("nav.central") }}
-        action={<ButtonLink to="/clientes/novo" variant="primary">{t("cliente.novo")}</ButtonLink>}
+        action={<ButtonLink to="/clientes/novo" variant="primary" size="sm"><Plus className="size-4" /> {t("cliente.novo")}</ButtonLink>}
       />
 
       <div className="mb-4">

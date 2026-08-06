@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { useParams, useNavigate, useSearchParams } from "react-router-dom"
 import { getContrato, deleteContrato } from "../services/contrato.service.js"
 import type { Contrato, Parcela } from "../services/contrato.service.js"
-import { FileText, Share2, MessageCircle, RotateCcw } from "lucide-react"
+import { FileText, Share2, MessageCircle, RotateCcw, Pencil } from "lucide-react"
 import { ApiError } from "../../../api/client.js"
 import { formatarData } from "../../../shared/utils/formatarData.js"
 import { formatCurrency, unmask } from "../../../shared/utils/masks.js"
@@ -262,8 +262,8 @@ export function ContratoDetail() {
             title: t("common.back"),
           }}
           action={!isAdminContext && contrato && !temPagamentos ? (
-            <ButtonLink to={`/contratos/${contrato.id}/editar`}>
-              {t("common.edit")}
+            <ButtonLink to={`/contratos/${contrato.id}/editar`} variant="primary" size="sm">
+              <Pencil className="size-4" /> {t("common.edit")}
             </ButtonLink>
           ) : undefined}
         />
@@ -362,7 +362,7 @@ export function ContratoDetail() {
               descricao={t("pagamento.estornarMessage")}
               footer={
                 <div className="flex w-full gap-3">
-                  <Button variant="secondary" onClick={() => setEstornandoId(null)} className="flex-1">
+                  <Button variant="ghost" onClick={() => setEstornandoId(null)} className="flex-1">
                     {t("common.cancel")}
                   </Button>
                   <Button variant="danger" onClick={handleEstornar} className="flex-1">
@@ -430,7 +430,7 @@ export function ContratoDetail() {
                 </Button>
               </div>
               <Button
-                variant="secondary"
+                variant="ghost"
                 onClick={() => setComprovante(null)}
                 className="mt-2 w-full"
               >

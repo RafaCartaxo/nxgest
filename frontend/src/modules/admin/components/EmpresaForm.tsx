@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Check } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Button } from "../../../shared/components/Button.js"
 import { Field } from "../../../shared/components/Field/Field.js"
@@ -53,7 +54,7 @@ export function EmpresaForm({ onSubmit, onCancel }: EmpresaFormProps) {
         <Button type="button" variant="ghost" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
-        <Button type="submit">{t("superAdmin.criarEmpresa")}</Button>
+        <Button type="submit"><Check className="size-4" /> {t("superAdmin.criarEmpresa")}</Button>
       </div>
     </form>
   )

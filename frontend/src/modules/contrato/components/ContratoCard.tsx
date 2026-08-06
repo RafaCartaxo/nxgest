@@ -169,7 +169,7 @@ function ContratoCard({ contrato: c, variant }: ContratoCardProps) {
             </div>
           </div>
 
-          <ButtonLink variant="secondary" to={`/clientes/${c.clienteId}`}>
+          <ButtonLink variant="soft" to={`/clientes/${c.clienteId}`}>
             {t("contrato.verCliente")}
           </ButtonLink>
         </div>

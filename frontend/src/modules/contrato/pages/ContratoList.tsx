@@ -5,7 +5,7 @@ import { listContratos as listContratosApi } from "../services/contrato.service.
 import type { Contrato } from "../services/contrato.service.js"
 import { listClientes } from "../../cliente/services/cliente.service.js"
 import type { Cliente } from "../../cliente/services/cliente.service.js"
-import { ChevronDown, X, FileText } from "lucide-react"
+import { ChevronDown, Plus, X, FileText } from "lucide-react"
 import { ContratoCard } from "../components/ContratoCard.js"
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
@@ -119,7 +119,7 @@ export function ContratoList() {
         title={t("contrato.title")}
         subtitle={t("contrato.subtitle")}
         back={{ onClick: () => navigate(temFiltroCliente ? `/clientes/${clienteId}` : "/clientes"), title: t("nav.clientes") }}
-        action={<ButtonLink to={`/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}`} variant="primary">{t("contrato.novo")}</ButtonLink>}
+        action={<ButtonLink to={`/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}`} variant="primary" size="sm"><Plus className="size-4" /> {t("contrato.novo")}</ButtonLink>}
       />
 
       <div className="mb-4 flex items-center gap-2">

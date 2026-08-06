@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ChevronDown, FileText } from "lucide-react"
+import { ChevronDown, Check, FileText } from "lucide-react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -305,10 +305,10 @@ export function ContratoNovo() {
 
         <div className="flex gap-4">
           <Button type="submit" className="flex-1">
-            {t("common.save")}
+            <Check className="size-4" /> {t("common.save")}
           </Button>
           <Button
-            variant="secondary"
+            variant="ghost"
             type="button"
             onClick={() => navigate(clienteBloqueado ? `/clientes/${clienteIdParam}` : "/contratos")}
             className="flex-1"

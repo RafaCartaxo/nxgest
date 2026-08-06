@@ -5,9 +5,9 @@ export default {
     extend: {
       colors: {
         primary:   { DEFAULT: "var(--color-primary)", hover: "var(--color-primary-hover)", light: "var(--color-primary-light)", text: "var(--color-primary-text)" },
-        success:   { DEFAULT: "var(--color-success)", hover: "var(--color-success-hover)", light: "var(--color-success-light)", text: "var(--color-success-text)", border: "var(--color-success-border)" },
+        success:   { DEFAULT: "var(--color-success)", hover: "var(--color-success-hover)", light: "var(--color-success-light)", text: "var(--color-success-text)", border: "var(--color-success-border)", foreground: "var(--color-success-foreground)" },
         warning:   { DEFAULT: "var(--color-warning)", light: "var(--color-warning-light)", text: "var(--color-warning-text)" },
-        danger:    { DEFAULT: "var(--color-danger)", hover: "var(--color-danger-hover)", light: "var(--color-danger-light)", text: "var(--color-danger-text)" },
+        danger:    { DEFAULT: "var(--color-danger)", hover: "var(--color-danger-hover)", light: "var(--color-danger-light)", text: "var(--color-danger-text)", foreground: "var(--color-danger-foreground)" },
         info:      { DEFAULT: "var(--color-info)", light: "var(--color-info-light)", text: "var(--color-info-text)" },
         secondary: { DEFAULT: "var(--color-secondary)", light: "var(--color-secondary-light)" },
         surface:         { DEFAULT: "var(--color-surface)", secondary: "var(--color-surface-secondary)", hover: "var(--color-surface-hover)" },

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams, Navigate, useNavigate } from "react-router-dom"
-import { Settings } from "lucide-react"
+import { Settings, User } from "lucide-react"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -258,8 +258,8 @@ export function AdminPage() {
             </div>
           )}
           <div className="mt-6">
-            <Button type="button" variant="secondary" className="w-full" onClick={() => navigate("/perfil")}>
-              {t("perfil.title")}
+            <Button type="button" variant="soft" className="w-full" onClick={() => navigate("/perfil")}>
+              <User className="size-4" /> {t("perfil.title")}
             </Button>
           </div>
         </EstadoTela>

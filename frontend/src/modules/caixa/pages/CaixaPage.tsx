@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { ChevronLeft, ChevronRight, Wallet } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight, Receipt, Wallet } from "lucide-react"
 import { getCaixaStatus, ajustarCaixaBase, listarMovimentacoes, listarAuditoriaCaixa, liquidarSemana, type CaixaStatus, type MovimentacaoItem, type AuditoriaCaixaItem } from "../services/caixa.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { hasModule } from "../../../shared/modules/modules.js"
@@ -207,7 +207,7 @@ export function CaixaPage() {
         title={t("caixa.title")}
         subtitle={t("caixa.subtitle")}
         back={{ onClick: () => navigate(-1), title: t("common.back") }}
-        action={<Button variant="primary" onClick={() => setLiquidarModalOpen(true)}>{t("caixa.liquidar")}</Button>}
+        action={<Button variant="primary" size="sm" onClick={() => setLiquidarModalOpen(true)}><Wallet className="size-4" /> {t("caixa.liquidar")}</Button>}
       />
 
       {error && (
@@ -367,7 +367,7 @@ export function CaixaPage() {
                 onClick={() => navigate("/gastos")}
                 className="w-full"
               >
-                {t("gasto.registrar")}
+                <Receipt className="size-4" /> {t("gasto.registrar")}
               </Button>
             )}
           </div>
@@ -453,8 +453,8 @@ export function CaixaPage() {
                   placeholder="R$ 0,00"
                   className="min-h-12 w-full min-w-0 rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                <Button type="button" onClick={handleAjustar} className="shrink-0">
-                  {t("caixa.ajustarSalvar")}
+                <Button type="button" variant="soft" size="sm" onClick={handleAjustar} className="shrink-0">
+                  <Check className="size-4" /> {t("caixa.ajustarSalvar")}
                 </Button>
               </div>
               <input

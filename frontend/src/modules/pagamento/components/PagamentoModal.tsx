@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react"
+import { Check, Loader2 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { createPagamento, previewPagamento, type PreviewDistribuicao } from "../services/pagamento.service.js"
@@ -116,7 +116,7 @@ export function PagamentoModal({
       footer={
         <div className="flex w-full gap-4">
           <Button
-            variant="secondary"
+            variant="ghost"
             type="button"
             onClick={onClose}
             disabled={enviando}
@@ -129,7 +129,7 @@ export function PagamentoModal({
             disabled={enviando}
             className="flex-1"
           >
-            {t("pagamento.confirmar")}
+            <Check className="size-4" /> {t("pagamento.confirmar")}
           </Button>
         </div>
       }

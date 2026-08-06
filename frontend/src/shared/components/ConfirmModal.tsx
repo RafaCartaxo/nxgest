@@ -34,7 +34,7 @@ export function ConfirmModal({
       footer={
         <>
           <Button
-            variant="secondary"
+            variant="ghost"
             onClick={onCancel}
             className="flex-1"
           >

@@ -5,13 +5,13 @@ type Variant = "primary" | "secondary" | "soft" | "outline" | "ghost" | "danger"
 type Size = "sm" | "md" | "lg" | "block"
 
 const variantStyles: Record<Variant, string> = {
-  primary: "bg-primary bg-gradient-accent text-white hover:brightness-95",
+  primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
   secondary: "border border-border text-text-primary hover:bg-surface-hover",
   soft: "bg-primary-light text-primary-text hover:brightness-95",
   outline: "border border-border-strong bg-surface hover:bg-surface-hover",
   ghost: "text-text-secondary hover:bg-surface-hover hover:text-text-primary",
-  danger: "bg-danger text-white hover:bg-danger-hover",
-  success: "bg-success text-white hover:bg-success-hover",
+  danger: "bg-danger text-danger-foreground hover:brightness-95",
+  success: "bg-success text-success-foreground hover:brightness-95",
 }
 
 const sizeStyles: Record<Size, string> = {

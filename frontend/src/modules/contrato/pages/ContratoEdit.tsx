@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FileText } from "lucide-react"
+import { Check, FileText } from "lucide-react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -238,10 +238,10 @@ export function ContratoEdit() {
 
             <div className="flex gap-4">
               <Button type="submit" className="flex-1">
-                {t("common.save")}
+                <Check className="size-4" /> {t("common.save")}
               </Button>
               <Button
-                variant="secondary"
+                variant="ghost"
                 type="button"
                 onClick={() => navigate(`/contratos/${id}`)}
                 className="flex-1"
