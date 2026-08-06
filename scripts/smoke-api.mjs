@@ -200,6 +200,60 @@ async function main() {
     expect(r, 200, "editar cliente")
   })
 
+  // ---------- PLAN-055: localização (GPS) — persistência (P1..P7) ----------
+  let geoCli
+  await t("GEO-001", "Criar com localizacao (principal) + localizacaoComercio (P1)", async () => {
+    const r = await req("POST", "/api/clientes", {
+      token: opToken,
+      body: {
+        nome: "Geo Smoke", telefone: "83988886666", comercio: "Comércio Geo",
+        endereco: { logradouro: "Rua Principal", numero: "1", bairro: "Centro", cidade: "JP", estado: "PB" },
+        localizacao: { lat: -7.11, lng: -34.86 },
+        enderecoComercio: { logradouro: "Av Comercio", numero: "10", bairro: "Bairro", cidade: "JP", estado: "PB" },
+        localizacaoComercio: { lat: -7.12, lng: -34.87 },
+      },
+    })
+    expect(r, 201, "criar com localização")
+    geoCli = r.data.id
+  })
+  await t("GEO-002", "GET reflete localizacao + localizacaoComercio (P1)", async () => {
+    const r = await req("GET", `/api/clientes/${geoCli}`, { token: opToken })
+    expect(r, 200, "detalhe geo")
+    if (!r.data.localizacao || r.data.localizacao.lat !== -7.11) throw new Error("localizacao principal ausente (PLAN-055)")
+    if (!r.data.localizacaoComercio || r.data.localizacaoComercio.lat !== -7.12) throw new Error("localizacaoComercio ausente")
+  })
+  await t("GEO-003", "PATCH texto do comércio sem localizacaoComercio → coords MANTIDAS (semântica backend; fix envia null)", async () => {
+    const r = await req("PATCH", `/api/clientes/${geoCli}`, { token: opToken, body: { enderecoComercio: { logradouro: "Av Comercio Editada", numero: "10", bairro: "Bairro", cidade: "JP", estado: "PB" } } })
+    expect(r, 200, "patch texto comércio")
+    const got = await req("GET", `/api/clientes/${geoCli}`, { token: opToken })
+    if (!got.data.localizacaoComercio) throw new Error("coords deveriam MANTER sem localizacaoComercio:null (fix é enviar null no frontend)")
+  })
+  await t("GEO-004", "PATCH localizacaoComercio: null → coords do comércio ZERADAS (P3)", async () => {
+    const r = await req("PATCH", `/api/clientes/${geoCli}`, { token: opToken, body: { localizacaoComercio: null } })
+    expect(r, 200, "limpar coords comércio")
+    const got = await req("GET", `/api/clientes/${geoCli}`, { token: opToken })
+    if (got.data.localizacaoComercio !== null) throw new Error("coords do comércio não zeraram")
+  })
+  await t("GEO-005", "PATCH localizacao: null → coords do principal ZERADAS (P2)", async () => {
+    const r = await req("PATCH", `/api/clientes/${geoCli}`, { token: opToken, body: { localizacao: null } })
+    expect(r, 200, "limpar coords principal")
+    const got = await req("GET", `/api/clientes/${geoCli}`, { token: opToken })
+    if (got.data.localizacao !== null) throw new Error("coords do principal não zeraram")
+  })
+  await t("GEO-006", "PATCH só localizacaoComercio nova → substitui e mantém texto (P5)", async () => {
+    await req("PATCH", `/api/clientes/${geoCli}`, { token: opToken, body: { localizacaoComercio: { lat: -7.99, lng: -34.99 } } })
+    const got = await req("GET", `/api/clientes/${geoCli}`, { token: opToken })
+    if (got.data.localizacaoComercio?.lat !== -7.99) throw new Error("coords não substituíram")
+    if (!got.data.enderecoComercio?.logradouro) throw new Error("texto do comércio não deveria mudar")
+  })
+  await t("GEO-007", "Criar com localizacaoComercio SEM texto do comércio é permitido (S7 — navega por ponto)", async () => {
+    const r = await req("POST", "/api/clientes", {
+      token: opToken,
+      body: { nome: "Geo S7", telefone: "83988885555", comercio: "X", endereco: { logradouro: "Rua S7", cidade: "JP", estado: "PB" }, localizacaoComercio: { lat: -7.2, lng: -34.8 } },
+    })
+    expect(r, 201, "coords sem texto (S7)")
+  })
+
   // cliente de OUTRO operador (sofia) → 404 para gabriel
   let sofiaClientId
   await t("CLI-012", "Cliente de outro operador (404)", async () => {

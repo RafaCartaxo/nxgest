@@ -22,6 +22,7 @@ export interface Cliente {
     cidade?: string
     estado?: string
   } | null
+  localizacao?: { lat: number; lng: number } | null
   localizacaoComercio?: { lat: number; lng: number } | null
   totalContratos?: number
   saldoDevedor?: number

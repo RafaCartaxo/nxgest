@@ -36,6 +36,13 @@ export const updateClienteSchema = z.object({
     cidade: z.string().optional(),
     estado: z.string().optional(),
   }).optional().nullable(),
+  localizacao: z
+    .object({
+      lat: z.number(),
+      lng: z.number(),
+    })
+    .optional()
+    .nullable(),
   localizacaoComercio: z
     .object({
       lat: z.number(),

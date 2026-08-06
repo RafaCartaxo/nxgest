@@ -44,6 +44,10 @@ export class UpdateClienteUseCase {
       data.enderecoComercio = input.enderecoComercio ?? null
     }
 
+    if (input.localizacao !== undefined) {
+      data.localizacao = input.localizacao ?? null
+    }
+
     if (input.localizacaoComercio !== undefined) {
       data.localizacaoComercio = input.localizacaoComercio ?? null
     }

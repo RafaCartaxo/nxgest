@@ -36,6 +36,10 @@ function rowToCliente(row: ClienteRow): Cliente {
       row.comercioLat !== null && row.comercioLng !== null
         ? { lat: row.comercioLat, lng: row.comercioLng }
         : null,
+    localizacao:
+      row.lat !== null && row.lng !== null
+        ? { lat: row.lat, lng: row.lng }
+        : null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     deletedAt: row.deletedAt,
@@ -58,8 +62,8 @@ export class ClienteRepository implements IClienteRepository {
       bairro: cliente.endereco.bairro ?? null,
       cidade: cliente.endereco.cidade ?? null,
       estado: cliente.endereco.estado ?? null,
-      lat: null,
-      lng: null,
+      lat: cliente.localizacao?.lat ?? null,
+      lng: cliente.localizacao?.lng ?? null,
       comercioLogradouro: cliente.enderecoComercio?.logradouro ?? null,
       comercioNumero: cliente.enderecoComercio?.numero ?? null,
       comercioBairro: cliente.enderecoComercio?.bairro ?? null,
@@ -169,6 +173,15 @@ export class ClienteRepository implements IClienteRepository {
         if (data.enderecoComercio.bairro !== undefined) updateData.comercioBairro = data.enderecoComercio.bairro ?? null
         if (data.enderecoComercio.cidade !== undefined) updateData.comercioCidade = data.enderecoComercio.cidade
         if (data.enderecoComercio.estado !== undefined) updateData.comercioEstado = data.enderecoComercio.estado
+      }
+    }
+    if (data.localizacao !== undefined) {
+      if (data.localizacao === null) {
+        updateData.lat = null
+        updateData.lng = null
+      } else {
+        updateData.lat = data.localizacao.lat
+        updateData.lng = data.localizacao.lng
       }
     }
     if (data.localizacaoComercio !== undefined) {

@@ -25,6 +25,7 @@ export class CreateClienteUseCase {
       telefoneComercio: input.telefoneComercio,
       endereco: input.endereco,
       enderecoComercio: input.enderecoComercio,
+      localizacao: input.localizacao ?? null,
       localizacaoComercio: input.localizacaoComercio ?? null,
       createdAt: now,
       updatedAt: now,

@@ -29,6 +29,7 @@ export interface Cliente {
   telefoneComercio?: string
   endereco: Address
   enderecoComercio?: AddressPartial | null
+  localizacao?: Location | null
   localizacaoComercio?: Location | null
   totalContratos?: number
   createdAt: string
