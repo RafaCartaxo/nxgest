@@ -2,6 +2,22 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — PLAN-047 · Identidade visual "Nexus" — card de cobrança + componentes + anti-drift (consolidado)
+
+> **Plano único** — absorve os antigos **PLAN-048..054** (arquivos removidos; histórico mapeado a commits no plano). Escopo completo e rastreabilidade em [PLAN-047](plans/PLAN-047-card-cobranca-dia-lovable-badges-modais.md).
+
+**Adicionado / Melhorado**
+- **Card de cobrança do dia** (Central, `/cobrancas`, `/atendidos` e Rota): display no padrão Lovable (tone bar, `StatusBadge`, `value-lg`), **sem avatar**, ações só na Rota. `diasEmAtraso` no backend (`CobrancaItem`, subquery `julianday`) + **CT OPS-018** no smoke.
+- **Evolução do card (iterações):** fix da parcela (`proximoNumeroParcela` — antes mostrava saldo em R$ → "Parcela 30 de 20"), **altura uniforme** (4 linhas fixas), bairro/parcela em linhas próprias, linhas full-width (fim do truncamento no carousel/mobile) e "N dias de atraso" **alinhado ao fim do valor** (antes do ">").
+- **Componentes compartilhados:** `Modal` com assinatura Lovable (`title`/`descricao`/`footer`) + **bottom-sheet mobile** (sweep dos 14 consumidores) · `FieldSelect`/`FieldTextarea` (migrados 3 `<select>`) · `Tabs` · `EstadoTela` unificado · `PageHeader`/`SectionHeader` (icon `size-11 rounded-xl`, título 28px/22px) · `StatusBadge` com **dot** · `Switch` canônico · `ParcelaList` com badges.
+- **Admin:** `ModulosModal` v2 (descrição por módulo, Central sempre ativa, auto-completar deps, cascata-off) · `OperadorDetail` com `ContratoCard list-item`.
+- **Anti-drift:** `npm run audit:ui` estendido (select/textarea cru, header inline de modal, `role="tab"` fora do Tabs, `<Modal>` sem `title`) — gate no deploy.
+- **Docs:** `04-UI-COMPONENTS` v1.7 · `06-PRODUCAO` (gates) · `Lovable-NXGestao` superseded · `UI-COVERAGE` · índice de planos.
+
+**Por quê:** fechar a identidade "Nexus" ponta a ponta (referência `site-personality-plus`), padronizar componentes e travar o padrão contra regressão — em um único plano rastreável.
+
+Referência: [PLAN-047](plans/PLAN-047-card-cobranca-dia-lovable-badges-modais.md)
+
 ## 05/08/2026 — PLAN-046 · Fix do switch de módulos + engrenagem de configurações + coerência do grafo
 
 **Corrigido**
