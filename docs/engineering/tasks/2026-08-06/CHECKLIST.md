@@ -19,3 +19,5 @@
 - [x] Uniformidade: coluna esquerda (4 linhas) sempre mais alta → mesma altura atrasado/vence hoje
 - [x] Reflete nos 3 consumidores (fila + Central carousel + Rota)
 - [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
+
+- [x] **Refino (PLAN-051):** dias de atraso alinhado na MESMA linha do badge (coluna direita `self-stretch` + `mt-auto`) — borda direita alinhada com o valor acima; altura uniforme e sem truncar mantidas

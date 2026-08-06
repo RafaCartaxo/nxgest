@@ -53,7 +53,7 @@ export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProp
             />
           </div>
         </div>
-        <div className="flex shrink-0 flex-col items-end text-right">
+        <div className="flex shrink-0 flex-col items-end self-stretch text-right">
           <div className="flex items-center gap-1">
             <span className="value-lg whitespace-nowrap text-text-primary">
               R$ {formatCurrency(item.totalPendente)}
@@ -61,7 +61,7 @@ export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProp
             {onClick && <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden />}
           </div>
           {item.diasEmAtraso > 0 && (
-            <span className="mt-0.5 text-xs text-danger-text">
+            <span className="mt-auto text-xs text-danger-text">
               {t("operacoes.diasAtraso", { count: item.diasEmAtraso })}
             </span>
           )}
