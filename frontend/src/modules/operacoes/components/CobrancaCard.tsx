@@ -11,12 +11,21 @@ interface CobrancaCardProps {
   className?: string
 }
 
+/**
+ * Card de cobrança (PLAN-047/050) — estrutura fixa de 3 linhas para altura uniforme:
+ *   1. Nome (primário) + Valor (value-lg, nowrap)
+ *   2. Bairro · Parcela X de Y (secundário, truncate)
+ *   3. StatusBadge + dias de atraso (terciário, 1 linha fixa)
+ */
 export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProps) {
   const { t } = useTranslation()
   const tone: CardTone = item.situacao === "atrasado" ? "danger" : "info"
 
   const bairro = item.clienteBairro?.trim() ?? ""
-  const parcela = t("operacoes.parcelaDe", { atual: item.proximaParcela, total: item.totalParcelasContrato })
+  const parcelaNumero = item.proximoNumeroParcela
+  const parcela = parcelaNumero > 0
+    ? t("operacoes.parcelaDe", { atual: parcelaNumero, total: item.totalParcelasContrato })
+    : ""
   const subtitulo = [bairro, parcela].filter(Boolean).join(" · ")
 
   return (
@@ -29,23 +38,24 @@ export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProp
       className={`w-full p-4 pl-5 ${className}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate font-semibold text-text-primary">{item.clienteNome}</p>
-          <p className="mt-0.5 text-sm text-text-secondary">{subtitulo}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <p className="mt-0.5 truncate text-sm text-text-secondary">{subtitulo}</p>
+          <div className="mt-2 flex min-h-6 items-center gap-2">
             <StatusBadge
               variant={tone}
               label={item.situacao === "atrasado" ? t("status.atrasado") : t("status.venceHoje")}
+              className="shrink-0"
             />
             {item.diasEmAtraso > 0 && (
-              <span className="text-xs text-danger-text">
+              <span className="truncate text-xs text-danger-text">
                 {t("operacoes.diasAtraso", { count: item.diasEmAtraso })}
               </span>
             )}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1 text-right">
-          <span className="value-lg text-text-primary">
+          <span className="value-lg whitespace-nowrap text-text-primary">
             R$ {formatCurrency(item.totalPendente)}
           </span>
           {onClick && <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden />}
