@@ -17,8 +17,8 @@ const toneBar: Record<CardTone, string> = {
 }
 
 const rootStyles: Record<CardVariant, string> = {
-  "list-item":  "relative block rounded-xl border border-border bg-card text-card-foreground p-4 transition hover:border-primary",
-  "detail":     "relative rounded-xl border border-border bg-card text-card-foreground p-4",
+  "list-item":  "relative block overflow-hidden rounded-xl border border-border bg-card text-card-foreground p-4 transition hover:border-primary",
+  "detail":     "relative overflow-hidden rounded-xl border border-border bg-card text-card-foreground p-4",
   "collection": "relative overflow-hidden rounded-xl border border-border bg-card text-card-foreground",
 }
 

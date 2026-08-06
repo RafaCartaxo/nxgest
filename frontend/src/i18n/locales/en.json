@@ -556,9 +556,9 @@
     "adicionar": "Add photo",
     "remover": "Remove",
     "otimizada": "Optimized to {{px}}px · {{bytes}}",
-    "hint": "JPEG, PNG or WebP up to {{kb}}KB — reduced to {{px}}px before saving.",
+    "hint": "Any size — the image is reduced to {{px}}px before saving.",
     "tipo": "Use a JPEG, PNG or WebP image.",
-    "tamanho": "Image too large — choose a file smaller than {{kb}}KB.",
+    "tamanho": "Image larger than 50MB.",
     "falha": "Could not process the image. Try another photo."
   }
 }

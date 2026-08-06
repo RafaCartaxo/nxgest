@@ -556,9 +556,9 @@
     "adicionar": "Adicionar foto",
     "remover": "Remover",
     "otimizada": "Otimizada para {{px}}px · {{bytes}}",
-    "hint": "JPEG, PNG ou WebP até {{kb}}KB — reduzida para {{px}}px antes de salvar.",
+    "hint": "Qualquer tamanho — a imagem é reduzida para {{px}}px antes de salvar.",
     "tipo": "Use uma imagem JPEG, PNG ou WebP.",
-    "tamanho": "Imagem muito grande — escolha um arquivo com menos de {{kb}}KB.",
+    "tamanho": "Imagem acima de 50MB.",
     "falha": "Não foi possível processar a imagem. Tente outra foto."
   }
 }

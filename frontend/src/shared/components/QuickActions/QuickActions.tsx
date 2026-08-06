@@ -13,6 +13,18 @@ interface QuickActionsProps {
   layout?: "horizontal" | "vertical" | "grid"
   disabled?: boolean
   size?: "sm" | "md"
+  /** No layout "grid": força uma linha única com todas as ações visíveis (adaptável a itens ocultos). */
+  singleRow?: boolean
+}
+
+/** Mapa estático (classes literais para o Tailwind JIT) — singleRow = 1 linha por nº de visíveis. */
+const SINGLE_ROW_COLS: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  5: "grid-cols-5",
+  6: "grid-cols-6",
 }
 
 const variantStyles = {
@@ -23,14 +35,15 @@ const variantStyles = {
   danger: { color: "text-danger-text", hover: "hover:bg-danger-light", bg: "bg-danger-light" },
 }
 
-export function QuickActions({ actions, layout = "horizontal", disabled, size = "sm" }: QuickActionsProps) {
+export function QuickActions({ actions, layout = "horizontal", disabled, size = "sm", singleRow = false }: QuickActionsProps) {
   const iconSize = size === "md" ? "h-4 w-4" : "h-3.5 w-3.5"
   const padding = size === "md" ? "px-3 py-1.5" : "px-2 py-1"
 
   if (layout === "grid") {
     const visiveis = actions.filter((a) => a.show !== false && a.icon).length
-    const cols =
-      visiveis === 1 ? "grid-cols-1"
+    const cols = singleRow
+      ? SINGLE_ROW_COLS[visiveis] ?? "grid-cols-1"
+      : visiveis === 1 ? "grid-cols-1"
       : visiveis === 2 ? "grid-cols-2"
       : visiveis === 3 ? "grid-cols-3"
       : "grid-cols-2 sm:grid-cols-4"

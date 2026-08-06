@@ -486,9 +486,10 @@ export function RotaPage() {
                 <Card.Root variant="collection">
                   {operando && <div className="h-1 animate-pulse bg-primary" />}
 
-                  <div className="border-b border-border-light px-6 py-4">
+                  <div className="border-b border-border-light px-4 py-4">
                     <QuickActions
-                      layout="vertical"
+                      layout="grid"
+                      singleRow
                       disabled={operando}
                       actions={[
                         { icon: Navigation, label: t("operacoes.navegar"), onClick: () => handleNavegar(slideItem), variant: "blue", show: alvoNavegavel(alvoDeItemCobranca(slideItem)) },
@@ -499,7 +500,7 @@ export function RotaPage() {
                     />
                   </div>
 
-                  <div className="px-6 py-4">
+                  <div className="px-4 py-4">
                     <Button
                       variant="success"
                       onClick={() => setPagamentoOpen(true)}
@@ -510,9 +511,10 @@ export function RotaPage() {
                     </Button>
                   </div>
 
-                  <div className="border-t border-border-light px-6 py-4">
+                  <div className="border-t border-border-light px-4 py-4">
                     <QuickActions
-                      layout="vertical"
+                      layout="grid"
+                      singleRow
                       disabled={operando}
                       actions={[
                         { icon: UserCheck, label: t("operacoes.visitado"), onClick: () => handleVisitado(slideItem), variant: "gray", show: slideItem.resultadoOperacional !== ResultadoOperacional.VISITADO },

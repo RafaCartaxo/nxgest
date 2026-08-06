@@ -1,5 +1,5 @@
 /** Limites de imagem (PLAN-041/Avatar). */
-export const MAX_ENTRADA_BYTES = 500 * 1024 // 500KB
+export const MAX_ENTRADA_BYTES = 50 * 1024 * 1024 // 50MB — aceita qualquer foto, compacta na saída
 export const MAX_LADO = 200 // px
 
 export type ErroImagem = "tipo" | "tamanho" | "falha"

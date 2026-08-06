@@ -126,6 +126,7 @@ export function PagamentoModal({
           </Button>
           <Button
             type="submit"
+            form="pagamento-form"
             disabled={enviando}
             className="flex-1"
           >
@@ -145,7 +146,7 @@ export function PagamentoModal({
         Saldo restante do contrato após o pagamento.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-4">
+      <form id="pagamento-form" onSubmit={handleSubmit} className="mt-4">
         <label className="block text-sm font-medium text-text-primary">
           {t("pagamento.label")}
         </label>
