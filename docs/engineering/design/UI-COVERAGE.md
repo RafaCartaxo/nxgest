@@ -57,7 +57,7 @@
 | `Card` | ✅ | listas/cards/rows |
 | `KpiCard` | ✅ | dashboards/relatórios |
 | `Field` · `FieldSelect` · `FieldTextarea` | ✅ | forms/inputs/selects (16+; `node scripts/consumers.mjs Field`) |
-| `Modal` | ✅ | modais (KPI, admin, estorno...) — assinatura Lovable + bottom-sheet (PLAN-048) |
+| `Modal` | ✅ | modais (KPI, admin, estorno...) — assinatura Lovable + bottom-sheet (PLAN-047) |
 | `Switch` | ✅ | ModulosModal (módulos) |
 | `Tabs` | ✅ | AdminPage (equipe/meus dados) |
 | `QuickActions` | ✅ | Central, ClienteDetail, Rota, cards |

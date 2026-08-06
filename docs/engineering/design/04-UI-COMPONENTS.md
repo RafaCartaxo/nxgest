@@ -404,7 +404,7 @@ const { theme, toggle } = useTheme()
 
 ## Objetivo
 
-Orientar o operador quando não existirem dados — card `rounded-xl border bg-card` com ícone em círculo `size-11 rounded-full` (`bg-muted text-text-muted`) + título + descrição + ação (padrão Lovable, PLAN-048).
+Orientar o operador quando não existirem dados — card `rounded-xl border bg-card` com ícone em círculo `size-11 rounded-full` (`bg-muted text-text-muted`) + título + descrição + ação (padrão Lovable, PLAN-047).
 
 ---
 
@@ -483,7 +483,7 @@ Campos de formulário canônicos — todos com o mesmo `fieldControl` (`rounded-
 
 ## Objetivo
 
-Toggle canônico — track `h-7 w-12` com borda, knob `size-5` centralizado (`translate-x-1`/`translate-x-6`), ativo `bg-primary`, inativo `bg-muted` (padrão Lovable, PLAN-047/048). Suporta `label`, `disabled` e `motivo` (tooltip quando bloqueado).
+Toggle canônico — track `h-7 w-12` com borda, knob `size-5` centralizado (`translate-x-1`/`translate-x-6`), ativo `bg-primary`, inativo `bg-muted` (padrão Lovable, PLAN-047). Suporta `label`, `disabled` e `motivo` (tooltip quando bloqueado).
 
 ---
 
@@ -518,7 +518,7 @@ Executar fluxos secundários.
 `shared/components/Modal/Modal.tsx` provê a mecânica uniforme dos modais (PLAN-026/048):
 
 - `open`, `onClose` — controle de exibição;
-- `title`, `descricao?`, `footer?` — header padronizado (título `font-display text-[18px]` + X `size-9 rounded-lg`) e rodapé (assinatura Lovable, PLAN-048);
+- `title`, `descricao?`, `footer?` — header padronizado (título `font-display text-[18px]` + X `size-9 rounded-lg`) e rodapé (assinatura Lovable, PLAN-047);
 - `backdropClose` (bool) — clicar fora fecha? **Configurável por instância** (preserva a semântica atual de cada tela);
 - `escapeClose` (bool, padrão `true`) — tecla Escape fecha;
 - `maxWidth` — largura do conteúdo (ex.: `max-w-sm`, `max-w-md`);
@@ -566,7 +566,7 @@ Apresentar mensagens de erro com ação de retry.
 
 # Bottom Sheet
 
-**Status:** ✅ Coberto pelo `Modal` (bottom-sheet no mobile — PLAN-048)
+**Status:** ✅ Coberto pelo `Modal` (bottom-sheet no mobile — PLAN-047)
 
 ## Objetivo
 

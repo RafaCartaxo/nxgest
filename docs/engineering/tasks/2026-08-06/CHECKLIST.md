@@ -1,59 +1,36 @@
-# CHECKLIST — Card de cobrança: fix parcela + altura uniforme (PLAN-050)
+# CHECKLIST — Card de cobrança: iterações de refinamento (PLAN-047 consolidado — antigos 050–054)
 
 **Data:** 06/08/2026
 
+> Itens originais de PLAN-050..054, consolidados sob o PLAN-047 (identidade visual "Nexus").
+
+## 050 — Fix parcela + altura uniforme
 - [x] Bug "Parcela 30 de 20": `CobrancaCard` usa `proximoNumeroParcela` (número real) — antes usava `proximaParcela` (saldo em R$)
 - [x] Altura uniforme: subtítulo `truncate` · status `min-h-6` + `truncate` · valor `whitespace-nowrap` → 3 linhas fixas
 - [x] Hierarquia de informação: primário (nome+valor) · secundário (bairro · parcela) · terciário (badge + dias)
 - [x] Reflete nos 3 consumidores: fila `/cobrancas` + `/atendidos` · Central (carousel) · Rota
-- [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
 
----
-
-# CHECKLIST — Card de cobrança: bairro/parcela em linhas próprias + dias sem truncar (PLAN-051)
-
-**Data:** 06/08/2026
-
+## 051 — Bairro/parcela em linhas próprias + dias sem truncar
 - [x] 4 linhas fixas: Nome · Bairro · Parcela · StatusBadge
 - [x] "N dias de atraso" na coluna direita sob o valor (text-xs danger) — nunca trunca
 - [x] Uniformidade: coluna esquerda (4 linhas) sempre mais alta → mesma altura atrasado/vence hoje
-- [x] Reflete nos 3 consumidores (fila + Central carousel + Rota)
-- [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
+- [x] Refino: dias alinhado na MESMA linha do badge (coluna direita `self-stretch` + `mt-auto`) — borda direita alinhada com o valor acima
 
-- [x] **Refino (PLAN-051):** dias de atraso alinhado na MESMA linha do badge (coluna direita `self-stretch` + `mt-auto`) — borda direita alinhada com o valor acima; altura uniforme e sem truncar mantidas
-
----
-
-# CHECKLIST — Alinhamento fino do "dias de atraso" (PLAN-052)
-
-**Data:** 06/08/2026
-
+## 052 — Alinhamento fino do "dias de atraso"
 - [x] "dias de atraso" na linha do badge (coluna esquerda), `items-center` → centralizado com o badge
 - [x] Saiu da coluna direita (sem `self-stretch`/`mt-auto`) → não passa mais o ">" do valor
 - [x] `min-w-0 truncate` no texto (trunca só no carousel estreito)
-- [x] Coluna direita volta a ter só o valor; altura uniforme mantida
-- [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
 
----
-
-# CHECKLIST — Card de cobrança: linhas full-width (PLAN-053)
-
-**Data:** 06/08/2026
-
+## 053 — Linhas full-width
 - [x] Causa raiz: coluna do valor `shrink-0` encolhia todas as linhas (dias sumia no carousel ~90px)
 - [x] Só a linha 1 é 2 colunas (nome + valor); linhas 2–4 full-width
 - [x] Bairro/parcela/"dias de atraso" passam a usar os 252px do card → não trunca no carousel/mobile
-- [x] Mantidos: 4 linhas uniformes · dias centralizado com o badge · valor à direita
-- [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
 
----
-
-# CHECKLIST — "dias de atraso" alinhado ao fim do valor (PLAN-054)
-
-**Data:** 06/08/2026
-
+## 054 — "dias de atraso" alinhado ao fim do valor
 - [x] Linha do badge com `justify-between` → dias vai para o final do card
 - [x] `pr-5` condicional (quando há ">"): 20px = chevron 16px + gap 4px → dias termina no FIM DO VALOR (antes do ">")
 - [x] Rota (sem ">"): sem padding → alinhado com o valor (à direita)
-- [x] Mantidos: centralizado com o badge (items-center) · altura uniforme · sem truncar
-- [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
+
+## Validação
+- [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit` (a cada iteração)
+- [x] Mantidos ao final: altura uniforme · centralizado com o badge · sem truncar · valor à direita
