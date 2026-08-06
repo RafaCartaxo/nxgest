@@ -108,7 +108,7 @@
     "nenhumPendente": "No pending clients in route.",
     "todos": "All",
     "pendentes": "Pending",
-    "verPendentes": "Pending →",
+    "verPendentes": "Pending",
     "verNaRota": "View Route",
     "resultado": {
       "pendente": "Pending",
@@ -124,7 +124,7 @@
     "atendidosHoje": "Attended Today",
     "todosResultados": "All",
     "todosAtendidos": "✓ All {{total}} clients were attended today.",
-    "verResumo": "View summary →",
+    "verResumo": "View summary",
     "atrasadosResumo": "{{clientes}} overdue client(s) · R$ {{total}}",
     "resumoAtendidosDetail": "{{visitado}} visited · {{naoEncontrado}} not found · {{promessa}} promise(s) · {{pagos}} paid",
     "atrasadosResumoDetail": "{{pendente}} pending · {{visitado}} visited · {{naoEncontrado}} not found · {{promessa}} promise(s)",
@@ -203,8 +203,8 @@
     "naoEncontrado": "Contract not found.",
     "nenhumEncontrado": "No contracts found.",
     "todosClientes": "All clients",
-    "buscarCliente": "Search client...",
-    "nenhumClienteEncontrado": "No clients found",
+    "buscarCliente": "Search client…",
+    "nenhumClienteEncontrado": "No client found.",
     "limpar": "Clear",
     "selecioneCliente": "Select a client",
     "clienteLabel": "Client",
@@ -241,7 +241,8 @@
       "jurosNaoNegativo": "Interest cannot be negative.",
       "minimo1Parcela": "Enter at least 1 installment.",
       "informeDataInicio": "Enter the start date."
-    }
+    },
+    "selecionarCliente": "Select client"
   },
   "parcela": {
     "nenhumaEncontrada": "No installments found.",

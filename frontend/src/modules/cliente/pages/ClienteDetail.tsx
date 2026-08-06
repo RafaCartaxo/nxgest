@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { ChevronRight, Navigation, MessageCircle, Phone, User } from "lucide-react"
-import { useParams, Link, useNavigate } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { getCliente, type Cliente } from "../services/cliente.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { hasModule } from "../../../shared/modules/modules.js"
@@ -103,18 +103,12 @@ export function ClienteDetail() {
                     {cliente.totalContratos ?? 0}
                   </p>
                   <div className="mt-3 flex justify-center gap-2">
-                    <Link
-                      to={`/contratos?clienteId=${cliente.id}`}
-                      className="inline-flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
-                    >
-                      {t("cliente.verContratos")} <ChevronRight className="h-4 w-4" />
-                    </Link>
-                    <Link
-                      to={`/contratos/novo?clienteId=${cliente.id}`}
-                      className="inline-flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
-                    >
-                      {t("cliente.novoContrato")} <ChevronRight className="h-4 w-4" />
-                    </Link>
+                    <ButtonLink to={`/contratos?clienteId=${cliente.id}`} variant="ghost" size="sm">
+                      {t("cliente.verContratos")} <ChevronRight className="size-4" />
+                    </ButtonLink>
+                    <ButtonLink to={`/contratos/novo?clienteId=${cliente.id}`} variant="primary" size="sm">
+                      {t("cliente.novoContrato")} <ChevronRight className="size-4" />
+                    </ButtonLink>
                   </div>
                 </Card.Body>
               </Card.Root>

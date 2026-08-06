@@ -108,7 +108,7 @@
     "nenhumPendente": "Ningún cliente pendiente en la ruta.",
     "todos": "Todos",
     "pendentes": "Pendientes",
-    "verPendentes": "Pendientes →",
+    "verPendentes": "Pendientes",
     "verNaRota": "Ver Ruta",
     "resultado": {
       "pendente": "Pendiente",
@@ -124,7 +124,7 @@
     "atendidosHoje": "Atendidos Hoy",
     "todosResultados": "Todos",
     "todosAtendidos": "✓ Todos los {{total}} clientes fueron atendidos hoy.",
-    "verResumo": "Ver resumen →",
+    "verResumo": "Ver resumen",
     "atrasadosResumo": "{{clientes}} cliente(s) en atraso · R$ {{total}}",
     "resumoAtendidosDetail": "{{visitado}} visitado(s) · {{naoEncontrado}} no encontrado(s) · {{promessa}} promesa(s) · {{pagos}} pagado(s)",
     "atrasadosResumoDetail": "{{pendente}} pendiente(s) · {{visitado}} visitado(s) · {{naoEncontrado}} no encontrado(s) · {{promessa}} promesa(s)",
@@ -203,8 +203,8 @@
     "naoEncontrado": "Contrato no encontrado.",
     "nenhumEncontrado": "No se encontraron contratos.",
     "todosClientes": "Todos los clientes",
-    "buscarCliente": "Buscar cliente...",
-    "nenhumClienteEncontrado": "No se encontraron clientes",
+    "buscarCliente": "Buscar cliente…",
+    "nenhumClienteEncontrado": "No se encontró ningún cliente.",
     "limpar": "Limpiar",
     "selecioneCliente": "Seleccione un cliente",
     "clienteLabel": "Cliente",
@@ -241,7 +241,8 @@
       "jurosNaoNegativo": "Los intereses no pueden ser negativos.",
       "minimo1Parcela": "Informe al menos 1 cuota.",
       "informeDataInicio": "Informe la fecha de inicio."
-    }
+    },
+    "selecionarCliente": "Seleccionar cliente"
   },
   "parcela": {
     "nenhumaEncontrada": "No se encontraron cuotas.",

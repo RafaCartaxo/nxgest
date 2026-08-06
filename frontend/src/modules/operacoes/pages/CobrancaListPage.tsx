@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { ClipboardList } from "lucide-react"
+import { ChevronRight, ClipboardList } from "lucide-react"
 import { listarCobrancasDoDia, listarPagamentosHoje, ResultadoOperacional, type CobrancaDoDiaResult, type CobrancaItem, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
 import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { eventBus } from "../../../shared/events/eventBus.js"
@@ -170,7 +170,9 @@ export function CobrancaListPage() {
         subtitle={t("operacoes.subtitleCobrancas")}
         back={{ onClick: () => navigate(-1), title: t("common.back") }}
         action={!(pendentes.length === 0 && totalResolvidos > 0) ? (
-          <Button variant="primary" onClick={() => navigate("/rota")}>{t("operacoes.verNaRota")} →</Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/rota")}>
+            {t("operacoes.verNaRota")} <ChevronRight className="size-4" />
+          </Button>
         ) : undefined}
       />
 
