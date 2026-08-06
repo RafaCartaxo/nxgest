@@ -12,15 +12,15 @@ interface CobrancaCardProps {
 }
 
 /**
- * Card de cobrança (PLAN-047/050/051/052/053) — estrutura fixa de 4 linhas, altura uniforme.
+ * Card de cobrança (PLAN-047/050/051/052/053/054) — estrutura fixa de 4 linhas, altura uniforme.
  * Somente a linha 1 (nome + valor) é 2 colunas; linhas 2–4 ocupam a largura total do card,
- * então bairro, parcela e "dias de atraso" não são espremidos pela coluna do valor
- * (que trunca o dias no carousel/mobile quando compartilha linha).
+ * então bairro, parcela e "dias de atraso" não são espremidos pela coluna do valor.
+ * O "dias de atraso" fica na linha do badge, alinhado ao FIM DO VALOR (à esquerda do ">").
  *
  *   1. Nome (primário) + Valor (value-lg, nowrap)
  *   2. Bairro (secundário, truncate — largura total)
  *   3. Parcela X de Y (secundário, truncate — largura total)
- *   4. StatusBadge + dias de atraso (terciário, items-center — largura total)
+ *   4. StatusBadge + dias de atraso (terciário, items-center; dias alinhado ao fim do valor)
  */
 export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProps) {
   const { t } = useTranslation()
@@ -52,7 +52,9 @@ export function CobrancaCard({ item, onClick, className = "" }: CobrancaCardProp
       </div>
       <p className="mt-0.5 truncate text-sm text-text-secondary">{bairro}</p>
       <p className="mt-0.5 truncate text-sm text-text-secondary">{parcela}</p>
-      <div className="mt-2 flex min-h-6 items-center gap-2">
+      {/* justify-between alinha o "dias de atraso" ao final do card; pr-5 (20px) =
+          chevron size-4 (16px) + gap-1 (4px) → termina no FIM DO VALOR (antes do ">") */}
+      <div className={`mt-2 flex min-h-6 items-center justify-between gap-2 ${onClick ? "pr-5" : ""}`}>
         <StatusBadge
           variant={tone}
           label={item.situacao === "atrasado" ? t("status.atrasado") : t("status.venceHoje")}

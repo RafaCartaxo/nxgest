@@ -45,3 +45,15 @@
 - [x] Bairro/parcela/"dias de atraso" passam a usar os 252px do card → não trunca no carousel/mobile
 - [x] Mantidos: 4 linhas uniformes · dias centralizado com o badge · valor à direita
 - [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
+
+---
+
+# CHECKLIST — "dias de atraso" alinhado ao fim do valor (PLAN-054)
+
+**Data:** 06/08/2026
+
+- [x] Linha do badge com `justify-between` → dias vai para o final do card
+- [x] `pr-5` condicional (quando há ">"): 20px = chevron 16px + gap 4px → dias termina no FIM DO VALOR (antes do ">")
+- [x] Rota (sem ">"): sem padding → alinhado com o valor (à direita)
+- [x] Mantidos: centralizado com o badge (items-center) · altura uniforme · sem truncar
+- [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
