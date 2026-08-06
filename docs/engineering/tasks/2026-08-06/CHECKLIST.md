@@ -21,3 +21,15 @@
 - [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
 
 - [x] **Refino (PLAN-051):** dias de atraso alinhado na MESMA linha do badge (coluna direita `self-stretch` + `mt-auto`) — borda direita alinhada com o valor acima; altura uniforme e sem truncar mantidas
+
+---
+
+# CHECKLIST — Alinhamento fino do "dias de atraso" (PLAN-052)
+
+**Data:** 06/08/2026
+
+- [x] "dias de atraso" na linha do badge (coluna esquerda), `items-center` → centralizado com o badge
+- [x] Saiu da coluna direita (sem `self-stretch`/`mt-auto`) → não passa mais o ">" do valor
+- [x] `min-w-0 truncate` no texto (trunca só no carousel estreito)
+- [x] Coluna direita volta a ter só o valor; altura uniforme mantida
+- [x] `npm run build` · `audit:ui` · `audit:styles` · `docs:audit`
