@@ -441,10 +441,11 @@ export async function createTables() {
         createdAt TEXT NOT NULL DEFAULT (datetime('now')),
         deletedAt TEXT,
         empresaId TEXT,
-        chefeId TEXT
+        chefeId TEXT,
+        foto TEXT
       )
     `)
-    sqlite.exec("INSERT INTO usuarios_new (id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId, chefeId) SELECT id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId, chefeId FROM usuarios")
+    sqlite.exec("INSERT INTO usuarios_new (id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId, chefeId, foto) SELECT id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId, chefeId, foto FROM usuarios")
     sqlite.exec("DROP TABLE usuarios")
     sqlite.exec("ALTER TABLE usuarios_new RENAME TO usuarios")
     sqlite.exec("COMMIT")
