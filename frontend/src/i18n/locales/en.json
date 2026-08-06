@@ -152,7 +152,6 @@
     "comercioPlaceholder": "E.g.: São José Market",
     "endereco": "Personal Address",
     "enderecoComercio": "Business Address",
-    "usarLocalAtual": "Use current location",
     "expandirEndereco": "or fill manually",
     "logradouro": "Street",
     "numero": "Number",
@@ -533,6 +532,7 @@
     "recapturar": "Recapture",
     "capturarLocalizacao": "Capture location",
     "indisponivel": "Geolocation unavailable on this device",
-    "erroPermissao": "Could not get the location. Check the GPS permission."
+    "erroPermissao": "Could not get the location. Check the GPS permission.",
+    "localizacaoDescartada": "Address edited — location discarded. Recapture to update."
   }
 }

@@ -46,6 +46,8 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
   })
 
   const [comercioExpandido, setComercioExpandido] = useState(false)
+  const [comercioDescartada, setComercioDescartada] = useState(false)
+  const [principalDescartada, setPrincipalDescartada] = useState(false)
   const isGeocodingRef = useRef(false)
   const geoComercio = useGeolocation()
   const geoPrincipal = useGeolocation()
@@ -91,11 +93,13 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
         if (value.comercioLat != null || value.comercioLng != null) {
           form.setValue("comercioLat", undefined)
           form.setValue("comercioLng", undefined)
+          setComercioDescartada(true)
         }
       } else if (camposPrincipal.includes(name)) {
         if (value.lat != null || value.lng != null) {
           form.setValue("lat", undefined)
           form.setValue("lng", undefined)
+          setPrincipalDescartada(true)
         }
       }
     })
@@ -122,6 +126,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
     (lat, lng) => {
       form.setValue("comercioLat", lat)
       form.setValue("comercioLng", lng)
+      setComercioDescartada(false)
     },
     (end) => {
       if (end.logradouro) form.setValue("comercioLogradouro", end.logradouro)
@@ -138,6 +143,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
     (lat, lng) => {
       form.setValue("lat", lat)
       form.setValue("lng", lng)
+      setPrincipalDescartada(false)
     },
     (end) => {
       if (end.logradouro) form.setValue("logradouro", end.logradouro)
@@ -298,6 +304,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       <CapturaLocalizacao
         capturando={geoComercio.capturando}
         capturada={comercioCapturada}
+        descartada={comercioDescartada}
         onCapturar={capturarComercio}
         onRecapturar={capturarComercio}
         erro={geoComercio.erro}
@@ -343,6 +350,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       <CapturaLocalizacao
         capturando={geoPrincipal.capturando}
         capturada={principalCapturada}
+        descartada={principalDescartada}
         onCapturar={capturarPrincipal}
         onRecapturar={capturarPrincipal}
         erro={geoPrincipal.erro}

@@ -28,7 +28,8 @@ export function ClienteEdit() {
         }
       })
       .finally(() => setCarregando(false))
-  }, [id, t, feedback])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   async function handleSubmit(payload: Record<string, unknown>) {
     if (!id) return

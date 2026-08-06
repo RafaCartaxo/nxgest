@@ -44,3 +44,14 @@
 - [x] `docs/plans/Lovable-Cadastro-Rota-NXGestao.md` — briefing consolidado (4 entregáveis): botões (`Button` variantes + vocabulário único) · form de cliente (seções em Card + controle GPS 3 estados, comércio E residencial) · form de contrato (seletor buscável + condições + resumo + edit bloqueado) · rota (StatusBadge GPS, card de ações coerente, RouteProgress em Card, Modal p/ comprovante/promessa)
 - [x] Regra de ouro: descreve **como deve ficar** (estado-alvo), não o estado atual
 - [x] Seção "não esquecer" com 14 detalhes críticos (GPS 2 endereços, variante success, sem "→", tokens, i18n, mobile-first, etc.)
+
+---
+
+# CHECKLIST — Review PLAN-055: fix deps + limpeza + coerência "Não capturada"
+
+**Data:** 06/08/2026
+
+- [x] Bug: `ClienteEdit` useEffect deps voltaram a `[id]` (feedback sem useMemo → loop de refetch no erro)
+- [x] Limpeza: shim morto `shared/utils/maps.ts` removido · chave i18n órfã `cliente.usarLocalAtual` removida (3 locales)
+- [x] Coerência UX: estado "Localização descartada" (aviso + botão Capturar) ao editar texto pós-captura (comércio + principal)
+- [x] `tsc` · `audit:ui/styles` · vitest 18 · `docs:audit` · `build`

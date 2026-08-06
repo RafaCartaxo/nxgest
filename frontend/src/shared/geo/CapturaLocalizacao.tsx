@@ -8,21 +8,25 @@ interface CapturaLocalizacaoProps {
   capturando: boolean
   /** Endereço já tem coordenadas válidas. */
   capturada: boolean
+  /** O texto foi editado após uma captura (coordenadas descartadas). */
+  descartada?: boolean
   onCapturar: () => void
   onRecapturar: () => void
   erro?: string | null
 }
 
 /**
- * Controle de GPS/localização (PLAN-055). 3 estados:
+ * Controle de GPS/localização (PLAN-055). Estados:
  * - Capturando: botão desabilitado;
  * - Capturada: badge "Localização capturada" + botão Recapturar;
- * - Não capturada (padrão): botão "Capturar localização" (+ erro se houver).
+ * - Não capturada (padrão): botão "Capturar localização" (+ erro se houver);
+ * - Não capturada por edição (descartada): aviso "localização descartada" + botão Capturar.
  * Design final virá do briefing Lovable (Lovable-Cadastro-Rota-NXGestao.md).
  */
 export function CapturaLocalizacao({
   capturando,
   capturada,
+  descartada = false,
   onCapturar,
   onRecapturar,
   erro,
@@ -50,6 +54,9 @@ export function CapturaLocalizacao({
 
   return (
     <div className="space-y-1">
+      {descartada && (
+        <p className="text-xs text-warning-text">{t("geo.localizacaoDescartada")}</p>
+      )}
       <Button type="button" variant="secondary" onClick={onCapturar} className="w-full sm:w-auto">
         <MapPin className="size-4" aria-hidden />
         {t("geo.capturarLocalizacao")}

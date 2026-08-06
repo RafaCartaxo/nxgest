@@ -152,7 +152,6 @@
     "comercioPlaceholder": "Ej.: Mercadinho São José",
     "endereco": "Dirección Personal",
     "enderecoComercio": "Dirección del Comercio",
-    "usarLocalAtual": "Usar ubicación actual",
     "expandirEndereco": "o llenar manualmente",
     "logradouro": "Calle",
     "numero": "Número",
@@ -533,6 +532,7 @@
     "recapturar": "Recapturar",
     "capturarLocalizacao": "Capturar ubicación",
     "indisponivel": "Geolocalización no disponible en este dispositivo",
-    "erroPermissao": "No se pudo obtener la ubicación. Verifica el permiso del GPS."
+    "erroPermissao": "No se pudo obtener la ubicación. Verifica el permiso del GPS.",
+    "localizacaoDescartada": "Dirección editada — ubicación descartada. Recapturar para actualizar."
   }
 }

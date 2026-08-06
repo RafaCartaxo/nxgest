@@ -152,7 +152,6 @@
     "comercioPlaceholder": "Ex.: Mercadinho São José",
     "endereco": "Endereço Pessoal",
     "enderecoComercio": "Endereço do Comércio",
-    "usarLocalAtual": "Usar local atual",
     "expandirEndereco": "ou preencha manualmente",
     "logradouro": "Logradouro",
     "numero": "Número",
@@ -533,6 +532,7 @@
     "recapturar": "Recapturar",
     "capturarLocalizacao": "Capturar localização",
     "indisponivel": "Geolocalização indisponível neste dispositivo",
-    "erroPermissao": "Não foi possível obter a localização. Verifique a permissão do GPS."
+    "erroPermissao": "Não foi possível obter a localização. Verifique a permissão do GPS.",
+    "localizacaoDescartada": "Endereço editado — localização descartada. Recapturar para atualizar."
   }
 }
