@@ -2,6 +2,17 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — Favicon theme-aware + fix do token `primary-foreground`
+
+**Corrigido (gap do PLAN-056)**
+- `text-primary-foreground` (usado no `Button` variante `primary`) era uma classe **inexistente**: `--color-primary-foreground` não estava no CSS nem no tailwind (só `success`/`danger` tinham `foreground`). O texto do botão primary herdava a cor do contexto → contraste ruim em light/dark. Criado `--color-primary-foreground: var(--primary-foreground)` + `foreground` no `primary` do tailwind.
+
+**Adicionado**
+- **Favicon theme-aware:** novo `shared/theme/favicon.ts` (`atualizarFavicon`) re-renderiza a marca Nexus no ícone do site com as cores **efetivas** do tema (`--color-primary` fundo · `--color-primary-foreground` traço/nós · `--color-accent` nós quentes) via data URL — reage a dark/light, 5 paletas e whitelabel. Pluga no `ThemeProvider` (efeito do `applyTheme`). Fallback: `favicon.svg` estático até o JS rodar. Sem CSP no app, data URL não é bloqueado.
+- Removido `logo-nexus.svg` (órfão — não referenciado; o Logo é componente TSX).
+
+Referência: [PLAN-058](plans/PLAN-058-foto-qualidade-lightbox.md) · `Button.tsx` · `ThemeProvider.tsx`
+
 ## 06/08/2026 — PLAN-058: foto com qualidade (640px) + lightbox + segurança do upload
 
 **Adicionado / Melhorado**

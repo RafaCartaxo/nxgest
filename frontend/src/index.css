@@ -142,6 +142,7 @@ h3 {
   --color-primary-hover: var(--primary-hover);
   --color-primary-light: var(--primary-soft);
   --color-primary-text: var(--primary-text);
+  --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-soft);
   --color-accent-text: var(--accent-foreground);

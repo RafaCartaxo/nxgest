@@ -1,5 +1,6 @@
 import { createContext, useCallback, useEffect, useState, type ReactNode } from "react"
 import { isThemeId, type ThemeId } from "./themes.js"
+import { atualizarFavicon } from "./favicon.js"
 
 export type ThemeMode = "light" | "dark" | "system"
 
@@ -65,6 +66,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   useEffect(() => {
     applyTheme(palette, isDark)
+    atualizarFavicon()
     localStorage.setItem(PALETTE_KEY, palette)
     localStorage.setItem(MODE_KEY, mode)
   }, [palette, mode, isDark])

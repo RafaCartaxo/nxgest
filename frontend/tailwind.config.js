@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary:   { DEFAULT: "var(--color-primary)", hover: "var(--color-primary-hover)", light: "var(--color-primary-light)", text: "var(--color-primary-text)" },
+        primary:   { DEFAULT: "var(--color-primary)", hover: "var(--color-primary-hover)", light: "var(--color-primary-light)", text: "var(--color-primary-text)", foreground: "var(--color-primary-foreground)" },
         success:   { DEFAULT: "var(--color-success)", hover: "var(--color-success-hover)", light: "var(--color-success-light)", text: "var(--color-success-text)", border: "var(--color-success-border)", foreground: "var(--color-success-foreground)" },
         warning:   { DEFAULT: "var(--color-warning)", light: "var(--color-warning-light)", text: "var(--color-warning-text)" },
         danger:    { DEFAULT: "var(--color-danger)", hover: "var(--color-danger-hover)", light: "var(--color-danger-light)", text: "var(--color-danger-text)", foreground: "var(--color-danger-foreground)" },
