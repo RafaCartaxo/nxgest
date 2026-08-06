@@ -2,6 +2,26 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — Roles (sócio) + foto do usuário + Anexos + Empresa + ContratoForm/Rota
+
+Lote de fechamento de material pendente (identidade "Nexus" + PLAN-041/042 + Lovable):
+
+**Corrigido**
+- **Rótulo de papel incompleto:** operador promovido a **sócio** continuava com a tag "Operador" em `OperadorDetail`, `PerfilPage`, `ContribuicaoModal`, `EquipeModal` (sócios fora dos modais) e `AdminPage` (badge "Super Admin" para sócio). Consolidado num helper único `shared/utils/role.ts`; `EquipeModal` aceita `socio`; novo KPI **Sócios** (`totalSocios` no dashboard).
+- **Sessão stale pós-promoção:** o middleware usava a claim de `role` do JWT (7 dias); agora resolve `role`/`empresaId` do **banco** a cada request — corrige 403 pós-promoção e acesso indevido pós-rebaixamento sem relogin.
+
+**Adicionado / Melhorado**
+- **Foto do usuário/operador (PLAN-041 completo):** `PATCH /api/auth/foto` (self) + `foto` em `login`/`me`/`operadores` + `PATCH /admin/operadores/:id` aceita `foto`; PerfilPage (AvatarField), OperadorForm, Avatares em OperadoresList/EquipeModal/ContribuicaoModal/OperadorDetail/sidebar. BR-101.
+- **Anexos do cliente (PLAN-042):** tabela `anexos`, 4 endpoints escopados (`POST/GET/file/DELETE /api/clientes/:id/anexos*`), `multer` (guarda 5MB → 413), validação de **MIME real** (magic bytes) + limites (imagem ≤1MB · PDF ≤5MB), storage `UPLOADS_DIR` (Docker `/data/uploads` · dev `./uploads`), `AnexosSection` na ficha do cliente. **Backup inclui `/data/uploads`** (06-PRODUCAO). BR-102.
+- **Empresa (super admin, Lovable):** `EmpresaCard` no padrão (tone ativa/inativa, Avatar, documento, contagem de operadores, badges de módulos, botão "Módulos (X/Y)") + `EmpresaForm` com Nome fantasia/CNPJ/Situação — todos **opcionais** (não impedem cadastro). `PATCH /api/admin/empresas/:id`.
+- **ContratoForm compartilhado:** seletor de cliente buscável (`ClienteSelect` wireado), Cards Condições/Resumo vivo, edit bloqueado com parcela paga — fim do combobox artesanal.
+- **Rota no padrão:** GPS como `StatusBadge`, sem botão X redundante, comprovante via `Modal` base, promessa com `Field`, `RouteProgress` em `Card`, estados via `EstadoTela`.
+- **Anti-drift:** `audit-docs` passa a varrer **sub-routers** montados via `router.use` (anexos) — sem rota invisível à auditoria.
+
+**QA:** smoke **128/128** (FOT-001..004, ANE-089..093, EMP-095/095b, etc.) · gates verdes (build, audits, docs, vitest).
+
+Referência: [PLAN-041](plans/PLAN-041-avatar-foto.md) · [PLAN-042](plans/PLAN-042-anexos-cliente.md)
+
 ## 06/08/2026 — PLAN-047 · Identidade visual "Nexus" — card de cobrança + componentes + anti-drift (consolidado)
 
 > **Plano único** — absorve os antigos **PLAN-048..054** (arquivos removidos; histórico mapeado a commits no plano). Escopo completo e rastreabilidade em [PLAN-047](plans/PLAN-047-card-cobranca-dia-lovable-badges-modais.md).

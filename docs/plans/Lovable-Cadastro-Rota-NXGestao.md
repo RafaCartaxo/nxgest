@@ -150,13 +150,13 @@ Um bloco por endereço (comércio E residencial), com **3 estados visuais**:
 
 ## 6. Entregáveis (checklist)
 
-- [ ] `Button`/`ButtonLink` com variantes `primary | soft | outline | ghost | danger | success` + sizes `sm | md | lg | block`
-- [ ] Vocabulário único por tipo de ação (tabela do 4.1) aplicado nas telas
-- [ ] `ClienteForm` (novo/editar) em Cards: Identificação · Comércio · Localização do comércio · Endereço residencial
-- [ ] Controle de **GPS/Localização** com 3 estados (Capturar / Capturada+Recapturar / Não capturada) — para comércio E residencial
-- [ ] `ContratoForm` (novo/editar): seletor de cliente buscável + Condições + Resumo vivo + edit bloqueado
-- [ ] **Rota:** `StatusBadge` de GPS · card de ações coerente (contato / "Registrar pagamento" `success` / resultado) · `RouteProgress` em `Card` · promessa com `Field` · comprovante com `Modal` · `EstadoTela` nos estados
-- [ ] Tudo com tokens, `Field`/`Card`/`Modal`/`StatusBadge`/`Button`, ícones lucide, i18n pt/en/es, mobile-first
+- [x] `Button`/`ButtonLink` com variantes `primary | soft | outline | ghost | danger | success` + sizes `sm | md | lg | block` (PLAN-056)
+- [x] Vocabulário único por tipo de ação (tabela do 4.1) aplicado nas telas (PLAN-056 F3)
+- [x] `ClienteForm` (novo/editar) em Cards: Identificação · Comércio · Localização do comércio · Endereço residencial (PLAN-056 F2)
+- [x] Controle de **GPS/Localização** com 3 estados (Capturar / Capturada+Recapturar / Não capturada) — para comércio E residencial (PLAN-056 F2)
+- [x] `ContratoForm` (novo/editar): seletor de cliente buscável + Condições + Resumo vivo + edit bloqueado (WS6 — implementado no app, não no Lovable)
+- [x] **Rota:** `StatusBadge` de GPS · card de ações coerente (contato / "Registrar pagamento" `success` / resultado) · `RouteProgress` em `Card` · promessa com `Field` · comprovante com `Modal` · `EstadoTela` nos estados (WS6)
+- [x] Tudo com tokens, `Field`/`Card`/`Modal`/`StatusBadge`/`Button`, ícones lucide, i18n pt/en/es, mobile-first
 
 ---
 

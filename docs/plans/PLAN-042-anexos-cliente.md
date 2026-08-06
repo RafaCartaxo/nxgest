@@ -1,6 +1,6 @@
 # PLAN-042 — Anexos do cliente: comprovante de residência (foto ou PDF)
 
-**Status:** Planejado
+**Status:** Concluído
 
 **Versão:** 1.0
 

@@ -1,6 +1,6 @@
 # PLAN-041 — Avatar com foto (usuário/operador/cliente)
 
-**Status:** Planejado
+**Status:** Concluído
 
 **Versão:** 1.0
 

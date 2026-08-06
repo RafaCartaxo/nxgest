@@ -29,16 +29,15 @@ Componente compartilhado: `frontend/src/shared/components/Field/Field.tsx`
 |---|---|---|---|
 | Cliente | `cliente/pages/ClienteNovo.tsx` | nome, telefones, cpf, comércio, endereços, GPS | ✅ `PageHeader` + `Field` (PLAN-039) |
 | Cliente | `cliente/pages/ClienteEdit.tsx` | idem cadastro | ✅ `PageHeader` + `Field` (PLAN-039) |
-| Contrato | `contrato/pages/ContratoNovo.tsx` | select cliente custom + valor/juros/parcelas/data (date) | ✅ `PageHeader` + `Field` + select `rounded-xl` (PLAN-039) |
-| Contrato | `contrato/pages/ContratoEdit.tsx` | idem | ✅ `PageHeader` + `Field` (PLAN-039) |
-| Admin | `admin/components/OperadorForm.tsx` | nome, email, senha, role, chefe | ✅ `Field` + selects canônicos (PLAN-040) |
-| Admin | `admin/components/EmpresaForm.tsx` | nome + admin (nome/email/senha) | ✅ `Field` (PLAN-040) |
+| Contrato | `contrato/components/ContratoForm.tsx` (novo/editar) | ClienteSelect buscável (novo) / Card read-only (edit) · Condições (valor/juros/parcelas/data) · Resumo vivo | ✅ `Field` + `ClienteSelect` + Cards (WS6) |
+| Admin | `admin/components/OperadorForm.tsx` | nome, email, senha, role, chefe, foto | ✅ `Field` + selects canônicos + `AvatarField` (PLAN-040/WS3) |
+| Admin | `admin/components/EmpresaForm.tsx` | nome, nomeFantasia, CNPJ, situação (ativa/inativa), admin (nome/email/senha) | ✅ `Field` + `FieldSelect` (WS5) |
 | Gasto | `gasto/components/GastoForm.tsx` | valor, categoria (select), data (date), observação | ✅ `Field` + select canônico (PLAN-043) |
-| Auth | `auth/pages/PerfilPage.tsx` | senha atual, nova, confirma | ✅ `Field` + `Card` (PLAN-043) |
+| Auth | `auth/pages/PerfilPage.tsx` | senha atual, nova, confirma, **foto** | ✅ `Field` + `Card` + `AvatarField` (PLAN-043/WS3) |
 | Auth | `auth/pages/LoginPage.tsx` | email, senha (+ mostrar/ocultar) | ✅ `Field` (PLAN-043) |
 | Caixa | `caixa/pages/CaixaPage.tsx` | ajuste valor + motivo | ✅ inputs canônicos `rounded-xl` + `Button` (PLAN-043) |
 | Admin | `admin/pages/OperadorDetail.tsx` | ajuste caixa: valor + motivo | ✅ inputs canônicos + `Button` (PLAN-043) |
-| Operações | `operacoes/pages/RotaPage.tsx` | promessa — date | ✅ input canônico (PLAN-043) |
+| Operações | `operacoes/pages/RotaPage.tsx` | promessa — date | ✅ `Field` (WS6) |
 | Pagamento | `pagamento/components/PagamentoModal.tsx` | valor | ✅ input canônico (PLAN-043) |
 | Contrato | `contrato/pages/ContratoDetail.tsx` | motivo estorno | ✅ input canônico (PLAN-043) |
 | Contrato | `contrato/pages/ContratoList.tsx` | filtro cliente (dropdown custom) | ✅ `rounded-xl` (PLAN-043) |

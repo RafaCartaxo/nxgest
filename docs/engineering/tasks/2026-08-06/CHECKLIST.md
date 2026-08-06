@@ -71,7 +71,7 @@
 - [x] Gates: build · audit:ui/styles · vitest 18 · docs:audit
 
 ## Pendência registrada (Lovable)
-- [ ] `ContratoForm` · `/rota` · wiring das telas (`central`/`clientes`) — solicitar ao Lovable
+- [x] `ContratoForm` · `/rota` · wiring das telas (`central`/`clientes`) — **implementado no app (WS6)**: ContratoForm compartilhado (ClienteSelect wireado, Cards Condições/Resumo, edit bloqueado) + Rota no padrão (StatusBadge GPS, sem X, Modal comprovante, Field promessa, RouteProgress em Card, EstadoTela). Wiring da Central já coberto pelo PLAN-056.
 
 ---
 
