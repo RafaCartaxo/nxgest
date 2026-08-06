@@ -269,6 +269,12 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 ### API-CT-014 — CPF duplicado excluindo o próprio
 **Dado** CPF de outro cliente do mesmo operador → **Então** 409; **Dado** o próprio CPF mantido → **Então** 200.
 
+### API-CT-132 — Foto do cliente no PATCH (P8)
+- **Dado** `PATCH` com `foto: null` (+ `enderecoComercio: null`, `localizacao: null`, `localizacaoComercio: null` — cliente sem foto/GPS) → **Então** 200 (antes 422: `foto` não aceitava `null`).
+- **Dado** `PATCH` com `foto: "data:image/jpeg;base64,..."` → **Então** 200 e `GET` reflete a foto.
+- **Dado** `PATCH` com `foto` que **não** começa com `data:image/` → **Então** 422.
+- **Dado** `PATCH` com `foto: null` de um cliente com foto → **Então** 200 e `GET` devolve `foto: null` (remoção).
+
 ---
 
 ## API-UC-008 — Excluir cliente

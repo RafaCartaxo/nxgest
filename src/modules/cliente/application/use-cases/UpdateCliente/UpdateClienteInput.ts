@@ -36,7 +36,13 @@ export const updateClienteSchema = z.object({
     cidade: z.string().optional(),
     estado: z.string().optional(),
   }).optional().nullable(),
-  foto: z.string().max(50000).optional(),
+  // foto: data URL normalizada (processarImagem) — `null` remove. Valida formato (P8).
+  foto: z
+    .string()
+    .max(50000, "Foto muito grande.")
+    .refine((v) => v.startsWith("data:image/"), "Foto deve ser uma imagem em data URL.")
+    .optional()
+    .nullable(),
   localizacao: z
     .object({
       lat: z.number(),

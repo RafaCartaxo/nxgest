@@ -268,6 +268,53 @@ async function main() {
     expect(r, 201, "coords sem texto (S7)")
   })
 
+  // ---------- EDIÇÃO DE CLIENTE (P8 — foto/gps/endereço) ----------
+  let cliEditId
+  const cliFoto = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA=="
+  await t("CLI-E0", "Setup: cliente de edição (com endereço completo)", async () => {
+    const r = await req("POST", "/api/clientes", {
+      token: opToken,
+      body: { nome: "Cliente Edit", telefone: "83988889999", comercio: "Edit Comércio", endereco: { logradouro: "Rua Edit", numero: "5", bairro: "Centro", cidade: "João Pessoa", estado: "PB" }, enderecoComercio: { logradouro: "Av Edit", numero: "10", bairro: "Bairro", cidade: "JP", estado: "PB" } },
+    })
+    expect(r, 201, "criar cliente edit")
+    cliEditId = r.data.id
+  })
+  await t("CLI-E1", "PATCH cliente sem foto/GPS (foto:null + coords null) = 200 (regressão P8)", async () => {
+    const r = await req("PATCH", `/api/clientes/${cliEditId}`, {
+      token: opToken,
+      body: { foto: null, enderecoComercio: null, localizacao: null, localizacaoComercio: null },
+    })
+    expect(r, 200, "edição sem foto/GPS")
+  })
+  await t("CLI-E2", "PATCH cliente com foto dataURL (200) + GET reflete", async () => {
+    const r = await req("PATCH", `/api/clientes/${cliEditId}`, { token: opToken, body: { foto: cliFoto } })
+    expect(r, 200, "salvar foto")
+    const g = await req("GET", `/api/clientes/${cliEditId}`, { token: opToken })
+    expect(g, 200, "detalhe")
+    if (g.data.foto !== cliFoto) throw new Error("foto não refletida")
+  })
+  await t("CLI-E3", "PATCH cliente com enderecoComercio + localizacaoComercio (200) + GET reflete", async () => {
+    const r = await req("PATCH", `/api/clientes/${cliEditId}`, {
+      token: opToken,
+      body: { enderecoComercio: { logradouro: "Av Nova", numero: "99", bairro: "Novo", cidade: "JP", estado: "PB" }, localizacaoComercio: { lat: -7.11, lng: -34.87 } },
+    })
+    expect(r, 200, "edição completa")
+    const g = await req("GET", `/api/clientes/${cliEditId}`, { token: opToken })
+    expect(g, 200, "detalhe")
+    if (g.data.enderecoComercio?.logradouro !== "Av Nova") throw new Error("enderecoComercio não refletido")
+    if (g.data.localizacaoComercio?.lat !== -7.11) throw new Error("localizacaoComercio não refletida")
+  })
+  await t("CLI-E4", "PATCH foto:null remove (200) + GET foto null", async () => {
+    const r = await req("PATCH", `/api/clientes/${cliEditId}`, { token: opToken, body: { foto: null } })
+    expect(r, 200, "remover foto")
+    const g = await req("GET", `/api/clientes/${cliEditId}`, { token: opToken })
+    if (g.data.foto != null) throw new Error("foto não removida")
+  })
+  await t("CLI-E5", "PATCH foto não-dataURL = 422 (validação P8)", async () => {
+    const r = await req("PATCH", `/api/clientes/${cliEditId}`, { token: opToken, body: { foto: "https://exemplo.com/foto.jpg" } })
+    expect(r, 422, "foto inválida")
+  })
+
   // cliente de OUTRO operador (sofia) → 404 para gabriel
   let sofiaClientId
   await t("CLI-012", "Cliente de outro operador (404)", async () => {

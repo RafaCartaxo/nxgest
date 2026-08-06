@@ -339,6 +339,8 @@ Todos os campos são opcionais.
 
 Somente os campos enviados deverão ser alterados.
 
+> **`foto` (P8):** data URL de imagem normalizada (`data:image/...`, ≤50000 caracteres) — `null` **remove** a foto (a coluna é zerada). Valor que não começa com `data:image/` → **422**.
+
 ## Response 200
 
 Mesma estrutura do endpoint `GET /api/clientes/{id}`.

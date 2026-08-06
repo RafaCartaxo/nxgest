@@ -15,6 +15,7 @@ import { getClienteSchema, UFS, type ClienteFormData } from "../schemas/cliente.
 import type { Cliente } from "../services/cliente.service.js"
 import { useGeolocation, type UseGeolocationReturn } from "../../../shared/geo/hooks.js"
 import { GpsControl, type GpsEstado } from "../../../shared/geo/GpsControl.js"
+import { estadoGpsInicial } from "../../../shared/geo/estadoGps.js"
 import type { EnderecoTexto } from "../../../shared/geo/types.js"
 
 interface ClienteFormProps {
@@ -93,6 +94,9 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       lng: initial.localizacao?.lng,
       foto: initial.foto ?? undefined,
     })
+    // P7: o GpsControl é controlado — refletir a localização salva no estado do bloco.
+    setGpsComercio(estadoGpsInicial(initial.localizacaoComercio))
+    setGpsPrincipal(estadoGpsInicial(initial.localizacao))
     isGeocodingRef.current = false
   }, [initial, form])
 

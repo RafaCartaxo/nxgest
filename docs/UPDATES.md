@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — P7: GPS na edição do cliente · P8: "dados inválidos" ao editar cliente
+
+**Corrigido**
+- **P7 — GPS sempre "não capturada" na edição:** o `useEffect` de edição do `ClienteForm` carregava as coords salvas no form, mas **não sincronizava** o estado do `GpsControl` (controlado) — os blocos de localização ficavam sempre `vazio`. Novo helper puro `estadoGpsInicial(localizacao)` (com coords → `capturada`; sem → `vazio`) sincronizado no reset de edição + **vitest** em `geo/estadoGps.test.ts`.
+- **P8 — "Dados inválidos" ao editar cliente sem foto:** o form envia `foto: null` (limpar) no edit, mas o schema `updateClienteSchema` (`z.string().max(50000).optional()`) **rejeitava `null`** → 422. Agora `foto` é `optional().nullable()` e ainda **valida `data:image/...`** (paridade com `/auth/foto`, coerência create × update). Entity `Cliente.foto` tipada `string | null`.
+
+**QA:** smoke com CTs de edição de cliente — CLI-E0..E5 (edição sem foto/GPS → 200, foto salva/refletida/removida, endereço+coords, foto não-dataURL → 422) + vitest do P7. Gates verdes.
+
 ## 06/08/2026 — WS7: transições de papel blindadas + fixes de UI (date, dropdown, labels)
 
 **Corrigido (segurança/consistência)**

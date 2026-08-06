@@ -31,7 +31,7 @@ export interface Cliente {
   enderecoComercio?: AddressPartial | null
   localizacao?: Location | null
   localizacaoComercio?: Location | null
-  foto?: string
+  foto?: string | null
   totalContratos?: number
   createdAt: string
   updatedAt: string
