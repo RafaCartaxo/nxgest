@@ -57,7 +57,7 @@ export async function createOperador(data: { nome: string; email: string; senha:
   return apiRequest<OperadorRow>("POST", `/admin/operadores${params}`, body)
 }
 
-export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null }, empresaId?: string): Promise<OperadorRow> {
+export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null; reatribuirParaChefeId?: string | null }, empresaId?: string): Promise<OperadorRow> {
   const params = empresaId ? `?empresaId=${empresaId}` : ""
   return apiRequest<OperadorRow>("PATCH", `/admin/operadores/${id}${params}`, data)
 }

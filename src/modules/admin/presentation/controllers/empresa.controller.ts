@@ -30,6 +30,7 @@ function validarDocumento(documento: unknown): { ok: true; valor: string | null 
 
 export class EmpresaController {
   private repository: IEmpresaRepository
+  private auditoria: IAuditoriaModulosWriter
   private listUseCase: ListarEmpresasUseCase
   private criarUseCase: CriarEmpresaUseCase
   private atualizarModulosUseCase: AtualizarModulosUseCase
@@ -38,6 +39,7 @@ export class EmpresaController {
 
   constructor(repository: IEmpresaRepository, impactoQuery: IImpactoDesativacaoQuery, auditoria: IAuditoriaModulosWriter) {
     this.repository = repository
+    this.auditoria = auditoria
     this.listUseCase = new ListarEmpresasUseCase(repository)
     this.criarUseCase = new CriarEmpresaUseCase(repository)
     this.atualizarModulosUseCase = new AtualizarModulosUseCase(repository, impactoQuery, auditoria)
@@ -118,11 +120,31 @@ export class EmpresaController {
       if (nomeFantasia !== undefined) data.nomeFantasia = typeof nomeFantasia === "string" && nomeFantasia.trim() ? nomeFantasia.trim() : null
       if (ativa !== undefined && typeof ativa === "boolean") data.ativa = ativa
 
+      // Auditoria da suspensão/reativação (BR-106): lê o estado ANTES, aplica e registra só se mudou.
+      let antesAtiva: boolean | null = null
+      if (data.ativa !== undefined) {
+        const existente = await this.repository.findById(req.params.id)
+        antesAtiva = existente ? existente.ativa !== false : null
+      }
+
       const result = await this.repository.update(req.params.id, data)
       if (!result) {
         res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
         return
       }
+
+      if (data.ativa !== undefined && antesAtiva !== null && antesAtiva !== data.ativa) {
+        await this.auditoria.registrar({
+          empresaId: req.params.id,
+          adminId: req.userId ?? "unknown",
+          tipo: "empresa",
+          antes: JSON.stringify({ ativa: antesAtiva }),
+          depois: JSON.stringify({ ativa: data.ativa }),
+          force: false,
+          motivo: null,
+        })
+      }
+
       res.json(result)
     } catch (err) {
       console.error("Erro ao atualizar empresa:", err)

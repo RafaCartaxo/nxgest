@@ -2,9 +2,10 @@ import i18n from "../i18n/config.js"
 
 const BASE_URL = "/api"
 
-function translateError(code: string, fallback: string): string {
+function translateError(code: string, fallback: string, data?: unknown): string {
   const key = `errors.${code}`
-  const translated = i18n.t(key)
+  const params = data && typeof data === "object" ? (data as Record<string, unknown>) : undefined
+  const translated = i18n.t(key, params ? { ...params, defaultValue: fallback } : { defaultValue: fallback })
   return translated !== key ? translated : fallback
 }
 
@@ -44,10 +45,6 @@ export async function apiRequest<T>(
 
   const response = await fetch(`${BASE_URL}${path}`, options)
 
-  if (response.status === 401) {
-    localStorage.removeItem("nxgestao_token")
-  }
-
   if (response.status === 204) {
     return undefined as T
   }
@@ -58,8 +55,13 @@ export async function apiRequest<T>(
 
   const data = await response.json()
 
+  // Sessão encerrada: 401 (token expirado) OU empresa suspensa (403 EMPRESA_INATIVA).
+  if (response.status === 401 || (response.status === 403 && data?.code === "EMPRESA_INATIVA")) {
+    localStorage.removeItem("nxgestao_token")
+  }
+
   if (!response.ok) {
-    const message = translateError(data.code, data.message)
+    const message = translateError(data.code, data.message, data)
     throw new ApiError(
       response.status,
       data.code,

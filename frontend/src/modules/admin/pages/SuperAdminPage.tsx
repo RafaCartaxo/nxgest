@@ -17,6 +17,7 @@ import { ImpactConfirmModal } from "../components/ImpactConfirmModal.js"
 import {
   listEmpresas,
   createEmpresa,
+  updateEmpresa,
   updateEmpresaModulos,
   updateEmpresaModulosForcado,
   updateEmpresaCapacidades,
@@ -34,10 +35,13 @@ export function SuperAdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [editarTarget, setEditarTarget] = useState<EmpresaComStats | null>(null)
+  const [suspensaoPendente, setSuspensaoPendente] = useState<{ empresa: EmpresaComStats; data: { nome: string; documento?: string; nomeFantasia?: string; ativa: boolean } } | null>(null)
   const [modulosTarget, setModulosTarget] = useState<EmpresaComStats | null>(null)
   const [capacidadesTarget, setCapacidadesTarget] = useState<EmpresaComStats | null>(null)
   const [savingModulos, setSavingModulos] = useState(false)
   const [savingCapacidades, setSavingCapacidades] = useState(false)
+  const [savingEditar, setSavingEditar] = useState(false)
   const [impactoState, setImpactoState] = useState<{ modulos: string[]; impacto: ImpactoDesativacao } | null>(null)
 
   const fetchData = useCallback(async () => {
@@ -64,6 +68,37 @@ export function SuperAdminPage() {
     })
     setFormOpen(false)
     fetchData()
+  }
+
+  async function aplicarEdicao(empresa: EmpresaComStats, data: { nome: string; documento?: string; nomeFantasia?: string; ativa: boolean }) {
+    setSavingEditar(true)
+    try {
+      await updateEmpresa(empresa.id, data)
+      feedback.show({ status: "success", message: t("superAdmin.editarSucesso") })
+      setEditarTarget(null)
+      setSuspensaoPendente(null)
+      fetchData()
+    } catch (err) {
+      feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("superAdmin.erroEditar") })
+    } finally {
+      setSavingEditar(false)
+    }
+  }
+
+  function handleUpdateEmpresa(data: { nome: string; documento?: string; nomeFantasia?: string; ativa: boolean; adminNome: string; adminEmail: string; adminSenha: string }) {
+    if (!editarTarget) return
+    const ativaAntes = editarTarget.ativa !== false
+    if (ativaAntes && !data.ativa) {
+      // Suspensão: confirma antes (BR-106) — bloqueia o acesso de toda a empresa.
+      setSuspensaoPendente({ empresa: editarTarget, data })
+      return
+    }
+    void aplicarEdicao(editarTarget, data)
+  }
+
+  function handleConfirmarSuspensao() {
+    if (!suspensaoPendente) return
+    void aplicarEdicao(suspensaoPendente.empresa, suspensaoPendente.data)
   }
 
   async function handleSaveModulos(modulos: string[]) {
@@ -148,6 +183,36 @@ export function SuperAdminPage() {
         </Modal>
       )}
 
+      {editarTarget && (
+        <Modal open onClose={() => setEditarTarget(null)} title={t("superAdmin.editarEmpresa", { empresa: editarTarget.nomeFantasia || editarTarget.nome })} maxWidth="max-w-md">
+          <EmpresaForm
+            initial={{ nome: editarTarget.nome, documento: editarTarget.documento ?? null, nomeFantasia: editarTarget.nomeFantasia ?? null, ativa: editarTarget.ativa !== false }}
+            onSubmit={handleUpdateEmpresa}
+            onCancel={() => setEditarTarget(null)}
+          />
+        </Modal>
+      )}
+
+      {suspensaoPendente && (
+        <Modal
+          open
+          onClose={() => setSuspensaoPendente(null)}
+          title={t("superAdmin.confirmarSuspensao")}
+          descricao={t("superAdmin.suspensaoDesc", { n: suspensaoPendente.empresa.totalUsuarios, empresa: suspensaoPendente.empresa.nomeFantasia || suspensaoPendente.empresa.nome })}
+          maxWidth="max-w-md"
+          footer={
+            <>
+              <Button type="button" variant="ghost" onClick={() => setSuspensaoPendente(null)}>
+                {t("common.cancel")}
+              </Button>
+              <Button type="button" variant="danger" disabled={savingEditar} onClick={handleConfirmarSuspensao}>
+                {t("superAdmin.suspender")}
+              </Button>
+            </>
+          }
+        />
+      )}
+
       <ModulosModal
         key={modulosTarget?.id ?? "none"}
         open={modulosTarget !== null}
@@ -190,7 +255,12 @@ export function SuperAdminPage() {
         empty={!loading && empresas.length === 0}
         emptyMessage={t("superAdmin.emptyMessage")}
       >
-        <EmpresaList empresas={empresas} onConfigurar={setModulosTarget} />
+        <EmpresaList
+          empresas={empresas}
+          onConfigurar={setModulosTarget}
+          onRecursos={setCapacidadesTarget}
+          onEditar={setEditarTarget}
+        />
       </EstadoTela>
     </div>
   )

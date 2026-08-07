@@ -842,7 +842,7 @@ Modal OperadorForm (criação/edição):
 │ │ Desenvolvimento              │ │  ← Card.Root list-item
 │ │ 3 operadores · 12 clientes  │ │     Card.Body: stats
 │ │ 8 contratos ativos          │ │
-│ │             [Configurar][→] │ │     Card.Actions: modulos + drill-down
+│ │             [Configurar][Recursos][Editar][→] │ │     Card.Actions: módulos + capacidades + editar + drill-down (PLAN-061)
 │ └──────────────────────────────┘ │
 │                                  │
 │ [+ Nova Empresa]  ← Modal base  │  ← EmpresaForm (Modal, não backdrop cru)

@@ -149,7 +149,7 @@ export class AdminController {
       const targetEmpresaId = this.resolveEmpresaId(req)
       const scope = await this.resolveScope(req)
       const userId = req.userId!
-      const { nome, email, role, senha, chefeId, foto } = req.body
+      const { nome, email, role, senha, chefeId, foto, reatribuirParaChefeId } = req.body
 
       const existing = await this.repository.findById(req.params.id, targetEmpresaId, scope)
       if (!existing) {
@@ -192,8 +192,17 @@ export class AdminController {
           return
         }
       }
+      // Reassign atômico (PLAN-061): o novo chefe dos subordinados deve ser um ADMIN
+      // da mesma empresa (vale para operadores e sócios reatribuídos).
+      if (reatribuirParaChefeId !== undefined && reatribuirParaChefeId !== null) {
+        const chefeOk = await this.validarChefe(reatribuirParaChefeId, targetEmpresaId, "socio", req.params.id)
+        if (!chefeOk.ok) {
+          res.status(422).json({ code: "VALIDATION_ERROR", message: chefeOk.message })
+          return
+        }
+      }
 
-      const data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null } = {}
+      const data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null; reatribuirParaChefeId?: string | null } = {}
       if (nome !== undefined) data.nome = nome
       if (email !== undefined) data.email = email
       if (role !== undefined) data.role = role
@@ -202,6 +211,7 @@ export class AdminController {
       if (role === "admin" || targetRole === "admin") data.chefeId = null
       else if (chefeId !== undefined) data.chefeId = chefeId
       if (foto !== undefined) data.foto = foto
+      if (reatribuirParaChefeId !== undefined) data.reatribuirParaChefeId = reatribuirParaChefeId ?? null
 
       const operador = await this.editarUseCase.execute(req.params.id, data, userId, targetEmpresaId, scope)
       res.json(operador)
@@ -211,7 +221,7 @@ export class AdminController {
         return
       }
       if (err instanceof NaoPodeRebaixarComSubordinadosError) {
-        res.status(422).json({ code: "VALIDATION_ERROR", message: err.message })
+        res.status(422).json({ code: "OPERATOR_HAS_SUBORDINATES", message: err.message, subordinados: err.subordinados })
         return
       }
       if (err instanceof NaoPodeAutoModificarError || err instanceof NaoPodeAlterarSuperAdminError || err instanceof NaoPodeAtribuirSuperAdminError) {

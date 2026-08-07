@@ -20,16 +20,21 @@ export class AuthController {
     this.alterarSenhaUseCase = new AlterarSenhaUseCase(repository)
   }
 
-  private async enriquecer(usuario: { empresaId: string | null }): Promise<{ empresaNome: string | null; modulos: string[] | null; capacidades: string[] | null }> {
+  private async enriquecer(usuario: { empresaId: string | null }): Promise<{ empresaNome: string | null; modulos: string[] | null; capacidades: string[] | null; ativa: boolean | null }> {
     if (!usuario.empresaId) {
-      return { empresaNome: null, modulos: null, capacidades: null }
+      return { empresaNome: null, modulos: null, capacidades: null, ativa: null }
     }
     const [empresaRow] = await db.select().from(empresas).where(eq(empresas.id, usuario.empresaId)).limit(1)
     return {
       empresaNome: empresaRow?.nome ?? null,
       modulos: parseModulos(empresaRow?.modulos ?? null),
       capacidades: parseCapacidades(empresaRow?.capacidades ?? null),
+      ativa: empresaRow ? (empresaRow.ativa == null ? true : Boolean(empresaRow.ativa)) : null,
     }
+  }
+
+  private empresaInativa(ativa: boolean | null): boolean {
+    return ativa === false
   }
 
   login = async (req: Request, res: Response) => {
@@ -42,7 +47,11 @@ export class AuthController {
       }
 
       const result = await this.loginUseCase.execute({ email, senha })
-      const { empresaNome, modulos, capacidades } = await this.enriquecer(result.usuario)
+      const { empresaNome, modulos, capacidades, ativa } = await this.enriquecer(result.usuario)
+      if (this.empresaInativa(ativa)) {
+        res.status(403).json({ code: "EMPRESA_INATIVA", message: "A empresa está inativa." })
+        return
+      }
       res.json({ ...result, usuario: { ...result.usuario, empresaNome, modulos, capacidades } })
     } catch (err) {
       if (err instanceof CredenciaisInvalidasError) {
@@ -67,7 +76,11 @@ export class AuthController {
         return
       }
 
-      const { empresaNome, modulos, capacidades } = await this.enriquecer(usuario)
+      const { empresaNome, modulos, capacidades, ativa } = await this.enriquecer(usuario)
+      if (this.empresaInativa(ativa)) {
+        res.status(403).json({ code: "EMPRESA_INATIVA", message: "A empresa está inativa." })
+        return
+      }
 
       res.json({
         id: usuario.id,

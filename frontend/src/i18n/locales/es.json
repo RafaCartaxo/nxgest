@@ -368,7 +368,9 @@
     "INTERNAL_ERROR": "Error interno del servidor. Intente de nuevo.",
     "MODULE_DISABLED": "Este módulo está desactivado para su empresa.",
     "MODULE_HAS_ACTIVE_DATA": "Hay datos financieros pendientes en los módulos que se desactivarían.",
-    "CAPABILITY_DISABLED": "Este recurso está desactivado para su empresa."
+    "CAPABILITY_DISABLED": "Este recurso está desactivado para su empresa.",
+    "EMPRESA_INATIVA": "La empresa está inactiva. Contacta al administrador.",
+    "OPERATOR_HAS_SUBORDINATES": "Este usuario tiene {{n}} subordinado(s). Reasigna antes de degradar."
   },
   "auth": {
     "title": "Iniciar Sesión",
@@ -460,6 +462,13 @@
     "modalSocios": "Socios",
     "modalOperadores": "Operadores",
     "modalResultadoDia": "Resultado del Día",
+    "reassignTitulo": "Reasignar subordinados",
+    "reassignDesc": "{{nome}} tiene {{n}} subordinado(s). Para degradar, reasigna a un nuevo jefe.",
+    "reassignAviso": "Los subordinados se moverán al nuevo jefe en la misma acción.",
+    "reassignRole": "Rol deseado: {{role}}",
+    "reassignNovoChefe": "Nuevo jefe",
+    "reassignSelecione": "Selecciona un administrador…",
+    "reassignConfirmar": "Degradar y reasignar",
     "acessar": "Acceder",
     "editar": "Editar",
     "remover": "Eliminar",
@@ -534,7 +543,17 @@
     "impactoForcar": "Forzar desactivación",
     "impactoCancelar": "Cancelar",
     "impactoMotivo": "Motivo del forzar",
-    "impactoMotivoPlaceholder": "Indica el motivo (obligatorio)"
+    "impactoMotivoPlaceholder": "Indica el motivo (obligatorio)",
+    "impactoMotivoMax": "Máximo {{max}} caracteres",
+    "editarEmpresa": "Editar — {{empresa}}",
+    "salvarEmpresa": "Guardar empresa",
+    "editarSucesso": "Empresa actualizada.",
+    "erroEditar": "Error al actualizar empresa.",
+    "confirmarSuspensao": "Suspender empresa",
+    "suspensaoDesc": "Esto bloquea el acceso de {{n}} usuario(s) de {{empresa}} hasta reactivarla. ¿Suspender?",
+    "suspender": "Suspender",
+    "recursosTodas": "Recursos: todos activos",
+    "recursosOff": "Recursos: {{n}} desactivado(s)"
   },
   "capacidades": {
     "titulo": "Recursos — {{empresa}}",

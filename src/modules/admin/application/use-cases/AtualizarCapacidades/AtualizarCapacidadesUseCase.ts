@@ -36,15 +36,20 @@ export class AtualizarCapacidadesUseCase {
     }
 
     const result = await this.repository.updateCapacidades(input.empresaId, novo)
-    await this.auditoria.registrar({
-      empresaId: input.empresaId,
-      adminId: input.adminId,
-      tipo: "capacidades",
-      antes: empresa.capacidades ? serializeCapacidades(empresa.capacidades) : null,
-      depois: novo === null ? null : serializeCapacidades(novo),
-      force: false,
-      motivo: null,
-    })
+    const antes = empresa.capacidades ? serializeCapacidades(empresa.capacidades) : null
+    const depois = novo === null ? null : serializeCapacidades(novo)
+    // Idempotente: sem mudança real, não polui a auditoria.
+    if (antes !== depois) {
+      await this.auditoria.registrar({
+        empresaId: input.empresaId,
+        adminId: input.adminId,
+        tipo: "capacidades",
+        antes,
+        depois,
+        force: false,
+        motivo: null,
+      })
+    }
 
     return result
   }

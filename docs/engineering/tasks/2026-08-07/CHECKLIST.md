@@ -45,3 +45,17 @@ O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context*
 
 ## Validação
 - [x] `tsc` · `npm run build` · `audit:ui` · `audit:styles` · `audit:modules` · `npm test` (29/29) · `node scripts/consumers.mjs Modal` (20 consumidores, sem quebra)
+
+---
+
+# CHECKLIST — PLAN-061: card empresa, suspensão por `ativa`, rebaixamento com reassign
+
+**Data:** 07/08/2026
+
+- [x] Card empresa: botão Recursos (abre CapacidadesModal) + badge de capacidades + botão Editar
+- [x] Editar empresa: `EmpresaForm` com `initial` (esconde admin no edit) + modal + confirm de suspensão (nº usuários)
+- [x] BR-106: `authMiddleware` + login/me → 403 EMPRESA_INATIVA · frontend desloga na suspensão · auditoria `tipo:"empresa"`
+- [x] Rebaixamento: `OPERATOR_HAS_SUBORDINATES` + count · `reatribuirParaChefeId` (reassign atômico na transação) · `ReassignModal`
+- [x] `SuperAdminRoute` (só super em /admin/empresas*) · `maxLength={200}` motivo · auditoria idempotente · `apiRequest` interpolação `{{n}}`
+- [x] Smoke **189 → 203/203** (SUSP-1..4 · SUP-1..6 · ORF-1..3 · REAS-1 · POS-1 · IMP-003/004 · MOD-G-14 · TR-123/127 atualizados)
+- [x] Docs: PLAN-061 · plans/README · UPDATES · 02-API (EMPRESA_INATIVA/OPERATOR_HAS_SUBORDINATES/reatribuirParaChefeId) · 07 CTs · BR-106 + BR-103 · UI-COVERAGE · MAPEAMENTO

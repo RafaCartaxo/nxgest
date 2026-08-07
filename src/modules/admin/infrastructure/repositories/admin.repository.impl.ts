@@ -101,7 +101,7 @@ export class AdminRepository implements IAdminRepository {
     return { id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, chefeId: input.chefeId ?? null, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0, foto: null }
   }
 
-  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
+  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null; reatribuirParaChefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
     if (id === currentUserId && data.role !== undefined) {
       throw new NaoPodeAutoModificarError("Você não pode alterar seu próprio papel.")
     }
@@ -113,20 +113,31 @@ export class AdminRepository implements IAdminRepository {
     }
 
     // Bloqueio de "chefe órfão" (WS7): rebaixar pode deixar subordinados com chefe inválido.
+    // Com `reatribuirParaChefeId`, os subordinados são movidos para o novo chefe no MESMO
+    // ato (reassign atômico — PLAN-061).
     const demoteToOperator = data.role === "operator" && existing.role !== "operator"
     const demoteToSocio = data.role === "socio" && existing.role === "admin"
+    const reassign = data.reatribuirParaChefeId ?? null
 
     db.transaction((tx) => {
       if (demoteToOperator) {
         const sub = tx.select({ total: count() }).from(usuarios).where(and(eq(usuarios.chefeId, id), isNull(usuarios.deletedAt))).get()
         if ((sub?.total ?? 0) > 0) {
-          throw new NaoPodeRebaixarComSubordinadosError("Rebaixe/reatribua os operadores antes de rebaixar para operador.")
+          if (reassign) {
+            tx.update(usuarios).set({ chefeId: reassign }).where(and(eq(usuarios.chefeId, id), isNull(usuarios.deletedAt))).run()
+          } else {
+            throw new NaoPodeRebaixarComSubordinadosError("Rebaixe/reatribua os operadores antes de rebaixar para operador.", sub?.total ?? 0)
+          }
         }
       }
       if (demoteToSocio) {
         const sub = tx.select({ total: count() }).from(usuarios).where(and(eq(usuarios.chefeId, id), eq(usuarios.role, "socio"), isNull(usuarios.deletedAt))).get()
         if ((sub?.total ?? 0) > 0) {
-          throw new NaoPodeRebaixarComSubordinadosError("Rebaixe/reatribua os sócios antes de rebaixar para sócio.")
+          if (reassign) {
+            tx.update(usuarios).set({ chefeId: reassign }).where(and(eq(usuarios.chefeId, id), eq(usuarios.role, "socio"), isNull(usuarios.deletedAt))).run()
+          } else {
+            throw new NaoPodeRebaixarComSubordinadosError("Rebaixe/reatribua os sócios antes de rebaixar para sócio.", sub?.total ?? 0)
+          }
         }
       }
 

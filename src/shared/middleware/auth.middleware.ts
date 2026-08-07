@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express"
 import { verifyToken, type JwtPayload } from "../utils/jwt.js"
-import { db, usuarios } from "../../database.js"
+import { db, usuarios, empresas } from "../../database.js"
 import { eq, and, isNull } from "drizzle-orm"
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -29,6 +29,16 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     req.userId = usuario.id
     req.userRole = usuario.role as JwtPayload["role"]
     req.empresaId = usuario.empresaId
+
+    // Empresa suspensa (ativa = 0) bloqueia todas as rotas operacionais (BR-106).
+    // super_admin (empresaId null) nunca é bloqueado — gestão global.
+    if (usuario.empresaId) {
+      const [empresa] = await db.select({ ativa: empresas.ativa }).from(empresas).where(eq(empresas.id, usuario.empresaId)).limit(1)
+      if (empresa && empresa.ativa === 0) {
+        res.status(403).json({ code: "EMPRESA_INATIVA", message: "A empresa está inativa." })
+        return
+      }
+    }
 
     next()
   } catch {

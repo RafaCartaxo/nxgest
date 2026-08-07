@@ -1516,6 +1516,7 @@ Autentica um operador e retorna token JWT.
 |---------|------|
 | CREDENCIAIS_INVALIDAS | 401 |
 | VALIDATION_ERROR | 400 |
+| EMPRESA_INATIVA | 403 (credenciais válidas, mas a empresa está suspensa — BR-106) |
 
 > **Rate limit (BR-077):** 10 tentativas por IP a cada 15 minutos → 429. O limite pode ser sobrescrito por env `LOGIN_RATE_LIMIT_MAX` (default 10) — usado em ambientes de teste/smoke.
 
@@ -1526,6 +1527,8 @@ Autentica um operador e retorna token JWT.
 Retorna os dados do operador autenticado.
 
 **Auth:** Sim (Bearer token)
+
+> **BR-106:** empresa suspensa → **403 `EMPRESA_INATIVA`** (o frontend encerra a sessão, como no 401).
 
 ## Response 200
 
@@ -1706,6 +1709,8 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
 Atualiza dados gerais da empresa (diferente do `/modulos`). Campos opcionais; apenas os enviados mudam.
 
 **Auth:** Super Admin (`role = 'super_admin'`)
+
+> **Suspensão (BR-106):** `ativa: false` **bloqueia o acesso** de todos os usuários da empresa (403 `EMPRESA_INATIVA` no login/`me` e em toda rota autenticada). A mudança de situação é registrada em `auditoria_modulos` (`tipo:"empresa"`).
 
 ## Request
 
@@ -1928,6 +1933,9 @@ Gestão de operadores e dashboard consolidado. Acesso para administradores (`rol
 | GET | `/api/admin/operadores/:id` | Admin / Super Admin | Buscar operador por id (validado dentro da empresa) |
 | POST | `/api/admin/operadores` | Admin / Super Admin | Criar novo operador vinculado à empresa |
 | PATCH | `/api/admin/operadores/:id` | Admin / Super Admin | Editar operador (nome, email, role, senha) |
+
+> **Rebaixamento (PLAN-061):** rebaixar um usuário com subordinados ativos responde **422 `OPERATOR_HAS_SUBORDINATES`** com `subordinados` (contagem) — mensagem específica. Para rebaixar no mesmo ato, enviar `reatribuirParaChefeId` (novo chefe, deve ser **admin** da mesma empresa) → os subordinados são movidos na transação e o demote aplicado.
+> **Corpo:** `{ "role": "operator", "reatribuirParaChefeId": "<adminId>" }`.
 | DELETE | `/api/admin/operadores/:id` | Admin / Super Admin | Remover operador (soft-delete) |
 | GET | `/api/admin/dashboard` | Admin / Super Admin | KPIs consolidados (filtrados por empresa) |
 | GET | `/api/admin/equipe` | Admin / Super Admin | Equipe com contribuição por operador + totais (PLAN-030) |

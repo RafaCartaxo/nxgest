@@ -812,6 +812,9 @@ async function main() {
     if (r.data.ativa !== false) throw new Error("ativa=false não refletiu")
     const inexistente = await req("PATCH", "/api/admin/empresas/00000000-0000-4000-8000-000000000000", { token: superToken, body: { ativa: false } })
     expect(inexistente, 404, "empresa inexistente")
+    // restaura ativa — BR-106: empresa inativa bloqueia login (os testes seguintes dependem)
+    const volta = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken, body: { ativa: true } })
+    expect(volta, 200, "reativar novaEmpresa")
   })
   await t("EMP-095b", "POST /admin/empresas SEM opcionais (201, não bloqueia)", async () => {
     const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Min ${Date.now()}`, adminNome: "Admin Min", adminEmail: `min.${Date.now()}@empresa.com`, adminSenha: SENHA } })
@@ -1104,6 +1107,16 @@ async function main() {
     if (r.data.desligados.length !== 0) throw new Error(`desligados=${JSON.stringify(r.data.desligados)}`)
   })
 
+  await t("IMP-003", "GET impacto sem query modulos → 422", async () => {
+    const r = await req("GET", `/api/admin/empresas/${guardEmpresaId}/impacto`, { token: superToken })
+    expect(r, 422, "sem modulos")
+  })
+
+  await t("IMP-004", "GET impacto com JSON inválido → 422", async () => {
+    const r = await req("GET", `/api/admin/empresas/${guardEmpresaId}/impacto`, { token: superToken, query: { modulos: "{nao-json" } })
+    expect(r, 422, "json inválido")
+  })
+
   let guardEmpresa2Id, guardAdmin2Token
   await t("MOD-G-S2", "Setup: empresa de guarda 2 sem dados", async () => {
     const email = `guard2.${Date.now()}@uorak.com`
@@ -1197,6 +1210,56 @@ async function main() {
     if (!(r.data?.message ?? "").includes("200")) throw new Error(`message=${r.data?.message}`)
   })
 
+  await t("MOD-G-14", "force com motivo só espaços → 422 (BR-105)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semClientesCascata, force: true, motivo: "   " } })
+    expect(r, 422, "motivo só espaço")
+    if (!(r.data?.message ?? "").toLowerCase().includes("motivo")) throw new Error(`message=${r.data?.message}`)
+  })
+
+  // ---------- EMPRESA INATIVA (BR-106): suspensão bloqueia acesso ----------
+  let suspEmpresaId, suspAdminEmail
+  await t("SUSP-S", "Setup: empresa dedicada de suspensão", async () => {
+    const email = `susp.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Susp ${Date.now()}`, adminNome: "Susp Admin", adminEmail: email, adminSenha: SENHA } })
+    expect(r, 201, "criar empresa susp")
+    suspEmpresaId = r.data.empresa.id
+    suspAdminEmail = email
+  })
+
+  await t("SUSP-1", "Empresa inativa → login 403 EMPRESA_INATIVA", async () => {
+    const susp = await req("PATCH", `/api/admin/empresas/${suspEmpresaId}`, { token: superToken, body: { ativa: false } })
+    expect(susp, 200, "suspender empresa")
+    const login = await req("POST", "/api/auth/login", { body: { email: suspAdminEmail, senha: SENHA } })
+    expect(login, 403, "login empresa inativa")
+    if (login.data?.code !== "EMPRESA_INATIVA") throw new Error(`code=${login.data?.code}`)
+  })
+
+  await t("SUSP-2", "Token antigo: rota operacional → 403 EMPRESA_INATIVA", async () => {
+    await req("PATCH", `/api/admin/empresas/${suspEmpresaId}`, { token: superToken, body: { ativa: true } })
+    const login = await req("POST", "/api/auth/login", { body: { email: suspAdminEmail, senha: SENHA } })
+    expect(login, 200, "login antes de suspender")
+    const tok = login.data.token
+    await req("PATCH", `/api/admin/empresas/${suspEmpresaId}`, { token: superToken, body: { ativa: false } })
+    const r = await req("GET", "/api/clientes", { token: tok })
+    expect(r, 403, "rota bloqueada com token antigo")
+    if (r.data?.code !== "EMPRESA_INATIVA") throw new Error(`code=${r.data?.code}`)
+  })
+
+  await t("SUSP-3", "Reativar → login volta a 200", async () => {
+    const re = await req("PATCH", `/api/admin/empresas/${suspEmpresaId}`, { token: superToken, body: { ativa: true } })
+    expect(re, 200, "reativar")
+    const login = await req("POST", "/api/auth/login", { body: { email: suspAdminEmail, senha: SENHA } })
+    expect(login, 200, "login após reativar")
+  })
+
+  await t("SUSP-4", "Super admin não é afetado + auditoria tipo empresa gravada", async () => {
+    await req("PATCH", `/api/admin/empresas/${suspEmpresaId}`, { token: superToken, body: { ativa: false } })
+    const me = await req("GET", "/api/auth/me", { token: superToken })
+    expect(me, 200, "super /me intacto")
+    await req("PATCH", `/api/admin/empresas/${suspEmpresaId}`, { token: superToken, body: { ativa: true } })
+    if (auditoriaCount("empresa", suspEmpresaId) < 2) throw new Error("auditoria de suspensão não gravada")
+  })
+
   // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------
   let socioId, socioEmail, socioOpId, socioToken
   await t("SC-001", "Admin cria sócio (201, chefe = admin)", async () => {
@@ -1286,7 +1349,8 @@ async function main() {
     // socioId tem socioOpId como subordinado → rebaixar direto é bloqueado
     const bloqueado = await req("PATCH", `/api/admin/operadores/${socioId}`, { token: adminToken, body: { role: "operator" } })
     expect(bloqueado, 422, "rebaixar com subordinado bloqueado")
-    if (bloqueado.data.code !== "VALIDATION_ERROR") throw new Error("code esperado VALIDATION_ERROR")
+    if (bloqueado.data.code !== "OPERATOR_HAS_SUBORDINATES") throw new Error(`code=${bloqueado.data.code}`)
+    if (bloqueado.data.subordinados < 1) throw new Error(`subordinados=${bloqueado.data.subordinados}`)
     // reatribui o subordinado para o admin
     const reassign = await req("PATCH", `/api/admin/operadores/${socioOpId}`, { token: adminToken, body: { chefeId: null } })
     expect(reassign, 200, "reatribuir chefe")
@@ -1373,6 +1437,118 @@ async function main() {
     if (!rafael) throw new Error("rafael não achado")
     const r = await req("PATCH", `/api/admin/operadores/${rafael.id}`, { token: adminToken, body: { role: "socio" } })
     expect(r, 404, "cross-tenant bloqueado")
+  })
+
+  // ---------- MATRIZ DE REBAIXAMENTO (PLAN-061): ator super + variações de órfão + reassign atômico ----------
+  const criarUser = async (role, chefeId) => {
+    const email = `rb.${role}.${Date.now()}.${Math.floor(Math.random() * 1e4)}@uorak.com`
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: `RB ${role}`, email, senha: SENHA, role, chefeId } })
+    expect(r, 201, `criar ${role}`)
+    return { id: r.data.id, email }
+  }
+
+  await t("SUP-1", "super rebaixa admin→operator sem subordinado → 200", async () => {
+    const a = await criarUser("admin")
+    const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: superToken, body: { role: "operator" } })
+    expect(r, 200, "super rebaixa admin→op")
+    if (r.data.role !== "operator") throw new Error(`role=${r.data.role}`)
+  })
+
+  await t("SUP-2", "super rebaixa admin→operator COM subordinado → 422 + count (regressão do bug)", async () => {
+    const a = await criarUser("admin")
+    await criarUser("operator", a.id)
+    const bloqueado = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: superToken, body: { role: "operator" } })
+    expect(bloqueado, 422, "super: órfão bloqueia")
+    if (bloqueado.data.code !== "OPERATOR_HAS_SUBORDINATES") throw new Error(`code=${bloqueado.data.code}`)
+    if (bloqueado.data.subordinados !== 1) throw new Error(`subordinados=${bloqueado.data.subordinados}`)
+  })
+
+  await t("SUP-3", "super admin→socio: com subordinado sócio → 422; sem → 200", async () => {
+    const a = await criarUser("admin")
+    await criarUser("socio", a.id)
+    const bloqueado = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: superToken, body: { role: "socio" } })
+    expect(bloqueado, 422, "admin→socio com subord sócio")
+    const b = await criarUser("admin")
+    const ok = await req("PATCH", `/api/admin/operadores/${b.id}`, { token: superToken, body: { role: "socio" } })
+    expect(ok, 200, "admin→socio sem subord sócio")
+  })
+
+  await t("SUP-4", "super socio→operator: com subordinado → 422; reassign separado → 200", async () => {
+    const s = await criarUser("socio")
+    const sub = await criarUser("operator", s.id)
+    const bloqueado = await req("PATCH", `/api/admin/operadores/${s.id}`, { token: superToken, body: { role: "operator" } })
+    expect(bloqueado, 422, "socio→op com subord")
+    await req("PATCH", `/api/admin/operadores/${sub.id}`, { token: superToken, body: { chefeId: null } })
+    const ok = await req("PATCH", `/api/admin/operadores/${s.id}`, { token: superToken, body: { role: "operator" } })
+    expect(ok, 200, "socio→op após reassign")
+  })
+
+  await t("SUP-5", "super promove operator→socio · operator→admin · socio→admin → 200", async () => {
+    const op1 = await criarUser("operator")
+    const op2 = await criarUser("operator")
+    const s = await criarUser("socio")
+    const r1 = await req("PATCH", `/api/admin/operadores/${op1.id}`, { token: superToken, body: { role: "socio", chefeId: adminId } })
+    expect(r1, 200, "op→socio")
+    const r2 = await req("PATCH", `/api/admin/operadores/${op2.id}`, { token: superToken, body: { role: "admin" } })
+    expect(r2, 200, "op→admin")
+    const r3 = await req("PATCH", `/api/admin/operadores/${s.id}`, { token: superToken, body: { role: "admin" } })
+    expect(r3, 200, "socio→admin")
+  })
+
+  await t("SUP-6", "super rebaixa admin de OUTRA empresa via ?empresaId= → 200", async () => {
+    const email = `rb.xt.${Date.now()}@uorak.com`
+    const created = await req("POST", "/api/admin/operadores", { token: guardAdmin2Token, body: { nome: "RB XT", email, senha: SENHA, role: "admin" } })
+    expect(created, 201, "criar admin outra empresa")
+    const r = await req("PATCH", `/api/admin/operadores/${created.data.id}`, { token: superToken, body: { role: "operator" }, query: { empresaId: guardEmpresa2Id } })
+    expect(r, 200, "super rebaixa cross-tenant")
+    if (r.data.role !== "operator") throw new Error(`role=${r.data.role}`)
+  })
+
+  await t("ORF-1", "admin admin→socio com subordinado SÓCIO → 422", async () => {
+    const a = await criarUser("admin")
+    await criarUser("socio", a.id)
+    const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: adminToken, body: { role: "socio" } })
+    expect(r, 422, "admin→socio com subord sócio")
+    if (r.data.code !== "OPERATOR_HAS_SUBORDINATES") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("ORF-2", "admin admin→operator com subordinado SÓCIO → 422", async () => {
+    const a = await criarUser("admin")
+    await criarUser("socio", a.id)
+    const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: adminToken, body: { role: "operator" } })
+    expect(r, 422, "admin→op com subord sócio")
+    if (r.data.code !== "OPERATOR_HAS_SUBORDINATES") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("ORF-3", "admin admin→socio com subordinados só operator → 200", async () => {
+    const a = await criarUser("admin")
+    await criarUser("operator", a.id)
+    const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: adminToken, body: { role: "socio" } })
+    expect(r, 200, "admin→socio com operator subordinado")
+    if (r.data.role !== "socio") throw new Error(`role=${r.data.role}`)
+  })
+
+  await t("REAS-1", "rebaixar + reatribuirParaChefeId no MESMO PATCH → 200 e subordinados movem", async () => {
+    const alvo = await criarUser("admin")
+    const sub = await criarUser("operator", alvo.id)
+    const novoChefe = await criarUser("admin")
+    const r = await req("PATCH", `/api/admin/operadores/${alvo.id}`, { token: adminToken, body: { role: "operator", reatribuirParaChefeId: novoChefe.id } })
+    expect(r, 200, "reassign atômico")
+    if (r.data.role !== "operator") throw new Error(`role=${r.data.role}`)
+    const subDetalhe = await req("GET", `/api/admin/operadores/${sub.id}`, { token: adminToken })
+    expect(subDetalhe, 200, "detalhe subordinado")
+    if (subDetalhe.data.chefeId !== novoChefe.id) throw new Error(`chefe do subordinado=${subDetalhe.data.chefeId}`)
+  })
+
+  await t("POS-1", "novo chefe passa a ver o subordinado reatribuído na equipe", async () => {
+    const novoChefe = await criarUser("admin")
+    const alvo = await criarUser("admin")
+    const sub = await criarUser("operator", alvo.id)
+    await req("PATCH", `/api/admin/operadores/${alvo.id}`, { token: adminToken, body: { role: "operator", reatribuirParaChefeId: novoChefe.id } })
+    const nLogin = await req("POST", "/api/auth/login", { body: { email: novoChefe.email, senha: SENHA } })
+    expect(nLogin, 200, "login novo chefe")
+    const eq = await req("GET", "/api/admin/equipe", { token: nLogin.data.token })
+    if (!eq.data.operadores.some((o) => o.id === sub.id)) throw new Error("novo chefe não vê o subordinado")
   })
 
   await t("EMP-074", "Admin email duplicado (409)", async () => {

@@ -70,8 +70,10 @@
 | `UserMenu` | ✅ | `AppLayout` (topo fino mobile + rodapé da sidebar) — Perfil · Configurações (`PreferenciasModal`) · Sair; admin/super no mobile (nav app-first) |
 | `Avatar` / `AvatarField` | ✅ | ClienteCard (list-item/detail), ClienteForm, EmpresaList, AppLayout (sidebar), OperadorDetail, OperadoresList, modais — foto data URL **≤640px** + **lightbox** (`ampliar`: ClienteCard, OperadorDetail, sidebar, AvatarField) (PLAN-057/058) |
 | `AnexosSection` / `AnexoRow` | ✅ | ClienteDetail — upload foto/PDF do cliente (PLAN-042) |
-| `CapacidadesModal` | ✅ | SuperAdminPage (via ModulosModal "Recursos") — toggles de capacidades por empresa, agrupado por módulo dono (modularização fina) |
+| `CapacidadesModal` | ✅ | SuperAdminPage (via ModulosModal "Recursos" ou botão do card) — toggles de capacidades por empresa, agrupado por módulo dono (modularização fina) |
 | `ImpactConfirmModal` | ✅ | SuperAdminPage — confirmação/forçar de desativação com contagens do impacto (BR-105) |
+| `ReassignModal` | ✅ | AdminPage — reassign guiado ao rebaixar com subordinados (OPERATOR_HAS_SUBORDINATES, PLAN-061) |
+| `SuperAdminRoute` | ✅ | `shared/auth` — guard de rota exclusivo do super admin (`/admin/empresas*`, PLAN-061) |
 
 ## 4. Legado conhecido / planejado (rastreado)
 

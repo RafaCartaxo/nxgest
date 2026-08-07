@@ -102,6 +102,8 @@ export function ImpactConfirmModal({ open, impacto, canForce, saving, onConfirm,
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             rows={2}
+            maxLength={200}
+            hint={t("superAdmin.impactoMotivoMax", { max: 200 })}
             placeholder={t("superAdmin.impactoMotivoPlaceholder")}
           />
         )}

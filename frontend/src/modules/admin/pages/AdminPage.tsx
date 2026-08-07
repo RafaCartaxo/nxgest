@@ -17,6 +17,7 @@ import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { roleLabel } from "../../../shared/utils/role.js"
 import { OperadoresList } from "../components/OperadoresList.js"
 import { OperadorForm } from "../components/OperadorForm.js"
+import { ReassignModal, type ReassignState } from "../components/ReassignModal.js"
 import { EquipeModal } from "../components/EquipeModal.js"
 import { ContribuicaoModal } from "../components/ContribuicaoModal.js"
 import { listOperadores, getDashboard, getEquipe, createOperador, updateOperador, deleteOperador, type OperadorRow, type EquipeResult, type ContribuicaoMetric } from "../services/admin.service.js"
@@ -46,9 +47,11 @@ export function AdminPage() {
   const [meuCaixaError, setMeuCaixaError] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [editingOp, setEditingOp] = useState<OperadorRow | null>(null)
+  const [reassignState, setReassignState] = useState<ReassignState | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [equipeModal, setEquipeModal] = useState<"admin" | "operator" | "socio" | null>(null)
   const [contribuicaoMetric, setContribuicaoMetric] = useState<ContribuicaoMetric | null>(null)
+  const [savingUpdate, setSavingUpdate] = useState(false)
 
   const isAdminSelf = (user?.role === "admin" || user?.role === "socio") && !empresaId
 
@@ -118,14 +121,42 @@ export function AdminPage() {
 
   async function handleUpdate(data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null }) {
     if (!editingOp) return
-    await feedback.run({
-      action: async () => { await updateOperador(editingOp.id, data, empresaId) },
-      loading: t("common.saving"),
-      success: t("admin.editarSucesso"),
-      error: t("admin.erroCarregar"),
-    })
-    setEditingOp(null)
-    fetchData()
+    setSavingUpdate(true)
+    try {
+      await updateOperador(editingOp.id, data, empresaId)
+      feedback.show({ status: "success", message: t("admin.editarSucesso") })
+      setEditingOp(null)
+      fetchData()
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "OPERATOR_HAS_SUBORDINATES") {
+        // Rebaixamento com subordinados → reassign guiado (PLAN-061).
+        setReassignState({
+          operador: editingOp,
+          roleDesejado: (data.role ?? editingOp.role) as "admin" | "socio" | "operator",
+          subordinados: typeof (err.payload as { subordinados?: number } | undefined)?.subordinados === "number" ? (err.payload as { subordinados: number }).subordinados : 0,
+        })
+        setEditingOp(null)
+        return
+      }
+      feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("admin.erroCarregar") })
+    } finally {
+      setSavingUpdate(false)
+    }
+  }
+
+  async function handleReassignConfirm(novoChefeId: string) {
+    if (!reassignState) return
+    setSavingUpdate(true)
+    try {
+      await updateOperador(reassignState.operador.id, { role: reassignState.roleDesejado, reatribuirParaChefeId: novoChefeId }, empresaId)
+      feedback.show({ status: "success", message: t("admin.editarSucesso") })
+      setReassignState(null)
+      fetchData()
+    } catch (err) {
+      feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("admin.erroCarregar") })
+    } finally {
+      setSavingUpdate(false)
+    }
   }
 
   async function handleDeleteConfirm() {
@@ -215,6 +246,15 @@ export function AdminPage() {
                 />
             </Modal>
           )}
+
+          <ReassignModal
+            open={reassignState !== null}
+            reassign={reassignState}
+            chefes={operadores.filter((op) => op.role === "admin")}
+            saving={savingUpdate}
+            onConfirm={handleReassignConfirm}
+            onClose={() => setReassignState(null)}
+          />
 
           <SearchBar
             value={search}

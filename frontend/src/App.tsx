@@ -5,6 +5,7 @@ import { FeedbackProvider } from "./shared/feedback/FeedbackProvider.js"
 import { AuthProvider } from "./shared/auth/AuthContext.js"
 import { ProtectedRoute } from "./shared/auth/ProtectedRoute.js"
 import { AdminRoute } from "./shared/auth/AdminRoute.js"
+import { SuperAdminRoute } from "./shared/auth/SuperAdminRoute.js"
 import { RequireModule } from "./shared/auth/RequireModule.js"
 import { LoginPage } from "./modules/auth/pages/LoginPage.js"
 import { PerfilPage } from "./modules/auth/pages/PerfilPage.js"
@@ -55,8 +56,8 @@ export function App() {
                    <Route path="/perfil" element={<PerfilPage />} />
                    <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
                    <Route path="/admin/operadores/:id" element={<AdminRoute><OperadorDetail /></AdminRoute>} />
-                   <Route path="/admin/empresas" element={<AdminRoute><SuperAdminPage /></AdminRoute>} />
-                   <Route path="/admin/empresas/:id" element={<AdminRoute><AdminPage /></AdminRoute>} />
+                   <Route path="/admin/empresas" element={<SuperAdminRoute><SuperAdminPage /></SuperAdminRoute>} />
+                   <Route path="/admin/empresas/:id" element={<SuperAdminRoute><AdminPage /></SuperAdminRoute>} />
                  </Routes>
               </ErrorBoundary>
             </AppLayout>

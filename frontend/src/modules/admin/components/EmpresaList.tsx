@@ -1,20 +1,23 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { SlidersHorizontal, ArrowRight } from "lucide-react"
+import { SlidersHorizontal, ArrowRight, ToggleLeft, Pencil } from "lucide-react"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { Button } from "../../../shared/components/Button.js"
 import { MODULES } from "../../../shared/modules/modules.js"
+import { ALL_CAPABILITIES } from "../../../shared/modules/capacidades.js"
 import { formatCpfCnpj } from "../../../shared/utils/masks.js"
 import type { EmpresaComStats } from "../services/empresa.service.js"
 
 interface EmpresaListProps {
   empresas: EmpresaComStats[]
   onConfigurar: (empresa: EmpresaComStats) => void
+  onRecursos: (empresa: EmpresaComStats) => void
+  onEditar: (empresa: EmpresaComStats) => void
 }
 
-export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
+export function EmpresaList({ empresas, onConfigurar, onRecursos, onEditar }: EmpresaListProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -30,6 +33,8 @@ export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
         const todos = ativos >= total
         const nomeExibido = empresa.nomeFantasia || empresa.nome
         const ativa = empresa.ativa !== false
+        const capsTodas = empresa.capacidades === null || empresa.capacidades === undefined
+        const capsOff = capsTodas ? 0 : ALL_CAPABILITIES.length - empresa.capacidades!.length
 
         return (
           <Card.Root key={empresa.id} variant="list-item" tone={ativa ? "info" : "neutral"}>
@@ -43,6 +48,11 @@ export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
                   <span className="text-xs text-text-muted">
                     {empresa.totalUsuarios} {empresa.totalUsuarios === 1 ? t("superAdmin.operadorUm") : t("superAdmin.operadorOutros")}
                   </span>
+                  <StatusBadge
+                    variant={capsTodas || capsOff === 0 ? "neutral" : "warning"}
+                    size="sm"
+                    label={capsTodas || capsOff === 0 ? t("superAdmin.recursosTodas") : t("superAdmin.recursosOff", { n: capsOff })}
+                  />
                 </div>
               </div>
             </div>
@@ -62,9 +72,15 @@ export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
               )}
             </div>
 
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               <Button variant="outline" size="sm" className="flex-1" onClick={() => onConfigurar(empresa)}>
                 <SlidersHorizontal className="size-4" aria-hidden /> {t("superAdmin.modulosButton", { ativos, total })}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onRecursos(empresa)}>
+                <ToggleLeft className="size-4" aria-hidden /> {t("superAdmin.capacidadesButton")}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => onEditar(empresa)}>
+                <Pencil className="size-4" aria-hidden /> {t("common.edit")}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/empresas/${empresa.id}`)}>
                 <ArrowRight className="size-4" aria-hidden /> {t("superAdmin.acessar")}

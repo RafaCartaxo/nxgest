@@ -2,6 +2,18 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — PLAN-061: card da empresa, suspensão por `ativa` e rebaixamento com reassign
+
+**Adicionado / Corrigido**
+- **Card da empresa:** botão **"Recursos"** (abre `CapacidadesModal` direto) + **badge de estado das capacidades** + botão **"Editar"** (modal reusando `EmpresaForm` — nome, fantasia, documento, situação). **Confirm na suspensão** (ativa→inativa mostra nº de usuários afetados).
+- **Suspensão (BR-106):** `empresa.ativa=false` agora **bloqueia acesso** — **403 `EMPRESA_INATIVA`** no login, `/me` e em toda rota autenticada (`authMiddleware`). Super admin intacto. Frontend **desloga** na suspensão. Auditoria `tipo:"empresa"`.
+- **Rebaixamento:** o erro de chefe órfão ganhou **`OPERATOR_HAS_SUBORDINATES` + contagem** (antes era "Dados inválidos." genérico) e **reassign atômico** — campo `reatribuirParaChefeId` no `PATCH /admin/operadores/:id` move os subordinados no mesmo ato + UI guiada (`ReassignModal`).
+- **Fixes:** `SuperAdminRoute` (só super acessa `/admin/empresas*`) · `maxLength={200}` no motivo · auditoria idempotente (sem mudança = sem registro) · `apiRequest` interpola `{{n}}` nas mensagens de erro.
+
+**QA:** smoke **189 → 203/203** (SUSP-1..4 · SUP-1..6 matriz super · ORF-1..3 variações de órfão · REAS-1/POS-1 reassign · IMP-003/004 · MOD-G-14 · TR-123/127 atualizados) · build · audits · vitest 29 · docs:audit.
+
+Referência: [PLAN-061](plans/PLAN-061-empresa-card-suspensao-rebaixamento.md) · BR-106
+
 ## 06/08/2026 — Navegação app-first (Stitch): BottomTabBar + UserMenu, fim do drawer/Topbar
 
 **Adicionado / Reorganizado**

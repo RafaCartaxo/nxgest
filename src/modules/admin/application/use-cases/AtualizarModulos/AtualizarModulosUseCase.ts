@@ -45,15 +45,20 @@ export class AtualizarModulosUseCase {
     }
 
     const result = await this.repository.updateModulos(input.empresaId, valid.value)
-    await this.auditoria.registrar({
-      empresaId: input.empresaId,
-      adminId: input.adminId,
-      tipo: "modulos",
-      antes: empresa.modulos ? serializeModulos(empresa.modulos) : null,
-      depois: serializeModulos(valid.value),
-      force: forcar,
-      motivo,
-    })
+    const antes = empresa.modulos ? serializeModulos(empresa.modulos) : null
+    const depois = serializeModulos(valid.value)
+    // Idempotente: sem mudança real, não polui a auditoria.
+    if (antes !== depois) {
+      await this.auditoria.registrar({
+        empresaId: input.empresaId,
+        adminId: input.adminId,
+        tipo: "modulos",
+        antes,
+        depois,
+        force: forcar,
+        motivo,
+      })
+    }
 
     return { ...result, impacto }
   }

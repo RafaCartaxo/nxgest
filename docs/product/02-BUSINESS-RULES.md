@@ -830,6 +830,14 @@ O `PATCH /api/admin/empresas/:id/modulos` **computa o impacto** de desligar o co
 - **Toda mudança** de módulos/capacidades é registrada em `auditoria_modulos` (quem, `tipo`, antes/depois, `force`, motivo).
 - Contagens empresa-wide passam por `usuarios.empresaId` (tabelas operacionais ligam por `userId`).
 
+## BR-106
+
+A **situação da empresa** (`empresas.ativa`) é enforçada: empresa **inativa = suspensa**, bloqueando o acesso de todos os seus usuários — `login` e `me` respondem **403 `EMPRESA_INATIVA`** e o `authMiddleware` bloqueia **todas as rotas autenticadas** (efeito imediato em sessões existentes). `super_admin` (sem `empresaId`) nunca é bloqueado. Reativar (`PATCH /admin/empresas/:id` com `ativa: true`) restaura o acesso. A mudança de situação é registrada em `auditoria_modulos` (`tipo:"empresa"`). No frontend, o 403 `EMPRESA_INATIVA` encerra a sessão (limpa o token), como o 401.
+
+## BR-103 (evoluída — reassign atômico)
+
+Além do bloqueio de chefe órfão (ver abaixo), o rebaixamento pode ser feito **com reassign atômico**: no `PATCH /api/admin/operadores/:id`, o campo `reatribuirParaChefeId` move os subordinados do alvo para o novo chefe **na mesma transação** e aplica o demote. O novo chefe deve ser um **admin da mesma empresa** (validação por `validarChefe` no papel de sócio-alvo). Sem o campo, o bloqueio persiste e responde **422 `OPERATOR_HAS_SUBORDINATES`** com `subordinados` (contagem) — mensagem específica (antes era `VALIDATION_ERROR` genérico).
+
 ---
 
 # Referências

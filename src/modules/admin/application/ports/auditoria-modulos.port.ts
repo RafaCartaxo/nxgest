@@ -5,7 +5,7 @@
 export interface AuditoriaModulosInput {
   empresaId: string
   adminId: string
-  tipo: "modulos" | "capacidades"
+  tipo: "modulos" | "capacidades" | "empresa"
   /** Valor serializado antes da mudança (`null` = ausente). */
   antes: string | null
   /** Valor serializado depois da mudança (`null` = ausente). */

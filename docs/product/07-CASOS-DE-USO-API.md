@@ -1330,6 +1330,58 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+# SUSPENSÃO DE EMPRESA — BR-106
+
+**Regras:** BR-106 · **Smoke:** `SUSP-1..4`
+
+### SUSP-CT-1 — Empresa inativa bloqueia login
+**Dado** empresa com `ativa: false` → **Então** `POST /auth/login` de usuário da empresa → **403** `EMPRESA_INATIVA`.
+
+### SUSP-CT-2 — Token antigo bloqueado em rotas
+**Dado** usuário logado antes da suspensão → **Então** `GET /api/clientes` (token antigo) → **403** `EMPRESA_INATIVA` (efeito imediato).
+
+### SUSP-CT-3 — Reativação restaura acesso
+**Dado** `PATCH /admin/empresas/:id` com `ativa: true` → **Então** login → **200**.
+
+### SUSP-CT-4 — Super admin intacto + auditoria
+**Dado** empresa suspensa → **Então** `GET /auth/me` do super admin → **200**; `auditoria_modulos` registra `tipo:"empresa"` (antes/depois do `ativa`).
+
+---
+
+# REBAIXAMENTO — MATRIZ E REASSIGN (PLAN-061)
+
+**Regras:** BR-103 (evoluída) · **Smoke:** `SUP-1..6`, `ORF-1..3`, `REAS-1`, `POS-1`, TR-123/127
+
+### SUP-CT-1 — Super rebaixa admin→operator (sem subordinado) → 200
+**Dado** admin sem subordinados → **Quando** super `PATCH` `{role:"operator"}` → **Então** **200**.
+
+### SUP-CT-2 — Super rebaixa admin→operator com subordinado → 422 + contagem
+**Dado** admin com subordinado → **Então** **422** `OPERATOR_HAS_SUBORDINATES` + `subordinados: N` (regressão do bug do super admin).
+
+### SUP-CT-3 — admin→socio: subordinado sócio → 422; sem sócio → 200
+**Dado** admin com subordinado **sócio** → **422**. **Dado** admin sem subordinado sócio → **200**.
+
+### SUP-CT-4 — socio→operator com subordinado → 422; após reassign → 200
+**Dado** sócio com subordinado → **422**; **Quando** o subordinado é reatribuído → **200**.
+
+### SUP-CT-5 — Super promove (operator→socio · operator→admin · socio→admin) → 200
+**Dado** super → **Então** as três promoções → **200**.
+
+### SUP-CT-6 — Super rebaixa admin de outra empresa (`?empresaId=`) → 200
+**Dado** super com `?empresaId=` de outra empresa → **Então** rebaixa → **200**.
+
+### ORF-CT-1 — admin→socio com subordinado SÓCIO → 422
+### ORF-CT-2 — admin→operator com subordinado SÓCIO → 422
+### ORF-CT-3 — admin→socio com subordinados só operator → **200** (operator pode ter chefe sócio)
+
+### REAS-CT-1 — Reassign atômico no mesmo PATCH
+**Dado** `PATCH /operadores/:id` com `{role:"operator", reatribuirParaChefeId:<adminId>}` → **Então** **200**; o subordinado fica com `chefeId` = novo admin (transação).
+
+### POS-CT-1 — Novo chefe vê o subordinado reatribuído
+**Dado** reassign → **Então** `GET /admin/equipe` do novo chefe inclui o subordinado.
+
+---
+
 # AUTH — SENHA (PLAN-029)
 
 ## API-UC-041 — Alterar a própria senha
