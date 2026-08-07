@@ -1426,6 +1426,41 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+# FLUXO DE CONTA (PLAN-065) — convite/ativação + forgot/reset
+
+**Smoke:** `AC-13..20`, `ES-02..11`, `SE-01/04`, `SM-1/2`
+
+**Endpoint:** `POST /api/auth/ativar` — público
+**Endpoint:** `POST /api/auth/forgot` — público (resposta genérica 200, rate limit por e-mail+IP)
+**Endpoint:** `POST /api/auth/reset` — público
+**Endpoint:** `PATCH /api/admin/operadores/:id/reenviar-convite` — admin/super
+
+### AC-CT-13 — Login de convidado → 403 ACCOUNT_PENDING
+**Dado** conta sem senha (convidada) → **Então** `POST /auth/login` → **403** `ACCOUNT_PENDING`.
+
+### AC-CT-15 — Criar operador sem senha → convidado + convite
+**Dado** `POST /admin/operadores` sem `senha` → **Então** **201** com `status: "convidado"` + token de convite gerado.
+
+### AC-CT-05 — Ativar com token válido → login funciona
+**Dado** `POST /auth/ativar` com token válido + senha ≥6 → **Então** **200**; login com a nova senha → **200** (`status: "ativo"`).
+
+### AC-CT-08 — Token já usado → 400 TOKEN_INVALID
+**Dado** ativar 2× com o mesmo token → **Então** 2ª → **400**.
+
+### AC-CT-20 — Empresa sem adminSenha → admin convidado
+**Dado** `POST /admin/empresas` sem `adminSenha` → **Então** **201**; login do admin → **403** `ACCOUNT_PENDING`.
+
+### ES-CT-02/03 — Forgot genérico
+**Dado** e-mail existente OU inexistente → **Então** **200** sempre (não vaza).
+
+### ES-CT-05 — Reset com token válido → login nova senha
+**Dado** `POST /auth/reset` com token válido → **Então** **200**; login com a nova senha → **200**.
+
+### SE-CT-01 — Token armazenado com hash
+**Dado** token gerado → **Então** no banco `auth_tokens.hash` é SHA-256 (64 hex), nunca o token em texto.
+
+---
+
 # AUTH — SENHA (PLAN-029)
 
 ## API-UC-041 — Alterar a própria senha

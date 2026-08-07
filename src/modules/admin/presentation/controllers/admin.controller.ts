@@ -9,6 +9,10 @@ import { RemoverOperadorUseCase } from "../../application/use-cases/RemoverOpera
 import { OperadorNaoEncontradoError, NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, NaoPodeAtribuirSuperAdminError, NaoPodeRebaixarComSubordinadosError } from "../../domain/errors/admin.error.js"
 import { validarFoto } from "../../../../shared/utils/foto.js"
 import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
+import { ConvidarUseCase } from "../../../../modules/auth/application/use-cases/Convidar/ConvidarUseCase.js"
+import { AuthTokenRepository } from "../../../../modules/auth/infrastructure/repositories/auth-token.repository.impl.js"
+import { criarMailer } from "../../../../shared/email/mailers.js"
+import { resolverLang } from "../../../../shared/email/templates.js"
 
 const ROLES_ADMIN = ["admin", "socio", "operator"] as const
 
@@ -20,6 +24,7 @@ export class AdminController {
   private editarUseCase: EditarOperadorUseCase
   private removerUseCase: RemoverOperadorUseCase
   private dashboardGetter: IAdminRepository
+  private convidarUseCase: ConvidarUseCase
 
   constructor(repository: IAdminRepository) {
     this.repository = repository
@@ -29,6 +34,7 @@ export class AdminController {
     this.editarUseCase = new EditarOperadorUseCase(repository)
     this.removerUseCase = new RemoverOperadorUseCase(repository)
     this.dashboardGetter = repository
+    this.convidarUseCase = new ConvidarUseCase(new AuthTokenRepository(), criarMailer())
   }
 
   private resolveEmpresaId(req: Request): string | null | undefined {
@@ -98,15 +104,15 @@ export class AdminController {
         return
       }
       const { nome, email, senha, role, chefeId } = req.body
-      if (!nome || !email || !senha || !role) {
-        res.status(400).json({ code: "VALIDATION_ERROR", message: "Nome, email, senha e role são obrigatórios." })
+      if (!nome || !email || !role) {
+        res.status(400).json({ code: "VALIDATION_ERROR", message: "Nome, email e role são obrigatórios." })
         return
       }
       if (!(ROLES_ADMIN as readonly string[]).includes(role)) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Role deve ser 'admin', 'socio' ou 'operator'." })
         return
       }
-      if (typeof senha !== "string" || senha.length < 6) {
+      if (senha !== undefined && senha !== null && (typeof senha !== "string" || senha.length < 6)) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
         return
       }
@@ -127,8 +133,12 @@ export class AdminController {
         }
       }
 
-      const senhaHash = await bcrypt.hash(senha, 10)
+      // Senha opcional (PLAN-065): sem senha → convidado (recebe convite por e-mail).
+      const senhaHash = senha ? await bcrypt.hash(senha, 10) : null
       const operador = await this.criarUseCase.execute({ nome, email, senhaHash, role, empresaId: targetEmpresaId, chefeId: finalChefeId })
+      if (senhaHash === null) {
+        await this.convidarUseCase.execute({ subjectId: operador.id, nome: operador.nome, email: operador.email, lang: resolverLang(req.headers["accept-language"]) })
+      }
       res.status(201).json(operador)
     } catch (err) {
       if (err instanceof EmailDuplicadoError) {
@@ -141,6 +151,32 @@ export class AdminController {
       }
       console.error("Erro ao criar operador:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao criar operador." })
+    }
+  }
+
+  reenviarConvite = async (req: Request, res: Response) => {
+    try {
+      const targetEmpresaId = this.resolveEmpresaId(req)
+      const scope = await this.resolveScope(req)
+      const operador = await this.repository.findById(req.params.id, targetEmpresaId, scope)
+      if (!operador) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
+        return
+      }
+      if (operador.status !== "convidado") {
+        res.status(409).json({ code: "VALIDATION_ERROR", message: "Conta já ativa — convite não se aplica." })
+        return
+      }
+      await this.convidarUseCase.execute({
+        subjectId: operador.id,
+        nome: operador.nome,
+        email: operador.email,
+        lang: resolverLang(req.headers["accept-language"]),
+      })
+      res.json({ ok: true })
+    } catch (err) {
+      console.error("Erro ao reenviar convite:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao reenviar convite." })
     }
   }
 

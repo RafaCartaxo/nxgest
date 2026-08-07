@@ -2,7 +2,8 @@ export interface Usuario {
   id: string
   nome: string
   email: string
-  senhaHash: string
+  /** Nullable (PLAN-065): convidado ainda não definiu senha. */
+  senhaHash: string | null
   role: "super_admin" | "admin" | "socio" | "operator"
   createdAt: string
   deletedAt: string | null

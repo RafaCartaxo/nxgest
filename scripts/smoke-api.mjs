@@ -10,6 +10,7 @@
  * Não testa rate limit (429) — bloquearia o IP da própria execução.
  */
 import Database from "better-sqlite3"
+import { createHash, randomUUID } from "node:crypto"
 
 const SMOKE_DB_PATH = process.env.SMOKE_DB_PATH || "/tmp/nxgestao-smoke.db"
 
@@ -23,6 +24,33 @@ function auditoriaCount(tipo, empresaId) {
   } catch {
     return -1
   }
+}
+
+/** Conta tokens de `auth_tokens` (PLAN-065) por sujeito/tipo. -1 se indisponível. */
+function authTokensCount(subjectId, tipo, naoUsadosOnly = false) {
+  try {
+    const d = new Database(SMOKE_DB_PATH, { readonly: true })
+    const sql = `SELECT COUNT(*) AS c FROM auth_tokens WHERE subjectId = ? AND tipo = ?${naoUsadosOnly ? " AND usadoEm IS NULL" : ""}`
+    const row = d.prepare(sql).get(subjectId, tipo)
+    d.close()
+    return row?.c ?? 0
+  } catch {
+    return -1
+  }
+}
+
+/** Insere um token conhecido (raw) p/ testar ativar/reset sem ler o console. */
+function inserirAuthToken(subjectId, tipo, rawToken, expiraEm, usadoEm = null) {
+  const d = new Database(SMOKE_DB_PATH)
+  const hash = createHash("sha256").update(rawToken).digest("hex")
+  d.prepare("INSERT INTO auth_tokens (id, subjectId, tipo, hash, expiraEm, usadoEm, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .run(randomUUID(), subjectId, tipo, hash, expiraEm, usadoEm, new Date().toISOString())
+  d.close()
+}
+
+/** Hash SHA-256 de um token (para comparar o que está no banco — SE-06). */
+function sha256(token) {
+  return createHash("sha256").update(token).digest("hex")
 }
 const baseUrlIdx = process.argv.indexOf("--baseUrl")
 const baseUrlArg = baseUrlIdx !== -1 ? process.argv[baseUrlIdx + 1] : undefined
@@ -1361,6 +1389,188 @@ async function main() {
   await t("P13-5", "super_admin com ?empresaId= respeita a empresa-alvo", async () => {
     const r = await req("GET", "/api/clientes", { token: superToken, query: { empresaId: novaEmpresaId, limit: "100" } })
     expect(r, 200, "super com empresaId")
+  })
+
+  // ---------- FLUXO DE CONTA (PLAN-065): convite/ativação + forgot/reset ----------
+  let convId, convEmail, convSenha
+  await t("AC-15", "criar operador sem senha → convidado + convite gerado", async () => {
+    const email = `conv.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Convidado S", email, role: "operator" } })
+    expect(r, 201, "criar convidado")
+    if (r.data.status !== "convidado") throw new Error(`status=${r.data.status}`)
+    convId = r.data.id
+    convEmail = email
+    if (authTokensCount(convId, "convite") < 1) throw new Error("token de convite não criado")
+  })
+
+  await t("AC-16", "convidado → senhaHash NULL no banco", async () => {
+    const d = new Database(SMOKE_DB_PATH, { readonly: true })
+    const row = d.prepare("SELECT senhaHash FROM usuarios WHERE id = ?").get(convId)
+    d.close()
+    if (row?.senhaHash !== null) throw new Error(`senhaHash=${row?.senhaHash}`)
+  })
+
+  await t("AC-13", "login de convidado → 403 ACCOUNT_PENDING", async () => {
+    const login = await req("POST", "/api/auth/login", { body: { email: convEmail, senha: "qualquer123" } })
+    expect(login, 403, "login convidado")
+    if (login.data.code !== "ACCOUNT_PENDING") throw new Error(`code=${login.data.code}`)
+  })
+
+  await t("SE-01", "token de convite armazenado como HASH (64 hex)", async () => {
+    const d = new Database(SMOKE_DB_PATH, { readonly: true })
+    const row = d.prepare("SELECT hash FROM auth_tokens WHERE subjectId = ? AND tipo = 'convite' AND usadoEm IS NULL ORDER BY createdAt DESC LIMIT 1").get(convId)
+    d.close()
+    if (!row?.hash || !/^[0-9a-f]{64}$/.test(row.hash)) throw new Error(`hash=${row?.hash}`)
+  })
+
+  await t("SE-04", "reenviar-convite invalida o token anterior", async () => {
+    const r = await req("PATCH", `/api/admin/operadores/${convId}/reenviar-convite`, { token: adminToken })
+    expect(r, 200, "reenviar convite")
+    if (authTokensCount(convId, "convite", true) !== 1) throw new Error("deveria haver exatamente 1 token não usado")
+  })
+
+  await t("AC-17", "reenviar-convite em conta ativa → 409", async () => {
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Ativo S", email: `ativo.${Date.now()}@uorak.com`, role: "operator", senha: "senha123" } })
+    expect(criado, 201, "criar ativo")
+    const r = await req("PATCH", `/api/admin/operadores/${criado.data.id}/reenviar-convite`, { token: adminToken })
+    expect(r, 409, "ativo não reenvia")
+  })
+
+  await t("AC-18", "reenviar-convite de usuário inexistente → 404", async () => {
+    const r = await req("PATCH", "/api/admin/operadores/00000000-0000-4000-8000-000000000000/reenviar-convite", { token: adminToken })
+    expect(r, 404, "inexistente")
+  })
+
+  await t("AC-05", "ativar com token válido → ok + login funciona", async () => {
+    const raw = "rawtoken-ativar-123456"
+    inserirAuthToken(convId, "convite", raw, new Date(Date.now() + 3600e3).toISOString())
+    const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "novaSenha123" } })
+    expect(r, 200, "ativar")
+    const login = await req("POST", "/api/auth/login", { body: { email: convEmail, senha: "novaSenha123" } })
+    expect(login, 200, "login pós ativação")
+    if (login.data.usuario.status !== "ativo") throw new Error(`status=${login.data.usuario.status}`)
+    convSenha = "novaSenha123"
+  })
+
+  await t("AC-08", "ativar com token já usado → 400 TOKEN_INVALID (single-use)", async () => {
+    const r = await req("POST", "/api/auth/ativar", { body: { token: "rawtoken-ativar-123456", senha: "outra123" } })
+    expect(r, 400, "single-use")
+    if (r.data.code !== "TOKEN_INVALID") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("AC-19", "ativar com token de tipo errado → 400", async () => {
+    const raw = "rawtoken-reset-000000"
+    inserirAuthToken(convId, "reset", raw, new Date(Date.now() + 3600e3).toISOString())
+    const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "outra123" } })
+    expect(r, 400, "tipo errado")
+  })
+
+  await t("AC-07", "ativar com token expirado → 400 TOKEN_EXPIRED", async () => {
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Conv Exp", email: `convexp.${Date.now()}@uorak.com`, role: "operator" } })
+    expect(criado, 201, "criar convidado expirado")
+    const raw = "rawtoken-expirado-000"
+    inserirAuthToken(criado.data.id, "convite", raw, new Date(Date.now() - 1000).toISOString())
+    const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "outra123" } })
+    expect(r, 400, "expirado")
+    if (r.data.code !== "TOKEN_EXPIRED") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("AC-20", "criar empresa sem adminSenha → admin convidado", async () => {
+    const email = `admconv.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Emp Conv ${Date.now()}`, adminNome: "Adm Conv", adminEmail: email } })
+    expect(r, 201, "empresa sem senha")
+    const login = await req("POST", "/api/auth/login", { body: { email, senha: "x" } })
+    expect(login, 403, "admin convidado")
+    if (login.data.code !== "ACCOUNT_PENDING") throw new Error(`code=${login.data.code}`)
+  })
+
+  await t("ES-02", "forgot de e-mail existente → 200 genérico", async () => {
+    const r = await req("POST", "/api/auth/forgot", { body: { email: "admin@cobranca.com" } })
+    expect(r, 200, "forgot existente")
+  })
+
+  await t("ES-03", "forgot de e-mail inexistente → 200 genérico (não vaza)", async () => {
+    const r = await req("POST", "/api/auth/forgot", { body: { email: `naoexiste.${Date.now()}@uorak.com` } })
+    expect(r, 200, "forgot inexistente")
+  })
+
+  await t("ES-08", "forgot de convidado → 200 + NENHUM token de reset", async () => {
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Conv FR", email: `convfr.${Date.now()}@uorak.com`, role: "operator" } })
+    expect(criado, 201, "criar convidado")
+    const r = await req("POST", "/api/auth/forgot", { body: { email: criado.data.email } })
+    expect(r, 200, "forgot convidado")
+    if (authTokensCount(criado.data.id, "reset") !== 0) throw new Error("convidado não deve gerar reset")
+  })
+
+  let resetUserId
+  await t("ES-05", "reset com token válido → login com a nova senha", async () => {
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Reset S", email: `reset.${Date.now()}@uorak.com`, role: "operator", senha: "senhaAntiga123" } })
+    expect(criado, 201, "criar ativo p/ reset")
+    resetUserId = criado.data.id
+    const raw = "rawtoken-reset-123456"
+    inserirAuthToken(resetUserId, "reset", raw, new Date(Date.now() + 1800e3).toISOString())
+    const r = await req("POST", "/api/auth/reset", { body: { token: raw, senha: "senhaNova123" } })
+    expect(r, 200, "reset")
+    const login = await req("POST", "/api/auth/login", { body: { email: criado.data.email, senha: "senhaNova123" } })
+    expect(login, 200, "login nova senha")
+    if (login.data.usuario.status !== "ativo") throw new Error(`status=${login.data.usuario.status}`)
+  })
+
+  await t("ES-07", "reset com token reutilizado → 400", async () => {
+    const r = await req("POST", "/api/auth/reset", { body: { token: "rawtoken-reset-123456", senha: "outra123" } })
+    expect(r, 400, "reset reutilizado")
+    if (r.data.code !== "TOKEN_INVALID") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("ES-10", "reset com token expirado → 400 TOKEN_EXPIRED", async () => {
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Reset Exp", email: `resetexp.${Date.now()}@uorak.com`, role: "operator", senha: "senha123" } })
+    expect(criado, 201, "criar p/ reset expirado")
+    const raw = "rawtoken-reset-expired"
+    inserirAuthToken(criado.data.id, "reset", raw, new Date(Date.now() - 1000).toISOString())
+    const r = await req("POST", "/api/auth/reset", { body: { token: raw, senha: "outra123" } })
+    expect(r, 400, "reset expirado")
+    if (r.data.code !== "TOKEN_EXPIRED") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("ES-09", "reset com senha curta → 422", async () => {
+    const r = await req("POST", "/api/auth/reset", { body: { token: "rawtoken-reset-123456", senha: "123" } })
+    expect(r, 422, "senha curta")
+  })
+
+  await t("SM-1", "ciclo completo: convite → ativação → troca de senha → login novo", async () => {
+    const email = `sm1.${Date.now()}@uorak.com`
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "SM1", email, role: "operator" } })
+    expect(criado, 201, "criar convidado SM1")
+    const raw = "rawtoken-sm1"
+    inserirAuthToken(criado.data.id, "convite", raw, new Date(Date.now() + 3600e3).toISOString())
+    await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "sm1Senha123" } })
+    const login = await req("POST", "/api/auth/login", { body: { email, senha: "sm1Senha123" } })
+    expect(login, 200, "login SM1")
+    const troca = await req("PATCH", "/api/auth/senha", { token: login.data.token, body: { senhaAtual: "sm1Senha123", novaSenha: "sm1Nova123" } })
+    expect(troca, 200, "troca senha")
+    const relogin = await req("POST", "/api/auth/login", { body: { email, senha: "sm1Nova123" } })
+    expect(relogin, 200, "login nova")
+  })
+
+  await t("SM-2", "ciclo completo: forgot → reset → login novo", async () => {
+    const email = `sm2.${Date.now()}@uorak.com`
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "SM2", email, role: "operator", senha: "sm2Antiga123" } })
+    expect(criado, 201, "criar p/ SM2")
+    const raw = "rawtoken-sm2"
+    inserirAuthToken(criado.data.id, "reset", raw, new Date(Date.now() + 1800e3).toISOString())
+    await req("POST", "/api/auth/reset", { body: { token: raw, senha: "sm2Nova123" } })
+    const login = await req("POST", "/api/auth/login", { body: { email, senha: "sm2Nova123" } })
+    expect(login, 200, "login SM2 nova")
+  })
+
+  await t("ES-11", "rate limit do forgot por email+IP → 429", async () => {
+    const email = `rl.${Date.now()}@uorak.com`
+    for (let i = 0; i < 3; i++) {
+      const r = await req("POST", "/api/auth/forgot", { body: { email } })
+      expect(r, 200, `forgot ${i}`)
+    }
+    const r = await req("POST", "/api/auth/forgot", { body: { email } })
+    expect(r, 429, "rate limit forgot")
   })
 
   // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------

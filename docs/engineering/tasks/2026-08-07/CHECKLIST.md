@@ -121,3 +121,17 @@ O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context*
 
 - [ ] BACKLOG: P020 → PLAN-065 · novo epic P026 → PLAN-064
 - [ ] ROADMAP · UPDATES · plans/README atualizados
+
+---
+
+# CHECKLIST — PLAN-065 backend (Checkpoint 1) implementado
+
+**Data:** 07/08/2026
+
+- [x] Infra e-mail: mailer port + Resend/console + templates pt/en/es + env MAIL_*/RESEND/APP_URL
+- [x] Migração: usuarios.senhaHash nullable (usuarios_new corrigido) + tabela auth_tokens (migracao:test ✅)
+- [x] Convite/ativação: createOperador senha opcional · reenviar-convite · /auth/ativar · login convidado 403 ACCOUNT_PENDING · /me status · createEmpresa adminSenha opcional
+- [x] forgot/reset (resposta genérica + rate limit e-mail+IP) + rotas públicas
+- [x] Fix leak: OperadorRow status + strip senhaHash
+- [x] Smoke 213 → 235/235 (AC/ES/SE/SM) · vitest 36 · docs:audit · collection 55
+- [ ] Frontend (Checkpoint 2): páginas públicas, login link, AuthContext status, OperadorForm/EmpresaForm senha opcional, badge convite

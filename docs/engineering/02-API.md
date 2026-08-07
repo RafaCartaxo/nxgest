@@ -2171,3 +2171,101 @@ Para **remover** a foto, enviar `"foto": null`.
 | UNAUTHORIZED | 401 |
 
 ---
+
+# POST /api/auth/ativar
+
+Ativação de conta **convidada** (PLAN-065): valida o token de convite (enviado por e-mail) e define a senha.
+
+**Auth:** Público · **Rate limit:** 10/15min
+
+## Request
+
+```json
+{ "token": "<token do e-mail>", "senha": "novaSenha123" }
+```
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| VALIDATION_ERROR | 422 (token/senha < 6) |
+| TOKEN_EXPIRED | 400 |
+| TOKEN_INVALID | 400 (inválido, tipo errado ou já usado) |
+| RATE_LIMIT | 429 |
+
+---
+
+# POST /api/auth/forgot
+
+"Esqueci a senha" (PLAN-065). **Resposta SEMPRE 200 genérica** (não revela se o e-mail existe nem se a conta é convidada) — quando aplicável, envia e-mail com link de reset.
+
+**Auth:** Público · **Rate limit:** 3/15min por e-mail+IP
+
+## Request
+
+```json
+{ "email": "admin@cobranca.com" }
+```
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+---
+
+# POST /api/auth/reset
+
+Redefine a senha via token de reset (PLAN-065, validade 30 min, single-use).
+
+**Auth:** Público · **Rate limit:** 10/15min
+
+## Request
+
+```json
+{ "token": "<token do e-mail>", "senha": "novaSenha123" }
+```
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| VALIDATION_ERROR | 422 (token/senha < 6) |
+| TOKEN_EXPIRED | 400 |
+| TOKEN_INVALID | 400 (inválido ou já usado) |
+| RATE_LIMIT | 429 |
+
+---
+
+# PATCH /api/admin/operadores/{id}/reenviar-convite
+
+Reenvia o convite de ativação para um operador **convidado** (PLAN-065) — novo token; o anterior é invalidado. Conta já ativa → **409**.
+
+**Auth:** Admin / Super Admin
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| OPERATOR_NOT_FOUND | 404 |
+| VALIDATION_ERROR | 409 (conta já ativa) |
+| FORBIDDEN | 403 |

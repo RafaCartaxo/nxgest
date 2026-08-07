@@ -10,6 +10,8 @@ export interface OperadorRow {
   empresaId: string | null
   chefeId: string | null
   foto: string | null
+  /** PLAN-065: conta sem senha definida (aguardando convite). */
+  status: "convidado" | "ativo"
 }
 
 export interface AdminDashboardStats {
@@ -46,7 +48,7 @@ export interface IAdminRepository {
   findAllOperadores(empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow[]>
   findById(id: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null>
   findByEmail(email: string): Promise<OperadorRow | null>
-  create(input: { nome: string; email: string; senhaHash: string; role: "super_admin" | "admin" | "socio" | "operator"; empresaId: string | null; chefeId?: string | null }): Promise<OperadorRow>
+  create(input: { nome: string; email: string; senhaHash: string | null; role: "super_admin" | "admin" | "socio" | "operator"; empresaId: string | null; chefeId?: string | null }): Promise<OperadorRow>
   update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null>
   softDelete(id: string, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<void>
   getDashboardStats(empresaId?: string | null, userId?: string | null, scopeUserIds?: string[]): Promise<AdminDashboardStats>

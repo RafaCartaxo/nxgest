@@ -12,6 +12,10 @@ import { EmailDuplicadoError } from "../../../auth/domain/errors/auth.error.js"
 import { EmpresaNaoEncontradaError } from "../../domain/errors/empresa.error.js"
 import { ModulosInvalidosError, CapacidadesInvalidasError, MotivoObrigatorioError, ModuloComDadosEmAbertoError } from "../../domain/errors/modulos.error.js"
 import { isValidCpf } from "../../../../shared/validators/cpf.js"
+import { ConvidarUseCase } from "../../../auth/application/use-cases/Convidar/ConvidarUseCase.js"
+import { AuthTokenRepository } from "../../../auth/infrastructure/repositories/auth-token.repository.impl.js"
+import { criarMailer } from "../../../../shared/email/mailers.js"
+import { resolverLang } from "../../../../shared/email/templates.js"
 import { isValidCnpj } from "../../../../shared/validators/cnpj.js"
 
 /**
@@ -36,6 +40,7 @@ export class EmpresaController {
   private atualizarModulosUseCase: AtualizarModulosUseCase
   private atualizarCapacidadesUseCase: AtualizarCapacidadesUseCase
   private calcularImpactoUseCase: CalcularImpactoUseCase
+  private convidarUseCase: ConvidarUseCase
 
   constructor(repository: IEmpresaRepository, impactoQuery: IImpactoDesativacaoQuery, auditoria: IAuditoriaModulosWriter) {
     this.repository = repository
@@ -45,6 +50,7 @@ export class EmpresaController {
     this.atualizarModulosUseCase = new AtualizarModulosUseCase(repository, impactoQuery, auditoria)
     this.atualizarCapacidadesUseCase = new AtualizarCapacidadesUseCase(repository, auditoria)
     this.calcularImpactoUseCase = new CalcularImpactoUseCase(repository, impactoQuery)
+    this.convidarUseCase = new ConvidarUseCase(new AuthTokenRepository(), criarMailer())
   }
 
   list = async (_req: Request, res: Response) => {
@@ -74,11 +80,15 @@ export class EmpresaController {
   create = async (req: Request, res: Response) => {
     try {
       const { nome, documento, nomeFantasia, ativa, adminNome, adminEmail, adminSenha } = req.body
-      if (!nome || !adminNome || !adminEmail || !adminSenha) {
-        res.status(400).json({ code: "VALIDATION_ERROR", message: "Nome, adminNome, adminEmail e adminSenha são obrigatórios." })
+      if (!nome || !adminNome || !adminEmail) {
+        res.status(400).json({ code: "VALIDATION_ERROR", message: "Nome, adminNome e adminEmail são obrigatórios." })
         return
       }
-      const senhaHash = bcrypt.hashSync(adminSenha, 10)
+      if (adminSenha !== undefined && adminSenha !== null && (typeof adminSenha !== "string" || adminSenha.length < 6)) {
+        res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
+        return
+      }
+      const senhaHash = adminSenha ? bcrypt.hashSync(adminSenha, 10) : null
       const doc = validarDocumento(documento)
       if (!doc.ok) {
         res.status(422).json({ code: "VALIDATION_ERROR", message: "Documento inválido — informe um CPF ou CNPJ válido." })
@@ -93,6 +103,15 @@ export class EmpresaController {
         adminEmail,
         adminSenhaHash: senhaHash,
       })
+      // Sem senha → admin convidado (recebe convite por e-mail, PLAN-065).
+      if (senhaHash === null) {
+        await this.convidarUseCase.execute({
+          subjectId: result.admin.id,
+          nome: result.admin.nome,
+          email: result.admin.email,
+          lang: resolverLang(req.headers["accept-language"]),
+        })
+      }
       res.status(201).json(result)
     } catch (err: unknown) {
       if (err instanceof EmailDuplicadoError) {

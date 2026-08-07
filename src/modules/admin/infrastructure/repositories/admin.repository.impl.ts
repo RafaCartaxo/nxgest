@@ -7,6 +7,28 @@ import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
 const SCOPE_NOT_SUPER = [isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin")]
 
+/** Mapeia a linha completa (com senhaHash) → OperadorRow público (strip + status). */
+function toOperadorRow(
+  row: { id: string; nome: string; email: string; senhaHash: string | null; role: string; createdAt: string; deletedAt: string | null; empresaId: string | null; chefeId: string | null; foto: string | null },
+  totalClientes = 0,
+  contratosAtivos = 0,
+): OperadorRow {
+  return {
+    id: row.id,
+    nome: row.nome,
+    email: row.email,
+    role: row.role as OperadorRow["role"],
+    createdAt: row.createdAt,
+    deletedAt: row.deletedAt ?? null,
+    empresaId: row.empresaId ?? null,
+    chefeId: row.chefeId ?? null,
+    foto: row.foto ?? null,
+    status: row.senhaHash ? "ativo" : "convidado",
+    totalClientes,
+    contratosAtivos,
+  }
+}
+
 export class AdminRepository implements IAdminRepository {
   async findAllOperadores(empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow[]> {
     const conditions = [...SCOPE_NOT_SUPER]
@@ -24,19 +46,7 @@ export class AdminRepository implements IAdminRepository {
       db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
       db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
     ])
-      result.push({
-        id: row.id,
-        nome: row.nome,
-        email: row.email,
-        role: row.role as OperadorRow["role"],
-        createdAt: row.createdAt,
-        deletedAt: row.deletedAt,
-        totalClientes: clientesCount[0].total,
-        contratosAtivos: contratosCount[0].total,
-        empresaId: row.empresaId ?? null,
-        chefeId: row.chefeId ?? null,
-        foto: row.foto ?? null,
-      })
+      result.push(toOperadorRow(row, clientesCount[0].total, contratosCount[0].total))
     }
     return result
   }
@@ -56,15 +66,7 @@ export class AdminRepository implements IAdminRepository {
       db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
       db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
     ])
-    return {
-      ...row,
-      role: row.role as OperadorRow["role"],
-      totalClientes: clientesCount[0].total,
-      contratosAtivos: contratosCount[0].total,
-      empresaId: row.empresaId ?? null,
-      chefeId: row.chefeId ?? null,
-      foto: row.foto ?? null,
-    }
+    return toOperadorRow(row, clientesCount[0].total, contratosCount[0].total)
   }
 
   async findByEmail(email: string): Promise<OperadorRow | null> {
@@ -75,18 +77,10 @@ export class AdminRepository implements IAdminRepository {
       db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
       db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
     ])
-    return {
-      ...row,
-      role: row.role as OperadorRow["role"],
-      totalClientes: clientesCount[0].total,
-      contratosAtivos: contratosCount[0].total,
-      empresaId: row.empresaId ?? null,
-      chefeId: row.chefeId ?? null,
-      foto: row.foto ?? null,
-    }
+    return toOperadorRow(row, clientesCount[0].total, contratosCount[0].total)
   }
 
-  async create(input: { nome: string; email: string; senhaHash: string; role: "super_admin" | "admin" | "socio" | "operator"; empresaId: string | null; chefeId?: string | null }): Promise<OperadorRow> {
+  async create(input: { nome: string; email: string; senhaHash: string | null; role: "super_admin" | "admin" | "socio" | "operator"; empresaId: string | null; chefeId?: string | null }): Promise<OperadorRow> {
     const id = uuid()
     await db.insert(usuarios).values({
       id,
@@ -98,7 +92,7 @@ export class AdminRepository implements IAdminRepository {
       chefeId: input.chefeId ?? null,
       createdAt: new Date().toISOString(),
     })
-    return { id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, chefeId: input.chefeId ?? null, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0, foto: null }
+    return { id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, chefeId: input.chefeId ?? null, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0, foto: null, status: input.senhaHash ? "ativo" : "convidado" }
   }
 
   async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null; reatribuirParaChefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {

@@ -16,7 +16,28 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 })
 
+const forgotLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  // PLAN-065: limite por e-mail + IP (não só por IP).
+  keyGenerator: (req) => `${req.ip}-${String((req.body as { email?: string })?.email ?? "").toLowerCase()}`,
+  message: { code: "RATE_LIMIT", message: "Muitas tentativas. Tente novamente em 15 minutos." },
+})
+
+const publicoLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { code: "RATE_LIMIT", message: "Muitas tentativas. Tente novamente em 15 minutos." },
+})
+
 router.post("/login", loginLimiter, controller.login)
+router.post("/ativar", publicoLimiter, controller.ativar)
+router.post("/forgot", forgotLimiter, controller.forgot)
+router.post("/reset", publicoLimiter, controller.reset)
 router.get("/me", authMiddleware, controller.me)
 router.patch("/senha", authMiddleware, controller.alterarSenha)
 router.patch("/foto", authMiddleware, controller.alterarFoto)

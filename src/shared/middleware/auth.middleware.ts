@@ -40,6 +40,13 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       }
     }
 
+    // Conta convidada sem senha (PLAN-065) → bloqueia rotas operacionais, exceto
+    // `/api/auth/me` (que devolve o status para o front saber do convite).
+    if (!usuario.senhaHash && !req.originalUrl.startsWith("/api/auth/")) {
+      res.status(403).json({ code: "ACCOUNT_PENDING", message: "Ativação pendente — defina sua senha pelo link do convite." })
+      return
+    }
+
     next()
   } catch {
     res.status(401).json({ code: "TOKEN_EXPIRED", message: "Token inválido ou expirado." })

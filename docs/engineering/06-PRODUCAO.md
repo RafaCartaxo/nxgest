@@ -240,9 +240,44 @@ git reset --hard <commit-bom>   # cuidado: descarta mudanças locais no repo
 
 ---
 
-## 9. Problemas conhecidos e alertas
+## 9. E-mail — Resend + domínio (`nxgest.com.br`)
+
+> Suporte ao **PLAN-065** (fluxo de conta: convite/ativação + esqueci a senha). Envio via **Resend** de `no-reply@nxgest.com.br`.
+
+### Estado (07/08)
+
+- [x] Domínio `nxgest.com.br` **registrado** no registro.br (pré-requisito de produção do PLAN-065).
+- [x] **Add Domain** feito no Resend.
+- [ ] **Registros DNS** (SPF/DKIM/DMARC) criados no painel do registro.br.
+- [ ] Verificação no Resend **verde** ("Verify DNS Records").
+- [ ] `.env` da VPS: `MAIL_PROVIDER=resend` · `RESEND_API_KEY=…` · `MAIL_FROM=no-reply@nxgest.com.br` · `APP_URL=…`.
+
+### Passo a passo (terminar a verificação no Resend)
+
+1. **Resend** → Domains → `nxgest.com.br` → seção **DNS Records** → copie cada registro TXT (DKIM e SPF) com Name/Host + Value.
+2. **Registro.br** → domínio → menu **DNS** (Serviço de DNS / Zona DNS) → **Adicionar registro**:
+   - **Tipo** `TXT` · **Nome/Host** (ex.: `resend._domainkey` p/ DKIM, `@` p/ SPF) · **Valor** (cole o copiado) · Salvar.
+3. Repita para cada registro.
+4. **Aguarde a propagação** do DNS (minutos a algumas horas).
+5. Resend → **Verify DNS Records** → itens verdes.
+
+### Troubleshooting (verificação vermelha)
+
+- **Host errado** — o DKIM é `resend._domainkey`, não o domínio raiz.
+- **SPF duplicado** — se já existir outro SPF, combine num só (`v=spf1 …`); nunca crie dois.
+- **Propagação** ainda em andamento — aguarde e re-verifique.
+- **DNS em outro host** — se o registro.br apontar NS para outro provedor (ex.: Cloudflare), crie os registros lá, não no registro.br.
+
+### Notas
+
+- **`APP_URL`** ainda aponta para o duckdns — os links de convite/reset funcionam; migrar a URL do app para `nxgest.com.br` é passo separado (roadmap).
+- Modo dev sem `RESEND_API_KEY` loga o link no console (não quebra desenvolvimento).
+
+---
+
+## 10. Problemas conhecidos e alertas
 
 1. **Sem snapshot do provedor** → backup cron + off-site são obrigatórios (seção 5).
 2. **Provedor com reputação mista** (Trustpilot ~2,9/5; relatos de troca de IP e nulling) → plano de migração de host para o próximo mês; domínio DuckDNS independente do provedor facilita a troca.
-3. **Domínio `.duckdns.org` é provisório** → registrar `.com.br` e atualizar `DOMAIN`/`CORS_ORIGIN` no `.env` na migração.
+3. **Domínio `.duckdns.org` é provisório** → `nxgest.com.br` já registrado (07/08); falta a migração da URL do app (DOMAIN/CORS_ORIGIN/APP_URL) — o e-mail (Resend) usa o `nxgest.com.br` independente da URL do app (ver seção 9).
 4. **Latência ~120-180ms** (VPS nos EUA, clientes no Brasil) — aceitável para MVP; melhorar na migração para datacenter BR.

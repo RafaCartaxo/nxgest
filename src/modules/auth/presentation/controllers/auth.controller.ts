@@ -6,18 +6,32 @@ import { parseCapacidades } from "../../../admin/domain/capacidades.js"
 import type { IAuthRepository } from "../../application/ports/auth.repository.js"
 import { LoginUseCase } from "../../application/use-cases/Login/LoginUseCase.js"
 import { AlterarSenhaUseCase } from "../../application/use-cases/AlterarSenha/AlterarSenhaUseCase.js"
-import { CredenciaisInvalidasError, SenhaAtualIncorretaError } from "../../domain/errors/auth.error.js"
+import { AtivarContaUseCase } from "../../application/use-cases/AtivarConta/AtivarContaUseCase.js"
+import { EsquecerSenhaUseCase } from "../../application/use-cases/EsquecerSenha/EsquecerSenhaUseCase.js"
+import { RedefinirSenhaUseCase } from "../../application/use-cases/RedefinirSenha/RedefinirSenhaUseCase.js"
+import { AuthTokenRepository } from "../../infrastructure/repositories/auth-token.repository.impl.js"
+import { criarMailer } from "../../../../shared/email/mailers.js"
+import { resolverLang } from "../../../../shared/email/templates.js"
+import { CredenciaisInvalidasError, SenhaAtualIncorretaError, ContaConvidadaError, TokenInvalidoError, TokenExpiradoError } from "../../domain/errors/auth.error.js"
 import { validarFoto } from "../../../../shared/utils/foto.js"
 
 export class AuthController {
   private loginUseCase: LoginUseCase
   private alterarSenhaUseCase: AlterarSenhaUseCase
+  private ativarContaUseCase: AtivarContaUseCase
+  private esquecerSenhaUseCase: EsquecerSenhaUseCase
+  private redefinirSenhaUseCase: RedefinirSenhaUseCase
   private repository: IAuthRepository
 
   constructor(repository: IAuthRepository) {
     this.repository = repository
     this.loginUseCase = new LoginUseCase(repository)
     this.alterarSenhaUseCase = new AlterarSenhaUseCase(repository)
+    const tokenRepo = new AuthTokenRepository()
+    const mailer = criarMailer()
+    this.ativarContaUseCase = new AtivarContaUseCase(repository, tokenRepo)
+    this.esquecerSenhaUseCase = new EsquecerSenhaUseCase(repository, tokenRepo, mailer)
+    this.redefinirSenhaUseCase = new RedefinirSenhaUseCase(repository, tokenRepo)
   }
 
   private async enriquecer(usuario: { empresaId: string | null }): Promise<{ empresaNome: string | null; modulos: string[] | null; capacidades: string[] | null; ativa: boolean | null }> {
@@ -54,6 +68,10 @@ export class AuthController {
       }
       res.json({ ...result, usuario: { ...result.usuario, empresaNome, modulos, capacidades } })
     } catch (err) {
+      if (err instanceof ContaConvidadaError) {
+        res.status(403).json({ code: "ACCOUNT_PENDING", message: err.message })
+        return
+      }
       if (err instanceof CredenciaisInvalidasError) {
         res.status(401).json({ code: "INVALID_CREDENTIALS", message: err.message })
         return
@@ -93,9 +111,74 @@ export class AuthController {
         capacidades,
         chefeId: usuario.chefeId,
         foto: usuario.foto,
+        status: usuario.senhaHash ? "ativo" : "convidado",
       })
     } catch (err) {
       console.error("Erro no me:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
+    }
+  }
+
+  /** Ativação de conta convidada (PLAN-065). Público — valida token de convite. */
+  ativar = async (req: Request, res: Response) => {
+    const { token, senha } = req.body ?? {}
+    if (!token || typeof senha !== "string" || senha.length < 6) {
+      res.status(422).json({ code: "VALIDATION_ERROR", message: "Token e senha (mín. 6) são obrigatórios." })
+      return
+    }
+    try {
+      await this.ativarContaUseCase.execute({ token, senha })
+      res.json({ ok: true })
+    } catch (err) {
+      if (err instanceof TokenExpiradoError) {
+        res.status(400).json({ code: "TOKEN_EXPIRED", message: err.message })
+        return
+      }
+      if (err instanceof TokenInvalidoError) {
+        res.status(400).json({ code: "TOKEN_INVALID", message: err.message })
+        return
+      }
+      console.error("Erro ao ativar conta:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
+    }
+  }
+
+  /** Esqueci a senha (PLAN-065). Público + rate limit — resposta SEMPRE genérica 200. */
+  forgot = async (req: Request, res: Response) => {
+    const { email } = req.body ?? {}
+    if (!email || typeof email !== "string") {
+      res.status(422).json({ code: "VALIDATION_ERROR", message: "E-mail é obrigatório." })
+      return
+    }
+    try {
+      await this.esquecerSenhaUseCase.execute({ email, lang: resolverLang(req.headers["accept-language"]) })
+      res.json({ ok: true })
+    } catch (err) {
+      console.error("Erro no forgot:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
+    }
+  }
+
+  /** Redefinir senha via token de reset (PLAN-065). Público + rate limit. */
+  reset = async (req: Request, res: Response) => {
+    const { token, senha } = req.body ?? {}
+    if (!token || typeof senha !== "string" || senha.length < 6) {
+      res.status(422).json({ code: "VALIDATION_ERROR", message: "Token e senha (mín. 6) são obrigatórios." })
+      return
+    }
+    try {
+      await this.redefinirSenhaUseCase.execute({ token, senha })
+      res.json({ ok: true })
+    } catch (err) {
+      if (err instanceof TokenExpiradoError) {
+        res.status(400).json({ code: "TOKEN_EXPIRED", message: err.message })
+        return
+      }
+      if (err instanceof TokenInvalidoError) {
+        res.status(400).json({ code: "TOKEN_INVALID", message: err.message })
+        return
+      }
+      console.error("Erro no reset:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
     }
   }

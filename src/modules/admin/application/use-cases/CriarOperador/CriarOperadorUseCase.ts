@@ -5,7 +5,8 @@ import { NaoPodeAtribuirSuperAdminError } from "../../../domain/errors/admin.err
 interface CriarOperadorInput {
   nome: string
   email: string
-  senhaHash: string
+  /** Nullable (PLAN-065): sem senha = convidado (recebe convite). */
+  senhaHash: string | null
   role: "super_admin" | "admin" | "socio" | "operator"
   empresaId: string | null
   chefeId?: string | null

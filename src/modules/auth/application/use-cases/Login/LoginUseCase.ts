@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs"
 import { signToken } from "../../../../../shared/utils/jwt.js"
 import type { IAuthRepository } from "../../ports/auth.repository.js"
-import { CredenciaisInvalidasError } from "../../../domain/errors/auth.error.js"
+import { CredenciaisInvalidasError, ContaConvidadaError } from "../../../domain/errors/auth.error.js"
 
 export class LoginUseCase {
   constructor(private readonly authRepository: IAuthRepository) {}
@@ -15,6 +15,11 @@ export class LoginUseCase {
 
     if (usuario.deletedAt) {
       throw new CredenciaisInvalidasError()
+    }
+
+    // Conta convidada (senha não definida) → 403 ativação pendente (PLAN-065).
+    if (!usuario.senhaHash) {
+      throw new ContaConvidadaError()
     }
 
     const senhaValida = await bcrypt.compare(input.senha, usuario.senhaHash)
@@ -34,6 +39,7 @@ export class LoginUseCase {
         empresaId: usuario.empresaId,
         chefeId: usuario.chefeId,
         foto: usuario.foto,
+        status: "ativo" as const,
       },
     }
   }

@@ -2,6 +2,19 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — PLAN-065 backend: fluxo de conta (convite/ativação + forgot/reset + Resend)
+
+**Implementado (backend — Checkpoint 1)**
+- **Infra e-mail:** `mailer.port` + impl (Resend via REST + **console em dev**) + templates pt/en/es (convite/reset/lead) + env `MAIL_*`/`RESEND_API_KEY`/`APP_URL`.
+- **Migração:** `usuarios.senhaHash` → **nullable** (convidado sem senha) — `usuarios_new` corrigido (senhaHash TEXT sem NOT NULL; dados preservados, `migracao:test` ✅) · tabela **`auth_tokens`** (hash SHA-256, single-use, expiração por tipo, reenvio invalida anterior).
+- **Convite/ativação:** `POST /admin/operadores` senha **opcional** → convidado + convite · `reenviar-convite` · `POST /auth/ativar` · login de convidado → **403 ACCOUNT_PENDING** · `/me` devolve `status` · `createEmpresa` adminSenha opcional → convite.
+- **Esqueci a senha:** `POST /auth/forgot` (resposta genérica, rate limit e-mail+IP) · `POST /auth/reset`.
+- **Segurança:** `OperadorRow` ganhou `status` e **parou de vazar `senhaHash`** (fix de leak pré-existente no `findById`).
+
+**QA:** smoke 213 → **235/235** (AC-13..20 · ES-02..11 · SE-01/04 · SM-1/2) · vitest 36 · build · audits · docs:audit · migracao:test.
+
+Referência: [PLAN-065](plans/PLAN-065-fluxo-de-conta.md) · frontend (Checkpoint 2) pendente
+
 ## 07/08/2026 — Planos de conta e aquisição (handoff)
 
 - **PLAN-065-fluxo-de-conta.md** — fluxo de conta (P020): convite/ativação + esqueci a senha + infra de e-mail (**Resend**, `no-reply@nxgest.com.br`). Pré-requisito de produção: domínio `nxgest.com.br` + DNS (SPF/DKIM/DMARC); dev sem bloqueio (modo console).

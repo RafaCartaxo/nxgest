@@ -62,7 +62,7 @@ export class EmpresaRepository implements IEmpresaRepository {
     })
   }
 
-  async create(input: { nome: string; documento?: string | null; nomeFantasia?: string | null; ativa?: boolean; adminNome: string; adminEmail: string; adminSenhaHash: string }) {
+  async create(input: { nome: string; documento?: string | null; nomeFantasia?: string | null; ativa?: boolean; adminNome: string; adminEmail: string; adminSenhaHash: string | null }) {
     const existente = await this.authRepository.findByEmail(input.adminEmail)
     if (existente) {
       throw new EmailDuplicadoError()

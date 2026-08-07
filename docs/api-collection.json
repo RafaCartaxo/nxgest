@@ -100,7 +100,121 @@
                 }
               ]
             },
-            "description": "API-UC-003 · 200 dados do usuário logado · 403 EMPRESA_INATIVA (BR-106)"
+            "description": "API-UC-003 · 200 dados do usuário logado · 403 EMPRESA_INATIVA (BR-106) · status convidado/ativo (PLAN-065)"
+          }
+        },
+        {
+          "name": "Ativar conta",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/ativar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "ativar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{conviteToken}}\",\n  \"senha\": \"novaSenha123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "PLAN-065 · 200 · 422 · 400 TOKEN_EXPIRED/TOKEN_INVALID · 429"
+          }
+        },
+        {
+          "name": "Esqueci senha",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "forgot"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@cobranca.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "PLAN-065 · 200 sempre (genérico) · 429 rate limit e-mail+IP"
+          }
+        },
+        {
+          "name": "Resetar senha",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"senha\": \"novaSenha123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "PLAN-065 · 200 · 422 · 400 TOKEN_EXPIRED/TOKEN_INVALID · 429"
           }
         },
         {
@@ -1451,6 +1565,37 @@
               }
             },
             "description": "API-UC-035 · 200 · 403 auto-rebaixar · 422 OPERATOR_HAS_SUBORDINATES (rebaixar com subordinados) · reatribuirParaChefeId move os subordinados no mesmo ato (PLAN-061)"
+          }
+        },
+        {
+          "name": "Reenviar convite",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/operadores/{{operadorId}}/reenviar-convite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "operadores",
+                "{{operadorId}}",
+                "reenviar-convite"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "PLAN-065 · 200 · 404 · 409 conta já ativa"
           }
         },
         {

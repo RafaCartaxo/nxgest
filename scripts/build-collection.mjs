@@ -70,7 +70,19 @@ const endpoints = [
       body: { email: "admin@cobranca.com", senha: "teste123!" },
       description: "API-UC-002 · 200 {token, usuario} · 401 inválido · 403 EMPRESA_INATIVA (BR-106) · 429 rate limit (10/15min)",
     }),
-    req("Me", "GET", "/api/auth/me", { description: "API-UC-003 · 200 dados do usuário logado · 403 EMPRESA_INATIVA (BR-106)" }),
+    req("Me", "GET", "/api/auth/me", { description: "API-UC-003 · 200 dados do usuário logado · 403 EMPRESA_INATIVA (BR-106) · status convidado/ativo (PLAN-065)" }),
+    req("Ativar conta", "POST", "/api/auth/ativar", {
+      body: { token: "{{conviteToken}}", senha: "novaSenha123" },
+      description: "PLAN-065 · 200 · 422 · 400 TOKEN_EXPIRED/TOKEN_INVALID · 429",
+    }),
+    req("Esqueci senha", "POST", "/api/auth/forgot", {
+      body: { email: "admin@cobranca.com" },
+      description: "PLAN-065 · 200 sempre (genérico) · 429 rate limit e-mail+IP",
+    }),
+    req("Resetar senha", "POST", "/api/auth/reset", {
+      body: { token: "{{resetToken}}", senha: "novaSenha123" },
+      description: "PLAN-065 · 200 · 422 · 400 TOKEN_EXPIRED/TOKEN_INVALID · 429",
+    }),
     req("Alterar senha", "PATCH", "/api/auth/senha", {
       body: { senhaAtual: "teste123!", novaSenha: "novaSenha123" },
       description: "API-UC-041 · 200 {ok} · 422 senha atual incorreta/nova inválida (BR-089/090, PLAN-029)",
@@ -176,6 +188,7 @@ const endpoints = [
       body: { role: "operator", reatribuirParaChefeId: "{{novoChefeAdminId}}" },
       description: "API-UC-035 · 200 · 403 auto-rebaixar · 422 OPERATOR_HAS_SUBORDINATES (rebaixar com subordinados) · reatribuirParaChefeId move os subordinados no mesmo ato (PLAN-061)",
     }),
+    req("Reenviar convite", "PATCH", "/api/admin/operadores/{{operadorId}}/reenviar-convite", { description: "PLAN-065 · 200 · 404 · 409 conta já ativa" }),
     req("Remover operador", "DELETE", "/api/admin/operadores/{{operadorId}}", { description: "API-UC-036 · 204 · 403 auto-remover" }),
     req("Dashboard", "GET", "/api/admin/dashboard", { query: [{ key: "empresaId", value: "" }], description: "API-UC-037 · 200 KPIs · 403 operator" }),
     req("Equipe", "GET", "/api/admin/equipe", { query: [{ key: "empresaId", value: "" }], description: "API-UC-042 · 200 operadores+totais (BR-091) · 403 operator · 400 super sem empresaId" }),

@@ -8,7 +8,7 @@
 
 **Origem:** backlog `docs/plans/BACKLOG.md` — P020 (re-escopado) + decisões de produto 07/08
 
-**Dependência de produção:** domínio real `nxgest.com.br` + verificação no Resend (SPF/DKIM/DMARC). **Não bloqueia desenvolvimento** (modo dev loga o link no console).
+**Dependência de produção:** domínio real `nxgest.com.br` ✅ **registrado** (07/08) — falta concluir a verificação no Resend (SPF/DKIM/DMARC). **Não bloqueia desenvolvimento** (modo dev loga o link no console). Passo a passo do DNS: `docs/engineering/06-PRODUCAO.md` seção 9.
 
 ---
 

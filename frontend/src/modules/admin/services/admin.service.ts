@@ -11,6 +11,8 @@ export interface OperadorRow {
   contratosAtivos: number
   chefeId?: string | null
   foto?: string | null
+  /** PLAN-065: conta sem senha definida (aguardando convite). */
+  status?: "convidado" | "ativo"
 }
 
 export interface AdminDashboardStats {

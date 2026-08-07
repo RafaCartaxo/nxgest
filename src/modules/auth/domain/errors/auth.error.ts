@@ -25,3 +25,25 @@ export class SenhaAtualIncorretaError extends Error {
     this.name = "SenhaAtualIncorretaError"
   }
 }
+
+/** Login de conta convidada (senha não definida) → 403 ACCOUNT_PENDING (PLAN-065). */
+export class ContaConvidadaError extends Error {
+  constructor() {
+    super("Ativação pendente — defina sua senha pelo link recebido no e-mail.")
+    this.name = "ContaConvidadaError"
+  }
+}
+
+export class TokenInvalidoError extends Error {
+  constructor() {
+    super("Token inválido ou já utilizado.")
+    this.name = "TokenInvalidoError"
+  }
+}
+
+export class TokenExpiradoError extends Error {
+  constructor() {
+    super("Token expirado.")
+    this.name = "TokenExpiradoError"
+  }
+}

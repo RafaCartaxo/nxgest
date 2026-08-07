@@ -12,7 +12,7 @@ export class AlterarSenhaUseCase {
       throw new UsuarioNaoEncontradoError()
     }
 
-    const senhaAtualValida = await bcrypt.compare(input.senhaAtual, usuario.senhaHash)
+    const senhaAtualValida = await bcrypt.compare(input.senhaAtual, usuario.senhaHash ?? "")
     if (!senhaAtualValida) {
       throw new SenhaAtualIncorretaError()
     }

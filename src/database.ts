@@ -180,13 +180,26 @@ export const usuarios = sqliteTable("usuarios", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
   email: text("email").notNull().unique(),
-  senhaHash: text("senhaHash").notNull(),
+  /** Nullable (PLAN-065): convidado ainda não definiu senha. */
+  senhaHash: text("senhaHash"),
   role: text("role").notNull().default("operator"),
   createdAt: text("createdAt").notNull(),
   deletedAt: text("deletedAt"),
   empresaId: text("empresaId"),
   chefeId: text("chefeId"),
   foto: text("foto"),
+})
+
+/** Tokens de conta (PLAN-065): convite | reset | lead. Hash SHA-256, single-use, expiração por tipo. */
+export const authTokens = sqliteTable("auth_tokens", {
+  id: text("id").primaryKey(),
+  /** Id do sujeito (usuário; p/ lead no PLAN-064). */
+  subjectId: text("subjectId").notNull(),
+  tipo: text("tipo").notNull(),
+  hash: text("hash").notNull(),
+  expiraEm: text("expiraEm").notNull(),
+  usadoEm: text("usadoEm"),
+  createdAt: text("createdAt").notNull(),
 })
 
 export const empresas = sqliteTable("empresas", {
@@ -422,13 +435,23 @@ export async function createTables() {
       id TEXT PRIMARY KEY,
       nome TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
-      senhaHash TEXT NOT NULL,
+      senhaHash TEXT,
       role TEXT NOT NULL DEFAULT 'operator',
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       deletedAt TEXT,
       empresaId TEXT,
       chefeId TEXT,
       foto TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS auth_tokens (
+      id TEXT PRIMARY KEY,
+      subjectId TEXT NOT NULL,
+      tipo TEXT NOT NULL,
+      hash TEXT NOT NULL,
+      expiraEm TEXT NOT NULL,
+      usadoEm TEXT,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS empresas (
@@ -510,7 +533,7 @@ export async function createTables() {
         id TEXT PRIMARY KEY,
         nome TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
-        senhaHash TEXT NOT NULL,
+        senhaHash TEXT,
         role TEXT NOT NULL DEFAULT 'operator',
         createdAt TEXT NOT NULL DEFAULT (datetime('now')),
         deletedAt TEXT,
