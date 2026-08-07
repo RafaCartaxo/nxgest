@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — Planos de conta e aquisição (handoff)
+
+- **PLAN-065-fluxo-de-conta.md** — fluxo de conta (P020): convite/ativação + esqueci a senha + infra de e-mail (**Resend**, `no-reply@nxgest.com.br`). Pré-requisito de produção: domínio `nxgest.com.br` + DNS (SPF/DKIM/DMARC); dev sem bloqueio (modo console).
+- **PLAN-064-onboarding-comercial-leads.md** — aquisição de empresas (P026): `/quero-conhecer` (lead + confirmação de e-mail) + painel `/admin/leads` (onboarding, converter — reusa `createEmpresa` + convite, descartar). Empresa nunca nasce automática; separação comercial × operacional.
+- Backlog/roadmap atualizados (P020 → PLAN-065 · P026 → PLAN-064).
+
+Referência: `plans/PLAN-065-fluxo-de-conta.md` · `plans/PLAN-064-onboarding-comercial-leads.md` · `plans/BACKLOG.md`
+
 ## 07/08/2026 — PLAN-062: Rota do dia (Lovable) — progresso, card de ações, modais 3→2, FAB
 
 **Implementado (Rota `/rota`)**

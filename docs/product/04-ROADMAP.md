@@ -33,7 +33,7 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 
 | Módulo | BRs | Depende de |
 |--------|-----|------------|
-| "Esqueci minha senha" + convite/ativação de conta | — | Backlog P020 (novo escopo: fluxo de conta + infra de e-mail) |
+| "Esqueci minha senha" + convite/ativação de conta + onboarding comercial | — | Backlog P020 → PLAN-065 (fluxo de conta) · P026 → PLAN-064 (onboarding de empresas) |
 | Mapa | — | Fase 5.3 |
 | PWA | — | Fase 5.4 |
 | Testes | — | Fase 5.5 |

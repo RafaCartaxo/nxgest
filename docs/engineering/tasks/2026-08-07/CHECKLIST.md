@@ -98,3 +98,26 @@ O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context*
 - [x] Extras: alça Modal · html lang dinâmico · FAB (FabContext + ClienteList/ContratoList)
 - [x] Gates: build · vitest 36 · audit:ui/styles/modules · docs:audit
 - [ ] Regressão ROT-CTs em DEV (Grupos A–G) — pendente de validação manual
+
+---
+
+# CHECKLIST — Planos de conta e aquisição (handoff)
+
+**Data:** 07/08/2026
+
+> Prontos para execução pelo próximo chat/agente (regras em `AGENTS.md`). Ordem de dependência: **PLAN-065 primeiro, depois PLAN-064**.
+
+## PLAN-065 — Fluxo de conta (P020)
+
+- [ ] `docs/plans/PLAN-065-fluxo-de-conta.md` criado (convite/ativação + esqueci senha + Resend) + CTs (AC/ES/SE/EM/UI)
+- [ ] Aguardando execução (infra e-mail → convite → esqueci senha → telas → CTs)
+
+## PLAN-064 — Onboarding comercial (P026)
+
+- [ ] `docs/plans/PLAN-064-onboarding-comercial-leads.md` criado (Lead → confirmação → painel super → converter) + CTs (LD-*)
+- [ ] Aguardando execução (depende do PLAN-065)
+
+## Backlog / docs
+
+- [ ] BACKLOG: P020 → PLAN-065 · novo epic P026 → PLAN-064
+- [ ] ROADMAP · UPDATES · plans/README atualizados

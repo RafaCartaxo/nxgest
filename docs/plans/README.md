@@ -65,4 +65,6 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-061-empresa-card-suspensao-rebaixamento.md](PLAN-061-empresa-card-suspensao-rebaixamento.md) | Card da empresa (Recursos/Editar) + suspensão por `ativa` (403 EMPRESA_INATIVA, BR-106) + rebaixamento com reassign atômico (OPERATOR_HAS_SUBORDINATES) + SuperAdminRoute + fixes | Concluído |
 | [PLAN-062-rota-dia-lovable.md](PLAN-062-rota-dia-lovable.md) | Rota do dia: progresso Lovable, card de ações, "Parada X de Y", modais 3→2, alça Modal, html lang, FAB (handoff) | 🔵 Pronto p/ execução |
 | [PLAN-063-contexto-operador-clientes.md](PLAN-063-contexto-operador-clientes.md) | Contexto do operador: clientes do operador (`?usuarioId=` na lista) — fecha P13 (handoff) | 🔵 Pronto p/ execução |
+| [PLAN-064-onboarding-comercial-leads.md](PLAN-064-onboarding-comercial-leads.md) | Onboarding comercial: Lead → confirmação de e-mail → painel super → converter (reusa createEmpresa + convite) | 🔵 Pronto p/ execução |
+| [PLAN-065-fluxo-de-conta.md](PLAN-065-fluxo-de-conta.md) | Fluxo de conta: convite/ativação + esqueci a senha + infra de e-mail (Resend) — P020 | 🔵 Pronto p/ execução |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |

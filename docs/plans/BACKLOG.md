@@ -300,7 +300,7 @@ Novos refinamentos deverão ser adicionados aqui conforme evolução do produto.
 
 ## P020 — Perfil do usuário: troca de senha e recuperação
 
-> **Escopo revisado (07/08):** evoluir para **fluxo de conta completo** — **convite por e-mail** (admin cria usuário com nome+email, sem senha → link de ativação → usuário define a própria senha) + **esqueci a senha** (token por e-mail) + **infra de e-mail** (provider + env `MAIL_*` + templates HTML/texto). **Aguardando decisões de produto:** modelo de cadastro (convite recomendado vs auto-cadastro público) e provedor de e-mail (Resend recomendado). Virará um PLAN dedicado.
+> **Escopo revisado (07/08):** evoluir para **fluxo de conta completo** — **convite por e-mail** (admin cria usuário com nome+email, sem senha → link de ativação → usuário define a própria senha) + **esqueci a senha** (token por e-mail) + **infra de e-mail** (**Resend**; env `MAIL_*`; templates). ✅ **Plano pronto:** `PLAN-065-fluxo-de-conta.md`. Pré-requisito de produção: domínio real `nxgest.com.br` + DNS (SPF/DKIM/DMARC) — sem bloquear dev.
 
 ### Situação atual
 
@@ -361,6 +361,19 @@ Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já cobe
 ## P025 — Central se adapta aos módulos off (frontend)
 
 > **Concluído** (PLAN-037). A Central compõe só widgets dos módulos ativos: KPIs financeiros gated por `contratos`, "Pendentes do Dia"/clientes pendentes por `cobrancas`, skip de fetches de módulos off e estado vazio coerente. Junto, o grafo de dependências ganhou `contratos ⇒ clientes` e validação **transitiva** de combos órfãos (combos incoerentes → 422). Princípio que sustenta o multi-negócio: dado de módulo off nunca aparece.
+
+---
+
+# EPIC 7 — Aquisição / Onboarding Comercial
+
+## P026 — Onboarding Comercial (Leads)
+
+> **Planejado (07/08):** `PLAN-064-onboarding-comercial-leads.md` — pronto p/ execução (depende do PLAN-065).
+
+- Separar o **fluxo comercial** (aquisição de empresas) do **fluxo operacional** (que permanece intacto).
+- Empresa **nunca nasce automaticamente**: todo interessado vira **Lead** (NOVO → EMAIL_CONFIRMADO → EM_ONBOARDING → CONVERTIDO/DESCARTADO).
+- Página pública `/quero-conhecer` (dedup por e-mail, rate limit, confirmação de e-mail) + painel super `/admin/leads` (onboarding, converter — reusa `createEmpresa` + convite, descartar).
+- **Fora de escopo:** assinaturas, trial automático, sandbox, CRM, pagamento.
 
 ---
 
