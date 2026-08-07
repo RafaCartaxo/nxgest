@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { Link, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { Building2, LogOut, Settings, ShieldCheck, User, type LucideIcon } from "lucide-react"
@@ -75,9 +76,43 @@ export function UserMenu({
   const linha =
     "flex min-h-12 w-full items-center gap-3 px-4 text-left text-[15px] font-medium text-text-primary transition-colors hover:bg-surface-hover active:scale-[0.99]"
 
-  const popover = crescer === "cima"
-    ? "lg:absolute lg:inset-x-0 lg:bottom-full lg:mb-2"
-    : "lg:absolute lg:inset-x-0 lg:top-full lg:mt-2"
+  const conteudoMenu = (
+    <ul className="py-1">
+      {itens.map((item) => (
+        <li key={item.chave}>
+          {item.to ? (
+            <Link to={item.to} role="menuitem" onClick={() => setAberto(false)} className={linha}>
+              <item.icon className="size-[18px] shrink-0 text-text-muted" aria-hidden />
+              {t(item.chave)}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setAberto(false)
+                item.onClick?.()
+              }}
+              className={linha}
+            >
+              <item.icon className="size-[18px] shrink-0 text-text-muted" aria-hidden />
+              {t(item.chave)}
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+
+  const cabecalho = (
+    <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+      <Avatar nome={user?.nome ?? "?"} foto={user?.foto ?? null} size="md" />
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-text-primary">{user?.nome}</p>
+        <p className="truncate text-xs text-text-secondary">{roleLabel(role, t)}</p>
+      </div>
+    </div>
+  )
 
   return (
     <div className={`relative ${className}`}>
@@ -100,50 +135,46 @@ export function UserMenu({
 
       {aberto && (
         <>
-          <button
-            type="button"
-            aria-label={t("common.cancel")}
-            onClick={() => setAberto(false)}
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] lg:bg-transparent lg:backdrop-blur-none"
-          />
-          <div
-            role="menu"
-            aria-label={t("nav.rotulo")}
-            className={`animate-slide-in-from-bottom fixed inset-x-0 bottom-0 z-50 overflow-hidden rounded-t-xl border border-border bg-card pb-safe ${popover} lg:animate-none lg:w-full lg:rounded-xl lg:shadow-lg`}
-          >
-            <div className="flex items-center gap-3 border-b border-border px-4 py-3 lg:hidden">
-              <Avatar nome={user?.nome ?? "?"} foto={user?.foto ?? null} size="md" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-text-primary">{user?.nome}</p>
-                <p className="truncate text-xs text-text-secondary">{roleLabel(role, t)}</p>
-              </div>
+          {/* desktop: popover in-place (cresce da sidebar — nada o cobre) */}
+          <div className="hidden lg:block">
+            <button
+              type="button"
+              aria-label={t("common.cancel")}
+              onClick={() => setAberto(false)}
+              className="fixed inset-0 z-40 bg-transparent"
+            />
+            <div
+              role="menu"
+              aria-label={t("nav.rotulo")}
+              className={`absolute inset-x-0 z-50 overflow-hidden rounded-xl border border-border bg-card shadow-lg ${
+                crescer === "cima" ? "bottom-full mb-2" : "top-full mt-2"
+              }`}
+            >
+              {conteudoMenu}
             </div>
-            <ul className="py-1">
-              {itens.map((item) => (
-                <li key={item.chave}>
-                  {item.to ? (
-                    <Link to={item.to} role="menuitem" onClick={() => setAberto(false)} className={linha}>
-                      <item.icon className="size-[18px] shrink-0 text-text-muted" aria-hidden />
-                      {t(item.chave)}
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setAberto(false)
-                        item.onClick?.()
-                      }}
-                      className={linha}
-                    >
-                      <item.icon className="size-[18px] shrink-0 text-text-muted" aria-hidden />
-                      {t(item.chave)}
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
           </div>
+
+          {/* mobile: bottom-sheet via portal no body — escapa do stacking
+              context do header sticky, acima da tab bar */}
+          {createPortal(
+            <div className="lg:hidden">
+              <button
+                type="button"
+                aria-label={t("common.cancel")}
+                onClick={() => setAberto(false)}
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
+              />
+              <div
+                role="menu"
+                aria-label={t("nav.rotulo")}
+                className="animate-slide-in-from-bottom fixed inset-x-0 bottom-0 z-50 overflow-hidden rounded-t-xl border border-border bg-card pb-safe"
+              >
+                {cabecalho}
+                {conteudoMenu}
+              </div>
+            </div>,
+            document.body
+          )}
         </>
       )}
 

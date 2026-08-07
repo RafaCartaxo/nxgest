@@ -26,3 +26,22 @@
 
 - Corrigido bug de build pré-existente (trabalho em aberto): `ClienteDetail.tsx` passava `variant: string` ao `QuickActions` — `QuickAction` agora é exportada e `acoesCliente` tipado.
 - Hide-on-scroll da tab bar (protótipo) **não** implementado — fora do escopo do briefing (decisão 07/08).
+
+---
+
+# FIX — Menu do usuário coberto pela tab bar (Sair inacessível)
+
+**Data:** 07/08/2026
+
+## Bug
+No mobile, ao abrir o menu do usuário (avatar no topo fino), a linha **Sair** ficava coberta pela tab bar → impossível sair da conta (mesmo efeito no `PreferenciasModal` aberto pelo menu).
+
+## Causa raiz
+O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context**. O overlay do `UserMenu` e o `Modal` (via `PreferenciasModal`), sendo filhos desse header, ficavam presos no z-40 do header; a `BottomTabBar` (fixed `z-40` no raiz, posterior no DOM) pintava por cima da base do bottom-sheet.
+
+## Correção (portal no body)
+- [x] `shared/components/Modal/Modal.tsx`: render via `createPortal(..., document.body)` — o modal escapa de qualquer stacking context do ancestor (20 consumidores — mudança transparente)
+- [x] `shared/layout/UserMenu.tsx`: bottom-sheet mobile via `createPortal` no body (z-50 raiz, acima da tab bar); popover desktop permanece in-place (cresce da sidebar, nada o cobre); conteúdo do menu extraído em `conteudoMenu`/`cabecalho`
+
+## Validação
+- [x] `tsc` · `npm run build` · `audit:ui` · `audit:styles` · `audit:modules` · `npm test` (29/29) · `node scripts/consumers.mjs Modal` (20 consumidores, sem quebra)

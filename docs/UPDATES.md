@@ -34,6 +34,13 @@ Referência: [PLAN-060](plans/PLAN-060-Stitch-Nav-AppFirst-NXGestao.md) · brief
 
 Referência: [PLAN-059](plans/PLAN-059-modularizacao-fina-capacidades-guard.md) · BR-104/105
 
+## 07/08/2026 — Fix: menu do usuário coberto pela tab bar (Sair inacessível no mobile)
+
+**Corrigido**
+- **Causa:** header mobile `sticky top-0 z-40` criava *stacking context*; o bottom-sheet do `UserMenu` e o `PreferenciasModal` ficavam presos nele e a tab bar (`z-40` raiz) cobria a base — o **Sair** não era clicável.
+- **Correção:** `Modal` compartilhado agora renderiza via **portal no `document.body`** (escapa de qualquer stacking context; transparente pros 20 consumidores) e o bottom-sheet do `UserMenu` também — acima da tab bar. Popover desktop mantido in-place.
+- Gate: `build` · `audit:ui/styles/modules` · `test` 29/29 · `tsc`.
+
 ## 07/08/2026 — Navegação "app-first": bottom tab bar + menu do usuário (Stitch-Nav-AppFirst)
 
 **Redesenhado (identidade intacta — tokens/cores/fontes)**

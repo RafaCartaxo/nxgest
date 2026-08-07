@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 import { X } from "lucide-react"
 
 interface ModalProps {
@@ -45,7 +46,9 @@ export function Modal({
 
   if (!open) return null
 
-  return (
+  /* portal no body: o modal escapa de qualquer stacking context do ancestor
+     (ex.: header sticky com z-index do AppLayout) e fica acima de overlays fixos */
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
@@ -77,6 +80,7 @@ export function Modal({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-border px-4 py-3">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
