@@ -246,31 +246,45 @@ git reset --hard <commit-bom>   # cuidado: descarta mudanças locais no repo
 
 ### Estado (07/08)
 
-- [x] Domínio `nxgest.com.br` **registrado** no registro.br (pré-requisito de produção do PLAN-065).
-- [x] **Add Domain** feito no Resend.
-- [ ] **Registros DNS** (SPF/DKIM/DMARC) criados no painel do registro.br.
-- [ ] Verificação no Resend **verde** ("Verify DNS Records").
-- [ ] `.env` da VPS: `MAIL_PROVIDER=resend` · `RESEND_API_KEY=…` · `MAIL_FROM=no-reply@nxgest.com.br` · `APP_URL=…`.
+- [x] Domínio `nxgest.com.br` **registrado** no registro.br
+- [x] **Add Domain** no Resend (`no-reply@nxgest.com.br`)
+- [x] **DNS movido para o Cloudflare** (plano Free) — NS `lara.ns.cloudflare.com` / `hunts.ns.cloudflare.com` (via "Alterar servidores DNS" do registro.br; transição ~2h)
+- [x] **Records no Cloudflare**: DKIM `resend._domainkey` · MX `send` (prioridade 10) · SPF `send` (`include:amazonses.com`) · **SPF da raiz corrigido** (`v=spf1 include:amazonses.com ~all`) · **DMARC `p=none`**
+- [ ] Verificação no Resend **verde** (aguardando propagação do NS)
+- [ ] `.env` da VPS: `MAIL_PROVIDER=resend` · `RESEND_API_KEY=…` · `MAIL_FROM=no-reply@nxgest.com.br` · `APP_URL=…` (com o deploy do PLAN-065)
 
-### Passo a passo (terminar a verificação no Resend)
+### Por que Cloudflare (e não o painel do registro.br)
 
-1. **Resend** → Domains → `nxgest.com.br` → seção **DNS Records** → copie cada registro TXT (DKIM e SPF) com Name/Host + Value.
-2. **Registro.br** → domínio → menu **DNS** (Serviço de DNS / Zona DNS) → **Adicionar registro**:
-   - **Tipo** `TXT` · **Nome/Host** (ex.: `resend._domainkey` p/ DKIM, `@` p/ SPF) · **Valor** (cole o copiado) · Salvar.
-3. Repita para cada registro.
-4. **Aguarde a propagação** do DNS (minutos a algumas horas).
-5. Resend → **Verify DNS Records** → itens verdes.
+O **registro.br não permite criar registros TXT** no painel ("Configurar endereçamento" só faz redirect + servidor de e-mail; "Alterar servidores DNS" só troca NS). Por isso o DNS de envio foi delegado ao **Cloudflare (plano Free, $0)**, que suporta TXT/MX.
+
+### Passo a passo (reproduzir)
+
+1. **Resend** → Domains → `nxgest.com.br` → aba **Records** → copie cada registro (Type/Name/Value).
+2. **Cloudflare** (plano Free) → Add a site → `nxgest.com.br` → anote os **2 nameservers**.
+3. **Registro.br** → "Alterar servidores DNS" → cole os 2 NS do Cloudflare → salvar (`+dns`). **Não** habilitar `+dnssec`.
+4. Aguarde a transição (~2h) → Cloudflare fica **Active**.
+5. **Cloudflare → DNS → Add record** (Proxy status = **DNS only**):
+   - TXT `resend._domainkey` → `p=…` (o valor do Resend)
+   - MX `send` → `feedback-smtp.sa-east-1.amazonses.com` · priority `10`
+   - TXT `send` → `v=spf1 include:amazonses.com ~all`
+6. **Resend** → `nxgest.com.br` → **Verify DNS Records** → verde.
+
+### Ajustes recomendados (feitos)
+
+- **SPF da raiz**: default do registro.br era `v=spf1 -all` → trocado para **`v=spf1 include:amazonses.com ~all`** (o `From` é `no-reply@nxgest.com.br`).
+- **DMARC**: `p=reject` → **`p=none`** até confirmar envio real; depois endurecer (`quarantine` → `reject`).
 
 ### Troubleshooting (verificação vermelha)
 
-- **Host errado** — o DKIM é `resend._domainkey`, não o domínio raiz.
-- **SPF duplicado** — se já existir outro SPF, combine num só (`v=spf1 …`); nunca crie dois.
-- **Propagação** ainda em andamento — aguarde e re-verifique.
-- **DNS em outro host** — se o registro.br apontar NS para outro provedor (ex.: Cloudflare), crie os registros lá, não no registro.br.
+- **Host errado** — DKIM é `resend._domainkey`, não a raiz.
+- **SPF duplicado** — um SPF por nome; nunca dois no mesmo host.
+- **Propagação** — NS em transição pode levar horas; re-verifique depois.
+- **Proxy status** — TXT/MX devem estar **DNS only** (cinza), não Proxied.
 
 ### Notas
 
-- **`APP_URL`** ainda aponta para o duckdns — os links de convite/reset funcionam; migrar a URL do app para `nxgest.com.br` é passo separado (roadmap).
+- **`APP_URL`** ainda aponta para o duckdns — links de convite/reset funcionam; migrar a URL do app para `nxgest.com.br` é passo separado (roadmap).
+- Já existem **A record** `nxgest.com.br → 172.245.152.223` (VPS, Proxied) e `www` CNAME → raiz — inofensivos; decidir proxy vs DNS-only na migração do app.
 - Modo dev sem `RESEND_API_KEY` loga o link no console (não quebra desenvolvimento).
 
 ---
