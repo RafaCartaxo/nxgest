@@ -43,6 +43,8 @@ export interface ListClientesParams {
   limit?: number
   sort?: string
   order?: "asc" | "desc"
+  /** Drill-down (PLAN-063/P13): admin/socio/super listam os clientes do operador-alvo. */
+  usuarioId?: string
 }
 
 export interface PaginatedResponse<T> {
@@ -71,6 +73,7 @@ export async function listClientes(
   if (params?.limit) searchParams.set("limit", String(params.limit))
   if (params?.sort) searchParams.set("sort", params.sort)
   if (params?.order) searchParams.set("order", params.order)
+  if (params?.usuarioId) searchParams.set("usuarioId", params.usuarioId)
 
   const query = searchParams.toString()
   return apiRequest<PaginatedResponse<Cliente>>(

@@ -1405,6 +1405,27 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+# CONTEXTO DO OPERADOR — LISTA DE CLIENTES (P13, PLAN-063)
+
+**Regras:** escopo hierárquico (`resolveUsuarioAlvo`) · **Smoke:** `P13-1..5`
+
+### P13-CT-1 — Admin lista clientes do operador
+**Dado** admin com `GET /api/clientes?usuarioId=<operador>` → **Então** **200** retornando só os clientes do operador.
+
+### P13-CT-2 — Sócio fora da subárvore → 404
+**Dado** sócio com `?usuarioId=` de operador fora da subárvore → **Então** **404** `OPERATOR_NOT_FOUND`.
+
+### P13-CT-3 — Operator ignora override
+**Dado** operator com `?usuarioId=<outro>` → **Então** **200** vendo só os próprios (ignora o override).
+
+### P13-CT-4 — Admin sem `?usuarioId=` preservado
+**Dado** admin sem override → **Então** **200** com os próprios clientes (comportamento atual).
+
+### P13-CT-5 — Super admin com `?empresaId=`
+**Dado** super com `?empresaId=` → **Então** **200** respeitando a empresa-alvo.
+
+---
+
 # AUTH — SENHA (PLAN-029)
 
 ## API-UC-041 — Alterar a própria senha

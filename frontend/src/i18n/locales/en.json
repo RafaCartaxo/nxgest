@@ -457,6 +457,8 @@
     "ajustarCaixaOperador": "Adjust operator cash base",
     "contratosOperador": "Operator contracts",
     "semContratosOperador": "No contracts found for this operator.",
+    "clientesOperador": "Operator's clients",
+    "semClientesOperador": "No clients found for this operator.",
     "adminDaEmpresa": "Company administrator",
     "modalAdmins": "Administrators",
     "modalSocios": "Partners",

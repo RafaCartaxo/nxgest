@@ -2,6 +2,17 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — P13 (contexto do operador): lista de clientes com `?usuarioId=` (PLAN-063)
+
+**Implementado (fecha P13)**
+- **Backend:** `GET /api/clientes` (lista) usa `resolveUsuarioAlvo` → admin/socio/super resolvem o operador-alvo via `?usuarioId=` (+ `?empresaId=` p/ super); operator vê os próprios (ignora override). Sócio fora da subárvore → **404**.
+- **Frontend:** `listClientes` aceita `usuarioId` · `OperadorDetail` ganha seção **"Clientes do operador"** · `ClienteDetail` com `?usuarioId=` (voltar → `/admin/operadores/:id`, links de contrato preservam o contexto). **Decisão:** no drill-down, o gating de capacidades usa as capacidades do admin (quem está operando).
+- **Smoke `P13-1..5`** (admin · sócio fora da subárvore 404 · operator ignora override · admin self · super com `?empresaId=`).
+
+**QA:** smoke 208 → **213/213** · build · vitest 36 · audits · docs:audit.
+
+Referência: [PLAN-063](plans/PLAN-063-contexto-operador-clientes.md) · `07-CASOS-DE-USO-API.md` (P13-CT-1..5)
+
 ## 07/08/2026 — Persistência de desativar/ativar módulos e recursos (full cycle)
 
 **Corrigido (fluxo de ativar/desativar)**

@@ -6,6 +6,8 @@ import { getOperador, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
 import { ContratoCard } from "../../contrato/components/ContratoCard.js"
+import { listClientes, type Cliente } from "../../cliente/services/cliente.service.js"
+import { ClienteCard } from "../../cliente/components/ClienteCard.js"
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -30,6 +32,7 @@ export function OperadorDetail() {
   const [caixa, setCaixa] = useState<CaixaStatus | null>(null)
   const [auditoria, setAuditoria] = useState<AuditoriaCaixaItem[]>([])
   const [contratos, setContratos] = useState<Contrato[]>([])
+  const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ajusteValor, setAjusteValor] = useState("")
@@ -40,16 +43,18 @@ export function OperadorDetail() {
     setLoading(true)
     setError(null)
     try {
-      const [op, cx, aud, ctr] = await Promise.all([
+      const [op, cx, aud, ctr, cli] = await Promise.all([
         getOperador(id, empresaId),
         getCaixaStatus(undefined, undefined, id),
         listarAuditoriaCaixa({ limit: 20 }, id),
         listContratos({ limit: 50 }, id),
+        listClientes({ limit: 50, usuarioId: id }),
       ])
       setOperador(op)
       setCaixa(cx)
       setAuditoria(aud.data)
       setContratos(ctr.data)
+      setClientes(cli.data)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("admin.erroCarregar"))
     } finally {
@@ -194,6 +199,23 @@ export function OperadorDetail() {
                     className="block"
                   >
                     <ContratoCard variant="list-item" contrato={c} />
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <SectionHeader title={t("admin.clientesOperador")} />
+            {clientes.length === 0 ? (
+              <p className="text-text-secondary">{t("admin.semClientesOperador")}</p>
+            ) : (
+              <div className="mt-2 space-y-3">
+                {clientes.map((c) => (
+                  <Link
+                    key={c.id}
+                    to={`/clientes/${c.id}?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`}
+                    className="block"
+                  >
+                    <ClienteCard variant="list-item" cliente={c} />
                   </Link>
                 ))}
               </div>

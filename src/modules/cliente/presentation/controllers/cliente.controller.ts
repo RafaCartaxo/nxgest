@@ -85,13 +85,20 @@ export class ClienteController {
     }
 
     try {
-      const result = await this.listClientes.execute(req.userId!, parsed.data)
+      // PLAN-063 (P13): escopo hierárquico na LISTA — admin/socio/super resolvem o
+      // operador-alvo via `?usuarioId=` (+ `?empresaId=` p/ super); operator vê os próprios.
+      const userId = await resolveUsuarioAlvo(req, this.adminRepository)
+      const result = await this.listClientes.execute(userId, parsed.data)
 
       res.status(200).json({
         data: result.data,
         pagination: result.pagination,
       })
     } catch (error) {
+      if (error instanceof OperadorNaoEncontradoError) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: error.message })
+        return
+      }
       console.error("Erro ao listar clientes:", error)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno ao listar clientes." })
     }

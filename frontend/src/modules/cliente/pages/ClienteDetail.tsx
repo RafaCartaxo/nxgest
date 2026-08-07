@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { ChevronRight, Plus, Pencil, Navigation, MessageCircle, Phone, User } from "lucide-react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useSearchParams } from "react-router-dom"
 import { getCliente, type Cliente } from "../services/cliente.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { hasModule } from "../../../shared/modules/modules.js"
@@ -21,8 +21,12 @@ import { buildMapsUrl, resolveAlvoCliente, alvoNavegavel } from "../../../shared
 export function ClienteDetail() {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const usuarioId = searchParams.get("usuarioId") || undefined
+  const empresaId = searchParams.get("empresaId") || undefined
+  const emDrillDown = !!usuarioId
   const contratosAtivo = hasModule(user?.modulos, "contratos")
   const [cliente, setCliente] = useState<Cliente | null>(null)
   const [loading, setLoading] = useState(true)
@@ -35,7 +39,7 @@ export function ClienteDetail() {
     setError(null)
 
     try {
-      const result = await getCliente(id)
+      const result = await getCliente(id, usuarioId)
       setCliente(result)
     } catch (err) {
       if (err instanceof ApiError) {
@@ -46,7 +50,7 @@ export function ClienteDetail() {
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, usuarioId, t])
 
   useEffect(() => {
     fetch()
@@ -91,8 +95,10 @@ export function ClienteDetail() {
             <PageHeader
               icon={User}
               title={cliente.nome}
-              back={{ onClick: () => navigate("/clientes"), title: t("common.back") }}
-              action={<ButtonLink to={`/clientes/${cliente.id}/editar`} variant="primary" size="sm"><Pencil className="size-4" /> {t("common.edit")}</ButtonLink>}
+              back={emDrillDown
+                ? { onClick: () => navigate(`/admin/operadores/${usuarioId}${empresaId ? `?empresaId=${empresaId}` : ""}`), title: t("common.back") }
+                : { onClick: () => navigate("/clientes"), title: t("common.back") }}
+              action={!emDrillDown ? <ButtonLink to={`/clientes/${cliente.id}/editar`} variant="primary" size="sm"><Pencil className="size-4" /> {t("common.edit")}</ButtonLink> : undefined}
             />
             <ClienteInfo cliente={cliente} />
             {acoesCliente.length > 0 && <QuickActions layout="grid" actions={acoesCliente} />}
@@ -106,10 +112,10 @@ export function ClienteDetail() {
                     {cliente.totalContratos ?? 0}
                   </p>
                   <div className="mt-3 flex justify-center gap-2">
-                    <ButtonLink to={`/contratos?clienteId=${cliente.id}`} variant="soft" size="sm">
+                    <ButtonLink to={`/contratos?clienteId=${cliente.id}${emDrillDown ? `&usuarioId=${usuarioId}` : ""}`} variant="soft" size="sm">
                       <ChevronRight className="size-4" /> {t("cliente.verContratos")}
                     </ButtonLink>
-                    <ButtonLink to={`/contratos/novo?clienteId=${cliente.id}`} variant="soft" size="sm">
+                    <ButtonLink to={`/contratos/novo?clienteId=${cliente.id}${emDrillDown ? `&usuarioId=${usuarioId}` : ""}`} variant="soft" size="sm">
                       <Plus className="size-4" /> {t("cliente.novoContrato")}
                     </ButtonLink>
                   </div>

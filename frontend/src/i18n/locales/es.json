@@ -457,6 +457,8 @@
     "ajustarCaixaOperador": "Ajustar base de caja del operador",
     "contratosOperador": "Contratos del operador",
     "semContratosOperador": "No se encontraron contratos para este operador.",
+    "clientesOperador": "Clientes del operador",
+    "semClientesOperador": "Ningún cliente encontrado para este operador.",
     "adminDaEmpresa": "Administrador de la empresa",
     "modalAdmins": "Administradores",
     "modalSocios": "Socios",

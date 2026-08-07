@@ -1326,6 +1326,43 @@ async function main() {
     if (JSON.stringify(g1.data.modulos?.sort()) !== JSON.stringify(g2.data.modulos?.sort())) throw new Error("modulos mudou sem necessidade")
   })
 
+  // ---------- P13 — CONTEXTO DO OPERADOR: lista de clientes com ?usuarioId= (PLAN-063) ----------
+  let p13ClienteId
+  await t("P13-1", "admin lista clientes do operador com ?usuarioId= → só os do operador", async () => {
+    const criado = await req("POST", "/api/clientes", { token: opToken, body: { nome: "Cliente P13", telefone: "83999990001", cpf: "52998224725", comercio: "Com", endereco: { logradouro: "Rua P13", cidade: "João Pessoa", estado: "PB" } } })
+    expect(criado, 201, "criar cliente p13")
+    p13ClienteId = criado.data.id
+    const r = await req("GET", "/api/clientes", { token: adminToken, query: { usuarioId: gabrielId, limit: "100" } })
+    expect(r, 200, "admin lista do operador")
+    if (!r.data.data?.some((c) => c.id === p13ClienteId)) throw new Error("cliente do operador não veio na lista")
+  })
+
+  await t("P13-2", "socio com ?usuarioId= fora da subárvore → 404", async () => {
+    const sEmail = `p13socio.${Date.now()}@uorak.com`
+    const created = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "P13 Socio", email: sEmail, senha: SENHA, role: "socio" } })
+    expect(created, 201, "criar socio p13")
+    const login = await req("POST", "/api/auth/login", { body: { email: sEmail, senha: SENHA } })
+    const r = await req("GET", "/api/clientes", { token: login.data.token, query: { usuarioId: gabrielId } })
+    expect(r, 404, "socio fora da subárvore")
+    if (r.data?.code !== "OPERATOR_NOT_FOUND") throw new Error(`code=${r.data?.code}`)
+  })
+
+  await t("P13-3", "operator ignora ?usuarioId= override → vê os próprios", async () => {
+    const r = await req("GET", "/api/clientes", { token: opToken, query: { usuarioId: adminLogin.data.usuario.id, limit: "100" } })
+    expect(r, 200, "operator lista")
+    if (!r.data.data?.some((c) => c.id === p13ClienteId)) throw new Error("operator não vê os próprios clientes")
+  })
+
+  await t("P13-4", "admin sem ?usuarioId= → vê os próprios (comportamento preservado)", async () => {
+    const r = await req("GET", "/api/clientes", { token: adminToken })
+    expect(r, 200, "admin sem override")
+  })
+
+  await t("P13-5", "super_admin com ?empresaId= respeita a empresa-alvo", async () => {
+    const r = await req("GET", "/api/clientes", { token: superToken, query: { empresaId: novaEmpresaId, limit: "100" } })
+    expect(r, 200, "super com empresaId")
+  })
+
   // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------
   let socioId, socioEmail, socioOpId, socioToken
   await t("SC-001", "Admin cria sócio (201, chefe = admin)", async () => {
