@@ -35,6 +35,41 @@
 3. Garantir: `npm run audit:modules` limpo + widgets na Central (composição automática).
 4. Validar "on" (o módulo) e "off" (nada vaza).
 
+---
+
+## Capacidades (recursos finos — BR-104)
+
+Recurso individual de um módulo, ativável/desativável por empresa (`empresas.capacidades`). Capacidade exige o **módulo dono** ativo. Manifest: `src/modules/admin/domain/capacidades.ts` (espelho `frontend/src/shared/modules/capacidades.ts`).
+
+| Capacidade | Dono | Superfícies | Enforcement |
+|---|---|---|---|
+| `cliente:whatsapp` | clientes | ClienteDetail (WhatsApp) | UI |
+| `cliente:ligar` | clientes | ClienteDetail (Ligar) | UI |
+| `cliente:navegar` | clientes | ClienteDetail (Navegar) | UI |
+| `cliente:anexos` | clientes | ClienteDetail (Anexos) | **API** (`/clientes/:id/anexos*` → 403 `CAPABILITY_DISABLED`) |
+| `rota:whatsapp` | rota | RotaPage (WhatsApp) | UI |
+| `rota:ligar` | rota | RotaPage (Ligar) | UI |
+| `rota:navegar` | rota | RotaPage (Navegar) | UI |
+| `pagamento:comprovante_whatsapp` | contratos | RotaPage/ContratoDetail (comprovante WhatsApp) | UI |
+
+CTs: 07 — `CAP-CT-101..110`. Smoke: `CAP-100..110`.
+
+## Guard de desativação com dados (BR-105)
+
+O `PATCH /modulos` protege dados em aberto ao desligar módulos:
+
+| Módulo | Dado que bloqueia (409) | Sem esse dado |
+|---|---|---|
+| `contratos` | parcelas em aberto (`saldoPendente > 0`) | confirmação |
+| `cobrancas` | clientes com pendência | confirmação |
+| `caixa` | `caixa_base != 0` (**nunca forcável**) | 200 |
+| `gastos` | — | confirmação |
+| `clientes` / `rota` / `atendidos` | — | confirmação (contagens no impacto) |
+
+- `force: true` + motivo (só super admin) sobrepõe contratos/cobrancas/clientes; **caixa nunca**.
+- `GET /:id/impacto?modulos=<JSON>` devolve a prévia.
+- Auditoria em `auditoria_modulos`. CTs: 07 — `IMP-CT-1/2`, `MOD-G-CT-1..11`. Smoke: `MOD-G-1..11`, `IMP-001/002`.
+
 ## Referências
 
 - `src/modules/admin/domain/modules.ts` (MODULE_MANIFEST — `ucs`) · `frontend/src/shared/modules/modules.ts` (MODULE_WIDGETS)

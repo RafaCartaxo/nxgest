@@ -25,6 +25,8 @@ import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { PagamentoModal, type PagamentoSuccessData } from "../../pagamento/components/PagamentoModal.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
+import { useAuth } from "../../../shared/auth/AuthContext.js"
+import { hasCapability } from "../../../shared/modules/capacidades.js"
 
 function formatarParcelasTexto(pagasRange: { inicio: number; fim: number } | null): string {
   if (!pagasRange) return ""
@@ -60,6 +62,7 @@ function montarTextoComprovante(nome: string, valor: number, parcelasTexto: stri
 
 export function RotaPage() {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [items, setItems] = useState<CobrancaItem[]>([])
@@ -464,9 +467,9 @@ export function RotaPage() {
                       singleRow
                       disabled={operando}
                       actions={[
-                        { icon: Navigation, label: t("operacoes.navegar"), onClick: () => handleNavegar(slideItem), variant: "blue", show: alvoNavegavel(alvoDeItemCobranca(slideItem)) },
-                        { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(slideItem), variant: "green" },
-                        { icon: Phone, label: t("operacoes.ligar"), onClick: () => handleLigar(slideItem), variant: "blue" },
+                        { icon: Navigation, label: t("operacoes.navegar"), onClick: () => handleNavegar(slideItem), variant: "blue", show: hasCapability(user?.capacidades, user?.modulos, "rota:navegar") && alvoNavegavel(alvoDeItemCobranca(slideItem)) },
+                        { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(slideItem), variant: "green", show: hasCapability(user?.capacidades, user?.modulos, "rota:whatsapp") },
+                        { icon: Phone, label: t("operacoes.ligar"), onClick: () => handleLigar(slideItem), variant: "blue", show: hasCapability(user?.capacidades, user?.modulos, "rota:ligar") },
                         { icon: FileText, label: t("operacoes.abrir"), onClick: () => handleAbrirContrato(slideItem), variant: "gray" },
                       ]}
                     />
@@ -580,10 +583,12 @@ export function RotaPage() {
               <Share2 className="h-4 w-4" />
               Compartilhar
             </Button>
-            <Button variant="secondary" onClick={handleWhatsAppComprovante} className="flex flex-1 items-center justify-center gap-1">
-              <MessageCircle className="h-4 w-4" />
-              WhatsApp
-            </Button>
+            {hasCapability(user?.capacidades, user?.modulos, "pagamento:comprovante_whatsapp") && (
+              <Button variant="secondary" onClick={handleWhatsAppComprovante} className="flex flex-1 items-center justify-center gap-1">
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp
+              </Button>
+            )}
           </div>
           <Button variant="ghost" onClick={() => setComprovante(null)} className="mt-2 w-full">
             {t("common.cancel")}

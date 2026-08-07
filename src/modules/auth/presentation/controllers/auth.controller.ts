@@ -2,6 +2,7 @@ import type { Request, Response } from "express"
 import { eq } from "drizzle-orm"
 import { db, empresas } from "../../../../database.js"
 import { parseModulos } from "../../../admin/domain/modules.js"
+import { parseCapacidades } from "../../../admin/domain/capacidades.js"
 import type { IAuthRepository } from "../../application/ports/auth.repository.js"
 import { LoginUseCase } from "../../application/use-cases/Login/LoginUseCase.js"
 import { AlterarSenhaUseCase } from "../../application/use-cases/AlterarSenha/AlterarSenhaUseCase.js"
@@ -19,14 +20,15 @@ export class AuthController {
     this.alterarSenhaUseCase = new AlterarSenhaUseCase(repository)
   }
 
-  private async enriquecer(usuario: { empresaId: string | null }): Promise<{ empresaNome: string | null; modulos: string[] | null }> {
+  private async enriquecer(usuario: { empresaId: string | null }): Promise<{ empresaNome: string | null; modulos: string[] | null; capacidades: string[] | null }> {
     if (!usuario.empresaId) {
-      return { empresaNome: null, modulos: null }
+      return { empresaNome: null, modulos: null, capacidades: null }
     }
     const [empresaRow] = await db.select().from(empresas).where(eq(empresas.id, usuario.empresaId)).limit(1)
     return {
       empresaNome: empresaRow?.nome ?? null,
       modulos: parseModulos(empresaRow?.modulos ?? null),
+      capacidades: parseCapacidades(empresaRow?.capacidades ?? null),
     }
   }
 
@@ -40,8 +42,8 @@ export class AuthController {
       }
 
       const result = await this.loginUseCase.execute({ email, senha })
-      const { empresaNome, modulos } = await this.enriquecer(result.usuario)
-      res.json({ ...result, usuario: { ...result.usuario, empresaNome, modulos } })
+      const { empresaNome, modulos, capacidades } = await this.enriquecer(result.usuario)
+      res.json({ ...result, usuario: { ...result.usuario, empresaNome, modulos, capacidades } })
     } catch (err) {
       if (err instanceof CredenciaisInvalidasError) {
         res.status(401).json({ code: "INVALID_CREDENTIALS", message: err.message })
@@ -65,7 +67,7 @@ export class AuthController {
         return
       }
 
-      const { empresaNome, modulos } = await this.enriquecer(usuario)
+      const { empresaNome, modulos, capacidades } = await this.enriquecer(usuario)
 
       res.json({
         id: usuario.id,
@@ -75,6 +77,7 @@ export class AuthController {
         empresaId: usuario.empresaId,
         empresaNome,
         modulos,
+        capacidades,
         chefeId: usuario.chefeId,
         foto: usuario.foto,
       })

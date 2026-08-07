@@ -88,3 +88,57 @@
 - [x] 5 micro-usos: Criar empresa/Salvar módulos/Confirmar pagamento + Check · Registrar gasto + Receipt · Ver cliente → soft
 - [x] Vocabulário documentado em `04-UI-COMPONENTS.md`
 - [x] tsc · audit:ui/styles · build
+
+---
+
+# CHECKLIST — Modularização fina: capacidades + guard de desativação + smoke
+
+**Data:** 06/08/2026
+
+## Bloco A — Capacidades (recursos finos, BR-104)
+- [x] `src/modules/admin/domain/capacidades.ts`: `CAPABILITY_MANIFEST` (8 capacidades, `moduleOwner`) + `validateCapacidades` (id válido, duplicatas normalizadas) + `hasCapability` (dono ativo; `null`=todas, `[]`=nenhuma)
+- [x] `empresas.capacidades` (JSON) + migração incremental (ALTER, NULL = todas ativas) — `database.ts`
+- [x] Port/repo/controller/route: `PATCH /api/admin/empresas/:id/capacidades` (só super admin); `null` limpa override; dono off → 422
+- [x] `login`/`me` retornam `capacidades`
+- [x] `requireCapability` middleware + enforcement real em `cliente:anexos` (`/clientes/:id/anexos*` → 403 `CAPABILITY_DISABLED`)
+- [x] Frontend: `hasCapability` + gating ClienteDetail (navegar/whatsapp/ligar/anexos), RotaPage (rota:* + comprovante), ContratoDetail (comprovante); `CapacidadesModal` (via ModulosModal "Recursos"); i18n pt/en/es
+- [x] `audit:modules` valida o capability manifest (espelho + dono válido)
+
+## Bloco B — Guard de desativação com dados (BR-105) + auditoria
+- [x] `auditoria_modulos` (tabela + `registrarAuditoriaModulos`)
+- [x] `calcularImpactoDesativacao` (cascata + contagens por domínio; join por `usuarios.empresaId`)
+- [x] `PATCH /modulos`: 409 `MODULE_HAS_ACTIVE_DATA` + `impacto`; `force`+motivo só super; **caixa nunca força**; 200 ecoa impacto
+- [x] `GET /:id/impacto?modulos=<JSON>` (prévia sem persistir)
+- [x] UI: `ImpactConfirmModal` (bloqueados/confirmação/forçar com motivo) — fluxo preview → confirm/force
+
+## Bloco C — Smoke + vitest + migração + docs
+- [x] Smoke: **156 → 182** (CAP-100..110, MOD-G-S/S2 + MOD-G-1..11, IMP-001/002) — **182/182 PASS**
+- [x] Vitest `hasCapability`: 22 → **29**
+- [x] `scripts/test-migracao.mjs` (`npm run migracao:test`) — valida ALTER em banco legado (backup) + dados preservados
+- [x] Docs: BR-104/105 · 08-UC-MODULOS · 02-API (2 endpoints + guard) · 07 (CAP/IMP/MOD-G CTs) · api-collection (51) · UI-COVERAGE · 01-DATABASE
+- [x] Gates: build · audit:ui/styles/modules · docs:audit (0 divergências) · vitest 29 · smoke 182 · migracao:test ✓
+
+---
+
+# CHECKLIST — Refactor de arquitetura (PLAN-059) + correções do code review
+
+**Data:** 06/08/2026
+
+## Arquitetura (00-ARCHITECTURE.md — presentation não toca infra)
+- [x] `domain/impacto.ts` (tipos do impacto) + `domain/errors/modulos.error.ts` (ModulosInvalidos/CapacidadesInvalidas/MotivoObrigatorio/ModuloComDadosEmAberto)
+- [x] Ports `IImpactoDesativacaoQuery`/`IAuditoriaModulosWriter` (application/ports)
+- [x] Use-cases `AtualizarModulos` (guard + motivo + auditoria), `AtualizarCapacidades`, `CalcularImpacto`
+- [x] Impls em infra como classes (`*.query.impl.ts`/`*.repository.impl.ts`); funções soltas removidas
+- [x] `EmpresaController` só mapeia erro → HTTP; wiring de DI na rota
+
+## Correções do code review
+- [x] **force exige motivo** (422) e `motivo ≤ 200` (padrão auditoria_caixa) — BR-105 coerente
+- [x] `ImpactConfirmModal` reseta `motivo` ao abrir + botão desabilitado sem motivo
+- [x] `capacidadesComDonoOff` → `capacidadesComDonoDesativado` (naming pt/pt)
+- [x] `CapacidadesModal` banner "Todas ativas" só sem override · `ClienteDetail` sem grid vazia (`QuickAction[]`)
+- [x] `QuickAction` exportado (ClienteDetail tipa o array)
+- [x] Docs: PLAN-059 · plans/README · UPDATES · 02-API (Validações → guard) · 04-UI-COMPONENTS (1.8)
+
+## QA
+- [x] Smoke **182 → 184** (MOD-G-12 force sem motivo → 422 · MOD-G-13 motivo > 200 → 422) — **184/184 PASS**
+- [x] Regressão 182 preservada após refactor · vitest 29 · build · audit:ui/styles/modules · docs:audit · migracao:test

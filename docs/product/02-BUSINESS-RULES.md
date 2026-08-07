@@ -805,6 +805,33 @@ A **foto** (`foto`, data URL) é opcional em `usuarios`/`clientes`, normalizada 
 
 ---
 
+# Whitelabel — Capacidades (modularização fina)
+
+## BR-104
+
+O `super_admin` controla as **capacidades** (recursos finos) de cada empresa via `PATCH /api/admin/empresas/:id/capacidades`, armazenadas em `empresas.capacidades` (JSON). Cada capacidade tem **um módulo dono** (`moduleOwner` no `CAPABILITY_MANIFEST`). Capacidades atuais: `cliente:whatsapp`, `cliente:ligar`, `cliente:navegar`, `cliente:anexos`, `rota:whatsapp`, `rota:ligar`, `rota:navegar`, `pagamento:comprovante_whatsapp`.
+
+- `null`/ausente = **todas ativas** (mesma convenção de `modulos`); `[]` = nenhuma; PATCH com `null` limpa o override.
+- Id inexistente → 422; **duplicadas são normalizadas**.
+- Capacidade com **módulo dono desativado** → **422** no PATCH (dono precisa estar ativo). Dono desligado **depois** deixa a capacidade **inativa implicitamente** (persiste na lista; volta quando o módulo reativa).
+- A capacidade só é aplicada onde o **módulo dono está ativo**; `login`/`me` devolvem `capacidades`.
+- **Enforcement:** onde há endpoint (ex.: `cliente:anexos` → `/api/clientes/:id/anexos*`), capacidade off devolve **403 `CAPABILITY_DISABLED`** (`requireCapability`). WhatsApp/Ligar/Navegar são aberturas de URL — gating só de UI (`hasCapability`).
+- Fonte única: `CAPABILITY_MANIFEST` (`src/modules/admin/domain/capacidades.ts`) espelhado em `frontend/src/shared/modules/capacidades.ts`, validado por `npm run audit:modules`.
+
+## BR-105
+
+O `PATCH /api/admin/empresas/:id/modulos` **computa o impacto** de desligar o conjunto efetivo (inclui a cascata: módulos que dependem transitivamente de um desligado) e **protege os dados em aberto**:
+
+- Módulos **financeiros com dado pendente** → **409 `MODULE_HAS_ACTIVE_DATA`** + payload `impacto` (contagens por módulo): `contratos` (parcelas em aberto = `saldoPendente > 0 AND deletedAt IS NULL`), `cobrancas` (clientes com pendência), `caixa` (`caixa_config.caixaBase != 0`).
+- **`caixa` aberto NUNCA é forcável** (nem com `force: true`) — fecha o dia antes.
+- `force: true` + `motivo` (só super admin) sobrepõe o bloqueio dos demais financeiros; o response ecoa o `impacto`.
+- Cadastro/operação (`clientes`, `rota`, `atendidos`, `gastos`) → **200** ecoando o `impacto` (UI mostra confirmação com contagens).
+- `GET /api/admin/empresas/:id/impacto?modulos=<JSON>` devolve a **prévia** sem persistir.
+- **Toda mudança** de módulos/capacidades é registrada em `auditoria_modulos` (quem, `tipo`, antes/depois, `force`, motivo).
+- Contagens empresa-wide passam por `usuarios.empresaId` (tabelas operacionais ligam por `userId`).
+
+---
+
 # Referências
 
 - NORTH-STAR.md

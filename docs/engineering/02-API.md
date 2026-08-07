@@ -1754,6 +1754,7 @@ Ativa/desativa **módulos da empresa** (whitelabel, PLAN-031). O tenant passa a 
 - `modulos` deve ser um array de ids válidos: `clientes, contratos, caixa, gastos, rota, cobrancas, atendidos`.
 - **Dependências**: `gastos` requer `caixa`; `rota`, `cobrancas` e `atendidos` requerem `contratos`. Violação → 422.
 - Array vazio (`[]`) = apenas o módulo `central` (sempre ativo).
+- **Guard de dados (BR-105):** desligar módulo com dado financeiro em aberto → **409** `MODULE_HAS_ACTIVE_DATA` (ver seção abaixo). `force: true` + `motivo` obrigatório (≤200) só super admin; **caixa nunca é forcável**.
 
 ## Response 200
 
@@ -1776,6 +1777,140 @@ Ativa/desativa **módulos da empresa** (whitelabel, PLAN-031). O tenant passa a 
 | FORBIDDEN | 403 (não-super) |
 | EMPRESA_NOT_FOUND | 404 |
 | VALIDATION_ERROR | 422 (módulo inválido / dependência) |
+| MODULE_HAS_ACTIVE_DATA | 409 (módulo financeiro com dado pendente, sem `force`) |
+
+### Guard de desativação (BR-105)
+
+Desde a modularização fina, o `PATCH /modulos` **computa o impacto** de desligar o
+conjunto efetivo (inclui a cascata de dependências) e protege os dados:
+
+- Módulos **financeiros com dado em aberto** → **409 `MODULE_HAS_ACTIVE_DATA`** com
+  payload `impacto` (contagens por módulo). Para sobrepor, `force: true` + `motivo`
+  (só super admin). **Caixa aberto (`caixa_base != 0`) NUNCA é forcável.**
+- Cadastro/operação (`clientes`, `rota`, `atendidos`, `gastos`) → 200 ecoando o
+  `impacto` (a UI mostra confirmação com contagens).
+- Toda mudança é registrada em `auditoria_modulos` (quem, antes/depois, force).
+
+## Request
+
+```json
+{
+    "modulos": ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"],
+    "force": false,
+    "motivo": null
+}
+```
+
+## Response 200
+
+```json
+{
+    "id": "a1b2c3d4-...",
+    "nome": "Empresa Exemplo",
+    "modulos": ["clientes", "contratos", "caixa"],
+    "capacidades": null,
+    "totalUsuarios": 1,
+    "totalClientes": 0,
+    "contratosAtivos": 0,
+    "impacto": {
+        "desligados": [],
+        "impacto": [],
+        "bloqueado": false
+    }
+}
+```
+
+## Response 409 (bloqueio por dados)
+
+```json
+{
+    "code": "MODULE_HAS_ACTIVE_DATA",
+    "message": "Há dados financeiros em aberto nos módulos que seriam desativados.",
+    "impacto": {
+        "desligados": ["clientes", "contratos", "cobrancas", "rota", "atendidos"],
+        "impacto": [
+            { "modulo": "clientes", "contagem": 1, "bloqueia": false, "detalhe": "clientes cadastrados" },
+            { "modulo": "contratos", "contagem": 3, "bloqueia": true, "detalhe": "1 contrato(s) ativo(s) · 3 parcela(s) em aberto" }
+        ],
+        "bloqueado": true
+    }
+}
+```
+
+---
+
+# PATCH /api/admin/empresas/{id}/capacidades
+
+Ativa/desativa **capacidades** (recursos finos) da empresa — granularidade abaixo
+do módulo. `null` = todas ativas; `[]` = nenhuma. Capacidade exige o **módulo
+dono** ativo (422 se dono desligado); com dono desligado depois, fica inerte.
+
+Capacidades atuais: `cliente:whatsapp`, `cliente:ligar`, `cliente:navegar`,
+`cliente:anexos`, `rota:whatsapp`, `rota:ligar`, `rota:navegar`,
+`pagamento:comprovante_whatsapp`.
+
+**Auth:** Super Admin
+
+## Request
+
+```json
+{
+    "capacidades": ["cliente:whatsapp", "cliente:anexos"]
+}
+```
+
+Para limpar o override (voltar a todas ativas): `{ "capacidades": null }`.
+
+## Validações
+
+- Cada id deve existir no manifest; duplicadas são **normalizadas**.
+- Capacidade com módulo dono desativado na empresa → **422**.
+- `null` limpa o override (todas ativas).
+
+## Response 200
+
+Mesma estrutura do `GET /api/admin/empresas/:id`, com `capacidades`.
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| FORBIDDEN | 403 (não-super) |
+| EMPRESA_NOT_FOUND | 404 |
+| VALIDATION_ERROR | 422 (id inválido / dono off) |
+
+---
+
+# GET /api/admin/empresas/{id}/impacto
+
+Prévia (sem persistir) do impacto de desativar um conjunto de módulos — usada
+pela UI para exibir a confirmação antes de aplicar. Resposta idêntica ao campo
+`impacto` do `PATCH /modulos`.
+
+**Auth:** Super Admin
+
+## Request
+
+`GET /api/admin/empresas/{id}/impacto?modulos=<JSON>` (query `modulos` = array
+JSON urlencoded, ex.: `["clientes","contratos"]`).
+
+## Validações
+
+- `modulos` deve ser um JSON válido e um conjunto coerente (grafo de dependências)
+  → 422 caso contrário.
+
+## Response 200
+
+```json
+{
+    "desligados": ["clientes", "contratos", "cobrancas", "rota", "atendidos"],
+    "impacto": [
+        { "modulo": "clientes", "contagem": 1, "bloqueia": false, "detalhe": "clientes cadastrados" },
+        { "modulo": "contratos", "contagem": 3, "bloqueia": true, "detalhe": "1 contrato(s) ativo(s) · 3 parcela(s) em aberto" }
+    ],
+    "bloqueado": true
+}
+```
 
 ---
 

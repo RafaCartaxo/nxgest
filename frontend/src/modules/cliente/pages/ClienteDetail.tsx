@@ -5,12 +5,13 @@ import { useParams, useNavigate } from "react-router-dom"
 import { getCliente, type Cliente } from "../services/cliente.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { hasModule } from "../../../shared/modules/modules.js"
+import { hasCapability } from "../../../shared/modules/capacidades.js"
 import { ApiError } from "../../../api/client.js"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { ButtonLink } from "../../../shared/components/Button.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
-import { QuickActions } from "../../../shared/components/QuickActions/QuickActions.js"
+import { QuickActions, type QuickAction } from "../../../shared/components/QuickActions/QuickActions.js"
 import { ClienteInfo } from "../components/ClienteInfo.js"
 import { SituacaoFinanceira } from "../components/SituacaoFinanceira.js"
 import { AnexosSection } from "../components/AnexosSection.js"
@@ -68,6 +69,14 @@ export function ClienteDetail() {
     if (url) window.open(url, "_blank")
   }
 
+  const acoesCliente: QuickAction[] = cliente
+    ? [
+        { icon: Navigation,    label: t("operacoes.navegar"),  onClick: () => handleNavegar(cliente),  variant: "blue", show: hasCapability(user?.capacidades, user?.modulos, "cliente:navegar") && alvoNavegavel(resolveAlvoCliente(cliente)) },
+        { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(cliente), variant: "green", show: hasCapability(user?.capacidades, user?.modulos, "cliente:whatsapp") },
+        { icon: Phone,         label: t("operacoes.ligar"),    onClick: () => handleLigar(cliente),    variant: "blue", show: hasCapability(user?.capacidades, user?.modulos, "cliente:ligar") },
+      ]
+    : []
+
   return (
     <div className="mx-auto max-w-2xl p-4">
       <EstadoTela
@@ -86,14 +95,7 @@ export function ClienteDetail() {
               action={<ButtonLink to={`/clientes/${cliente.id}/editar`} variant="primary" size="sm"><Pencil className="size-4" /> {t("common.edit")}</ButtonLink>}
             />
             <ClienteInfo cliente={cliente} />
-            <QuickActions
-              layout="grid"
-              actions={[
-                { icon: Navigation,    label: t("operacoes.navegar"),  onClick: () => handleNavegar(cliente),  variant: "blue", show: alvoNavegavel(resolveAlvoCliente(cliente)) },
-                { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(cliente), variant: "green" },
-                { icon: Phone,         label: t("operacoes.ligar"),    onClick: () => handleLigar(cliente),    variant: "blue" },
-              ]}
-            />
+            {acoesCliente.length > 0 && <QuickActions layout="grid" actions={acoesCliente} />}
             {contratosAtivo && (
               <Card.Root variant="detail">
                 <Card.Header>
@@ -115,7 +117,7 @@ export function ClienteDetail() {
               </Card.Root>
             )}
             <SituacaoFinanceira cliente={cliente} />
-            <AnexosSection clienteId={cliente.id} />
+            {hasCapability(user?.capacidades, user?.modulos, "cliente:anexos") && <AnexosSection clienteId={cliente.id} />}
           </div>
         )}
       </EstadoTela>

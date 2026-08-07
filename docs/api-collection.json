@@ -1725,14 +1725,91 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"modulos\": [\n    \"clientes\",\n    \"contratos\",\n    \"caixa\",\n    \"gastos\",\n    \"rota\",\n    \"cobrancas\",\n    \"atendidos\"\n  ]\n}",
+              "raw": "{\n  \"modulos\": [\n    \"clientes\",\n    \"contratos\",\n    \"caixa\",\n    \"gastos\",\n    \"rota\",\n    \"cobrancas\",\n    \"atendidos\"\n  ],\n  \"force\": false,\n  \"motivo\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "API-UC-043 · 200 · 422 dependência (gastos requer caixa) · 403 não-super"
+            "description": "API-UC-043 · 200 · 422 dependência (gastos requer caixa) · 403 não-super · 409 MODULE_HAS_ACTIVE_DATA (dados em aberto, BR-105) · force+motivo só super"
+          }
+        },
+        {
+          "name": "Capacidades",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/empresas/{{empresaId}}/capacidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "empresas",
+                "{{empresaId}}",
+                "capacidades"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacidades\": [\n    \"cliente:whatsapp\",\n    \"cliente:anexos\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "CAP-UC · 200 · 422 id inválido/dono off · 403 não-super · null limpa (todas ativas) (BR-104)"
+          }
+        },
+        {
+          "name": "Impacto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/empresas/{{empresaId}}/impacto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "empresas",
+                "{{empresaId}}",
+                "impacto"
+              ],
+              "query": [
+                {
+                  "key": "modulos",
+                  "value": "[\"clientes\",\"contratos\",\"caixa\"]"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "IMP-UC · 200 {desligados, impacto, bloqueado} · prévia sem persistir (BR-105)"
           }
         }
       ]

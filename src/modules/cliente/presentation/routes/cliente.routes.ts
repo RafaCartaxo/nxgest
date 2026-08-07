@@ -5,6 +5,7 @@ import { ContratoCountQuery } from "../../infrastructure/queries/contrato-count.
 import { ClienteSaldoQuery } from "../../infrastructure/queries/cliente-saldo.query.impl.js"
 import { ClienteFinanceiroQuery } from "../../infrastructure/queries/cliente-financeiro.query.impl.js"
 import { anexoRoutes } from "../../../anexo/presentation/routes/anexo.routes.js"
+import { requireCapability } from "../../../../shared/middleware/capability.middleware.js"
 
 const router = Router()
 const repository = new ClienteRepository()
@@ -13,7 +14,7 @@ const clienteSaldoQuery = new ClienteSaldoQuery()
 const clienteFinanceiroQuery = new ClienteFinanceiroQuery()
 const controller = new ClienteController(repository, contratoCountQuery, clienteSaldoQuery, clienteFinanceiroQuery)
 
-router.use("/:id/anexos", anexoRoutes)
+router.use("/:id/anexos", requireCapability("cliente:anexos"), anexoRoutes)
 router.post("/", controller.create.bind(controller))
 router.get("/", controller.list.bind(controller))
 router.get("/:id", controller.getById.bind(controller))

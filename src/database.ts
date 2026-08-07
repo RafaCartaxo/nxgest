@@ -194,9 +194,23 @@ export const empresas = sqliteTable("empresas", {
   nome: text("nome").notNull(),
   createdAt: text("createdAt").notNull(),
   modulos: text("modulos"),
+  /** Recursos finos (capacidades) da empresa. `null` = todas ativas; `[]` = nenhuma. */
+  capacidades: text("capacidades"),
   documento: text("documento"),
   nomeFantasia: text("nomeFantasia"),
   ativa: integer("ativa").notNull().default(1),
+})
+
+export const auditoriaModulos = sqliteTable("auditoria_modulos", {
+  id: text("id").primaryKey(),
+  empresaId: text("empresaId").notNull(),
+  adminId: text("adminId").notNull(),
+  tipo: text("tipo").notNull(),
+  antes: text("antes"),
+  depois: text("depois"),
+  force: integer("force").notNull().default(0),
+  motivo: text("motivo"),
+  createdAt: text("createdAt").notNull(),
 })
 
 export const anexos = sqliteTable("anexos", {
@@ -422,9 +436,22 @@ export async function createTables() {
       nome TEXT NOT NULL,
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]',
+      capacidades TEXT,
       documento TEXT,
       nomeFantasia TEXT,
       ativa INTEGER NOT NULL DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS auditoria_modulos (
+      id TEXT PRIMARY KEY,
+      empresaId TEXT NOT NULL,
+      adminId TEXT NOT NULL,
+      tipo TEXT NOT NULL,
+      antes TEXT,
+      depois TEXT,
+      force INTEGER NOT NULL DEFAULT 0,
+      motivo TEXT,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS anexos (
@@ -446,6 +473,11 @@ export async function createTables() {
   const empresaCols = sqlite.pragma("table_info(empresas)") as unknown as { name: string }[]
   if (!empresaCols.some((c) => c.name === "modulos")) {
     sqlite.exec(`ALTER TABLE empresas ADD COLUMN modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]'`)
+  }
+
+  // Migração incremental (capacidades): coluna em empresas existentes — NULL = todas ativas.
+  if (!empresaCols.some((c) => c.name === "capacidades")) {
+    sqlite.exec("ALTER TABLE empresas ADD COLUMN capacidades TEXT")
   }
 
   // Migração incremental (WS5): campos opcionais de identidade/situação da empresa.

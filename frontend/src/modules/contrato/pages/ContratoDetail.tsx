@@ -17,6 +17,8 @@ import { PagamentoModal, type PagamentoSuccessData } from "../../pagamento/compo
 import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
+import { useAuth } from "../../../shared/auth/AuthContext.js"
+import { hasCapability } from "../../../shared/modules/capacidades.js"
 import { getCliente } from "../../cliente/services/cliente.service.js"
 import type { Cliente } from "../../cliente/services/cliente.service.js"
 import { listPagamentos, estornarPagamento, type PagamentoComDetalhes } from "../../pagamento/services/pagamento.service.js"
@@ -66,6 +68,7 @@ function canvasToFile(canvas: HTMLCanvasElement): File {
 
 export function ContratoDetail() {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const usuarioId = searchParams.get("usuarioId") || undefined
@@ -420,14 +423,16 @@ export function ContratoDetail() {
                   <Share2 className="h-4 w-4" />
                   Compartilhar
                 </Button>
-                <Button
-                  variant="secondary"
-                  onClick={handleWhatsAppComprovante}
-                  className="flex flex-1 items-center justify-center gap-1"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  WhatsApp
-                </Button>
+                {hasCapability(user?.capacidades, user?.modulos, "pagamento:comprovante_whatsapp") && (
+                  <Button
+                    variant="secondary"
+                    onClick={handleWhatsAppComprovante}
+                    className="flex flex-1 items-center justify-center gap-1"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    WhatsApp
+                  </Button>
+                )}
               </div>
               <Button
                 variant="ghost"

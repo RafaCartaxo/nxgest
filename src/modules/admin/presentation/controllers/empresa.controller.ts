@@ -1,11 +1,16 @@
 import type { Request, Response } from "express"
 import bcrypt from "bcryptjs"
 import type { IEmpresaRepository } from "../../application/ports/empresa.repository.js"
+import type { IImpactoDesativacaoQuery } from "../../application/ports/impacto-desativacao.port.js"
+import type { IAuditoriaModulosWriter } from "../../application/ports/auditoria-modulos.port.js"
 import { ListarEmpresasUseCase } from "../../application/use-cases/ListarEmpresas/ListarEmpresasUseCase.js"
 import { CriarEmpresaUseCase } from "../../application/use-cases/CriarEmpresa/CriarEmpresaUseCase.js"
-import { validateModulos } from "../../domain/modules.js"
+import { AtualizarModulosUseCase } from "../../application/use-cases/AtualizarModulos/AtualizarModulosUseCase.js"
+import { AtualizarCapacidadesUseCase } from "../../application/use-cases/AtualizarCapacidades/AtualizarCapacidadesUseCase.js"
+import { CalcularImpactoUseCase } from "../../application/use-cases/CalcularImpacto/CalcularImpactoUseCase.js"
 import { EmailDuplicadoError } from "../../../auth/domain/errors/auth.error.js"
 import { EmpresaNaoEncontradaError } from "../../domain/errors/empresa.error.js"
+import { ModulosInvalidosError, CapacidadesInvalidasError, MotivoObrigatorioError, ModuloComDadosEmAbertoError } from "../../domain/errors/modulos.error.js"
 import { isValidCpf } from "../../../../shared/validators/cpf.js"
 import { isValidCnpj } from "../../../../shared/validators/cnpj.js"
 
@@ -27,11 +32,17 @@ export class EmpresaController {
   private repository: IEmpresaRepository
   private listUseCase: ListarEmpresasUseCase
   private criarUseCase: CriarEmpresaUseCase
+  private atualizarModulosUseCase: AtualizarModulosUseCase
+  private atualizarCapacidadesUseCase: AtualizarCapacidadesUseCase
+  private calcularImpactoUseCase: CalcularImpactoUseCase
 
-  constructor(repository: IEmpresaRepository) {
+  constructor(repository: IEmpresaRepository, impactoQuery: IImpactoDesativacaoQuery, auditoria: IAuditoriaModulosWriter) {
     this.repository = repository
     this.listUseCase = new ListarEmpresasUseCase(repository)
     this.criarUseCase = new CriarEmpresaUseCase(repository)
+    this.atualizarModulosUseCase = new AtualizarModulosUseCase(repository, impactoQuery, auditoria)
+    this.atualizarCapacidadesUseCase = new AtualizarCapacidadesUseCase(repository, auditoria)
+    this.calcularImpactoUseCase = new CalcularImpactoUseCase(repository, impactoQuery)
   }
 
   list = async (_req: Request, res: Response) => {
@@ -120,22 +131,86 @@ export class EmpresaController {
   }
 
   updateModulos = async (req: Request, res: Response) => {
-    const { modulos } = req.body ?? {}
-    const valid = validateModulos(modulos)
-    if (!valid.ok) {
-      res.status(422).json({ code: "VALIDATION_ERROR", message: valid.message })
+    try {
+      const result = await this.atualizarModulosUseCase.execute({
+        empresaId: req.params.id,
+        modulos: req.body?.modulos,
+        force: req.body?.force === true,
+        motivo: req.body?.motivo,
+        adminId: req.userId ?? "unknown",
+      })
+      res.json(result)
+    } catch (err) {
+      if (err instanceof EmpresaNaoEncontradaError) {
+        res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: err.message })
+        return
+      }
+      if (err instanceof ModulosInvalidosError || err instanceof MotivoObrigatorioError) {
+        res.status(422).json({ code: "VALIDATION_ERROR", message: err.message })
+        return
+      }
+      if (err instanceof ModuloComDadosEmAbertoError) {
+        res.status(409).json({
+          code: "MODULE_HAS_ACTIVE_DATA",
+          message: err.message,
+          impacto: err.impacto,
+        })
+        return
+      }
+      console.error("Erro ao atualizar módulos:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao atualizar módulos da empresa." })
+    }
+  }
+
+  updateCapacidades = async (req: Request, res: Response) => {
+    try {
+      const result = await this.atualizarCapacidadesUseCase.execute({
+        empresaId: req.params.id,
+        capacidades: req.body?.capacidades,
+        adminId: req.userId ?? "unknown",
+      })
+      res.json(result)
+    } catch (err) {
+      if (err instanceof EmpresaNaoEncontradaError) {
+        res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: err.message })
+        return
+      }
+      if (err instanceof CapacidadesInvalidasError) {
+        res.status(422).json({ code: "VALIDATION_ERROR", message: err.message })
+        return
+      }
+      console.error("Erro ao atualizar capacidades:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao atualizar capacidades da empresa." })
+    }
+  }
+
+  getImpacto = async (req: Request, res: Response) => {
+    const { modulos } = req.query
+    if (typeof modulos !== "string") {
+      res.status(422).json({ code: "VALIDATION_ERROR", message: "Query `modulos` (JSON) é obrigatória." })
+      return
+    }
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(modulos)
+    } catch {
+      res.status(422).json({ code: "VALIDATION_ERROR", message: "Query `modulos` deve ser um JSON válido." })
       return
     }
     try {
-      const result = await this.repository.updateModulos(req.params.id, valid.value)
-      if (!result) {
-        res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
+      const impacto = await this.calcularImpactoUseCase.execute({ empresaId: req.params.id, modulos: parsed })
+      res.json(impacto)
+    } catch (err) {
+      if (err instanceof EmpresaNaoEncontradaError) {
+        res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: err.message })
         return
       }
-      res.json(result)
-    } catch (err) {
-      console.error("Erro ao atualizar módulos:", err)
-      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao atualizar módulos da empresa." })
+      if (err instanceof ModulosInvalidosError) {
+        res.status(422).json({ code: "VALIDATION_ERROR", message: err.message })
+        return
+      }
+      console.error("Erro ao calcular impacto:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao calcular impacto de desativação." })
     }
   }
 }

@@ -361,7 +361,9 @@
     "OPERATOR_NOT_FOUND": "Operador não encontrado.",
     "INVALID_CURRENT_PASSWORD": "Senha atual incorreta.",
     "INTERNAL_ERROR": "Erro interno do servidor. Tente novamente.",
-    "MODULE_DISABLED": "Este módulo está desativado para a sua empresa."
+    "MODULE_DISABLED": "Este módulo está desativado para a sua empresa.",
+    "MODULE_HAS_ACTIVE_DATA": "Há dados financeiros em aberto nos módulos que seriam desativados.",
+    "CAPABILITY_DISABLED": "Este recurso está desativado para a sua empresa."
   },
   "auth": {
     "title": "Entrar",
@@ -516,7 +518,36 @@
     "operadorUm": "operador",
     "operadorOutros": "operadores",
     "modulosButton": "Módulos ({{ativos}}/{{total}})",
-    "documentoPlaceholder": "CPF ou CNPJ"
+    "documentoPlaceholder": "CPF ou CNPJ",
+    "capacidadesButton": "Recursos",
+    "impactoTitulo": "Confirmar desativação",
+    "impactoDescricao": "Desativar esses módulos ocultará os dados abaixo para esta empresa. Confira antes de continuar.",
+    "impactoBloqueado": "Não é possível desativar enquanto houver dados financeiros em aberto:",
+    "impactoOculta": "Ao desativar, estes módulos ficam ocultos (dados preservados):",
+    "impactoVazio": "Nenhum dado afetado por esta desativação.",
+    "impactoConfirmar": "Confirmar desativação",
+    "impactoForcar": "Forçar desativação",
+    "impactoCancelar": "Cancelar",
+    "impactoMotivo": "Motivo do forçar",
+    "impactoMotivoPlaceholder": "Informe o motivo (obrigatório)"
+  },
+  "capacidades": {
+    "titulo": "Recursos — {{empresa}}",
+    "hint": "Ative ou desative recursos individuais dos módulos ativos desta empresa.",
+    "todasAtivas": "Todas ativas por padrão",
+    "todasAtivasDesc": "Sem configuração, todos os recursos dos módulos ativos valem.",
+    "recursos": "Recursos",
+    "requerModulo": "Requer módulo ativo: {{modulo}}",
+    "salvo": "Recursos atualizados.",
+    "erro": "Erro ao atualizar recursos.",
+    "cliente.whatsapp": "WhatsApp do cliente",
+    "cliente.ligar": "Ligar para o cliente",
+    "cliente.navegar": "Navegar até o cliente (GPS)",
+    "cliente.anexos": "Anexos do cliente",
+    "rota.whatsapp": "WhatsApp na rota",
+    "rota.ligar": "Ligar na rota",
+    "rota.navegar": "Navegar na rota (GPS)",
+    "pagamento.comprovanteWhatsapp": "Comprovante por WhatsApp"
   },
   "theme": {
     "default": "Azul",

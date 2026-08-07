@@ -5,7 +5,9 @@
  *   1. IDs e dependências do backend batem com o espelho do frontend;
  *   2. grafo de dependências NÃO tem ciclo;
  *   3. todo `dependsOn` aponta para um módulo válido;
- *   4. cada widget da Central tem UM único módulo dono.
+ *   4. cada widget da Central tem UM único módulo dono;
+ *   5. CAPABILITY_MANIFEST (backend) espelha o CAPABILITIES (frontend) e cada
+ *      capacidade tem um `moduleOwner` de módulo válido.
  *
  * Uso: node scripts/audit-modules.mjs
  * Exit 0 = limpo. Exit 1 = incoerência no manifest.
@@ -19,6 +21,8 @@ const root = join(here, "..")
 
 const backend = readFileSync(join(root, "src/modules/admin/domain/modules.ts"), "utf8")
 const frontend = readFileSync(join(root, "frontend/src/shared/modules/modules.ts"), "utf8")
+const backendCap = readFileSync(join(root, "src/modules/admin/domain/capacidades.ts"), "utf8")
+const frontendCap = readFileSync(join(root, "frontend/src/shared/modules/capacidades.ts"), "utf8")
 
 const errors = []
 const ok = (msg) => console.log(`  ✓ ${msg}`)
@@ -101,6 +105,28 @@ for (const [mod, widgets] of widgetsByModule) {
   }
 }
 if (allWidgets.size > 0) ok(`widgets da Central registrados (${allWidgets.size}, ${[...allWidgets.values()].filter((v, i, a) => a.indexOf(v) === i).join(", ")})`)
+
+// --- Capacidades (recursos finos do whitelabel) ---
+const backendCapIds = new Set()
+for (const m of backendCap.matchAll(/([a-z]+:[a-z_]+)["']?\s*:\s*\{/g)) backendCapIds.add(m[1])
+const frontendCapIds = new Set()
+for (const m of frontendCap.matchAll(/id: "([a-z]+:[a-z_]+)"/g)) frontendCapIds.add(m[1])
+
+if (backendCapIds.size === 0) fail("backend: CAPABILITY_MANIFEST não parseado (estrutura mudou?)")
+if (frontendCapIds.size === 0) fail("frontend: CAPABILITIES não parseado (estrutura mudou?)")
+
+const bCaps = [...backendCapIds].sort()
+const fCaps = [...frontendCapIds].sort()
+if (JSON.stringify(bCaps) !== JSON.stringify(fCaps)) {
+  fail(`capacidades divergem: backend=[${bCaps}] × frontend=[${fCaps}]`)
+} else if (bCaps.length > 0) {
+  ok(`capacidades backend = frontend (${bCaps.length})`)
+}
+
+for (const m of backendCap.matchAll(/moduleOwner: "(\w+)"/g)) {
+  if (!backendDeps.has(m[1])) fail(`capacidade com dono de módulo inválido: "${m[1]}"`)
+}
+if (bCaps.length > 0) ok("capacidades apontam para módulos válidos")
 
 if (errors.length > 0) {
   console.error(`\n✗ audit:modules — ${errors.length} incoerência(s):`)

@@ -1237,6 +1237,99 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+# CAPACIDADES — RECURSOS FINOS (modularização fina)
+
+## API-UC-CAP — Ativar/desativar capacidades da empresa
+
+**Endpoint:** `PATCH /api/admin/empresas/:id/capacidades` · **Auth:** super_admin
+
+**Request:** `{ capacidades: string[] | null }` — ids: `cliente:whatsapp`, `cliente:ligar`,
+`cliente:navegar`, `cliente:anexos`, `rota:whatsapp`, `rota:ligar`, `rota:navegar`,
+`pagamento:comprovante_whatsapp`.
+
+**Regras:** BR-095 · **Postman:** `Empresas > Capacidades`
+
+### CAP-CT-101 — Válido + coerência
+**Dado** super admin → **Quando** PATCH com `["cliente:whatsapp","cliente:anexos"]` → **Então** 200; `GET /admin/empresas/:id` reflete; `login`/`me` da empresa retorna as mesmas capacidades.
+
+### CAP-CT-102 — Capacidade com módulo dono desativado
+**Dado** empresa sem o módulo `rota` → **Quando** PATCH com `["rota:whatsapp"]` → **Então** **422**.
+
+### CAP-CT-103 — Capacidade inexistente
+**Dado** PATCH com `["nao:existe"]` → **Então** **422**.
+
+### CAP-CT-104 — Array vazio = nenhuma capacidade
+**Dado** PATCH com `[]` → **Então** **200**; `me` reflete `[]` (nenhuma capacidade).
+
+### CAP-CT-105 — Permissão
+**Dado** token de admin (não super) → **Então** **403**.
+
+### CAP-CT-106 — Não vaza entre tenants
+**Dado** empresa A com capacidades definidas → **Então** `me`/`login` de usuário da empresa B retorna `capacidades: null`.
+
+### CAP-CT-107 — `null` limpa override
+**Dado** PATCH com `capacidades: null` → **Então** **200**; `GET /:id` → `capacidades: null` (todas ativas).
+
+### CAP-CT-108 — Dono off persiste inerte
+**Dado** capacidade `rota:whatsapp` definida → **Quando** módulo `rota` é desativado → **Então** a capacidade permanece na lista (inerte); reativando `rota`, volta a valer.
+
+### CAP-CT-109 — Duplicatas normalizadas
+**Dado** PATCH com `["cliente:whatsapp","cliente:whatsapp"]` → **Então** **200**; `GET /:id` retorna uma única ocorrência.
+
+### CAP-CT-110 — Enforcement de anexos
+**Dado** empresa com `cliente:anexos` off → **Então** `GET|POST /api/clientes/:id/anexos` → **403** `CAPABILITY_DISABLED`.
+
+---
+
+# GUARD DE DESATIVAÇÃO — DADOS EM ABERTO (BR-105)
+
+## API-UC-IMP — Impacto e bloqueio ao desativar módulos
+
+**Endpoint:** `GET /api/admin/empresas/:id/impacto` (query `modulos=<JSON>`; prévia sem persistir — BR-105). O bloqueio (409) acontece no `PATCH /modulos` (API-UC-043).
+
+**Regras:** BR-096 · **Postman:** `Empresas > Módulos` (impacto no response)
+
+### IMP-CT-1 — Prévia retorna impacto sem persistir
+**Dado** empresa com cliente + contrato (3 parcelas em aberto) → **Quando** `GET /impacto?modulos=[sem clientes]` → **Então** 200, `bloqueado: true`, item `clientes` contagem 1 e item `contratos` contagem 3.
+
+### IMP-CT-2 — Conjunto igual → desligados vazio
+**Dado** `GET /impacto?modulos=<modulos atuais>` → **Então** 200, `desligados: []`.
+
+### MOD-G-CT-1 — Desativar clientes com dados → 409
+**Dado** empresa com cliente + contrato em aberto → **Quando** `PATCH /modulos` sem `clientes` (cascata desliga contratos/cobrancas/rota/atendidos) → **Então** **409** `MODULE_HAS_ACTIVE_DATA` + `impacto` com contagens (DOC-1: clientes=1, contratos parcelas em aberto=3).
+
+### MOD-G-CT-2 — Sem dados → 200
+**Dado** empresa sem dados → **Então** `PATCH /modulos` → **200**, `impacto.bloqueado: false`.
+
+### MOD-G-CT-3 — force sobrepõe + auditoria
+**Dado** `force: true` + `motivo` → **Então** **200** ecoando `impacto`; a mudança é gravada em `auditoria_modulos`.
+
+### MOD-G-CT-4 — Caixa aberto → 409 (sem force)
+**Dado** empresa com `caixa_base != 0` → **Quando** desativa `caixa` → **Então** **409**.
+
+### MOD-G-CT-5 — Reativar preserva dados
+**Dado** módulo desativado com force → **Quando** reativado → **Então** **200**; clientes/contratos seguem íntegros e os endpoints voltam a 200.
+
+### MOD-G-CT-6 — Idempotência
+**Dado** `PATCH /modulos` com o mesmo conjunto atual → **Então** **200** sem guard (`desligados: []`).
+
+### MOD-G-CT-7 — Caixa nunca força
+**Dado** caixa aberto + `force: true` → **Então** **409** (caixa não é forcável).
+
+### MOD-G-CT-8 — Só cadastros (sem contrato) → 200 com confirmação
+**Dado** empresa com clientes mas sem contratos → **Então** `PATCH` desativando `clientes` → **200**, item `clientes` contagem > 0 e `bloqueia: false`.
+
+### MOD-G-CT-9 — Cascata evidenciada no impacto
+**Dado** cliente com contrato → **Então** 409 e o `impacto` lista `contratos` como bloqueante (cascata).
+
+### MOD-G-CT-10 — Remover tudo com dados → 409
+**Dado** `PATCH /modulos` com `[]` numa empresa com dados → **Então** **409**.
+
+### MOD-G-CT-11 — Admin (não super) em force → 403
+**Dado** token de admin → **Quando** `PATCH` com `force: true` → **Então** **403**.
+
+---
+
 # AUTH — SENHA (PLAN-029)
 
 ## API-UC-041 — Alterar a própria senha

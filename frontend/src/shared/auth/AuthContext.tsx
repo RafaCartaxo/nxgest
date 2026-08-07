@@ -9,6 +9,7 @@ export interface AuthUser {
   empresaId?: string | null
   empresaNome?: string | null
   modulos?: string[] | null
+  capacidades?: string[] | null
   chefeId?: string | null
   foto?: string | null
 }
@@ -33,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const applyMe = useCallback((me: MeResponse) => {
-    setUser({ id: me.id, nome: me.nome, email: me.email, role: me.role, empresaId: me.empresaId, empresaNome: me.empresaNome, modulos: me.modulos ?? null, chefeId: me.chefeId ?? null, foto: me.foto ?? null })
+    setUser({ id: me.id, nome: me.nome, email: me.email, role: me.role, empresaId: me.empresaId, empresaNome: me.empresaNome, modulos: me.modulos ?? null, capacidades: me.capacidades ?? null, chefeId: me.chefeId ?? null, foto: me.foto ?? null })
   }, [])
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response: LoginResponse = await loginService(email, senha)
     localStorage.setItem(TOKEN_KEY, response.token)
     setToken(response.token)
-    setUser({ ...response.usuario, modulos: response.usuario.modulos ?? null })
+    setUser({ ...response.usuario, modulos: response.usuario.modulos ?? null, capacidades: response.usuario.capacidades ?? null })
     return response
   }, [])
 

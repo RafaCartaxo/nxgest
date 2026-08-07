@@ -361,7 +361,9 @@
     "OPERATOR_NOT_FOUND": "Operador no encontrado.",
     "INVALID_CURRENT_PASSWORD": "Contraseña actual incorrecta.",
     "INTERNAL_ERROR": "Error interno del servidor. Intente de nuevo.",
-    "MODULE_DISABLED": "Este módulo está desactivado para su empresa."
+    "MODULE_DISABLED": "Este módulo está desactivado para su empresa.",
+    "MODULE_HAS_ACTIVE_DATA": "Hay datos financieros pendientes en los módulos que se desactivarían.",
+    "CAPABILITY_DISABLED": "Este recurso está desactivado para su empresa."
   },
   "auth": {
     "title": "Iniciar Sesión",
@@ -516,7 +518,36 @@
     "operadorUm": "operador",
     "operadorOutros": "operadores",
     "modulosButton": "Módulos ({{ativos}}/{{total}})",
-    "documentoPlaceholder": "CPF o CNPJ"
+    "documentoPlaceholder": "CPF o CNPJ",
+    "capacidadesButton": "Recursos",
+    "impactoTitulo": "Confirmar desactivación",
+    "impactoDescricao": "Desactivar estos módulos ocultará los datos de abajo para esta empresa. Revisa antes de continuar.",
+    "impactoBloqueado": "No se puede desactivar mientras haya datos financieros pendientes:",
+    "impactoOculta": "Al desactivar, estos módulos quedan ocultos (datos preservados):",
+    "impactoVazio": "Ningún dato afectado por este cambio.",
+    "impactoConfirmar": "Confirmar desactivación",
+    "impactoForcar": "Forzar desactivación",
+    "impactoCancelar": "Cancelar",
+    "impactoMotivo": "Motivo del forzar",
+    "impactoMotivoPlaceholder": "Indica el motivo (obligatorio)"
+  },
+  "capacidades": {
+    "titulo": "Recursos — {{empresa}}",
+    "hint": "Activa o desactiva recursos individuales de los módulos activos de esta empresa.",
+    "todasAtivas": "Todas activas por defecto",
+    "todasAtivasDesc": "Sin configuración, valen todos los recursos de los módulos activos.",
+    "recursos": "Recursos",
+    "requerModulo": "Requiere módulo activo: {{modulo}}",
+    "salvo": "Recursos actualizados.",
+    "erro": "Error al actualizar recursos.",
+    "cliente.whatsapp": "WhatsApp del cliente",
+    "cliente.ligar": "Llamar al cliente",
+    "cliente.navegar": "Navegar hasta el cliente (GPS)",
+    "cliente.anexos": "Adjuntos del cliente",
+    "rota.whatsapp": "WhatsApp en la ruta",
+    "rota.ligar": "Llamar en la ruta",
+    "rota.navegar": "Navegar en la ruta (GPS)",
+    "pagamento.comprovanteWhatsapp": "Comprobante por WhatsApp"
   },
   "theme": {
     "default": "Azul",

@@ -10,6 +10,7 @@ export interface LoginResponse {
     empresaId?: string | null
     empresaNome?: string | null
     modulos?: string[] | null
+    capacidades?: string[] | null
     chefeId?: string | null
     foto?: string | null
   }
@@ -23,6 +24,7 @@ export interface MeResponse {
   empresaId?: string | null
   empresaNome?: string | null
   modulos?: string[] | null
+  capacidades?: string[] | null
   chefeId?: string | null
   foto?: string | null
 }

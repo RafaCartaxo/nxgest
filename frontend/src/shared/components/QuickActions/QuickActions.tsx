@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react"
 
-interface QuickAction {
+export interface QuickAction {
   icon?: LucideIcon
   label: string
   onClick: () => void

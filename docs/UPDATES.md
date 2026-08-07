@@ -2,6 +2,36 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — Modularização fina: capacidades (BR-104) + guard de desativação (BR-105)
+
+**Adicionado — Capacidades (recursos finos por empresa)**
+- `PATCH /api/admin/empresas/:id/capacidades` (só super admin): ativa/desativa recursos individuais de um módulo — `cliente:whatsapp/ligar/navegar/anexos`, `rota:whatsapp/ligar/navegar`, `pagamento:comprovante_whatsapp`. `null` = todas ativas; `[]` = nenhuma; dono off ⇒ inativa. `login`/`me` devolvem `capacidades`.
+- `CapacidadesModal` (via ModulosModal → "Recursos") + gating `hasCapability` nas telas (ClienteDetail, Rota, ContratoDetail, Anexos). Enforcement real em `cliente:anexos` (403 `CAPABILITY_DISABLED`).
+- `audit:modules` valida o capability manifest (espelho backend↔frontend + dono válido).
+
+**Corrigido — Guard de desativação (o "nada ocorre" virou proteção)**
+- `PATCH /modulos` agora **calcula o impacto** e bloqueia com **409 `MODULE_HAS_ACTIVE_DATA`** quando há dado financeiro em aberto (parcelas, pendências, caixa). **Caixa aberto nunca é forcável**; `force:true` + **motivo obrigatório (≤200)** só super admin sobrepõe os demais.
+- `GET /admin/empresas/:id/impacto?modulos=<JSON>` = prévia sem persistir (usada pela UI).
+- **Auditoria:** toda mudança de módulos/capacidades em `auditoria_modulos` (quem, antes/depois, force, motivo).
+
+**Arquitetura (PLAN-059)**
+- Presentation parou de tocar `infrastructure`: orquestração movida para use-cases (`AtualizarModulos`, `AtualizarCapacidades`, `CalcularImpacto`) com ports (`IImpactoDesativacaoQuery`, `IAuditoriaModulosWriter`) e errors de domínio (409/422) — `00-ARCHITECTURE.md` respeitado.
+
+**QA:** smoke **156 → 184/184** (CAP-100..110 · MOD-G-1..13 · IMP-001/002) · vitest 29 · `migracao:test` (ALTER em banco legado) · gates verdes (build · audit:ui/styles/modules · docs:audit).
+
+Referência: [PLAN-059](plans/PLAN-059-modularizacao-fina-capacidades-guard.md) · BR-104/105
+
+## 07/08/2026 — Navegação "app-first": bottom tab bar + menu do usuário (Stitch-Nav-AppFirst)
+
+**Redesenhado (identidade intacta — tokens/cores/fontes)**
+- **Mobile:** hamburger/drawer substituídos por **bottom tab bar** com 5 abas (Central · Clientes · Contratos · Caixa · Rota), gated por módulo (whitelabel), aba ativa por prefixo, `safe-area`; **topo fino** com marca + avatar.
+- **Desktop:** sidebar `w-64` sem o header superior duplicado; rodapé da sidebar agora tem o **menu do usuário** (avatar).
+- **Configurações** saíram da engrenagem solta e entram no **menu do usuário** (Perfil · Configurações · Sair; admin/super no mobile) — mesmo `PreferenciasModal` (Modo/Cor/Idioma).
+- **Rota** entrou na navegação principal (tab bar mobile + sidebar desktop) — a ação diária do operador não fica mais escondida.
+- Removido `Topbar.tsx`; adicionados `BottomTabBar.tsx` e `UserMenu.tsx`.
+
+Referência: [Stitch-Nav-AppFirst-NXGestao](plans/Stitch-Nav-AppFirst-NXGestao.md) · `AppLayout.tsx` · `BottomTabBar.tsx` · `UserMenu.tsx`
+
 ## 06/08/2026 — P11: empresa aceita CPF ou CNPJ · P10: viewer de anexos in-app + modal iOS
 
 **Corrigido**

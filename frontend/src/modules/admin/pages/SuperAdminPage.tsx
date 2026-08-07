@@ -8,21 +8,37 @@ import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { Button } from "../../../shared/components/Button.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
+import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { EmpresaList } from "../components/EmpresaList.js"
 import { EmpresaForm } from "../components/EmpresaForm.js"
 import { ModulosModal } from "../components/ModulosModal.js"
-import { listEmpresas, createEmpresa, updateEmpresaModulos, type EmpresaComStats } from "../services/empresa.service.js"
+import { CapacidadesModal } from "../components/CapacidadesModal.js"
+import { ImpactConfirmModal } from "../components/ImpactConfirmModal.js"
+import {
+  listEmpresas,
+  createEmpresa,
+  updateEmpresaModulos,
+  updateEmpresaModulosForcado,
+  updateEmpresaCapacidades,
+  getImpactoDesativacao,
+  type EmpresaComStats,
+  type ImpactoDesativacao,
+} from "../services/empresa.service.js"
 import { ApiError } from "../../../api/client.js"
 
 export function SuperAdminPage() {
   const { t } = useTranslation()
   const feedback = useFeedback()
+  const { user } = useAuth()
   const [empresas, setEmpresas] = useState<EmpresaComStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [modulosTarget, setModulosTarget] = useState<EmpresaComStats | null>(null)
+  const [capacidadesTarget, setCapacidadesTarget] = useState<EmpresaComStats | null>(null)
   const [savingModulos, setSavingModulos] = useState(false)
+  const [savingCapacidades, setSavingCapacidades] = useState(false)
+  const [impactoState, setImpactoState] = useState<{ modulos: string[]; impacto: ImpactoDesativacao } | null>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -54,6 +70,12 @@ export function SuperAdminPage() {
     if (!modulosTarget) return
     setSavingModulos(true)
     try {
+      const impacto = await getImpactoDesativacao(modulosTarget.id, modulos)
+      const temDado = impacto.impacto.some((i) => i.contagem > 0)
+      if (impacto.bloqueado || temDado) {
+        setImpactoState({ modulos, impacto })
+        return
+      }
       await updateEmpresaModulos(modulosTarget.id, modulos)
       feedback.show({ status: "success", message: t("superAdmin.modulosSalvo") })
       setModulosTarget(null)
@@ -62,6 +84,41 @@ export function SuperAdminPage() {
       feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("superAdmin.erroModulos") })
     } finally {
       setSavingModulos(false)
+    }
+  }
+
+  async function handleConfirmImpacto(force: boolean, motivo: string) {
+    if (!modulosTarget || !impactoState) return
+    setSavingModulos(true)
+    try {
+      if (force) {
+        await updateEmpresaModulosForcado(modulosTarget.id, impactoState.modulos, motivo)
+      } else {
+        await updateEmpresaModulos(modulosTarget.id, impactoState.modulos)
+      }
+      feedback.show({ status: "success", message: t("superAdmin.modulosSalvo") })
+      setImpactoState(null)
+      setModulosTarget(null)
+      fetchData()
+    } catch (err) {
+      feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("superAdmin.erroModulos") })
+    } finally {
+      setSavingModulos(false)
+    }
+  }
+
+  async function handleSaveCapacidades(capacidades: string[] | null) {
+    if (!capacidadesTarget) return
+    setSavingCapacidades(true)
+    try {
+      await updateEmpresaCapacidades(capacidadesTarget.id, capacidades)
+      feedback.show({ status: "success", message: t("capacidades.salvo") })
+      setCapacidadesTarget(null)
+      fetchData()
+    } catch (err) {
+      feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("capacidades.erro") })
+    } finally {
+      setSavingCapacidades(false)
     }
   }
 
@@ -98,7 +155,32 @@ export function SuperAdminPage() {
         initial={modulosTarget?.modulos ?? null}
         saving={savingModulos}
         onSave={handleSaveModulos}
+        onOpenCapacidades={() => {
+          if (!modulosTarget) return
+          setCapacidadesTarget(modulosTarget)
+          setModulosTarget(null)
+        }}
         onClose={() => setModulosTarget(null)}
+      />
+
+      <CapacidadesModal
+        key={capacidadesTarget?.id ?? "none"}
+        open={capacidadesTarget !== null}
+        empresaNome={capacidadesTarget?.nome ?? ""}
+        initial={capacidadesTarget?.capacidades ?? null}
+        modulos={capacidadesTarget?.modulos ?? null}
+        saving={savingCapacidades}
+        onSave={handleSaveCapacidades}
+        onClose={() => setCapacidadesTarget(null)}
+      />
+
+      <ImpactConfirmModal
+        open={impactoState !== null}
+        impacto={impactoState?.impacto ?? null}
+        canForce={user?.role === "super_admin"}
+        saving={savingModulos}
+        onConfirm={handleConfirmImpacto}
+        onClose={() => setImpactoState(null)}
       />
 
       <EstadoTela

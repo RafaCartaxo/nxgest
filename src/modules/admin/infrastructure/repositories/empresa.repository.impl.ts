@@ -3,15 +3,17 @@ import { db, empresas, usuarios, clientes, contratos } from "../../../../databas
 import type { IEmpresaRepository } from "../../application/ports/empresa.repository.js"
 import type { EmpresaComStats } from "../../domain/empresa.entity.js"
 import { parseModulos, serializeModulos, DEFAULT_MODULOS } from "../../domain/modules.js"
+import { parseCapacidades, serializeCapacidades } from "../../domain/capacidades.js"
 import type { IAuthRepository } from "../../../../modules/auth/application/ports/auth.repository.js"
 import { v4 as uuid } from "uuid"
 import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
 
-const toComStats = (row: { id: string; nome: string; createdAt: string; modulos?: string | null; documento?: string | null; nomeFantasia?: string | null; ativa?: number | boolean | null }, stats: Omit<EmpresaComStats, "id" | "nome" | "createdAt" | "modulos" | "documento" | "nomeFantasia" | "ativa">): EmpresaComStats => ({
+const toComStats = (row: { id: string; nome: string; createdAt: string; modulos?: string | null; capacidades?: string | null; documento?: string | null; nomeFantasia?: string | null; ativa?: number | boolean | null }, stats: Omit<EmpresaComStats, "id" | "nome" | "createdAt" | "modulos" | "capacidades" | "documento" | "nomeFantasia" | "ativa">): EmpresaComStats => ({
   id: row.id,
   nome: row.nome,
   createdAt: row.createdAt,
   modulos: parseModulos(row.modulos ?? null),
+  capacidades: parseCapacidades(row.capacidades ?? null),
   documento: row.documento ?? null,
   nomeFantasia: row.nomeFantasia ?? null,
   ativa: row.ativa == null ? true : Boolean(row.ativa),
@@ -90,7 +92,7 @@ export class EmpresaRepository implements IEmpresaRepository {
       }).run()
 
       return {
-        empresa: { id: empresaId, nome: input.nome, documento: input.documento ?? null, nomeFantasia: input.nomeFantasia ?? null, ativa: input.ativa === false ? false : true, createdAt: new Date().toISOString(), totalUsuarios: 1, totalClientes: 0, contratosAtivos: 0, modulos: [...DEFAULT_MODULOS] },
+        empresa: { id: empresaId, nome: input.nome, documento: input.documento ?? null, nomeFantasia: input.nomeFantasia ?? null, ativa: input.ativa === false ? false : true, createdAt: new Date().toISOString(), totalUsuarios: 1, totalClientes: 0, contratosAtivos: 0, modulos: [...DEFAULT_MODULOS], capacidades: null },
         admin: { id: adminId, nome: input.adminNome, email: input.adminEmail },
       }
     })
@@ -100,6 +102,13 @@ export class EmpresaRepository implements IEmpresaRepository {
     const [row] = await db.select().from(empresas).where(eq(empresas.id, id)).limit(1)
     if (!row) return null
     await db.update(empresas).set({ modulos: serializeModulos(modulos) }).where(eq(empresas.id, id))
+    return this.findById(id)
+  }
+
+  async updateCapacidades(id: string, capacidades: string[] | null): Promise<EmpresaComStats | null> {
+    const [row] = await db.select().from(empresas).where(eq(empresas.id, id)).limit(1)
+    if (!row) return null
+    await db.update(empresas).set({ capacidades: capacidades === null ? null : serializeCapacidades(capacidades) }).where(eq(empresas.id, id))
     return this.findById(id)
   }
 

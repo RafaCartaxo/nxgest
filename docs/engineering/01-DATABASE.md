@@ -77,6 +77,24 @@ O sistema adota o modelo de multi-tenant por empresa. O isolamento de dados é f
 | id | UUID v4 | Sim | Chave primária |
 | nome | TEXT | Sim | Nome da empresa |
 | createdAt | TEXT | Sim | Data de criação |
+| modulos | TEXT (JSON) | Não | Módulos ativos (whitelabel, BR-092). `null` = todos ativos |
+| capacidades | TEXT (JSON) | Não | Recursos finos (BR-104). `null` = todas ativas; `[]` = nenhuma |
+| documento | TEXT | Não | CPF/CNPJ (dígitos) |
+| nomeFantasia | TEXT | Não | Nome fantasia |
+| ativa | INTEGER | Sim | 1 = ativa, 0 = inativa |
+
+## Auditoria de módulos/capacidades (`auditoria_modulos`, BR-105)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| id | UUID v4 | Chave primária |
+| empresaId | TEXT | Empresa afetada |
+| adminId | TEXT | Responsável (super admin) |
+| tipo | TEXT | `modulos` \| `capacidades` |
+| antes / depois | TEXT (JSON) | Valor antes/depois (`null` = ausente) |
+| force | INTEGER | 1 se a desativação foi forçada |
+| motivo | TEXT | Motivo do `force` (obrigatório quando force) |
+| createdAt | TEXT | Data/hora |
 
 ## Isolamento por empresaId
 

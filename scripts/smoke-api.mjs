@@ -9,6 +9,21 @@
  *
  * Não testa rate limit (429) — bloquearia o IP da própria execução.
  */
+import Database from "better-sqlite3"
+
+const SMOKE_DB_PATH = process.env.SMOKE_DB_PATH || "/tmp/nxgestao-smoke.db"
+
+/** Leituras diretas no banco isolado (auditoria). Retorna -1 se indisponível. */
+function auditoriaCount(tipo, empresaId) {
+  try {
+    const d = new Database(SMOKE_DB_PATH, { readonly: true })
+    const row = d.prepare("SELECT COUNT(*) AS c FROM auditoria_modulos WHERE tipo = ? AND empresaId = ?").get(tipo, empresaId)
+    d.close()
+    return row?.c ?? 0
+  } catch {
+    return -1
+  }
+}
 const baseUrlIdx = process.argv.indexOf("--baseUrl")
 const baseUrlArg = baseUrlIdx !== -1 ? process.argv[baseUrlIdx + 1] : undefined
 const BASE = baseUrlArg || "http://localhost:3002"
@@ -924,6 +939,262 @@ async function main() {
     expect(r, 422, "atendidos sem cobrancas")
     if (!(r.data?.message ?? "").includes("cobrancas")) throw new Error(`message=${r.data?.message}`)
     await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+  })
+
+  // ---------- CAPACIDADES (recursos finos do whitelabel) ----------
+  let novaTenantToken
+  await t("CAP-100", "Setup: login do admin da novaEmpresa (token p/ capacidades)", async () => {
+    const login = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
+    expect(login, 200, "login tenant novaEmpresa")
+    novaTenantToken = login.data.token
+  })
+
+  await t("CAP-101", "PATCH capacidades válido (200) + GET/:id + /me refletem", async () => {
+    const set = ["cliente:whatsapp", "cliente:anexos"]
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: set } })
+    expect(r, 200, "patch capacidades")
+    const g = await req("GET", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken })
+    expect(g, 200, "get empresa")
+    if (JSON.stringify(g.data.capacidades?.sort()) !== JSON.stringify([...set].sort())) throw new Error(`GET/:id não refletiu: ${JSON.stringify(g.data.capacidades)}`)
+    const me = await req("GET", "/api/auth/me", { token: novaTenantToken })
+    expect(me, 200, "me tenant")
+    if (JSON.stringify(me.data.capacidades?.sort()) !== JSON.stringify([...set].sort())) throw new Error(`/me não refletiu: ${JSON.stringify(me.data.capacidades)}`)
+  })
+
+  await t("CAP-102", "Capacidade com módulo dono desativado (422)", async () => {
+    try {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL.filter((m) => m !== "rota") } })
+      const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: ["rota:whatsapp"] } })
+      expect(r, 422, "capacidade com dono off")
+      if (!(r.data?.message ?? "").includes("rota")) throw new Error(`message=${r.data?.message}`)
+    } finally {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    }
+  })
+
+  await t("CAP-103", "Capacidade inexistente (422)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: ["nao:existe"] } })
+    expect(r, 422, "capacidade inexistente")
+  })
+
+  await t("CAP-104", "Array vazio = nenhuma capacidade (200) + /me reflete", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: [] } })
+    expect(r, 200, "array vazio")
+    const me = await req("GET", "/api/auth/me", { token: novaTenantToken })
+    expect(me, 200, "me")
+    if (JSON.stringify(me.data.capacidades) !== "[]") throw new Error(`capacidades=${JSON.stringify(me.data.capacidades)}`)
+  })
+
+  await t("CAP-105", "Admin (não super) em PATCH capacidades (403)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: adminToken, body: { capacidades: [] } })
+    expect(r, 403, "admin sem permissão")
+  })
+
+  await t("CAP-106", "Não vaza entre tenants (empresa 0 /me segue null)", async () => {
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: ["cliente:whatsapp"] } })
+    const me = await req("GET", "/api/auth/me", { token: adminToken })
+    expect(me, 200, "me empresa 0")
+    if (me.data.capacidades !== null) throw new Error(`empresa 0 vazou capacidades: ${JSON.stringify(me.data.capacidades)}`)
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: null } })
+  })
+
+  await t("CAP-107", "PATCH null limpa override (volta todas ativas)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: null } })
+    expect(r, 200, "null limpa")
+    const g = await req("GET", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken })
+    expect(g, 200, "get")
+    if (g.data.capacidades !== null) throw new Error(`capacidades=${JSON.stringify(g.data.capacidades)}`)
+  })
+
+  await t("CAP-108", "Capacidade com dono off persiste inerte; reativa junto", async () => {
+    try {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: ["rota:whatsapp"] } })
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL.filter((m) => m !== "rota") } })
+      const g = await req("GET", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken })
+      expect(g, 200, "get após dono off")
+      if (JSON.stringify(g.data.capacidades) !== '["rota:whatsapp"]') throw new Error(`capacidades=${JSON.stringify(g.data.capacidades)}`)
+      if (g.data.modulos.includes("rota")) throw new Error("rota ainda ativa")
+    } finally {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    }
+    const g2 = await req("GET", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken })
+    if (JSON.stringify(g2.data.capacidades) !== '["rota:whatsapp"]') throw new Error(`capacidades=${JSON.stringify(g2.data.capacidades)}`)
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: null } })
+  })
+
+  await t("CAP-109", "Duplicatas normalizadas (200)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: ["cliente:whatsapp", "cliente:whatsapp", "cliente:ligar"] } })
+    expect(r, 200, "duplicata")
+    const g = await req("GET", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken })
+    if (JSON.stringify(g.data.capacidades?.sort()) !== JSON.stringify(["cliente:ligar", "cliente:whatsapp"])) throw new Error(`capacidades=${JSON.stringify(g.data.capacidades)}`)
+    await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: null } })
+  })
+
+  await t("CAP-110", "cliente:anexos off → GET/POST /clientes/:id/anexos (403 CAPABILITY_DISABLED)", async () => {
+    const cli = await req("POST", "/api/clientes", { token: novaTenantToken, body: { nome: "Cliente Anexos", telefone: "83988880001", cpf: "52998224725", comercio: "Com", endereco: { logradouro: "Rua X" } } })
+    expect(cli, 201, "criar cliente p/ anexos")
+    const cliId = cli.data.id
+    try {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: [] } })
+      const g = await req("GET", `/api/clientes/${cliId}/anexos`, { token: novaTenantToken })
+      expect(g, 403, "anexos off GET")
+      if (g.data?.code !== "CAPABILITY_DISABLED") throw new Error(`code=${g.data?.code}`)
+    } finally {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: null } })
+    }
+  })
+
+  // ---------- GUARD DE DESATIVAÇÃO COM DADOS (BR-105) + IMPACTO ----------
+  let guardEmpresaId, guardAdminToken, guardClienteId, guardContratoId
+  await t("MOD-G-S", "Setup: empresa de guarda com cliente + contrato (3 parcelas em aberto)", async () => {
+    const nome = `Empresa Guard ${Date.now()}`
+    const email = `guard.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, adminNome: "Guard Admin", adminEmail: email, adminSenha: SENHA } })
+    expect(r, 201, "criar empresa guarda")
+    guardEmpresaId = r.data.empresa.id
+    const login = await req("POST", "/api/auth/login", { body: { email, senha: SENHA } })
+    expect(login, 200, "login admin guarda")
+    guardAdminToken = login.data.token
+    await req("GET", "/api/caixa", { token: guardAdminToken })
+    const fundo = await req("POST", "/api/caixa/ajuste", { token: guardAdminToken, body: { valor: 5000, motivo: "smoke fundo guarda" } })
+    expect(fundo, 201, "fundear caixa guarda (contrato exige saldo)")
+    const cli = await req("POST", "/api/clientes", { token: guardAdminToken, body: { nome: "Cliente Guard", telefone: "83988880002", cpf: "39053344705", comercio: "Com", endereco: { logradouro: "Rua A", numero: "10", bairro: "Centro", cidade: "São Paulo", estado: "SP" } } })
+    expect(cli, 201, "criar cliente guarda")
+    guardClienteId = cli.data.id
+    const con = await req("POST", "/api/contratos", { token: guardAdminToken, body: { clienteId: cli.data.id, valorBase: 1200, percentualJuros: 0, quantidadeParcelas: 3, dataInicio: "2026-08-04" } })
+    expect(con, 201, "criar contrato guarda")
+    guardContratoId = con.data.id
+  })
+
+  // Remover `clientes` ⇒ cascata também desliga contratos/cobrancas/rota/atendidos (grafo).
+  const semClientesCascata = MODULOS_ALL.filter((m) => !["clientes", "contratos", "cobrancas", "rota", "atendidos"].includes(m))
+  // Remover `caixa` ⇒ cascata desliga gastos (gastos depende de caixa).
+  const semCaixaCascata = MODULOS_ALL.filter((m) => !["caixa", "gastos"].includes(m))
+  await t("MOD-G-1", "Desativar clientes com dados → 409 MODULE_HAS_ACTIVE_DATA + impacto (DOC-1 contagens)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semClientesCascata } })
+    expect(r, 409, "clientes com dados")
+    if (r.data?.code !== "MODULE_HAS_ACTIVE_DATA") throw new Error(`code=${r.data?.code}`)
+    const imp = r.data?.impacto ?? {}
+    if (imp.bloqueado !== true) throw new Error(`impacto.bloqueado=${imp.bloqueado}`)
+    const cli = imp.impacto?.find((i) => i.modulo === "clientes")
+    const con = imp.impacto?.find((i) => i.modulo === "contratos")
+    if (cli?.contagem !== 1) throw new Error(`clientes contagem=${cli?.contagem}`)
+    if (con?.contagem !== 3) throw new Error(`contratos parcelas em aberto=${con?.contagem}`)
+    if (con?.bloqueia !== true) throw new Error("contratos deveria bloquear")
+  })
+
+  await t("MOD-G-6", "Idempotência: PATCH com conjunto atual → 200 sem guard", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    expect(r, 200, "mesmo conjunto")
+    if (r.data?.impacto?.desligados?.length !== 0) throw new Error(`desligados=${JSON.stringify(r.data?.impacto?.desligados)}`)
+  })
+
+  await t("IMP-001", "GET impacto (prévia) com dados → bloqueado + contagens exatas", async () => {
+    const r = await req("GET", `/api/admin/empresas/${guardEmpresaId}/impacto`, { token: superToken, query: { modulos: JSON.stringify(semClientesCascata) } })
+    expect(r, 200, "impacto preview")
+    if (r.data.bloqueado !== true) throw new Error("bloqueado deveria ser true")
+    if (!r.data.desligados.includes("clientes")) throw new Error("desligados sem clientes")
+    const con = r.data.impacto?.find((i) => i.modulo === "contratos")
+    if (con?.contagem !== 3) throw new Error(`contratos=${con?.contagem}`)
+  })
+
+  await t("IMP-002", "GET impacto com conjunto igual → desligados vazio", async () => {
+    const r = await req("GET", `/api/admin/empresas/${guardEmpresaId}/impacto`, { token: superToken, query: { modulos: JSON.stringify(MODULOS_ALL) } })
+    expect(r, 200, "impacto preview igual")
+    if (r.data.desligados.length !== 0) throw new Error(`desligados=${JSON.stringify(r.data.desligados)}`)
+  })
+
+  let guardEmpresa2Id, guardAdmin2Token
+  await t("MOD-G-S2", "Setup: empresa de guarda 2 sem dados", async () => {
+    const email = `guard2.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Guard2 ${Date.now()}`, adminNome: "Guard2 Admin", adminEmail: email, adminSenha: SENHA } })
+    expect(r, 201, "criar empresa guarda 2")
+    guardEmpresa2Id = r.data.empresa.id
+    const login = await req("POST", "/api/auth/login", { body: { email, senha: SENHA } })
+    expect(login, 200, "login guarda 2")
+    guardAdmin2Token = login.data.token
+  })
+
+  await t("MOD-G-2", "Desativar módulo SEM dados → 200 (sem guard)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresa2Id}/modulos`, { token: superToken, body: { modulos: semClientesCascata } })
+    expect(r, 200, "sem dados")
+    if (r.data?.impacto?.bloqueado !== false) throw new Error(`bloqueado=${r.data?.impacto?.bloqueado}`)
+    await req("PATCH", `/api/admin/empresas/${guardEmpresa2Id}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+  })
+
+  await t("MOD-G-8", "clientes só com cadastros (sem contrato) → 200 com impacto de confirmação", async () => {
+    const cli = await req("POST", "/api/clientes", { token: guardAdmin2Token, body: { nome: "Cliente Guard2", telefone: "83988880003", cpf: "11144477735", comercio: "Com", endereco: { logradouro: "Rua B" } } })
+    expect(cli, 201, "criar cliente guarda 2")
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresa2Id}/modulos`, { token: superToken, body: { modulos: semClientesCascata } })
+    expect(r, 200, "clientes só cadastro")
+    const cliImp = r.data?.impacto?.impacto?.find((i) => i.modulo === "clientes")
+    if (cliImp?.contagem !== 1 || cliImp?.bloqueia !== false) throw new Error(`clientes impacto=${JSON.stringify(cliImp)}`)
+    await req("PATCH", `/api/admin/empresas/${guardEmpresa2Id}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+  })
+
+  await t("MOD-G-3", "force → 200 ecoando impacto + auditoria gravada", async () => {
+    const antes = auditoriaCount("modulos", guardEmpresaId)
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semClientesCascata, force: true, motivo: "smoke guard force" } })
+    expect(r, 200, "force sobrepõe")
+    if (r.data?.impacto?.bloqueado !== true) throw new Error(`impacto não ecoado: ${JSON.stringify(r.data?.impacto?.bloqueado)}`)
+    if (r.data?.modulos?.includes("clientes")) throw new Error("clientes ainda ativo após force")
+    if (auditoriaCount("modulos", guardEmpresaId) !== antes + 1) throw new Error("auditoria de modulos não gravada")
+  })
+
+  await t("MOD-G-5", "Reativar após force → dados preservados + /me e endpoints voltam a 200", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    expect(r, 200, "reativar todos")
+    const cli = await req("GET", `/api/clientes/${guardClienteId}`, { token: guardAdminToken })
+    expect(cli, 200, "cliente preservado")
+    if (cli.data.id !== guardClienteId) throw new Error("cliente divergiu")
+    const me = await req("GET", "/api/auth/me", { token: guardAdminToken })
+    expect(me, 200, "me")
+    if (me.data.modulos?.length !== MODULOS_ALL.length) throw new Error(`modulos=${JSON.stringify(me.data.modulos)}`)
+  })
+
+  await t("MOD-G-4", "Caixa com caixaBase ≠ 0 → 409 (sem force)", async () => {
+    await req("GET", "/api/caixa", { token: guardAdminToken })
+    const aj = await req("POST", "/api/caixa/ajuste", { token: guardAdminToken, body: { valor: 500, motivo: "smoke guard caixa" } })
+    expect(aj, 201, "ajuste caixa guarda")
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semCaixaCascata } })
+    expect(r, 409, "caixa aberto")
+    if (r.data?.impacto?.impacto?.find((i) => i.modulo === "caixa")?.bloqueia !== true) throw new Error("caixa deveria bloquear")
+  })
+
+  await t("MOD-G-7", "Caixa aberto → 409 MESMO com force (caixa nunca força)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semCaixaCascata, force: true, motivo: "tentativa force caixa" } })
+    expect(r, 409, "caixa com force")
+    if (r.data?.code !== "MODULE_HAS_ACTIVE_DATA") throw new Error(`code=${r.data?.code}`)
+  })
+
+  await t("MOD-G-9", "Clientes com contrato ativo → 409 e impacto evidencia a cascata (contratos)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semClientesCascata } })
+    expect(r, 409, "cascata bloqueia")
+    const con = r.data?.impacto?.impacto?.find((i) => i.modulo === "contratos")
+    if (!con || con.bloqueia !== true) throw new Error(`cascata não evidenciada: ${JSON.stringify(r.data?.impacto)}`)
+  })
+
+  await t("MOD-G-10", "Remover todos os módulos com dados → 409 (só central)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: [] } })
+    expect(r, 409, "tudo off com dados")
+    if (r.data?.code !== "MODULE_HAS_ACTIVE_DATA") throw new Error(`code=${r.data?.code}`)
+  })
+
+  await t("MOD-G-11", "Admin (não super) em PATCH /modulos com force (403)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: adminToken, body: { modulos: MODULOS_ALL, force: true } })
+    expect(r, 403, "admin sem permissão")
+  })
+
+  await t("MOD-G-12", "force SEM motivo → 422 (BR-105)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semClientesCascata, force: true } })
+    expect(r, 422, "force sem motivo")
+    if (!(r.data?.message ?? "").toLowerCase().includes("motivo")) throw new Error(`message=${r.data?.message}`)
+  })
+
+  await t("MOD-G-13", "force com motivo > 200 caracteres → 422 (BR-105)", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semClientesCascata, force: true, motivo: "x".repeat(201) } })
+    expect(r, 422, "motivo longo")
+    if (!(r.data?.message ?? "").includes("200")) throw new Error(`message=${r.data?.message}`)
   })
 
   // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------

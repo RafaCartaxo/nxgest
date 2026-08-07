@@ -13,7 +13,8 @@ export class ApiError extends Error {
     public status: number,
     public code: string,
     message: string,
-    public details?: { field: string; message: string }[]
+    public details?: { field: string; message: string }[],
+    public payload?: unknown
   ) {
     super(message)
     this.name = "ApiError"
@@ -63,7 +64,8 @@ export async function apiRequest<T>(
       response.status,
       data.code,
       message,
-      data.details
+      data.details,
+      data
     )
   }
 

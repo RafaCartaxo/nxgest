@@ -69,7 +69,7 @@ function realBackendRoutes() {
     for (const [name, src] of srcByVar) {
       const mount = mountByVar.get(name)
       if (!mount) continue
-      for (const m of src.matchAll(/router\.use\(\s*"([^"]+)",\s*(\w+Routes)\)/g)) {
+      for (const m of src.matchAll(/router\.use\(\s*"([^"]+)",[\s\S]*?(\w+Routes)\s*\)/g)) {
         const childMount = norm(mount + m[1])
         if (mountByVar.get(m[2]) !== childMount) {
           mountByVar.set(m[2], childMount)

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Check, Lock } from "lucide-react"
+import { Check, Lock, ToggleLeft } from "lucide-react"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { Button } from "../../../shared/components/Button.js"
 import { Switch } from "../../../shared/components/Switch/Switch.js"
@@ -13,6 +13,7 @@ interface Props {
   initial: string[] | null | undefined
   saving?: boolean
   onSave: (modulos: string[]) => void
+  onOpenCapacidades?: () => void
   onClose: () => void
 }
 
@@ -40,7 +41,7 @@ function completarDependencias(modulos: string[]): string[] {
   return [...set]
 }
 
-export function ModulosModal({ open, empresaNome, initial, saving, onSave, onClose }: Props) {
+export function ModulosModal({ open, empresaNome, initial, saving, onSave, onOpenCapacidades, onClose }: Props) {
   const { t } = useTranslation()
   const [selected, setSelected] = useState<string[]>(() => {
     const base = initial ?? MODULES.map((m) => m.id)
@@ -84,6 +85,11 @@ export function ModulosModal({ open, empresaNome, initial, saving, onSave, onClo
       maxWidth="max-w-md"
       footer={
         <>
+          {onOpenCapacidades && (
+            <Button type="button" variant="soft" onClick={onOpenCapacidades}>
+              <ToggleLeft className="size-4" /> {t("superAdmin.capacidadesButton")}
+            </Button>
+          )}
           <Button type="button" variant="ghost" onClick={onClose}>
             {t("common.cancel")}
           </Button>

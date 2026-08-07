@@ -18,4 +18,6 @@ export interface EmpresaComStats extends Empresa {
   adminEmail?: string | null
   /** Módulos ativos da empresa (whitelabel, PLAN-031). `null` = todos ativos. */
   modulos?: string[] | null
+  /** Capacidades (recursos finos) da empresa. `null` = todas ativas; `[]` = nenhuma. */
+  capacidades?: string[] | null
 }

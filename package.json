@@ -14,6 +14,7 @@
     "audit:styles": "node scripts/audit-styles.mjs",
     "audit:ui": "node scripts/audit-ui.mjs",
     "audit:modules": "node scripts/audit-modules.mjs",
+    "migracao:test": "tsx scripts/test-migracao.mjs",
     "docs:collection": "node scripts/build-collection.mjs",
     "smoke:api": "node scripts/smoke-api.mjs"
   },

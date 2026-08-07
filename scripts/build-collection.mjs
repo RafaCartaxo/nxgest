@@ -193,8 +193,16 @@ const endpoints = [
       description: "API-UC-047 · 200 dados atualizados · 404",
     }),
     req("Módulos", "PATCH", "/api/admin/empresas/{{empresaId}}/modulos", {
-      body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"] },
-      description: "API-UC-043 · 200 · 422 dependência (gastos requer caixa) · 403 não-super",
+      body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"], force: false, motivo: "" },
+      description: "API-UC-043 · 200 · 422 dependência (gastos requer caixa) · 403 não-super · 409 MODULE_HAS_ACTIVE_DATA (dados em aberto, BR-105) · force+motivo só super",
+    }),
+    req("Capacidades", "PATCH", "/api/admin/empresas/{{empresaId}}/capacidades", {
+      body: { capacidades: ["cliente:whatsapp", "cliente:anexos"] },
+      description: "CAP-UC · 200 · 422 id inválido/dono off · 403 não-super · null limpa (todas ativas) (BR-104)",
+    }),
+    req("Impacto", "GET", "/api/admin/empresas/{{empresaId}}/impacto", {
+      query: [{ key: "modulos", value: "[\"clientes\",\"contratos\",\"caixa\"]" }],
+      description: "IMP-UC · 200 {desligados, impacto, bloqueado} · prévia sem persistir (BR-105)",
     }),
   ]),
 ]
