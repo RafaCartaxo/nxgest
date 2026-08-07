@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — Segurança: assessment + plano de hardening (handoff)
+
+- **Assessment:** `docs/engineering/SEGURANCA.md` — postura de segurança viva (o que já está bom, gaps, processos, responsabilidades).
+- **Plano:** `PLAN-066-hardening-seguranca.md` — P0 (trust proxy · helmet/CSP · CORS fail-closed) · P1 (npm audit/drizzle · firewall/fail2ban · rate limit por usuário · backup cripto · timeouts Caddy) · P2 (JWT/revogação · Cloudflare WAF · 2FA · senha 8+) + ~22 CTs novos (T/A/I/D/P).
+- Backlog: novo epic P027 (segurança). `plans/README` atualizado.
+
+Referência: `plans/PLAN-066-hardening-seguranca.md` · `engineering/SEGURANCA.md` · `plans/BACKLOG.md`
+
 ## 07/08/2026 — PLAN-064: onboarding comercial — Leads (público + painel super)
 
 **Implementado (backend + frontend)**

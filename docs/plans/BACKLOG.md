@@ -377,6 +377,19 @@ Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já cobe
 
 ---
 
+# EPIC 8 — Segurança / Hardening
+
+## P027 — Hardening de segurança (P0/P1/P2)
+
+> **Planejado (07/08):** `PLAN-066-hardening-seguranca.md` — pronto p/ execução. Postura: `docs/engineering/SEGURANCA.md`.
+
+- **P0:** `trust proxy` (rate limit real atrás do Caddy) · `helmet`/CSP/HSTS + headers no Caddy · CORS fail-closed.
+- **P1:** `npm audit` + avaliar `drizzle-orm` · firewall/fail2ban no VPS · rate limit global/por usuário · backup off-site criptografado · timeouts no Caddy.
+- **P2:** JWT mais curto/revogação · Cloudflare WAF (migração de URL) · 2FA admin · senha mín. 8.
+- **CTs:** ~22 novos (T/A/I/D/P) + regressão referenciando os existentes no `07`.
+
+---
+
 # Prioridade sugerida
 
 ## Sprint 1 — Concluído (PLAN-026)
