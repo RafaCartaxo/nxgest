@@ -176,3 +176,19 @@ O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context*
 - [x] Caddyfile: HSTS header (validado no caddy:2-alpine)
 - [ ] **P1 — timeouts no Caddy (slowloris, H-CT-08):** syntax do `servers` block não reconhecida no Caddyfile desta versão — pesquisa pendente
 - [x] Docs: 02-API (503) · 07 (H-CT-01..08 · EM-503-01..03) · SEGURANCA (P0 ✅) · PLAN-066 (P0 feito) · BACKLOG P027 · UPDATES
+
+---
+
+# CHECKLIST — Deploy produção (07/08)
+
+**Alvo:** `nxgestao.duckdns.org` (site atual; migração pro `nxgest.com.br`/Cloudflare em andamento no registro.br)
+
+- [x] Push de todos os commits (PLAN-062/063/064/065 + e-mail 503 + P0) → `281150c`
+- [x] VPS: `git pull` → `281150c` · `./scripts/deploy.sh` (backup pré-deploy + gates UI + build + up)
+- [x] Pós-deploy: `/api/health` ok · `/` 200 · **security headers ativos** (CSP + X-Frame-Options + X-Content-Type-Options + HSTS + Referrer-Policy) · tabelas `leads`/`auth_tokens` criadas · `forgot` 200 genérico · asset JS 200 (CSP self ok)
+- [x] E-mail em prod segue **modo console** (sem `RESEND_API_KEY` no `.env` — verificação do Resend pendente de propagação do DNS) → Fase 1 inócua no prod
+
+## Follow-up P1 (não-bloqueante)
+
+- [ ] **express-rate-limit IPv6**: keyGenerators custom (`forgot`/`reconfirmar`) usam `req.ip` sem `ipKeyGenerator()` → warning `ERR_ERL_KEY_GEN_IPV6` (IPv6 pode burlar limite). Envolver `req.ip` com o helper do `express-rate-limit` (não-fatal; app operando normal).
+- [ ] **Caddy timeouts (slowloris, H-CT-08)**: `servers` block não reconhecido no Caddyfile desta versão — pesquisar syntax correta (P1).
