@@ -2,6 +2,19 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — Navegação app-first (Stitch): BottomTabBar + UserMenu, fim do drawer/Topbar
+
+**Adicionado / Reorganizado**
+- **Mobile:** `BottomTabBar` fixa (Central + abas operacionais gated por módulo — Clientes · Contratos · Caixa · Rota) + **topo fino** (marca → `/` + `UserMenu`). O hamburger/drawer **foram removidos**.
+- **`UserMenu`** (avatar → Perfil · Configurações · Sair): as **configurações** (tema/cores/idioma) saíram da engrenagem solta e agora abrem pelo menu do usuário (mesmo `PreferenciasModal`). Mobile = bottom-sheet, desktop = popover no rodapé da sidebar.
+- **Desktop:** sidebar intacta (rodapé com `UserMenu` detalhado), **sem header superior duplicado**; sidebar ganhou **Rota** (gated por módulo).
+- **`Topbar.tsx` removido** · utilitário `.pb-safe` (`index.css`, safe-area do iPhone).
+- **Fix:** link morto "Marca → Kit de identidade → `/design`" removido (não havia rota).
+
+**QA:** `tsc` + `build` + Vite ao vivo (módulos novos transformam sem erro) · audit:ui/styles · docs:audit.
+
+Referência: [PLAN-060](plans/PLAN-060-Stitch-Nav-AppFirst-NXGestao.md) · briefing `plans/Stitch-Nav-AppFirst-NXGestao.md`
+
 ## 06/08/2026 — Modularização fina: capacidades (BR-104) + guard de desativação (BR-105)
 
 **Adicionado — Capacidades (recursos finos por empresa)**

@@ -2,7 +2,7 @@
 
 **Status:** Ativo — manter atualizado a cada tela/componente novo ou redesign
 
-**Última atualização:** 05/08/2026
+**Última atualização:** 07/08/2026
 
 **Objetivo:** ser o **mapa único** de cobertura da identidade "Nexus". Evita o débito invisível que o redesign deixou (raiz A do ADR-005): o critério de "está redesenhado" é **todo elemento segue o DS**, não "a página tem PageHeader". Rastreia também itens legado/planejados — nada fica invisível.
 
@@ -63,11 +63,15 @@
 | `QuickActions` | ✅ | Central, ClienteDetail, Rota, cards |
 | `Button` / `ButtonLink` | ✅ | global — variantes `primary/secondary/soft/outline/ghost/danger/success` + sizes `sm/md/lg/block` (PLAN-056) |
 | `GpsControl` | ✅ | ClienteForm (comércio + residencial) — port Lovable, 3 estados (PLAN-056) |
-| `PreferenciasModal` | ✅ | Topbar (engrenagem) — tema light/dark/system + paletas + idioma (PLAN-056) |
+| `PreferenciasModal` | ✅ | `UserMenu` (avatar) — tema light/dark/system + paletas + idioma (PLAN-056; nav app-first 07/08) |
 | `ClienteSelect` | ✅ | `ContratoForm` (novo) — seletor de cliente buscável (PLAN-056) |
-| `StatusBadge` (pill com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` · `Topbar` | ✅ | — |
+| `StatusBadge` (pill com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` | ✅ | — |
+| `BottomTabBar` | ✅ | `AppLayout` (mobile) — 5 abas gated por módulo, `role="navigation"`, `aria-current`, `pb-safe` (nav app-first) |
+| `UserMenu` | ✅ | `AppLayout` (topo fino mobile + rodapé da sidebar) — Perfil · Configurações (`PreferenciasModal`) · Sair; admin/super no mobile (nav app-first) |
 | `Avatar` / `AvatarField` | ✅ | ClienteCard (list-item/detail), ClienteForm, EmpresaList, AppLayout (sidebar), OperadorDetail, OperadoresList, modais — foto data URL **≤640px** + **lightbox** (`ampliar`: ClienteCard, OperadorDetail, sidebar, AvatarField) (PLAN-057/058) |
 | `AnexosSection` / `AnexoRow` | ✅ | ClienteDetail — upload foto/PDF do cliente (PLAN-042) |
+| `CapacidadesModal` | ✅ | SuperAdminPage (via ModulosModal "Recursos") — toggles de capacidades por empresa, agrupado por módulo dono (modularização fina) |
+| `ImpactConfirmModal` | ✅ | SuperAdminPage — confirmação/forçar de desativação com contagens do impacto (BR-105) |
 
 ## 4. Legado conhecido / planejado (rastreado)
 

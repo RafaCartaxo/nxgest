@@ -491,7 +491,7 @@ Duas formas de header, por tipo de tela:
 
 # Componente compartilhado mudou? (protocolo PLAN-044)
 
-Mudou um componente compartilhado (`PageHeader`, `Card`, `KpiCard`, `Field`, `Modal`, `QuickActions`, `Button`, `StatusBadge`, `SearchBar`, `Topbar`, ...)?
+Mudou um componente compartilhado (`PageHeader`, `Card`, `KpiCard`, `Field`, `Modal`, `QuickActions`, `Button`, `StatusBadge`, `SearchBar`, `BottomTabBar`, `UserMenu`, ...)?
 
 1. Liste os consumidores: `node scripts/consumers.mjs <componente>`.
 2. Atualize **todos** os consumidores **no mesmo PR** (não deixar "adicionados depois" quebrados — precedente do badge GPS da Rota).

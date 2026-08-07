@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.7
+**Versão:** 1.8
 
-**Última atualização:** 05/08/2026
+**Última atualização:** 06/08/2026
 
 ---
 
@@ -26,8 +26,9 @@ Componentes compartilhados ativos da identidade "Nexus" (em `frontend/src/shared
 | `QuickActions` (grid adaptativo) | ✅ |
 | `Button` / `ButtonLink` | ✅ |
 | `StatusBadge` (pill `rounded-md` com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` | ✅ |
-| `Topbar` (dropdowns tema/cores/idioma, `shared/layout/Topbar.tsx`) | ✅ |
+| `BottomTabBar` (5 abas gated, `shared/layout/BottomTabBar.tsx`) · `UserMenu` (avatar, `shared/layout/UserMenu.tsx`) | ✅ | nav app-first |
 | `Avatar` (foto \| iniciais, data URL ≤200px) · `AvatarField` | ✅ PLAN-057 |
+| `CapacidadesModal` (toggles de recursos por empresa, `modules/admin/components/`) · `ImpactConfirmModal` (confirmação/forçar de desativação com contagens, BR-105) | ✅ PLAN-059 |
 
 Regras: usar **apenas** estes componentes em telas novas (checklist do MAPEAMENTO) e nunca reintroduzir padrões legado (verificado por `npm run audit:ui`).
 
@@ -528,7 +529,7 @@ Controle de GPS/localização de um endereço — **controlado** pelo form. 3 es
 
 ## Objetivo
 
-Preferências do app num modal (aberto pela engrenagem da Topbar): **Modo** (Tabs claro/escuro/sistema) · **Cores** (swatches das 5 paletas) · **Idioma** (PT/EN/ES). Depende do `ThemeProvider` com `mode`.
+Preferências do app num modal (aberto pelo **menu do usuário** no avatar — topo fino mobile / rodapé da sidebar desktop): **Modo** (Tabs claro/escuro/sistema) · **Cores** (swatches das 5 paletas) · **Idioma** (PT/EN/ES). Depende do `ThemeProvider` com `mode`.
 
 ---
 

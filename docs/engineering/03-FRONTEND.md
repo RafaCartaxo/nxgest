@@ -248,9 +248,14 @@ As regras de negócio continuarão sendo responsabilidade do backend.
 
 # Navegação
 
-O roteamento será implementado com React Router, utilizando navegação SPA sem recarregamento de página.
+O roteamento é implementado com React Router, navegação SPA sem recarregamento de página. A arquitetura é **app-first** (PLAN-060):
 
-Sempre que possível, a navegação deverá preservar o contexto do operador.
+- **`AppLayout`** = shell único: **sidebar lateral desktop** + **topo fino mobile** (marca → `/` + `UserMenu`) + conteúdo (`pb-28 lg:pb-16`).
+- **`BottomTabBar`** (mobile, `shared/layout/BottomTabBar.tsx`): abas fixas gated por módulo (`central` sempre; operacionais via `hasModule`) — Central · Clientes · Contratos · Caixa · Rota.
+- **`UserMenu`** (avatar): Perfil · Configurações (`PreferenciasModal`) · Sair; admin/sócio/super_admin no mobile. Mobile = bottom-sheet, desktop = popover.
+- **Sem hamburger/drawer** (`Topbar.tsx` removido) — a config vive no menu do usuário, não em engrenagem solta.
+
+Sempre que possível, a navegação preserva o contexto do operador.
 
 ---
 

@@ -1,5 +1,7 @@
 # NX Gestão — Navegação "app-first" (Bottom Nav mobile + Sidebar desktop + Configurações) — briefing para IA/Stitch
 
+**Status:** ✅ Concluído — implementado no app real em 07/08/2026 (bottom tab bar, topo fino, sidebar sem header duplicado, `UserMenu` com `PreferenciasModal`)
+
 **Versão:** 1.0 · **Data:** 06/08/2026
 
 > Briefing para gerar o redesign da **navegação e das configurações** do NX Gestão com cara de **app nativo**.

@@ -49,7 +49,7 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 
 ```
 App
-├── AppLayout (sidebar lateral desktop + drawer mobile; PLAN-036)
+├── AppLayout (sidebar lateral desktop + BottomTabBar mobile + UserMenu; PLAN-060)
 │   ├── [operator/socio/admin] NavLink: Central (/)
 │   ├── [operator/socio/admin] NavLink: Clientes (/clientes) [módulo clientes]
 │   ├── [operator/socio/admin] NavLink: Contratos (/contratos) [módulo contratos]

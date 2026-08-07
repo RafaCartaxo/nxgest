@@ -66,6 +66,8 @@ Feedback Global
 
 Cada nível possui uma responsabilidade específica.
 
+> **Mobile app-first (PLAN-060):** o shell é `AppLayout` — topo fino (marca + `UserMenu`), conteúdo e `BottomTabBar` fixa. Elementos fixos na base (tab bar, bottom-sheets, menus) usam o utilitário **`.pb-safe`** (`padding-bottom: env(safe-area-inset-bottom)`), registrado em `index.css`, para não colidir com a área segura do iPhone.
+
 ---
 
 # Hierarquia da Informação

@@ -338,6 +338,11 @@ h3 {
   font-variant-numeric: tabular-nums;
 }
 
+/* folga da área segura inferior (iPhone home indicator) — tab bar e bottom-sheets */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* underline de marca para títulos de página (reforço de identidade) */
 .title-accent {
   padding-bottom: 0.12em;
