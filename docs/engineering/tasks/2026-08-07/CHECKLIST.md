@@ -149,3 +149,30 @@ O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context*
 - [x] Frontend: QueroConhecerPage (`/quero-conhecer`) + ConfirmarLeadPage públicas · LeadsAdminPage (`/admin/leads`, SuperAdminRoute, filtro + ações) · nav Leads no super · i18n pt/en/es
 - [x] Smoke 235 → 248/248 (LD-01..13, LD-15) · vitest · tsc · build · audits · docs:audit 0 divergências (62 rotas)
 - [x] Docs: PLAN-064 implementado · 02-API · 07 · collection 62 · 05-MAPEAMENTO (§11d/11e/14b) · UI-COVERAGE (23–25) · UPDATES
+
+---
+
+# CHECKLIST — Tratamento de falha no envio de e-mail (503 EMAIL_UNAVAILABLE)
+
+**Data:** 07/08/2026
+
+- [x] `EmailEnvioFalhouError` (shared/email/errors) + `ResendMailer.send` lança o tipo
+- [x] `forgot` / `reconfirmar`: e-mail inexistente → 200 genérico (inalterado); envio falhou → 503 EMAIL_UNAVAILABLE
+- [x] `POST /leads`: falha → **rollback** (deleteById lead + removerPorTipo token) + 503 (retry limpo, sem dedup preso)
+- [x] `createOperador` / `createEmpresa` / `reenviar-convite` / converter: entidade permanece + 503 tratado
+- [x] i18n `errors.EMAIL_UNAVAILABLE` ×3 · `scripts/mail-test.ts` + `npm run mail:test` · 06-PRODUCAO §9
+- [x] vitest: `CriarLeadUseCase.test` (rollback) + `EsquecerSenhaUseCase.test` (rethrow) → 40/40
+- [x] QA: tsc · build · audits · docs:audit · smoke 248/248
+
+---
+
+# CHECKLIST — PLAN-066 · P0 (hardening) implementado
+
+**Data:** 07/08/2026
+
+- [x] `app.set("trust proxy", 1)` — rate limit real por IP atrás do Caddy (H-CT-01/02)
+- [x] `helmet` + CSP (script/style/img/connect/frame-ancestors) — Google Fonts liberadas; testado no build local (H-CT-03)
+- [x] CORS fail-closed — produção sem `CORS_ORIGIN` → origin:false (H-CT-04)
+- [x] Caddyfile: HSTS header (validado no caddy:2-alpine)
+- [ ] **P1 — timeouts no Caddy (slowloris, H-CT-08):** syntax do `servers` block não reconhecida no Caddyfile desta versão — pesquisa pendente
+- [x] Docs: 02-API (503) · 07 (H-CT-01..08 · EM-503-01..03) · SEGURANCA (P0 ✅) · PLAN-066 (P0 feito) · BACKLOG P027 · UPDATES

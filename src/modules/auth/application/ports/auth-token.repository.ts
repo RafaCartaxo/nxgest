@@ -6,4 +6,6 @@ export interface IAuthTokenRepository {
   marcarUsado(id: string, agora: string): Promise<void>
   /** Reenvio invalida tokens anteriores do mesmo tipo (SE-04). */
   invalidarPorTipo(subjectId: string, tipo: AuthTokenTipo): Promise<void>
+  /** Remove tokens do sujeito/tipo (rollback quando o e-mail falha). */
+  removerPorTipo(subjectId: string, tipo: AuthTokenTipo): Promise<void>
 }

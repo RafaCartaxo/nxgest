@@ -1,4 +1,5 @@
 import type { IMailer, EmailMessage } from "./mailer.port.js"
+import { EmailEnvioFalhouError } from "./errors.js"
 
 /** Dev/sem chave: loga o link no console (não quebra o fluxo — EM-01). */
 export class ConsoleMailer implements IMailer {
@@ -7,7 +8,7 @@ export class ConsoleMailer implements IMailer {
   }
 }
 
-/** Envio via Resend (REST, sem dependência npm). */
+/** Envio via Resend (REST, sem dependência npm). Falha → EmailEnvioFalhouError (503 EMAIL_UNAVAILABLE). */
 export class ResendMailer implements IMailer {
   constructor(
     private readonly apiKey: string,
@@ -24,7 +25,8 @@ export class ResendMailer implements IMailer {
       body: JSON.stringify({ from: this.from, to, subject, html, text }),
     })
     if (!res.ok) {
-      throw new Error(`Falha no envio (Resend HTTP ${res.status}).`)
+      // Ex.: domínio não verificado (403) / destinatário inválido (422). Causa vai pro log do controller.
+      throw new EmailEnvioFalhouError(`Resend HTTP ${res.status}`)
     }
   }
 }

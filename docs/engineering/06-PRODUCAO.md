@@ -286,6 +286,7 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
 - **`APP_URL`** ainda aponta para o duckdns — links de convite/reset funcionam; migrar a URL do app para `nxgest.com.br` é passo separado (roadmap).
 - Já existem **A record** `nxgest.com.br → 172.245.152.223` (VPS, Proxied) e `www` CNAME → raiz — inofensivos; decidir proxy vs DNS-only na migração do app.
 - Modo dev sem `RESEND_API_KEY` loga o link no console (não quebra desenvolvimento).
+- **Enquanto o domínio não estiver verificado no Resend** (verde), o envio real falha e os endpoints de e-mail devolvem **503 `EMAIL_UNAVAILABLE`** (`forgot`/`reconfirmar`/convite/lead) — tratado no front como "tente novamente". Validar antes do go-live de e-mail com: `npm run mail:test -- <email>` (usa `RESEND_API_KEY`/`MAIL_FROM` do ambiente).
 
 ---
 

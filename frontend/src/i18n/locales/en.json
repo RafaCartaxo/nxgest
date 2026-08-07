@@ -381,7 +381,8 @@
     "EMPRESA_INATIVA": "The company is inactive. Contact the administrator.",
     "OPERATOR_HAS_SUBORDINATES": "This user has {{n}} subordinate(s). Reassign them before demoting.",
     "ACCOUNT_PENDING": "Activation pending. Set your password using the link sent by email.",
-    "TOKEN_INVALID": "Invalid or already used link."
+    "TOKEN_INVALID": "Invalid or already used link.",
+    "EMAIL_UNAVAILABLE": "Email service is temporarily unavailable. Please try again in a few minutes."
   },
   "auth": {
     "title": "Sign In",

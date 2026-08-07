@@ -2203,7 +2203,7 @@ Ativação de conta **convidada** (PLAN-065): valida o token de convite (enviado
 
 # POST /api/auth/forgot
 
-"Esqueci a senha" (PLAN-065). **Resposta SEMPRE 200 genérica** (não revela se o e-mail existe nem se a conta é convidada) — quando aplicável, envia e-mail com link de reset.
+"Esqueci a senha" (PLAN-065). **Resposta SEMPRE 200 genérica** (não revela se o e-mail existe nem se a conta é convidada) — quando aplicável, envia e-mail com link de reset. **503** quando o envio real falha (serviço de e-mail indisponível).
 
 **Auth:** Público · **Rate limit:** 3/15min por e-mail+IP
 
@@ -2218,6 +2218,14 @@ Ativação de conta **convidada** (PLAN-065): valida o token de convite (enviado
 ```json
 { "ok": true }
 ```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| VALIDATION_ERROR | 422 (sem e-mail) |
+| EMAIL_UNAVAILABLE | 503 (envio falhou — serviço de e-mail indisponível) |
+| RATE_LIMIT | 429 |
 
 ---
 
@@ -2268,6 +2276,7 @@ Reenvia o convite de ativação para um operador **convidado** (PLAN-065) — no
 |--------|------|
 | OPERATOR_NOT_FOUND | 404 |
 | VALIDATION_ERROR | 409 (conta já ativa) |
+| EMAIL_UNAVAILABLE | 503 (envio falhou — tente novamente) |
 | FORBIDDEN | 403 |
 ---
 
@@ -2299,6 +2308,7 @@ E-mail já tem lead → não cria (`jaExistia: true` — mensagem amigável no f
 |--------|------|
 | VALIDATION_ERROR | 422 (campos obrigatórios/mín. 2) |
 | LEAD_EMAIL_JA_USUARIO | 409 (e-mail já é usuário/empresa) |
+| EMAIL_UNAVAILABLE | 503 (envio falhou — lead + token removidos, retry limpo) |
 | RATE_LIMIT | 429 |
 
 ---
@@ -2334,7 +2344,7 @@ Confirma o e-mail do lead via token (PLAN-064). Single-use; validade 24h.
 
 # POST /api/leads/reconfirmar
 
-Reenvia o e-mail de confirmação (PLAN-064, LD-07). **Resposta sempre 200 genérica** (não vaza se o lead existe).
+Reenvia o e-mail de confirmação (PLAN-064, LD-07). **Resposta sempre 200 genérica** (não vaza se o lead existe). **503** quando o envio real falha.
 
 **Auth:** Público · **Rate limit:** 3/15min por e-mail+IP
 
@@ -2343,6 +2353,19 @@ Reenvia o e-mail de confirmação (PLAN-064, LD-07). **Resposta sempre 200 gené
 ```json
 { "email": "maria@exemplo.com" }
 ```
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| EMAIL_UNAVAILABLE | 503 (envio falhou) |
+| RATE_LIMIT | 429 |
 
 ## Response 200
 

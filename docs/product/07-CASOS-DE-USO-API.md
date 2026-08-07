@@ -1637,3 +1637,48 @@ Matriz de transições via `PATCH /api/admin/operadores/:id` (papel-alvo). Ator 
 
 ### LD-CT-15 — E-mail já usuário
 **Dado** `POST /api/leads` com e-mail de usuário existente → **Então** **409** `LEAD_EMAIL_JA_USUARIO` — sem duplicado.
+
+---
+
+# HARDENING (PLAN-066) — transporte / proxy / headers
+
+**Smoke/CTs:** T-01..T-08 · regressão: auth 401/403 (API-CT-006/087), rate login (API-CT-004), upload (API-CT-089..094), PLAN-065 (AC-*/ES-*)
+
+### H-CT-01 — Rate limit real por IP atrás do proxy (T-01)
+**Dado** request via Caddy com `X-Forwarded-For` de IPs distintos | **Quando** 11º login inválido/15min de um mesmo IP-remoto | **Então** **429**. (Se falhar, `trust proxy` não está ok.)
+
+### H-CT-02 — trust proxy (T-02)
+**Dado** request via Caddy com `X-Forwarded-For: 1.2.3.4` | **Então** `req.ip === "1.2.3.4"` (não o IP do Caddy).
+
+### H-CT-03 — Security headers (T-03)
+**Dado** `GET /` e `GET /api/health` | **Então** resposta contém `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, `Referrer-Policy`.
+
+### H-CT-04 — CORS fail-closed (T-04)
+**Dado** produção sem `CORS_ORIGIN` | **Quando** origem externa requisita | **Então** sem `Access-Control-Allow-Origin` refletido (bloqueada).
+
+### H-CT-05 — HTTP → HTTPS (T-05)
+**Dado** `http://nxgestao.duckdns.org` | **Então** **301** para `https://`.
+
+### H-CT-06 — TLS válido (T-06)
+**Dado** handshake TLS | **Então** certificado Let's Encrypt válido (não expirado).
+
+### H-CT-07 — Clickjacking (T-07)
+**Dado** app em iframe | **Então** bloqueado (`frame-ancestors 'none'` / `X-Frame-Options`).
+
+### H-CT-08 — Slowloris (T-08, P1 — timeouts no Caddy)
+**Dado** conexão parcial mantida | **Então** Caddy encerra (timeout). [⏳ pendente — syntax do `servers` block a validar]
+
+---
+
+# TRATAMENTO DE E-MAIL — falha no envio (503 EMAIL_UNAVAILABLE)
+
+**Smoke:** manual/integração (o smoke usa ConsoleMailer — nunca falha) · unit: `CriarLeadUseCase.test` (rollback) + `EsquecerSenhaUseCase.test` (rethrow)
+
+### EM-503-01 — Forgot com envio falho → 503
+**Dado** e-mail de conta existente + Resend indisponível (ex.: domínio não verificado) | **Quando** `POST /api/auth/forgot` | **Então** **503** `EMAIL_UNAVAILABLE` (mensagem tratada, genérica). E-mail inexistente → **200** genérico (sem vazar).
+
+### EM-503-02 — Lead com envio falho → rollback + 503
+**Dado** `POST /api/leads` + envio de confirmação falha | **Então** **503** e o lead + token são **removidos** (retry limpo, sem dedup preso).
+
+### EM-503-03 — Convite (operador/empresa/reenviar) com envio falho → 503
+**Dado** criação de convidado + envio do convite falha | **Então** **503** `EMAIL_UNAVAILABLE`; a entidade permanece e o admin usa "Reenviar convite".

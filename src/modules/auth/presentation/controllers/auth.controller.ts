@@ -13,6 +13,7 @@ import { AuthTokenRepository } from "../../infrastructure/repositories/auth-toke
 import { criarMailer } from "../../../../shared/email/mailers.js"
 import { resolverLang } from "../../../../shared/email/templates.js"
 import { CredenciaisInvalidasError, SenhaAtualIncorretaError, ContaConvidadaError, TokenInvalidoError, TokenExpiradoError } from "../../domain/errors/auth.error.js"
+import { EmailEnvioFalhouError } from "../../../../shared/email/errors.js"
 import { validarFoto } from "../../../../shared/utils/foto.js"
 
 export class AuthController {
@@ -154,6 +155,11 @@ export class AuthController {
       await this.esquecerSenhaUseCase.execute({ email, lang: resolverLang(req.headers["accept-language"]) })
       res.json({ ok: true })
     } catch (err) {
+      if (err instanceof EmailEnvioFalhouError) {
+        console.error("[EMAIL] Falha no envio do reset:", err.message)
+        res.status(503).json({ code: "EMAIL_UNAVAILABLE", message: "Serviço de e-mail indisponível no momento. Tente novamente em alguns minutos." })
+        return
+      }
       console.error("Erro no forgot:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
     }

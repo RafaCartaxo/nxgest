@@ -16,6 +16,7 @@ import { ConvidarUseCase } from "../../../auth/application/use-cases/Convidar/Co
 import { AuthTokenRepository } from "../../../auth/infrastructure/repositories/auth-token.repository.impl.js"
 import { criarMailer } from "../../../../shared/email/mailers.js"
 import { resolverLang } from "../../../../shared/email/templates.js"
+import { EmailEnvioFalhouError } from "../../../../shared/email/errors.js"
 import { isValidCnpj } from "../../../../shared/validators/cnpj.js"
 
 /**
@@ -116,6 +117,12 @@ export class EmpresaController {
     } catch (err: unknown) {
       if (err instanceof EmailDuplicadoError) {
         res.status(409).json({ code: "EMAIL_DUPLICATED", message: (err as Error).message })
+        return
+      }
+      if (err instanceof EmailEnvioFalhouError) {
+        // Empresa + admin criados — o admin aparece com "Convite pendente" na lista de operadores da empresa.
+        console.error("[EMAIL] Falha no envio do convite do admin:", err.message)
+        res.status(503).json({ code: "EMAIL_UNAVAILABLE", message: "Empresa criada, mas o convite do administrador não foi enviado (serviço de e-mail indisponível). Use 'Reenviar convite'." })
         return
       }
       console.error("Erro ao criar empresa:", err)

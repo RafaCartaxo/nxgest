@@ -381,7 +381,8 @@
     "EMPRESA_INATIVA": "La empresa está inactiva. Contacta al administrador.",
     "OPERATOR_HAS_SUBORDINATES": "Este usuario tiene {{n}} subordinado(s). Reasigna antes de degradar.",
     "ACCOUNT_PENDING": "Activación pendiente. Define tu contraseña con el enlace enviado por correo.",
-    "TOKEN_INVALID": "Enlace inválido o ya utilizado."
+    "TOKEN_INVALID": "Enlace inválido o ya utilizado.",
+    "EMAIL_UNAVAILABLE": "El servicio de correo no está disponible en este momento. Inténtalo de nuevo en unos minutos."
   },
   "auth": {
     "title": "Iniciar Sesión",

@@ -16,6 +16,7 @@ import { ConverterLeadUseCase } from "../../application/use-cases/ConverterLead/
 import { DescartarLeadUseCase } from "../../application/use-cases/DescartarLead/DescartarLeadUseCase.js"
 import { LeadEmailJaUsuarioError, LeadNaoEncontradoError, LeadStatusInvalidoError } from "../../domain/errors/lead.error.js"
 import { EmailDuplicadoError, TokenExpiradoError, TokenInvalidoError } from "../../../auth/domain/errors/auth.error.js"
+import { EmailEnvioFalhouError } from "../../../../shared/email/errors.js"
 
 export class LeadController {
   private criarLead: CriarLeadUseCase
@@ -81,6 +82,12 @@ export class LeadController {
         res.status(409).json({ code: "LEAD_EMAIL_JA_USUARIO", message: err.message })
         return
       }
+      if (err instanceof EmailEnvioFalhouError) {
+        // Use case já fez rollback (lead + token removidos) — retry limpo.
+        console.error("[EMAIL] Falha no envio da confirmação de lead:", err.message)
+        res.status(503).json({ code: "EMAIL_UNAVAILABLE", message: "Serviço de e-mail indisponível no momento. Tente novamente em alguns minutos." })
+        return
+      }
       console.error("Erro ao criar lead:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
     }
@@ -120,6 +127,11 @@ export class LeadController {
       await this.reenviarConfirmacao.execute({ email, lang: resolverLang(req.headers["accept-language"]) })
       res.json({ ok: true })
     } catch (err) {
+      if (err instanceof EmailEnvioFalhouError) {
+        console.error("[EMAIL] Falha no reenvio de confirmação de lead:", err.message)
+        res.status(503).json({ code: "EMAIL_UNAVAILABLE", message: "Serviço de e-mail indisponível no momento. Tente novamente em alguns minutos." })
+        return
+      }
       console.error("Erro ao reenviar confirmação de lead:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })
     }
@@ -175,6 +187,12 @@ export class LeadController {
       }
       if (err instanceof EmailDuplicadoError) {
         res.status(409).json({ code: "EMAIL_DUPLICATED", message: err.message })
+        return
+      }
+      if (err instanceof EmailEnvioFalhouError) {
+        // Empresa + admin criados, mas o convite não saiu — super reenvia na lista de operadores da empresa.
+        console.error("[EMAIL] Falha no convite do admin na conversão:", err.message)
+        res.status(503).json({ code: "EMAIL_UNAVAILABLE", message: "Empresa criada, mas o convite do administrador não foi enviado (serviço de e-mail indisponível). Reenvie o convite na empresa." })
         return
       }
       console.error("Erro ao converter lead:", err)

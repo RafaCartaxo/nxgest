@@ -13,6 +13,7 @@ import { ConvidarUseCase } from "../../../../modules/auth/application/use-cases/
 import { AuthTokenRepository } from "../../../../modules/auth/infrastructure/repositories/auth-token.repository.impl.js"
 import { criarMailer } from "../../../../shared/email/mailers.js"
 import { resolverLang } from "../../../../shared/email/templates.js"
+import { EmailEnvioFalhouError } from "../../../../shared/email/errors.js"
 
 const ROLES_ADMIN = ["admin", "socio", "operator"] as const
 
@@ -149,6 +150,12 @@ export class AdminController {
         res.status(403).json({ code: "FORBIDDEN", message: err.message })
         return
       }
+      if (err instanceof EmailEnvioFalhouError) {
+        // Operador já foi criado (ficou "convidado") — o admin resolve com "reenviar convite".
+        console.error("[EMAIL] Falha no envio do convite:", err.message)
+        res.status(503).json({ code: "EMAIL_UNAVAILABLE", message: "Operador criado, mas o convite não foi enviado (serviço de e-mail indisponível). Use 'Reenviar convite'." })
+        return
+      }
       console.error("Erro ao criar operador:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao criar operador." })
     }
@@ -175,6 +182,11 @@ export class AdminController {
       })
       res.json({ ok: true })
     } catch (err) {
+      if (err instanceof EmailEnvioFalhouError) {
+        console.error("[EMAIL] Falha no reenvio do convite:", err.message)
+        res.status(503).json({ code: "EMAIL_UNAVAILABLE", message: "Serviço de e-mail indisponível no momento. Tente novamente em alguns minutos." })
+        return
+      }
       console.error("Erro ao reenviar convite:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao reenviar convite." })
     }

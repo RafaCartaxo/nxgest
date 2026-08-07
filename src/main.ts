@@ -1,6 +1,7 @@
 import "dotenv/config"
 import express from "express"
 import cors from "cors"
+import helmet from "helmet"
 import path from "path"
 import { fileURLToPath } from "url"
 import { createTables } from "./database.js"
@@ -25,8 +26,30 @@ garantirUploadsDir()
 
 const app = express()
 
+// PLAN-066 (P0): o único proxy externo é o Caddy → confiar no X-Forwarded-For p/ rate limit real por IP.
+app.set("trust proxy", 1)
+
+// PLAN-066 (P0): security headers (helmet) + CSP. Estilos inline (React style attr) + Google Fonts permitidos.
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+    },
+  },
+}))
+
+// PLAN-066 (P0): CORS fail-closed — produção sem CORS_ORIGIN recusa origens cruzadas (não reflete).
 const corsOrigin = process.env.CORS_ORIGIN
-app.use(cors(corsOrigin ? { origin: corsOrigin } : {}))
+if (process.env.NODE_ENV === "production" && !corsOrigin) {
+  console.error("[CORS] NODE_ENV=production sem CORS_ORIGIN → fail-closed (origin: false). Defina CORS_ORIGIN para liberar origens.")
+}
+app.use(cors(corsOrigin ? { origin: corsOrigin } : { origin: false }))
 
 // Limite maior de body: fotos/avatares chegam como data URL base64 (PLAN-041).
 // Fotos normalizadas ≤500KB decodificados (~667KB de texto) — 2mb cobre com folga.

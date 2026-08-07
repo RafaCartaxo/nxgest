@@ -18,4 +18,6 @@ export interface ILeadRepository {
   marcarConvertido(id: string, data: { empresaId: string; por: string }): Promise<Lead | null>
   /** Descarte (LGPD): anonimiza dados pessoais e registra motivo/quem/quando. */
   descartar(id: string, data: { por: string; motivo: string }): Promise<Lead | null>
+  /** Remove o lead (rollback quando o e-mail de confirmação falha). */
+  deleteById(id: string): Promise<void>
 }

@@ -31,4 +31,8 @@ export class AuthTokenRepository implements IAuthTokenRepository {
   async invalidarPorTipo(subjectId: string, tipo: AuthTokenTipo): Promise<void> {
     await db.update(authTokens).set({ usadoEm: new Date().toISOString() }).where(and(eq(authTokens.subjectId, subjectId), eq(authTokens.tipo, tipo), isNull(authTokens.usadoEm))).run()
   }
+
+  async removerPorTipo(subjectId: string, tipo: AuthTokenTipo): Promise<void> {
+    await db.delete(authTokens).where(and(eq(authTokens.subjectId, subjectId), eq(authTokens.tipo, tipo))).run()
+  }
 }

@@ -681,3 +681,18 @@ Referência: [PLAN-055](plans/PLAN-055-modulo-localizacao-navegacao-fix-endereco
 **Por quê:** aplicar o material da rodada nova do Lovable (identidade) sobre a camada geo pronta (PLAN-055).
 
 Referência: [PLAN-056](plans/PLAN-056-port-material-lovable-botoes-gps-form-preferencias.md)
+
+## 07/08/2026 — Tratamento de falha de e-mail (503 EMAIL_UNAVAILABLE) + PLAN-066 P0 (hardening)
+
+**E-mail tratado (fim do "verde mentiroso")**
+- `EmailEnvioFalhouError` + `ResendMailer` lança o tipo; `forgot`/`reconfirmar`: e-mail inexistente → 200 genérico (anti-enumeração mantida); **envio real falhou → 503 EMAIL_UNAVAILABLE** (mensagem tratada).
+- **`POST /leads` com rollback**: falha no e-mail de confirmação remove lead + token (retry limpo, sem dedup preso) — corrige o bug latente de lead/operador/empresa criados sem e-mail e retry bloqueado.
+- Convite (operador/empresa/reenviar/converter): entidade permanece + 503 com orientação de reenviar.
+- i18n `errors.EMAIL_UNAVAILABLE` ×3 · `npm run mail:test` (teste de envio) · 06-PRODUCAO §9 (503 enquanto o Resend não estiver verificado).
+- vitest 36 → **40/40** (rollback CriarLead + rethrow EsquecerSenha) · smoke **248/248**.
+
+**PLAN-066 · P0 (hardening)**
+- `trust proxy` (rate limit real por IP) · `helmet` + **CSP** (Google Fonts liberadas; testado no build) · **CORS fail-closed** em produção · **HSTS** no Caddyfile (validado).
+- CTs H-CT-01..08 + EM-503-01..03 em `07`. P1 pendente (npm audit/drizzle · firewall/fail2ban · rate limit por usuário · backup cripto · **timeouts do Caddy** — syntax a validar).
+
+Referência: `plans/PLAN-066-hardening-seguranca.md` · `engineering/SEGURANCA.md` · `plans/BACKLOG.md` (P027)

@@ -1,6 +1,6 @@
 # PLAN-066 — Hardening de Segurança (P0/P1/P2)
 
-**Status:** ✅ Pronto para execução (handoff)
+**Status:** 🔵 Em execução — **P0 implementado (07/08)** · P1/P2 pendentes
 
 **Versão:** 1.0
 
@@ -8,7 +8,7 @@
 
 **Origem:** assessment de segurança 07/08 (resumo em `docs/engineering/SEGURANCA.md`)
 
-**Execução:** fora deste chat — seguir P0 → P1 → P2. Regras em `AGENTS.md`.
+**Execução:** P0 concluído (trust proxy · helmet/CSP · CORS fail-closed · HSTS no Caddy). Próximo: P1. Regras em `AGENTS.md`.
 
 ---
 

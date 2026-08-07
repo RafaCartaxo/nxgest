@@ -96,4 +96,8 @@ export class LeadRepository implements ILeadRepository {
     }).where(eq(leads.id, id)).run()
     return this.findById(id)
   }
+
+  async deleteById(id: string): Promise<void> {
+    await db.delete(leads).where(eq(leads.id, id)).run()
+  }
 }
