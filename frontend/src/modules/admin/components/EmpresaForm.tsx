@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "../../../shared/components/Button.js"
 import { Field } from "../../../shared/components/Field/Field.js"
 import { FieldSelect } from "../../../shared/components/Field/FieldSelect.js"
+import { maskCpfCnpj } from "../../../shared/utils/masks.js"
 
 interface EmpresaFormData {
   nome: string
@@ -59,9 +60,9 @@ export function EmpresaForm({ onSubmit, onCancel }: EmpresaFormProps) {
         />
         <Field
           label={t("superAdmin.documento")}
-          placeholder="00.000.000/0000-00"
-          value={documento}
-          onChange={(e) => setDocumento(e.target.value)}
+          placeholder={t("superAdmin.documentoPlaceholder")}
+          value={maskCpfCnpj(documento)}
+          onChange={(e) => setDocumento(e.target.value.replace(/\D/g, ""))}
         />
       </div>
       <FieldSelect

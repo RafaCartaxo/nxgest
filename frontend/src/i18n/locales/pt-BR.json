@@ -509,13 +509,14 @@
     "modulosSalvo": "Módulos atualizados.",
     "erroModulos": "Erro ao atualizar módulos.",
     "nomeFantasia": "Nome fantasia",
-    "documento": "CNPJ",
+    "documento": "CPF/CNPJ",
     "situacao": "Situação",
     "empresaAtiva": "Ativa",
     "empresaInativa": "Inativa",
     "operadorUm": "operador",
     "operadorOutros": "operadores",
-    "modulosButton": "Módulos ({{ativos}}/{{total}})"
+    "modulosButton": "Módulos ({{ativos}}/{{total}})",
+    "documentoPlaceholder": "CPF ou CNPJ"
   },
   "theme": {
     "default": "Azul",

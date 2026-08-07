@@ -1665,7 +1665,7 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
 | adminNome | Sim | 1 a 100 caracteres |
 | adminEmail | Sim | Email válido |
 | adminSenha | Sim | Mínimo 6 caracteres |
-| documento | Não | CNPJ/documento — **opcional** (não impede cadastro) |
+| documento | Não | **CPF ou CNPJ** — validado com check-digit (11 ou 14 dígitos), armazenado em dígitos. **Opcional** (não impede cadastro) |
 | nomeFantasia | Não | Nome fantasia — **opcional** (usado no card) |
 | ativa | Não | Booleano, default `true` — **opcional** (situação da empresa) |
 
@@ -1712,11 +1712,13 @@ Atualiza dados gerais da empresa (diferente do `/modulos`). Campos opcionais; ap
 ```json
 {
     "nome": "Empresa Exemplo Ltda",
-    "documento": "00.000.000/0000-00",
+    "documento": "11.222.333/0001-81",
     "nomeFantasia": "Exemplo",
     "ativa": false
 }
 ```
+
+> **`documento` (P11):** aceita **CPF ou CNPJ** (validado com check-digit); `null` remove. Armazenado em dígitos; inválido → **422**.
 
 ## Response 200
 
@@ -1727,6 +1729,7 @@ Mesma estrutura do `GET /api/admin/empresas/:id` (com `documento`, `nomeFantasia
 | Código | HTTP |
 |---------|------|
 | EMPRESA_NOT_FOUND | 404 |
+| VALIDATION_ERROR (documento inválido) | 422 |
 
 ---
 

@@ -8,6 +8,22 @@ export function maskCpf(value: string): string {
     .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4")
 }
 
+/** CPF (até 11 dígitos) ou CNPJ (14) — auto-detecta pela quantidade de dígitos (P11). */
+export function maskCpfCnpj(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 14)
+  if (digits.length <= 11) return maskCpf(digits)
+  return digits
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3/$4")
+    .replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/, "$1.$2.$3/$4-$5")
+}
+
+/** Formata dígitos salvos (CPF ou CNPJ) para exibição. */
+export function formatCpfCnpj(digits: string): string {
+  return maskCpfCnpj(digits)
+}
+
 export function maskPhone(value: string): string {
   const d = value.replace(/\D/g, "").slice(0, 11)
   if (!d) return ""

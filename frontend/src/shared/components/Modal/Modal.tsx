@@ -56,7 +56,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`animate-slide-in-from-bottom relative flex max-h-[90vh] w-full ${maxWidth} flex-col overflow-hidden rounded-t-xl border border-border bg-card sm:rounded-xl sm:animate-none`}
+        className={`animate-slide-in-from-bottom relative flex max-h-[90dvh] w-full ${maxWidth} flex-col overflow-hidden rounded-t-xl border border-border bg-card sm:rounded-xl sm:animate-none`}
       >
         {(title || descricao) && (
           <div className="flex items-start gap-3 border-b border-border px-4 py-3.5">
@@ -74,7 +74,7 @@ export function Modal({
             </button>
           </div>
         )}
-        <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-border px-4 py-3">{footer}</div>}
       </div>
     </div>

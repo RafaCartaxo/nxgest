@@ -6,6 +6,7 @@ import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.
 import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { Button } from "../../../shared/components/Button.js"
 import { MODULES } from "../../../shared/modules/modules.js"
+import { formatCpfCnpj } from "../../../shared/utils/masks.js"
 import type { EmpresaComStats } from "../services/empresa.service.js"
 
 interface EmpresaListProps {
@@ -36,7 +37,7 @@ export function EmpresaList({ empresas, onConfigurar }: EmpresaListProps) {
               <Avatar nome={nomeExibido} size="lg" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-semibold">{nomeExibido}</p>
-                {empresa.documento && <p className="truncate text-sm text-text-secondary">{empresa.documento}</p>}
+                {empresa.documento && <p className="truncate text-sm text-text-secondary">{formatCpfCnpj(empresa.documento)}</p>}
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
                   <StatusBadge variant={ativa ? "success" : "neutral"} size="sm" label={ativa ? t("superAdmin.empresaAtiva") : t("superAdmin.empresaInativa")} />
                   <span className="text-xs text-text-muted">

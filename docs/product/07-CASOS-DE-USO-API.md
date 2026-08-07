@@ -1140,6 +1140,13 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 - **Dado** `PATCH` com body vazio ou só campos opcionais → **Então** 200 (nenhuma mudança forçada).
 - **Dado** empresa inexistente → **Então** 404.
 
+### API-CT-133 — Documento da empresa: CPF ou CNPJ (P11)
+- **Dado** `POST /admin/empresas` com **CPF válido** (`39053344705`) → **Então** 201 e `documento` persistido em dígitos.
+- **Dado** `POST` com **CNPJ válido** (`11222333000181`) → **Então** 201 e `documento` em dígitos.
+- **Dado** `POST`/`PATCH` com documento **inválido** (check-digit errado, ex.: `11222333000182` ou dígitos repetidos) → **Então** 422.
+- **Dado** `PATCH` com `documento: null` → **Então** 200 e `documento` zerado.
+- **Dado** `POST` **sem** `documento` → **Então** 201 (opcional — não impede cadastro).
+
 ---
 
 # ADMIN — EMPRESAS · MÓDULOS (PLAN-031, whitelabel)

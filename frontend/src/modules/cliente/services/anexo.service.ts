@@ -44,24 +44,14 @@ export async function excluirAnexo(clienteId: string, anexoId: string): Promise<
 }
 
 /**
- * Abre o arquivo numa nova aba. O endpoint exige Bearer, então é preciso buscar
- * com o token e servir via Blob URL (window.open simples não envia o header).
+ * Baixa o arquivo (autenticado) como Blob para exibição in-app (P10a).
+ * O Blob URL é criado e revogado pelo componente que exibe (ciclo de vida controlado).
  */
-export async function abrirAnexo(clienteId: string, anexo: AnexoDto): Promise<string> {
+export async function baixarAnexoBlob(clienteId: string, anexoId: string): Promise<Blob> {
   const token = localStorage.getItem("nxgestao_token")
-  const response = await fetch(`/api${BASE(clienteId)}/${anexo.id}/file`, {
+  const response = await fetch(`/api${BASE(clienteId)}/${anexoId}/file`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })
   if (!response.ok) throw new ApiError(response.status, "ANEXO_ERRO", "Não foi possível abrir o anexo.")
-  const blob = await response.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.target = "_blank"
-  a.rel = "noopener noreferrer"
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 60_000)
-  return url
+  return response.blob()
 }

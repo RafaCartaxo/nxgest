@@ -777,13 +777,13 @@ async function main() {
   })
   let novaEmpresaId
   let novaEmpresaAdminEmail
-  await t("EMP-073", "POST /admin/empresas (201, campos opcionais) + login admin novo + dashboard", async () => {
+  await t("EMP-073", "POST /admin/empresas (201, CNPJ válido) + login admin novo + dashboard", async () => {
     const nome = `Empresa Smoke ${Date.now()}`
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, documento: "12.345.678/0001-99", nomeFantasia: "Smoke Fantasia", ativa: true, adminNome: "Admin Smoke", adminEmail: `smoke.${Date.now()}@empresa.com`, adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, documento: "11222333000181", nomeFantasia: "Smoke Fantasia", ativa: true, adminNome: "Admin Smoke", adminEmail: `smoke.${Date.now()}@empresa.com`, adminSenha: SENHA } })
     expect(r, 201, "criar empresa")
     novaEmpresaId = r.data.empresa.id
     novaEmpresaAdminEmail = r.data.admin.email
-    if (r.data.empresa.documento !== "12.345.678/0001-99") throw new Error("documento não persistido")
+    if (r.data.empresa.documento !== "11222333000181") throw new Error("documento não persistido")
     if (r.data.empresa.ativa !== true) throw new Error("ativa não persistido")
     const login = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
     expect(login, 200, "login admin da nova empresa")
@@ -801,6 +801,25 @@ async function main() {
   await t("EMP-095b", "POST /admin/empresas SEM opcionais (201, não bloqueia)", async () => {
     const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Min ${Date.now()}`, adminNome: "Admin Min", adminEmail: `min.${Date.now()}@empresa.com`, adminSenha: SENHA } })
     expect(r, 201, "empresa sem opcionais")
+  })
+
+  // ---------- DOCUMENTO DA EMPRESA: CPF ou CNPJ (P11) ----------
+  const docEmpresaCpf = "39053344705"
+  await t("EMP-096", "POST empresa com CPF válido (201, dígitos persistidos)", async () => {
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa CPF ${Date.now()}`, documento: docEmpresaCpf, adminNome: "Admin CPF", adminEmail: `cpf.${Date.now()}@empresa.com`, adminSenha: SENHA } })
+    expect(r, 201, "empresa com CPF")
+    if (r.data.empresa.documento !== docEmpresaCpf) throw new Error("CPF não persistido em dígitos")
+  })
+  await t("EMP-097", "POST empresa com documento inválido (422)", async () => {
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Inv ${Date.now()}`, documento: "11222333000182", adminNome: "Admin Inv", adminEmail: `inv.${Date.now()}@empresa.com`, adminSenha: SENHA } })
+    expect(r, 422, "documento inválido")
+  })
+  await t("EMP-098", "PATCH empresa documento CPF (200) e inválido (422)", async () => {
+    const ok = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken, body: { documento: docEmpresaCpf } })
+    expect(ok, 200, "patch documento CPF")
+    if (ok.data.documento !== docEmpresaCpf) throw new Error("CPF não persistido")
+    const bad = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}`, { token: superToken, body: { documento: "11111111111111" } })
+    expect(bad, 422, "documento inválido no patch")
   })
 
   // ---------- MÓDULOS (PLAN-031, whitelabel) ----------

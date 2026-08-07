@@ -509,13 +509,14 @@
     "modulosSalvo": "Modules updated.",
     "erroModulos": "Error updating modules.",
     "nomeFantasia": "Trade name",
-    "documento": "CNPJ",
+    "documento": "CPF/CNPJ",
     "situacao": "Status",
     "empresaAtiva": "Active",
     "empresaInativa": "Inactive",
     "operadorUm": "operator",
     "operadorOutros": "operators",
-    "modulosButton": "Modules ({{ativos}}/{{total}})"
+    "modulosButton": "Modules ({{ativos}}/{{total}})",
+    "documentoPlaceholder": "CPF or CNPJ"
   },
   "theme": {
     "default": "Blue",

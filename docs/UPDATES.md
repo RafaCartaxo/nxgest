@@ -2,6 +2,17 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 06/08/2026 — P11: empresa aceita CPF ou CNPJ · P10: viewer de anexos in-app + modal iOS
+
+**Corrigido**
+- **P10a — Anexos abrindo em nova guia bugavam no Chrome:** o viewer nativo do Chromium com `blob:` em aba prende o scroll (topo some). "Abrir" agora abre um **viewer in-app** (`Modal`): imagem via `<img>`, PDF via `<iframe>` — scroll controlado por nós, funciona em qualquer browser (Chrome, Safari, Android) e o Blob URL é **revogado no fechamento** (fim do risco dos 60s).
+- **P10b — Modal com topo oculto no iOS:** `max-h-[90vh]` → **`max-h-[90dvh]`** (viewport dinâmica, se adapta à toolbar) + `min-h-0`/`overscroll-contain` no corpo — scroll interno do modal correto no iOS.
+
+**Adicionado (P11)**
+- Empresa cadastra com **CPF ou CNPJ** (auto-máscara `maskCpfCnpj`): novo validador `src/shared/validators/cnpj.ts`, `validarDocumento` no controller (create/update) — documento validado com check-digit (11/14), armazenado em dígitos, inválido → **422**; campo continua **opcional**. Card da empresa formata o documento.
+
+**QA:** smoke **156/156** (EMP-073 com CNPJ válido · EMP-096/097/098 CPF/CNPJ/inválido) · gates verdes.
+
 ## 06/08/2026 — Favicon theme-aware + fix do token `primary-foreground`
 
 **Corrigido (gap do PLAN-056)**

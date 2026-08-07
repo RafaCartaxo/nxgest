@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next"
 import { FileText, ImageIcon, Paperclip, Trash2, ExternalLink, Check } from "lucide-react"
 import { Button } from "../../../shared/components/Button.js"
 import { Card } from "../../../shared/components/Card/Card.js"
+import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { processarAnexo, formatarBytes, type ErroAnexo } from "../../../shared/utils/processarAnexo.js"
-import { listarAnexos, enviarAnexo, excluirAnexo, abrirAnexo, type AnexoDto } from "../services/anexo.service.js"
+import { listarAnexos, enviarAnexo, excluirAnexo, baixarAnexoBlob, type AnexoDto } from "../services/anexo.service.js"
 
 interface Props {
   clienteId: string
@@ -17,10 +18,9 @@ function tipoLabel(t: (k: string) => string, tipo: AnexoDto["tipo"]): string {
   return t("anexos.tipoOutro")
 }
 
-function AnexoRow({ anexo, clienteId, onRemover }: { anexo: AnexoDto; clienteId: string; onRemover: (id: string) => void }) {
+function AnexoRow({ anexo, onAbrir, onRemover }: { anexo: AnexoDto; onAbrir: () => void; onRemover: (id: string) => void }) {
   const { t } = useTranslation()
   const [confirmando, setConfirmando] = useState(false)
-  const [abrindo, setAbrindo] = useState(false)
   const isPdf = anexo.mime === "application/pdf"
 
   return (
@@ -41,11 +41,7 @@ function AnexoRow({ anexo, clienteId, onRemover }: { anexo: AnexoDto; clienteId:
         <button
           type="button"
           aria-label={t("anexos.abrir")}
-          disabled={abrindo}
-          onClick={() => {
-            setAbrindo(true)
-            abrirAnexo(clienteId, anexo).catch(() => undefined).finally(() => setAbrindo(false))
-          }}
+          onClick={onAbrir}
           className="grid size-11 place-items-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary"
         >
           <ExternalLink className="size-4" />
@@ -139,6 +135,23 @@ export function AnexosSection({ clienteId }: Props) {
     }
   }
 
+  const [visualizando, setVisualizando] = useState<{ url: string; mime: string; nome: string } | null>(null)
+
+  async function abrir(anexo: AnexoDto) {
+    try {
+      const blob = await baixarAnexoBlob(clienteId, anexo.id)
+      const url = URL.createObjectURL(blob)
+      setVisualizando({ url, mime: anexo.mime, nome: anexo.nome })
+    } catch {
+      feedback.show({ status: "error", message: t("anexos.erroServidor") })
+    }
+  }
+
+  function fecharViewer() {
+    if (visualizando) URL.revokeObjectURL(visualizando.url)
+    setVisualizando(null)
+  }
+
   return (
     <section>
       <div className="mb-3 flex items-end justify-between gap-3">
@@ -178,13 +191,37 @@ export function AnexosSection({ clienteId }: Props) {
         <Card.Root>
           <ul className="divide-y divide-border">
             {lista.map((a) => (
-              <AnexoRow key={a.id} anexo={a} clienteId={clienteId} onRemover={remover} />
+              <AnexoRow key={a.id} anexo={a} onAbrir={() => void abrir(a)} onRemover={remover} />
             ))}
           </ul>
         </Card.Root>
       )}
 
       <p className="mt-2 text-xs text-text-muted">{t("anexos.hint")}</p>
+
+      {visualizando && (
+        <Modal
+          open
+          onClose={fecharViewer}
+          backdropClose
+          maxWidth="max-w-2xl"
+          title={visualizando.nome}
+        >
+          {visualizando.mime === "application/pdf" ? (
+            <iframe
+              src={visualizando.url}
+              title={visualizando.nome}
+              className="h-[70vh] w-full rounded-xl border border-border"
+            />
+          ) : (
+            <img
+              src={visualizando.url}
+              alt={visualizando.nome}
+              className="mx-auto max-h-[75vh] w-auto rounded-xl"
+            />
+          )}
+        </Modal>
+      )}
     </section>
   )
 }

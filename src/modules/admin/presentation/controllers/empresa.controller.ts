@@ -6,6 +6,22 @@ import { CriarEmpresaUseCase } from "../../application/use-cases/CriarEmpresa/Cr
 import { validateModulos } from "../../domain/modules.js"
 import { EmailDuplicadoError } from "../../../auth/domain/errors/auth.error.js"
 import { EmpresaNaoEncontradaError } from "../../domain/errors/empresa.error.js"
+import { isValidCpf } from "../../../../shared/validators/cpf.js"
+import { isValidCnpj } from "../../../../shared/validators/cnpj.js"
+
+/**
+ * Normaliza + valida o documento da empresa (P11): aceita CPF (11) OU CNPJ (14),
+ * guarda em dígitos. `undefined`/vazio → null (opcional, não impede cadastro).
+ */
+function validarDocumento(documento: unknown): { ok: true; valor: string | null } | { ok: false } {
+  if (documento === undefined || documento === null) return { ok: true, valor: null }
+  if (typeof documento !== "string") return { ok: false }
+  const s = documento.trim()
+  if (!s) return { ok: true, valor: null }
+  const digits = s.replace(/\D/g, "")
+  if (!isValidCpf(digits) && !isValidCnpj(digits)) return { ok: false }
+  return { ok: true, valor: digits }
+}
 
 export class EmpresaController {
   private repository: IEmpresaRepository
@@ -50,9 +66,14 @@ export class EmpresaController {
         return
       }
       const senhaHash = bcrypt.hashSync(adminSenha, 10)
+      const doc = validarDocumento(documento)
+      if (!doc.ok) {
+        res.status(422).json({ code: "VALIDATION_ERROR", message: "Documento inválido — informe um CPF ou CNPJ válido." })
+        return
+      }
       const result = await this.criarUseCase.execute({
         nome,
-        documento: typeof documento === "string" && documento.trim() ? documento.trim() : null,
+        documento: doc.valor,
         nomeFantasia: typeof nomeFantasia === "string" && nomeFantasia.trim() ? nomeFantasia.trim() : null,
         ativa: typeof ativa === "boolean" ? ativa : true,
         adminNome,
@@ -75,7 +96,14 @@ export class EmpresaController {
       const { nome, documento, nomeFantasia, ativa } = req.body
       const data: { nome?: string; documento?: string | null; nomeFantasia?: string | null; ativa?: boolean } = {}
       if (nome !== undefined && typeof nome === "string" && nome.trim()) data.nome = nome.trim()
-      if (documento !== undefined) data.documento = typeof documento === "string" && documento.trim() ? documento.trim() : null
+      if (documento !== undefined) {
+        const doc = validarDocumento(documento)
+        if (!doc.ok) {
+          res.status(422).json({ code: "VALIDATION_ERROR", message: "Documento inválido — informe um CPF ou CNPJ válido." })
+          return
+        }
+        data.documento = doc.valor
+      }
       if (nomeFantasia !== undefined) data.nomeFantasia = typeof nomeFantasia === "string" && nomeFantasia.trim() ? nomeFantasia.trim() : null
       if (ativa !== undefined && typeof ativa === "boolean") data.ativa = ativa
 
