@@ -1,10 +1,10 @@
 # API
 
-**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa e Gasto documentados; módulos Auth e Admin documentados; módulo Multi-Tenant (Empresas) implementado (PLAN-019); drill-down Admin → Operador implementado (PLAN-020)
+**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa, Gasto, Auth e Admin documentados; Multi-Tenant (Empresas, PLAN-019) + drill-down Admin → Operador (PLAN-020) implementados; **fluxo de conta (PLAN-065: convite/ativação + forgot/reset + Resend)** e **Leads comerciais (PLAN-064)** documentados
 
-**Versão:** 1.3
+**Versão:** 1.4
 
-**Última atualização:** 31/07/2026
+**Última atualização:** 07/08/2026
 
 ---
 
@@ -2268,4 +2268,176 @@ Reenvia o convite de ativação para um operador **convidado** (PLAN-065) — no
 |--------|------|
 | OPERATOR_NOT_FOUND | 404 |
 | VALIDATION_ERROR | 409 (conta já ativa) |
+| FORBIDDEN | 403 |
+---
+
+# POST /api/leads
+
+Cria um **lead comercial** (PLAN-064, público — página `/quero-conhecer`). Não cria empresa/usuário/tenant. Envia e-mail de confirmação (token `lead`, validade 24h).
+
+**Auth:** Público · **Rate limit:** 10/15min
+
+## Request
+
+```json
+{ "nomeResponsavel": "Maria Interessada", "empresa": "Comercial Exemplo", "email": "maria@exemplo.com", "telefone": "11999999999", "origem": "Site" }
+```
+
+## Response 201
+
+```json
+{ "ok": true, "lead": { "id": "...", "status": "NOVO", "origem": "Site" } }
+```
+
+## Response 200 (dedup)
+
+E-mail já tem lead → não cria (`jaExistia: true` — mensagem amigável no front).
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| VALIDATION_ERROR | 422 (campos obrigatórios/mín. 2) |
+| LEAD_EMAIL_JA_USUARIO | 409 (e-mail já é usuário/empresa) |
+| RATE_LIMIT | 429 |
+
+---
+
+# POST /api/leads/confirmar
+
+Confirma o e-mail do lead via token (PLAN-064). Single-use; validade 24h.
+
+**Auth:** Público · **Rate limit:** 10/15min
+
+## Request
+
+```json
+{ "token": "<token do e-mail>" }
+```
+
+## Response 200
+
+```json
+{ "ok": true, "lead": { "id": "...", "status": "EMAIL_CONFIRMADO" } }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| VALIDATION_ERROR | 422 (sem token) |
+| TOKEN_EXPIRED | 400 |
+| TOKEN_INVALID | 400 (inválido ou já usado) |
+| RATE_LIMIT | 429 |
+
+---
+
+# POST /api/leads/reconfirmar
+
+Reenvia o e-mail de confirmação (PLAN-064, LD-07). **Resposta sempre 200 genérica** (não vaza se o lead existe).
+
+**Auth:** Público · **Rate limit:** 3/15min por e-mail+IP
+
+## Request
+
+```json
+{ "email": "maria@exemplo.com" }
+```
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+---
+
+# GET /api/admin/leads
+
+Lista leads comerciais com filtro por status (PLAN-064).
+
+**Auth:** Super Admin (não-super → 403)
+
+## Query
+
+`?status=NOVO` (opcional: `NOVO | EMAIL_CONFIRMADO | EM_ONBOARDING | CONVERTIDO | DESCARTADO`)
+
+## Response 200
+
+```json
+[ { "id": "...", "nomeResponsavel": "...", "empresa": "...", "email": "...", "telefone": "...", "origem": "Site", "status": "NOVO", "createdAt": "..." } ]
+```
+
+---
+
+# POST /api/admin/leads/{id}/onboarding
+
+Marca o lead como **EM_ONBOARDING** (PLAN-064, LD-10).
+
+**Auth:** Super Admin
+
+## Response 200
+
+```json
+{ "id": "...", "status": "EM_ONBOARDING" }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| LEAD_NOT_FOUND | 404 |
+| LEAD_STATUS_INVALIDO | 422 (convertido/descartado) |
+| FORBIDDEN | 403 |
+
+---
+
+# POST /api/admin/leads/{id}/converter
+
+Converte o lead (PLAN-064, LD-11): cria **Empresa + Administrador** (convite por e-mail) e registra auditoria (quem/quando). Só com e-mail confirmado (EMAIL_CONFIRMADO/EM_ONBOARDING).
+
+**Auth:** Super Admin
+
+## Response 200
+
+```json
+{ "ok": true, "lead": { "id": "...", "status": "CONVERTIDO", "convertidoEmpresaId": "...", "convertidoPor": "...", "convertidoEm": "..." }, "empresaId": "..." }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| LEAD_NOT_FOUND | 404 |
+| LEAD_STATUS_INVALIDO | 422 |
+| EMAIL_DUPLICATED | 409 |
+| FORBIDDEN | 403 |
+
+---
+
+# POST /api/admin/leads/{id}/descartar
+
+Descarta o lead (PLAN-064, LD-12): status **DESCARTADO** + **LGPD** (dados pessoais anonimizados — e-mail vira marcador `descartado-<id>@descartado.local`, nome/telefone removidos) + motivo.
+
+**Auth:** Super Admin
+
+## Request
+
+```json
+{ "motivo": "Fora do perfil" }
+```
+
+## Response 200
+
+```json
+{ "id": "...", "status": "DESCARTADO", "email": "descartado-...@descartado.local", "descarteMotivo": "Fora do perfil" }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| LEAD_NOT_FOUND | 404 |
+| LEAD_STATUS_INVALIDO | 422 (convertido) |
+| VALIDATION_ERROR | 422 (sem motivo) |
 | FORBIDDEN | 403 |

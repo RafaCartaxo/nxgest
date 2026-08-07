@@ -238,6 +238,25 @@ export const anexos = sqliteTable("anexos", {
   createdAt: text("createdAt").notNull(),
 })
 
+/** Leads comerciais (PLAN-064): interesse → confirmação de e-mail → onboarding → empresa. Isolado do domínio operacional. */
+export const leads = sqliteTable("leads", {
+  id: text("id").primaryKey(),
+  nomeResponsavel: text("nomeResponsavel").notNull(),
+  empresa: text("empresa").notNull(),
+  /** Unique para dedup; no descarte é anonimizado (LGPD). */
+  email: text("email").notNull().unique(),
+  telefone: text("telefone"),
+  origem: text("origem").notNull().default("Site"),
+  status: text("status").notNull().default("NOVO"),
+  convertidoEmpresaId: text("convertidoEmpresaId"),
+  convertidoEm: text("convertidoEm"),
+  convertidoPor: text("convertidoPor"),
+  descartadoEm: text("descartadoEm"),
+  descartadoPor: text("descartadoPor"),
+  descarteMotivo: text("descarteMotivo"),
+  createdAt: text("createdAt").notNull(),
+})
+
 export async function createTables() {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS clientes (
@@ -489,6 +508,26 @@ export async function createTables() {
       createdAt TEXT NOT NULL,
       FOREIGN KEY (clienteId) REFERENCES clientes(id)
     );
+
+    CREATE TABLE IF NOT EXISTS leads (
+      id TEXT PRIMARY KEY,
+      nomeResponsavel TEXT NOT NULL,
+      empresa TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      telefone TEXT,
+      origem TEXT NOT NULL DEFAULT 'Site',
+      status TEXT NOT NULL DEFAULT 'NOVO',
+      convertidoEmpresaId TEXT,
+      convertidoEm TEXT,
+      convertidoPor TEXT,
+      descartadoEm TEXT,
+      descartadoPor TEXT,
+      descarteMotivo TEXT,
+      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+    CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
 
   `)
 

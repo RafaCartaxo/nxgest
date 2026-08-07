@@ -2,6 +2,17 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — PLAN-064: onboarding comercial — Leads (público + painel super)
+
+**Implementado (backend + frontend)**
+- **Tabela `leads`** (domínio comercial isolado do operacional): nomeResponsavel · empresa · email **unique** (dedup) · telefone? · origem (default `Site`) · status `NOVO→EMAIL_CONFIRMADO→EM_ONBOARDING→CONVERTIDO/DESCARTADO` + auditoria de conversão/descarte.
+- **Público (sem auth):** `POST /api/leads` (rate limit, zod) — **não cria empresa/usuário**; dedup por e-mail (`200 jaExistia`) e e-mail já usuário (`409 LEAD_EMAIL_JA_USUARIO`) · `POST /api/leads/confirmar` (token `lead` 24h, **single-use**) · `POST /api/leads/reconfirmar` (resposta genérica).
+- **Super admin (auth + guard):** `GET /api/admin/leads?status=` · `POST .../:id/onboarding` · `POST .../:id/converter` (reusa `createEmpresa` + **convite** ao admin + auditoria quem/quando) · `POST .../:id/descartar` (motivo obrigatório + **LGPD**: dados anonimizados).
+- **Frontend:** `QueroConhecerPage` (`/quero-conhecer`) + `ConfirmarLeadPage` (`/quero-conhecer/confirmar`) públicas · `LeadsAdminPage` (`/admin/leads`, `SuperAdminRoute`, filtro por status, ações gated) · nav do super (sidebar + UserMenu) ganhou "Leads" · i18n pt/en/es (`lead.*`).
+- **QA:** smoke 235 → **248/248** (LD-01..13, LD-15) · vitest · tsc · build · audits · docs:audit (62 rotas = 62 telas).
+
+Referência: [PLAN-064](plans/PLAN-064-onboarding-comercial-leads.md) · `05-MAPEAMENTO-TELAS.md` (§11d/11e/14b) · `02-API` · `07-CASOS-DE-USO-API`
+
 ## 07/08/2026 — PLAN-065 frontend (Checkpoint 2): telas de conta + convite no admin
 
 **Implementado (frontend — fecha o PLAN-065)**

@@ -1936,6 +1936,136 @@ async function main() {
     expect(c, 401, "caixa token inválido")
   })
 
+  // ---------- LEADS COMERCIAIS (PLAN-064) ----------
+  let leadId, leadEmail
+  const countLeads = () => {
+    const d = new Database(SMOKE_DB_PATH, { readonly: true })
+    const row = d.prepare("SELECT COUNT(*) AS c FROM leads").get()
+    d.close()
+    return row?.c ?? 0
+  }
+  const countEmpresas = () => {
+    const d = new Database(SMOKE_DB_PATH, { readonly: true })
+    const row = d.prepare("SELECT COUNT(*) AS c FROM empresas").get()
+    d.close()
+    return row?.c ?? 0
+  }
+
+  await t("LD-01", "criar lead público → 201 NOVO + token de confirmação", async () => {
+    leadEmail = `lead.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/leads", { body: { nomeResponsavel: "Maria Interessada", empresa: "Comercial Exemplo", email: leadEmail, telefone: "11999999999" } })
+    expect(r, 201, "criar lead")
+    if (r.data.lead.status !== "NOVO") throw new Error(`status=${r.data.lead.status}`)
+    leadId = r.data.lead.id
+    const tok = authTokensCount(leadId, "lead")
+    if (tok < 1) throw new Error("token de confirmação não criado")
+    const d = new Database(SMOKE_DB_PATH)
+    const row = d.prepare("SELECT hash FROM auth_tokens WHERE subjectId = ? AND tipo = 'lead' AND usadoEm IS NULL ORDER BY createdAt DESC LIMIT 1").get(leadId)
+    d.close()
+    if (!row?.hash?.match(/^[0-9a-f]{64}$/)) throw new Error("token não armazenado como hash SHA-256")
+  })
+
+  await t("LD-05", "criar lead NÃO cria empresa/usuário (isolamento)", async () => {
+    const antes = countEmpresas()
+    const d = new Database(SMOKE_DB_PATH)
+    const user = d.prepare("SELECT id FROM usuarios WHERE email = ?").get(leadEmail)
+    d.close()
+    if (user) throw new Error("lead virou usuário")
+    if (countEmpresas() !== antes) throw new Error("lead criou empresa")
+  })
+
+  await t("LD-02", "e-mail duplicado → 200 jaExistia (não duplica)", async () => {
+    const antes = countLeads()
+    const r = await req("POST", "/api/leads", { body: { nomeResponsavel: "Outra", empresa: "Outra Ltda", email: leadEmail } })
+    expect(r, 200, "lead duplicado")
+    if (!r.data.jaExistia) throw new Error("jaExistia não sinalizado")
+    if (countLeads() !== antes) throw new Error("lead duplicado criado")
+  })
+
+  await t("LD-15", "e-mail que já é usuário → 409 LEAD_EMAIL_JA_USUARIO", async () => {
+    const r = await req("POST", "/api/leads", { body: { nomeResponsavel: "Pessoa Existente", empresa: "Empresa Real Ltda", email: "admin@cobranca.com" } })
+    expect(r, 409, "email já usuário")
+    if (r.data.code !== "LEAD_EMAIL_JA_USUARIO") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("LD-03", "validação (sem email / email inválido) → 422", async () => {
+    const a = await req("POST", "/api/leads", { body: { nomeResponsavel: "X", empresa: "Y" } })
+    expect(a, 422, "sem email")
+    const b = await req("POST", "/api/leads", { body: { nomeResponsavel: "X", empresa: "Y", email: "não-é-email" } })
+    expect(b, 422, "email inválido")
+  })
+
+  await t("LD-06", "confirmar token → EMAIL_CONFIRMADO (single-use)", async () => {
+    const raw = "lead-raw-confirm"
+    inserirAuthToken(leadId, "lead", raw, new Date(Date.now() + 3600e3).toISOString())
+    const r = await req("POST", "/api/leads/confirmar", { body: { token: raw } })
+    expect(r, 200, "confirmar lead")
+    if (r.data.lead.status !== "EMAIL_CONFIRMADO") throw new Error(`status=${r.data.lead.status}`)
+  })
+
+  await t("LD-08", "token de confirmação usado → 400 TOKEN_INVALID", async () => {
+    const r = await req("POST", "/api/leads/confirmar", { body: { token: "lead-raw-confirm" } })
+    expect(r, 400, "token usado")
+    if (r.data.code !== "TOKEN_INVALID") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("LD-07", "token de confirmação expirado → 400 TOKEN_EXPIRED", async () => {
+    const raw = "lead-raw-expired"
+    inserirAuthToken(leadId, "lead", raw, new Date(Date.now() - 1000).toISOString())
+    const r = await req("POST", "/api/leads/confirmar", { body: { token: raw } })
+    expect(r, 400, "token expirado")
+    if (r.data.code !== "TOKEN_EXPIRED") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("LD-09", "super lista leads (200) com filtro por status", async () => {
+    const r = await req("GET", "/api/admin/leads", { token: superToken })
+    expect(r, 200, "listar leads")
+    if (!r.data.some((l) => l.id === leadId)) throw new Error("lead não na lista")
+    const f = await req("GET", "/api/admin/leads?status=EMAIL_CONFIRMADO", { token: superToken })
+    expect(f, 200, "filtro status")
+    if (!f.data.every((l) => l.status === "EMAIL_CONFIRMADO")) throw new Error("filtro quebrado")
+  })
+
+  await t("LD-13", "não-super em /admin/leads → 403", async () => {
+    const r = await req("GET", "/api/admin/leads", { token: adminToken })
+    expect(r, 403, "admin bloqueado")
+  })
+
+  await t("LD-10", "iniciar onboarding → EM_ONBOARDING", async () => {
+    const r = await req("POST", `/api/admin/leads/${leadId}/onboarding`, { token: superToken })
+    expect(r, 200, "iniciar onboarding")
+    if (r.data.status !== "EM_ONBOARDING") throw new Error(`status=${r.data.status}`)
+  })
+
+  await t("LD-11", "converter → empresa + admin (convite) + CONVERTIDO + auditoria", async () => {
+    const antesEmpresas = countEmpresas()
+    const r = await req("POST", `/api/admin/leads/${leadId}/converter`, { token: superToken })
+    expect(r, 200, "converter")
+    if (r.data.lead.status !== "CONVERTIDO") throw new Error(`status=${r.data.lead.status}`)
+    if (!r.data.lead.convertidoEmpresaId) throw new Error("empresaId ausente")
+    if (!r.data.lead.convertidoPor) throw new Error("auditoria convertidoPor ausente")
+    if (!r.data.lead.convertidoEm) throw new Error("auditoria convertidoEm ausente")
+    if (countEmpresas() !== antesEmpresas + 1) throw new Error("empresa não criada")
+    // admin convidado (sem senha) → login 403 ACCOUNT_PENDING
+    const login = await req("POST", "/api/auth/login", { body: { email: leadEmail, senha: SENHA } })
+    expect(login, 403, "admin convidado")
+    if (login.data.code !== "ACCOUNT_PENDING") throw new Error(`code=${login.data.code}`)
+  })
+
+  await t("LD-12", "descartar → DESCARTADO + LGPD (dados anonimizados)", async () => {
+    const email = `desc.${Date.now()}@uorak.com`
+    const criado = await req("POST", "/api/leads", { body: { nomeResponsavel: "Ana", empresa: "Descartada Ltda", email } })
+    expect(criado, 201, "criar p/ descarte")
+    const r = await req("POST", `/api/admin/leads/${criado.data.lead.id}/descartar`, { token: superToken, body: { motivo: "Fora do perfil" } })
+    expect(r, 200, "descartar")
+    if (r.data.status !== "DESCARTADO") throw new Error(`status=${r.data.status}`)
+    if (r.data.email !== null && r.data.email.startsWith("descartado-") !== true) throw new Error("email não anonimizado")
+    if (r.data.descarteMotivo !== "Fora do perfil") throw new Error("motivo ausente")
+    // sem motivo → 422
+    const sem = await req("POST", `/api/admin/leads/${criado.data.lead.id}/descartar`, { token: superToken, body: {} })
+    expect(sem, 422, "descarte sem motivo")
+  })
+
   // aguarda todos terminarem
   await Promise.all([])
 }

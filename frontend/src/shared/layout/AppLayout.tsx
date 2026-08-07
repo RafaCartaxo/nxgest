@@ -5,6 +5,7 @@ import {
   Building2,
   FileText,
   LayoutDashboard,
+  Mail,
   Route as RouteIcon,
   ShieldCheck,
   Users,
@@ -51,6 +52,7 @@ function useAdminNavItems(): NavItem[] {
   }
   if (user?.role === "super_admin") {
     items.push({ to: "/admin/empresas", label: t("superAdmin.navEmpresas"), icon: Building2 })
+    items.push({ to: "/admin/leads", label: t("lead.navLeads"), icon: Mail })
   }
   return items
 }

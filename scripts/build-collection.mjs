@@ -93,6 +93,38 @@ const endpoints = [
     }),
   ]),
 
+  mod("Leads", "Aquisição comercial (PLAN-064) — público + super admin", [
+    req("Criar lead", "POST", "/api/leads", {
+      auth: PUBLIC,
+      body: { nomeResponsavel: "Maria Interessada", empresa: "Comercial Exemplo", email: "maria@exemplo.com", telefone: "11999999999" },
+      description: "PLAN-064 (LD-01) · 201 {ok, lead} · 200 jaExistia (dedup) · 409 LEAD_EMAIL_JA_USUARIO · 422 · 429",
+    }),
+    req("Confirmar lead", "POST", "/api/leads/confirmar", {
+      auth: PUBLIC,
+      body: { token: "{{leadToken}}" },
+      description: "PLAN-064 (LD-06) · 200 EMAIL_CONFIRMADO · 400 TOKEN_EXPIRED/TOKEN_INVALID (single-use) · 429",
+    }),
+    req("Reenviar confirmação", "POST", "/api/leads/reconfirmar", {
+      auth: PUBLIC,
+      body: { email: "maria@exemplo.com" },
+      description: "PLAN-064 (LD-07) · 200 sempre (genérico) · 429 rate limit e-mail+IP",
+    }),
+    req("Listar leads", "GET", "/api/admin/leads", {
+      query: [{ key: "status", value: "" }],
+      description: "PLAN-064 (LD-09) · 200 lista · 403 não-super (LD-13)",
+    }),
+    req("Iniciar onboarding", "POST", "/api/admin/leads/{{leadId}}/onboarding", {
+      description: "PLAN-064 (LD-10) · 200 EM_ONBOARDING · 404 · 422",
+    }),
+    req("Converter lead", "POST", "/api/admin/leads/{{leadId}}/converter", {
+      description: "PLAN-064 (LD-11) · 200 {lead CONVERTIDO, empresaId} + convite ao admin · 409 EMAIL_DUPLICATED",
+    }),
+    req("Descartar lead", "POST", "/api/admin/leads/{{leadId}}/descartar", {
+      body: { motivo: "Fora do perfil" },
+      description: "PLAN-064 (LD-12) · 200 DESCARTADO + LGPD (dados anonimizados) · 422 sem motivo",
+    }),
+  ]),
+
   mod("Clientes", "CRUD de clientes (escopo por operador)", [
     req("Criar", "POST", "/api/clientes", {
       body: { nome: "João Silva", telefone: "11999999999", cpf: "39053344705", comercio: "Padaria Central", endereco: { logradouro: "Rua A", numero: "123", bairro: "Centro", cidade: "São Paulo", estado: "SP" } },

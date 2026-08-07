@@ -2,7 +2,7 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.26
+**Versão:** 1.27
 
 **Última atualização:** 07/08/2026
 
@@ -34,15 +34,18 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 11a | Recuperar Senha | `/recuperar-senha` | auth | Formulário |
 | 11b | Redefinir Senha | `/resetar-senha` | auth | Formulário |
 | 11c | Ativar Conta | `/ativar` | auth | Formulário |
+| 11d | Quero Conhecer (lead) | `/quero-conhecer` | leads | Formulário |
+| 11e | Confirmar Lead | `/quero-conhecer/confirmar` | leads | Formulário |
 | 12 | Administração | `/admin` | admin | Dashboard |
 | 13 | Super Admin (Empresas) | `/admin/empresas` | admin | Dashboard |
 | 14 | Admin em contexto de empresa | `/admin/empresas/:id` | admin | Dashboard |
+| 14b | Leads (painel super) | `/admin/leads` | leads | Lista |
 | 15 | Detalhe do Operador | `/admin/operadores/:id` | admin | Detalhe |
 | 16 | Caixa | `/caixa` | caixa | Dashboard |
 | 17 | Gastos | `/gastos` | gasto | Formulário |
 | 18 | Perfil (Meus dados) | `/perfil` | auth | Formulário |
 
-**Total:** 22 telas (páginas) · 23 rotas | 7 módulos | 45 componentes (15 shared + 2 feedback + 3 auth + 25 módulo)
+**Total:** 25 telas (páginas) · 26 rotas | 8 módulos | 45 componentes (15 shared + 2 feedback + 3 auth + 25 módulo)
 
 > **Nota de navegação:** esta tabela é o espelho das rotas de `frontend/src/App.tsx`. Qualquer rota nova (ou removida) exige atualizar esta tabela + a seção correspondente — ver `SKILL-009-documentation-sync.md`.
 
@@ -93,7 +96,14 @@ App
     │   ├── Identidade visual (logo/nome do sistema)
     │   ├── Campo email
     │   ├── Campo senha (+ toggle mostrar/ocultar — Eye/EyeOff) [PLAN-029]
-    │   └── Botão Entrar + feedback de erro
+    │   ├── Botão Entrar + feedback de erro
+    │   └── Link "Esqueci minha senha" → /recuperar-senha [PLAN-065]
+    │
+    ├── RecuperarSenhaPage · ResetarSenhaPage · AtivarPage (públicas, `PublicPageShell`) [PLAN-065]
+    │   └── Fluxo de conta: e-mail → link → definir senha
+    │
+    ├── QueroConhecerPage · ConfirmarLeadPage (públicas, shell do login) [PLAN-064]
+    │   └── Lead comercial: interesse → confirmação de e-mail
     │
     ├── PerfilPage
     │   ├── Header (voltar, título "Meus dados")
@@ -110,6 +120,9 @@ App
     │   ├── SearchBar (busca por nome/email)
     │   └── OperadoresList (Card.Root list-item × N)
     │   └── OperadorForm (Modal: nome, email, senha, role)
+    │
+    ├── LeadsAdminPage (/admin/leads — SuperAdminRoute) [PLAN-064]
+    │   └── Filtro por status + cards (ações: onboarding/converter/descartar)
     │
     ├── OperacoesDashboard
     │   ├── IndicadoresCards (4 cards: a receber, recebido, clientes, resultado)
@@ -746,6 +759,34 @@ App
 
 ---
 
+## 11d. Quero Conhecer / 11e. Confirmar Lead (PLAN-064)
+**Formulários públicos** de aquisição comercial (fora do `ProtectedRoute`), shell no estilo do login.
+
+**Arquivos:** `frontend/src/modules/leads/pages/QueroConhecerPage.tsx`, `ConfirmarLeadPage.tsx`
+
+**Comportamento:**
+- **`/quero-conhecer`:** Nome · Empresa · E-mail · Telefone (opcional) → `POST /api/leads` (zod). Dedup → mensagem amigável "já existe solicitação"; e-mail já usuário → 409 tratado; sucesso → `SuccessState` + "Não recebeu? Reenviar".
+- **`/quero-conhecer/confirmar?token=`:** confirma no load → `SuccessState`; `TOKEN_EXPIRED`/`TOKEN_INVALID` → erro + form de reenviar (e-mail).
+
+**Aderência:** mesmo padrão do §11a–11c (Field, Button, ErrorBanner, SuccessState, i18n `lead.*`).
+
+---
+
+## 14b. Leads — painel do super admin (PLAN-064)
+**Lista** protegida por `SuperAdminRoute`; acesso exclusivo do super admin (não-super → redirect).
+
+**Arquivo:** `frontend/src/modules/leads/pages/LeadsAdminPage.tsx`
+
+**Comportamento:**
+- Filtro por status (`FieldSelect`: Todos + NOVO/EMAIL_CONFIRMADO/EM_ONBOARDING/CONVERTIDO/DESCARTADO).
+- `Card.Root list-item`: responsável · empresa · e-mail/telefone · badges origem/status · ações gated por estado:
+  - **Iniciar onboarding** (NOVO/EMAIL_CONFIRMADO) → `EM_ONBOARDING`
+  - **Converter** (EMAIL_CONFIRMADO/EM_ONBOARDING) → `ConfirmModal` → empresa + convite + auditoria
+  - **Descartar** (≠ CONVERTIDO) → `Modal` com motivo obrigatório → `DESCARTADO` + LGPD
+- Nav: sidebar desktop + `UserMenu` mobile do super admin ganharam "Leads".
+
+---
+
 ---
 
 ## 12. Administração (14 — contexto de empresa)
@@ -1199,6 +1240,8 @@ Ao implementar uma nova tela, verificar (PLAN-038/039/043/044):
 | 03/08/2026 | 1.23 | **PLAN-038 (identidade "Nexus")**: `Navbar` de topo substituída por **`AppLayout`** (sidebar lateral desktop + drawer mobile) com marca; `LoginPage` redesenhado (logo Nexus + tagline + card); novo **logo Nexus** (`Logo`/`LogoLockup`, favicon) e **tokens de identidade** (OKLCH, gradientes, Sora nos títulos, `--tenant-primary` p/ whitelabel). |
 | 03/08/2026 | 1.24 | PLAN-038 refinamentos (essência Lovable): `PageHeader` com **título limpo + ícone suave + data (eyebrow)**; `KpiCard` com **barra de tom + value-lg**; `Card` com `tone`/`interactive`; **Ações rápidas** na Central (grade de ícones, gated por módulo); sidebar com seção **"Administração"** (Painel Admin + Empresas). |
 | 03/08/2026 | 1.25 | PLAN-038 ajustes: **overscroll** corrigido (`overscroll-behavior-y: none` + sem `background-attachment: fixed` + `100dvh`); seletor de tema em **bolinhas de gradiente + nome do tema atual** (compacto); botão **claro/escuro só ícone**; `RotaCobrancaSection` **removida da Central**; **marca no topo do drawer** (mark + "NX Gestão" + X na mesma linha); seção **"Administração" visível sem scroll**. |
+| 07/08/2026 | 1.26 | PLAN-065: telas públicas **Recuperar Senha (§11a) · Redefinir Senha (§11b) · Ativar Conta (§11c)** (`PublicPageShell`, estilo do login) + link "Esqueci minha senha" no login + badge "Convite pendente"/reenviar no admin. |
+| 07/08/2026 | 1.27 | PLAN-064: telas públicas **Quero Conhecer (§11d) · Confirmar Lead (§11e)** + painel super **Leads (§14b)** (`/admin/leads`) + nav "Leads" no super (sidebar + UserMenu). |
 
 # Referências
 

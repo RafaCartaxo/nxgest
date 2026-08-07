@@ -135,3 +135,17 @@ O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context*
 - [x] Fix leak: OperadorRow status + strip senhaHash
 - [x] Smoke 213 → 235/235 (AC/ES/SE/SM) · vitest 36 · docs:audit · collection 55
 - [x] Frontend (Checkpoint 2): páginas públicas (recuperar/resetar/ativar) · login link + ApiError · AuthContext status · OperadorForm/EmpresaForm senha opcional · badge convite + reenviar · i18n
+
+---
+
+# CHECKLIST — PLAN-064: onboarding comercial (Leads) implementado
+
+**Data:** 07/08/2026
+
+- [x] Tabela `leads` (dedup por e-mail, origem default Site, auditoria conversão/descarte) — `auth_tokens` tipo `lead` (24h, single-use)
+- [x] Público: `POST /api/leads` (rate limit; não cria empresa/usuário) · `POST /api/leads/confirmar` · `POST /api/leads/reconfirmar` (genérico)
+- [x] Super: `GET /api/admin/leads?status=` · onboarding · converter (createEmpresa + convite + auditoria) · descartar (LGPD + motivo)
+- [x] Guard: não-super em /api/admin/leads → 403 (LD-13)
+- [x] Frontend: QueroConhecerPage (`/quero-conhecer`) + ConfirmarLeadPage públicas · LeadsAdminPage (`/admin/leads`, SuperAdminRoute, filtro + ações) · nav Leads no super · i18n pt/en/es
+- [x] Smoke 235 → 248/248 (LD-01..13, LD-15) · vitest · tsc · build · audits · docs:audit 0 divergências (62 rotas)
+- [x] Docs: PLAN-064 implementado · 02-API · 07 · collection 62 · 05-MAPEAMENTO (§11d/11e/14b) · UI-COVERAGE (23–25) · UPDATES

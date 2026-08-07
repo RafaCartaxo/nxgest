@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { Link, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Building2, LogOut, Settings, ShieldCheck, User, type LucideIcon } from "lucide-react"
+import { Building2, LogOut, Mail, Settings, ShieldCheck, User, type LucideIcon } from "lucide-react"
 import { Avatar } from "../components/Avatar/Avatar.js"
 import { PreferenciasModal } from "../theme/PreferenciasModal.js"
 import { useAuth } from "../auth/AuthContext.js"
@@ -62,6 +62,7 @@ export function UserMenu({
     }
     if (role === "super_admin") {
       itens.push({ chave: "superAdmin.navEmpresas", icon: Building2, to: "/admin/empresas" })
+      itens.push({ chave: "lead.navLeads", icon: Mail, to: "/admin/leads" })
     }
   }
   itens.push({

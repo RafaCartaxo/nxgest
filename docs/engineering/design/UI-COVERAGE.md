@@ -51,6 +51,9 @@
 | 20 | Recuperar Senha (`/recuperar-senha`) | ✅ (novo, PLAN-065) | PublicPageShell + Field email + SuccessState (resposta genérica) | ✅ Canônico |
 | 21 | Redefinir Senha (`/resetar-senha?token=`) | ✅ (novo, PLAN-065) | PublicPageShell + Field (senha+confirmar) + ErrorBanner token | ✅ Canônico |
 | 22 | Ativar Conta (`/ativar?token=`) | ✅ (novo, PLAN-065) | PublicPageShell + Field (senha+confirmar) + ErrorBanner token | ✅ Canônico |
+| 23 | Quero Conhecer (`/quero-conhecer`) | ✅ (novo, PLAN-064) | Shell login + Field (zod) + SuccessState dedup/reenviar | ✅ Canônico |
+| 24 | Confirmar Lead (`/quero-conhecer/confirmar`) | ✅ (novo, PLAN-064) | PublicPageShell + SuccessState/ErrorBanner + reenviar | ✅ Canônico |
+| 25 | Leads Super (`/admin/leads`) | ✅ (novo, PLAN-064) | PageHeader + FieldSelect filtro + Card list-item + badges status + modais (Confirm/descarte) | ✅ Canônico |
 
 ## 3. Componentes compartilhados
 

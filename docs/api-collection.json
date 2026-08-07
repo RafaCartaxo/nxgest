@@ -296,6 +296,232 @@
       ]
     },
     {
+      "name": "Leads",
+      "description": "Aquisição comercial (PLAN-064) — público + super admin",
+      "item": [
+        {
+          "name": "Criar lead",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nomeResponsavel\": \"Maria Interessada\",\n  \"empresa\": \"Comercial Exemplo\",\n  \"email\": \"maria@exemplo.com\",\n  \"telefone\": \"11999999999\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "PLAN-064 (LD-01) · 201 {ok, lead} · 200 jaExistia (dedup) · 409 LEAD_EMAIL_JA_USUARIO · 422 · 429"
+          }
+        },
+        {
+          "name": "Confirmar lead",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/confirmar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads",
+                "confirmar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{leadToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "PLAN-064 (LD-06) · 200 EMAIL_CONFIRMADO · 400 TOKEN_EXPIRED/TOKEN_INVALID (single-use) · 429"
+          }
+        },
+        {
+          "name": "Reenviar confirmação",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/reconfirmar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads",
+                "reconfirmar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria@exemplo.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "PLAN-064 (LD-07) · 200 sempre (genérico) · 429 rate limit e-mail+IP"
+          }
+        },
+        {
+          "name": "Listar leads",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "PLAN-064 (LD-09) · 200 lista · 403 não-super (LD-13)"
+          }
+        },
+        {
+          "name": "Iniciar onboarding",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/leads/{{leadId}}/onboarding",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "leads",
+                "{{leadId}}",
+                "onboarding"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "PLAN-064 (LD-10) · 200 EM_ONBOARDING · 404 · 422"
+          }
+        },
+        {
+          "name": "Converter lead",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/leads/{{leadId}}/converter",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "leads",
+                "{{leadId}}",
+                "converter"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "PLAN-064 (LD-11) · 200 {lead CONVERTIDO, empresaId} + convite ao admin · 409 EMAIL_DUPLICATED"
+          }
+        },
+        {
+          "name": "Descartar lead",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/leads/{{leadId}}/descartar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "leads",
+                "{{leadId}}",
+                "descartar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Fora do perfil\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "PLAN-064 (LD-12) · 200 DESCARTADO + LGPD (dados anonimizados) · 422 sem motivo"
+          }
+        }
+      ]
+    },
+    {
       "name": "Clientes",
       "description": "CRUD de clientes (escopo por operador)",
       "item": [

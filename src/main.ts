@@ -16,6 +16,8 @@ import { operacoesRoutes } from "./modules/operacoes/presentation/routes/operaco
 import { caixaRoutes } from "./modules/caixa/presentation/routes/caixa.routes.js"
 import { empresaRoutes } from "./modules/admin/presentation/routes/empresa.routes.js"
 import { gastoRoutes } from "./modules/gasto/presentation/routes/gasto.routes.js"
+import { leadPublicRoutes } from "./modules/leads/presentation/routes/lead.routes.js"
+import { leadAdminRoutes } from "./modules/leads/presentation/routes/lead.admin.routes.js"
 import { garantirUploadsDir } from "./shared/utils/uploads.js"
 
 await createTables()
@@ -34,6 +36,8 @@ app.use("/api/health", healthRoutes)
 app.use("/api/auth", authRoutes)
 app.use("/api/admin", authMiddleware, adminRoutes)
 app.use("/api/admin/empresas", authMiddleware, empresaRoutes)
+app.use("/api/leads", leadPublicRoutes)
+app.use("/api/admin/leads", authMiddleware, leadAdminRoutes)
 
 app.use("/api/clientes", authMiddleware, requireModule("clientes"), clienteRoutes)
 app.use("/api/contratos", authMiddleware, requireModule("contratos"), contratoRoutes)

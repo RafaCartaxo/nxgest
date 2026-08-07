@@ -12,6 +12,9 @@ import { PerfilPage } from "./modules/auth/pages/PerfilPage.js"
 import { RecuperarSenhaPage } from "./modules/auth/pages/RecuperarSenhaPage.js"
 import { ResetarSenhaPage } from "./modules/auth/pages/ResetarSenhaPage.js"
 import { AtivarPage } from "./modules/auth/pages/AtivarPage.js"
+import { QueroConhecerPage } from "./modules/leads/pages/QueroConhecerPage.js"
+import { ConfirmarLeadPage } from "./modules/leads/pages/ConfirmarLeadPage.js"
+import { LeadsAdminPage } from "./modules/leads/pages/LeadsAdminPage.js"
 import { OperacoesDashboard } from "./modules/operacoes/pages/OperacoesDashboard.js"
 import { CobrancaListPage } from "./modules/operacoes/pages/CobrancaListPage.js"
 import { AtendidosPage } from "./modules/operacoes/pages/AtendidosPage.js"
@@ -40,6 +43,8 @@ export function App() {
         <Route path="/recuperar-senha" element={<RecuperarSenhaPage />} />
         <Route path="/resetar-senha" element={<ResetarSenhaPage />} />
         <Route path="/ativar" element={<AtivarPage />} />
+        <Route path="/quero-conhecer" element={<QueroConhecerPage />} />
+        <Route path="/quero-conhecer/confirmar" element={<ConfirmarLeadPage />} />
         <Route path="*" element={
           <ProtectedRoute>
             <AppLayout>
@@ -64,6 +69,7 @@ export function App() {
                    <Route path="/admin/operadores/:id" element={<AdminRoute><OperadorDetail /></AdminRoute>} />
                    <Route path="/admin/empresas" element={<SuperAdminRoute><SuperAdminPage /></SuperAdminRoute>} />
                    <Route path="/admin/empresas/:id" element={<SuperAdminRoute><AdminPage /></SuperAdminRoute>} />
+                   <Route path="/admin/leads" element={<SuperAdminRoute><LeadsAdminPage /></SuperAdminRoute>} />
                  </Routes>
               </ErrorBoundary>
             </AppLayout>

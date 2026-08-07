@@ -1584,3 +1584,56 @@ Matriz de transições via `PATCH /api/admin/operadores/:id` (papel-alvo). Ator 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)
 - `api-collection.json` — collection Postman executável (espelho desta base)
 - `skills/SKILL-009-documentation-sync.md` — matriz de propagação (mudou endpoint → atualize este doc + collection + 02-API)
+
+---
+
+# AQUISIÇÃO COMERCIAL (PLAN-064) — Leads
+
+**Smoke:** `LD-01..03`, `LD-05..13`, `LD-15`
+
+**Endpoint:** `POST /api/leads` — público (rate limit 10/15min)
+**Endpoint:** `POST /api/leads/confirmar` — público
+**Endpoint:** `POST /api/leads/reconfirmar` — público (resposta genérica, rate limit e-mail+IP)
+**Endpoint:** `GET /api/admin/leads` — super admin (filtro `?status=`)
+**Endpoint:** `POST /api/admin/leads/:id/onboarding` — super admin
+**Endpoint:** `POST /api/admin/leads/:id/converter` — super admin
+**Endpoint:** `POST /api/admin/leads/:id/descartar` — super admin
+
+### LD-CT-01 — Criar lead público → NOVO + e-mail de confirmação
+**Dado** `POST /api/leads` (nome/empresa/email válidos) → **Então** **201** com `status: "NOVO"` + token `lead` (24h, single-use) criado.
+
+### LD-CT-02 — Dedup por e-mail
+**Dado** segundo `POST /api/leads` com o mesmo e-mail → **Então** **200** `{ ok, jaExistia: true }` — não cria lead duplicado.
+
+### LD-CT-03 — Validação pública
+**Dado** requisição sem e-mail ou com e-mail inválido / nome ou empresa < 2 → **Então** **422**.
+
+### LD-CT-05 — Não cria empresa/usuário
+**Dado** `POST /api/leads` → **Então** nenhuma empresa/usuário é criado (isolamento comercial × operacional).
+
+### LD-CT-06 — Confirmar token → EMAIL_CONFIRMADO
+**Dado** `POST /api/leads/confirmar` com token válido → **Então** **200** `status: "EMAIL_CONFIRMADO"`.
+
+### LD-CT-07 — Token expirado → reenviar
+**Dado** token expirado → **Então** **400** `TOKEN_EXPIRED`; `POST /api/leads/reconfirmar` gera novo token (invalida o anterior).
+
+### LD-CT-08 — Token usado (single-use)
+**Dado** `POST /api/leads/confirmar` com token já consumido → **Então** **400** `TOKEN_INVALID`.
+
+### LD-CT-09 — Painel super: listar + filtrar
+**Dado** `GET /api/admin/leads` (super) → **Então** **200** lista; `?status=X` filtra.
+
+### LD-CT-10 — Iniciar onboarding
+**Dado** `POST /api/admin/leads/:id/onboarding` (super) → **Então** **200** `EM_ONBOARDING`; convertido/descartado → **422**.
+
+### LD-CT-11 — Converter → empresa + convite + auditoria
+**Dado** lead confirmado + `POST /api/admin/leads/:id/converter` (super) → **Então** **200**: empresa criada, admin convidado (login → 403 ACCOUNT_PENDING), `status: "CONVERTIDO"` + `convertidoPor/Em/EmpresaId` (auditoria). E-mail já usuário → **409** EMAIL_DUPLICATED.
+
+### LD-CT-12 — Descartar → DESCARTADO + LGPD
+**Dado** `POST /api/admin/leads/:id/descartar` com motivo (super) → **Então** **200** `DESCARTADO` com dados pessoais anonimizados. Sem motivo → **422**.
+
+### LD-CT-13 — Não-super bloqueado
+**Dado** admin/sócio em `/api/admin/leads` → **Então** **403**.
+
+### LD-CT-15 — E-mail já usuário
+**Dado** `POST /api/leads` com e-mail de usuário existente → **Então** **409** `LEAD_EMAIL_JA_USUARIO` — sem duplicado.
