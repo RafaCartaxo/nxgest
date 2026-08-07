@@ -42,7 +42,7 @@ export function SuperAdminPage() {
   const [savingModulos, setSavingModulos] = useState(false)
   const [savingCapacidades, setSavingCapacidades] = useState(false)
   const [savingEditar, setSavingEditar] = useState(false)
-  const [impactoState, setImpactoState] = useState<{ modulos: string[]; impacto: ImpactoDesativacao } | null>(null)
+  const [impactoState, setImpactoState] = useState<{ empresaId: string; modulos: string[]; impacto: ImpactoDesativacao } | null>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -108,7 +108,9 @@ export function SuperAdminPage() {
       const impacto = await getImpactoDesativacao(modulosTarget.id, modulos)
       const temDado = impacto.impacto.some((i) => i.contagem > 0)
       if (impacto.bloqueado || temDado) {
-        setImpactoState({ modulos, impacto })
+        // Fix A: um modal por vez — fecha o ModulosModal e abre o de confirmação.
+        setImpactoState({ empresaId: modulosTarget.id, modulos, impacto })
+        setModulosTarget(null)
         return
       }
       await updateEmpresaModulos(modulosTarget.id, modulos)
@@ -123,20 +125,23 @@ export function SuperAdminPage() {
   }
 
   async function handleConfirmImpacto(force: boolean, motivo: string) {
-    if (!modulosTarget || !impactoState) return
+    if (!impactoState) return
     setSavingModulos(true)
     try {
       if (force) {
-        await updateEmpresaModulosForcado(modulosTarget.id, impactoState.modulos, motivo)
+        await updateEmpresaModulosForcado(impactoState.empresaId, impactoState.modulos, motivo)
       } else {
-        await updateEmpresaModulos(modulosTarget.id, impactoState.modulos)
+        await updateEmpresaModulos(impactoState.empresaId, impactoState.modulos)
       }
       feedback.show({ status: "success", message: t("superAdmin.modulosSalvo") })
       setImpactoState(null)
       setModulosTarget(null)
       fetchData()
     } catch (err) {
+      // Fix B: fecha os modais no erro — o toast explica o motivo (ex.: caixa nunca força).
       feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("superAdmin.erroModulos") })
+      setImpactoState(null)
+      setModulosTarget(null)
     } finally {
       setSavingModulos(false)
     }

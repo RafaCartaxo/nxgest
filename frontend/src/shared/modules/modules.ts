@@ -48,3 +48,23 @@ export function isWidgetActive(modulos: string[] | null | undefined, widget: str
   if (!modulos) return true
   return Object.entries(MODULE_WIDGETS).some(([mod, widgets]) => widgets.includes(widget) && modulos.includes(mod))
 }
+
+/** Fecha o grafo: adiciona dependências (direta/indireta) ausentes do conjunto (Fix C, PLAN-061). */
+export function completarDependencias(modulos: string[]): string[] {
+  const set = new Set(modulos)
+  let mudou = true
+  while (mudou) {
+    mudou = false
+    for (const m of [...set]) {
+      const def = MODULES.find((x) => x.id === m)
+      if (!def) continue
+      for (const d of def.dependsOn) {
+        if (!set.has(d)) {
+          set.add(d)
+          mudou = true
+        }
+      }
+    }
+  }
+  return [...set]
+}

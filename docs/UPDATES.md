@@ -2,6 +2,30 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — Persistência de desativar/ativar módulos e recursos (full cycle)
+
+**Corrigido (fluxo de ativar/desativar)**
+- **A — Modais empilhados:** ao abrir o `ImpactConfirmModal`, o `ModulosModal` agora **fecha** (um modal por vez). O `impactoState` carrega `empresaId` (o force não depende mais do modal de trás).
+- **B — Erro no force:** `handleConfirmImpacto` **limpa os modais** no erro (o toast explica, ex.: caixa nunca força).
+- **C — Ligar módulo completa dependências:** `alternar(id,true)` usa `completarDependencias` (extraído p/ `shared/modules/modules.ts`, com bug do grafo corrigido — não puxa mais clientes/contratos/cobrancas sem necessidade).
+- **D — Capacidades com dono off:** `CapacidadesModal.save()` filtra via `capacidadesAplicaveis` (o backend rejeitava 422).
+
+**CTs de persistência (smoke `PERS-1..5`):** force desativa `clientes` → `GET/:id`+`/me`+403 · reativa → 200 · `cliente:anexos` off → 403 · reativa → 200 · idempotência real.
+
+**QA:** vitest 29 → **36** · smoke 203 → **208/208** · build · audits · docs:audit.
+
+Referência: PLAN-061 · `07-CASOS-DE-USO-API.md` (PERS-CT-1..5)
+
+## 07/08/2026 — Planejamento de execução (handoff) + P13/P16 fechados
+
+**Backlog organizado (linha cronológica)**
+- **P16 — Endereços ✅** (PLAN-055/056): GPS nos 2 endereços + editar descarta coords + navegação única (decisão). Sem código novo.
+- **P13 — Contexto do Operador ✅** (fecha gap): plano `PLAN-063-contexto-operador-clientes.md` — lista de clientes do operador via `resolveUsuarioAlvo` no `GET /api/clientes` + seção no `OperadorDetail` + `ClienteDetail` com `?usuarioId=`.
+- **P20 — Fluxo de conta** re-escopado (convite por e-mail + esqueci a senha + infra de e-mail) — aguardando decisões de produto.
+- **PLAN-062-rota-dia-lovable.md** — plano completo da Rota (progresso Lovable, card de ações, "Parada X de Y", modais 3→2, FAB) + suíte de regressão `tasks/2026-08-07/ROTA-REGRESSAO-CT.md`.
+
+Referência: `plans/PLAN-062-rota-dia-lovable.md` · `plans/PLAN-063-contexto-operador-clientes.md` · `plans/BACKLOG.md`
+
 ## 06/08/2026 — PLAN-061: card da empresa, suspensão por `ativa` e rebaixamento com reassign
 
 **Adicionado / Corrigido**

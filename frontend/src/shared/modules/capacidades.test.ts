@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { hasCapability, ALL_CAPABILITIES } from "./capacidades.js"
+import { hasCapability, capacidadesAplicaveis, ALL_CAPABILITIES } from "./capacidades.js"
 
 describe("hasCapability (capacidades do whitelabel)", () => {
   it("modulos null + capacidades null = todas ativas", () => {
@@ -36,5 +36,27 @@ describe("hasCapability (capacidades do whitelabel)", () => {
 
   it("lista canônica tem 8 capacidades", () => {
     expect(ALL_CAPABILITIES).toHaveLength(8)
+  })
+})
+
+describe("capacidadesAplicaveis (Fix D — filtra dono off ao salvar)", () => {
+  const semRota = ["clientes", "contratos", "caixa", "gastos", "cobrancas", "atendidos"]
+
+  it("modulos null = mantém todas", () => {
+    expect(capacidadesAplicaveis(ALL_CAPABILITIES, null)).toEqual(ALL_CAPABILITIES)
+    expect(capacidadesAplicaveis(ALL_CAPABILITIES, undefined)).toEqual(ALL_CAPABILITIES)
+  })
+
+  it("remove capacidades com módulo dono desativado", () => {
+    const aplicaveis = capacidadesAplicaveis(ALL_CAPABILITIES, semRota)
+    expect(aplicaveis).not.toContain("rota:whatsapp")
+    expect(aplicaveis).not.toContain("rota:navegar")
+    expect(aplicaveis).toContain("cliente:whatsapp")
+    expect(aplicaveis).toContain("pagamento:comprovante_whatsapp")
+  })
+
+  it("mantém só as ativas quando o set já é filtrado", () => {
+    const caps = ["cliente:whatsapp", "rota:whatsapp"]
+    expect(capacidadesAplicaveis(caps, semRota)).toEqual(["cliente:whatsapp"])
   })
 })

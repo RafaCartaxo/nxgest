@@ -5,7 +5,7 @@ import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { Button } from "../../../shared/components/Button.js"
 import { Switch } from "../../../shared/components/Switch/Switch.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
-import { CAPABILITIES, ALL_CAPABILITIES, type CapabilityId } from "../../../shared/modules/capacidades.js"
+import { CAPABILITIES, ALL_CAPABILITIES, capacidadesAplicaveis, type CapabilityId } from "../../../shared/modules/capacidades.js"
 import { MODULES, type ModuleId } from "../../../shared/modules/modules.js"
 
 interface Props {
@@ -47,8 +47,14 @@ export function CapacidadesModal({ open, empresaNome, initial, modulos, saving, 
       onSave(null)
       return
     }
-    const tudo = current.size === ALL_CAPABILITIES.length
-    onSave(tudo ? null : [...current])
+    // Fix D: exclui capacidades com módulo dono desativado (backend rejeita 422).
+    const aplicaveis = capacidadesAplicaveis([...current], modulos)
+    if (aplicaveis.length === 0) {
+      onSave(null)
+      return
+    }
+    const tudo = aplicaveis.length === ALL_CAPABILITIES.length
+    onSave(tudo ? null : aplicaveis)
   }
 
   const donoOff = (id: CapabilityId): boolean => {

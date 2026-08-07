@@ -68,9 +68,9 @@ const endpoints = [
     req("Login", "POST", "/api/auth/login", {
       auth: PUBLIC,
       body: { email: "admin@cobranca.com", senha: "teste123!" },
-      description: "API-UC-002 · 200 {token, usuario} · 401 inválido · 429 rate limit (10/15min)",
+      description: "API-UC-002 · 200 {token, usuario} · 401 inválido · 403 EMPRESA_INATIVA (BR-106) · 429 rate limit (10/15min)",
     }),
-    req("Me", "GET", "/api/auth/me", { description: "API-UC-003 · 200 dados do usuário logado" }),
+    req("Me", "GET", "/api/auth/me", { description: "API-UC-003 · 200 dados do usuário logado · 403 EMPRESA_INATIVA (BR-106)" }),
     req("Alterar senha", "PATCH", "/api/auth/senha", {
       body: { senhaAtual: "teste123!", novaSenha: "novaSenha123" },
       description: "API-UC-041 · 200 {ok} · 422 senha atual incorreta/nova inválida (BR-089/090, PLAN-029)",
@@ -173,8 +173,8 @@ const endpoints = [
       description: "API-UC-034 · 201 · 409 e-mail · 400 role inválido/senha < 6",
     }),
     req("Editar operador", "PATCH", "/api/admin/operadores/{{operadorId}}", {
-      body: { nome: "Maria Atualizada", senha: "novaSenha123" },
-      description: "API-UC-035 · 200 · 403 auto-rebaixar",
+      body: { role: "operator", reatribuirParaChefeId: "{{novoChefeAdminId}}" },
+      description: "API-UC-035 · 200 · 403 auto-rebaixar · 422 OPERATOR_HAS_SUBORDINATES (rebaixar com subordinados) · reatribuirParaChefeId move os subordinados no mesmo ato (PLAN-061)",
     }),
     req("Remover operador", "DELETE", "/api/admin/operadores/{{operadorId}}", { description: "API-UC-036 · 204 · 403 auto-remover" }),
     req("Dashboard", "GET", "/api/admin/dashboard", { query: [{ key: "empresaId", value: "" }], description: "API-UC-037 · 200 KPIs · 403 operator" }),
@@ -190,7 +190,7 @@ const endpoints = [
     }),
     req("Editar dados", "PATCH", "/api/admin/empresas/{{empresaId}}", {
       body: { nomeFantasia: "Exemplo Atualizado", ativa: false },
-      description: "API-UC-047 · 200 dados atualizados · 404",
+      description: "API-UC-047 · 200 dados atualizados · 404 · ativa:false SUSPENDE a empresa (403 EMPRESA_INATIVA nos usuários — BR-106)",
     }),
     req("Módulos", "PATCH", "/api/admin/empresas/{{empresaId}}/modulos", {
       body: { modulos: ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"], force: false, motivo: "" },

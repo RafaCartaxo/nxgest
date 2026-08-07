@@ -1382,6 +1382,29 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+# PERSISTÊNCIA DESATIVAÇÃO/ATIVAÇÃO — full cycle (PLAN-061)
+
+**Regras:** BR-104/105/106 · **Smoke:** `PERS-1..5`
+
+> Garante que a alteração é **de fato feita e respeitada** (GET/:id + `/me` + enforcement), não apenas um "sucesso".
+
+### PERS-CT-1 — Force desativa e reflete em todos os níveis
+**Dado** force desativa `clientes` → **Então** `GET /admin/empresas/:id` **sem clientes** · `/me` sem clientes · `GET /api/clientes` → **403** `MODULE_DISABLED`.
+
+### PERS-CT-2 — Reativação reflete e libera
+**Dado** reativa `clientes` → **Então** `GET/:id` com clientes · `/me` com clientes · `GET /api/clientes` → **200**.
+
+### PERS-CT-3 — Capacidade off reflete + enforcement
+**Dado** desativa `cliente:anexos` → **Então** `GET/:id` + `/me` sem anexos · `GET /clientes/:id/anexos` → **403** `CAPABILITY_DISABLED`.
+
+### PERS-CT-4 — Capacidade reativada (null) volta
+**Dado** `capacidades: null` → **Então** `/me` com `capacidades: null` · anexos → **200**.
+
+### PERS-CT-5 — Idempotência real
+**Dado** repetir o mesmo PATCH → **Então** `GET/:id` inalterado (não muda sem necessidade).
+
+---
+
 # AUTH — SENHA (PLAN-029)
 
 ## API-UC-041 — Alterar a própria senha

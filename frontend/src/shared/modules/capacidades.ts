@@ -39,3 +39,15 @@ export function hasCapability(
   if (!capacidades) return true
   return capacidades.includes(id)
 }
+
+/**
+ * Capacidades APLICÁVEIS ao salvar (Fix D, PLAN-061): remove as que têm o módulo
+ * dono desativado — elas ficam inativas por definição e o backend as rejeita (422).
+ */
+export function capacidadesAplicaveis(capacidades: string[], modulos: string[] | null | undefined): string[] {
+  if (!modulos) return capacidades
+  return capacidades.filter((id) => {
+    const owner = CAPABILITIES.find((c) => c.id === id)?.moduleOwner
+    return owner === undefined || modulos.includes(owner)
+  })
+}

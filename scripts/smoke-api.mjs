@@ -112,6 +112,12 @@ async function main() {
     expect(r, 401, "me sem token")
   })
 
+  // ---------- SAÚDE ----------
+  await t("HEA-001", "GET /api/health (200)", async () => {
+    const r = await req("GET", "/api/health")
+    expect(r, 200, "health")
+  })
+
   // ---------- PERMISSÃO: operator em rotas admin ----------
   await t("ADM-057", "Operator em /admin/operadores (403)", async () => {
     const r = await req("GET", "/api/admin/operadores", { token: opToken })
@@ -437,7 +443,7 @@ async function main() {
     expect(r, 204, "delete cliente sem contrato")
   })
 
-  // ---------- OPERADOR: caixa base alta (via admin, p/ criar contrato) ----------
+  // ---------- SETUP: caixa base alta (via admin — dependência do contrato) ----------
   await t("CAX-044", "Admin ajusta caixa do operador (201 + auditoria)", async () => {
     const r = await req("POST", "/api/caixa/ajuste", { token: adminToken, body: { valor: 100000, motivo: "Smoke test — caixa para contrato" }, query: { usuarioId: gabrielId } })
     expect(r, 201, "ajuste caixa")
@@ -819,6 +825,10 @@ async function main() {
   await t("EMP-095b", "POST /admin/empresas SEM opcionais (201, não bloqueia)", async () => {
     const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Min ${Date.now()}`, adminNome: "Admin Min", adminEmail: `min.${Date.now()}@empresa.com`, adminSenha: SENHA } })
     expect(r, 201, "empresa sem opcionais")
+  })
+  await t("EMP-074", "Admin email duplicado (409)", async () => {
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: "Duplicada", adminNome: "X", adminEmail: "admin@cobranca.com", adminSenha: SENHA } })
+    expect(r, 409, "email admin duplicado")
   })
 
   // ---------- DOCUMENTO DA EMPRESA: CPF ou CNPJ (P11) ----------
@@ -1260,6 +1270,62 @@ async function main() {
     if (auditoriaCount("empresa", suspEmpresaId) < 2) throw new Error("auditoria de suspensão não gravada")
   })
 
+  // ---------- PERSISTÊNCIA DESATIVAÇÃO/ATIVAÇÃO (full cycle — garantir que a mudança é FEITA e RESPEITADA) ----------
+  await t("PERS-1", "Force desativa clientes → GET/:id + /me sem clientes + rota 403", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semClientesCascata, force: true, motivo: "smoke PERS-1" } })
+    expect(r, 200, "force desativa")
+    const g = await req("GET", `/api/admin/empresas/${guardEmpresaId}`, { token: superToken })
+    expect(g, 200, "get empresa")
+    if (g.data.modulos.includes("clientes")) throw new Error("clientes ainda ativo no GET/:id")
+    const me = await req("GET", "/api/auth/me", { token: guardAdminToken })
+    expect(me, 200, "me tenant")
+    if (me.data.modulos.includes("clientes")) throw new Error("clientes ainda ativo no /me")
+    const rota = await req("GET", "/api/clientes", { token: guardAdminToken })
+    expect(rota, 403, "enforcement clientes off")
+    if (rota.data?.code !== "MODULE_DISABLED") throw new Error(`code=${rota.data?.code}`)
+  })
+
+  await t("PERS-2", "Reativa clientes → GET/:id + /me com clientes + rota 200", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    expect(r, 200, "reativa")
+    const g = await req("GET", `/api/admin/empresas/${guardEmpresaId}`, { token: superToken })
+    if (!g.data.modulos.includes("clientes")) throw new Error("clientes não reativado no GET/:id")
+    const me = await req("GET", "/api/auth/me", { token: guardAdminToken })
+    if (!me.data.modulos.includes("clientes")) throw new Error("clientes não reativado no /me")
+    const rota = await req("GET", "/api/clientes", { token: guardAdminToken })
+    expect(rota, 200, "enforcement clientes on")
+  })
+
+  await t("PERS-3", "Desativa recurso cliente:anexos → GET/:id + /me refletem + anexos 403", async () => {
+    const caps = ["cliente:whatsapp", "cliente:ligar", "cliente:navegar", "rota:whatsapp", "rota:ligar", "rota:navegar", "pagamento:comprovante_whatsapp"]
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/capacidades`, { token: superToken, body: { capacidades: caps } })
+    expect(r, 200, "desativa anexos")
+    const g = await req("GET", `/api/admin/empresas/${guardEmpresaId}`, { token: superToken })
+    if (g.data.capacidades.includes("cliente:anexos")) throw new Error("anexos ainda ativo no GET/:id")
+    const me = await req("GET", "/api/auth/me", { token: guardAdminToken })
+    if (me.data.capacidades.includes("cliente:anexos")) throw new Error("anexos ainda ativo no /me")
+    const anexos = await req("GET", `/api/clientes/${guardClienteId}/anexos`, { token: guardAdminToken })
+    expect(anexos, 403, "anexos off → 403")
+    if (anexos.data?.code !== "CAPABILITY_DISABLED") throw new Error(`code=${anexos.data?.code}`)
+  })
+
+  await t("PERS-4", "Reativa recurso (null) → /me volta + anexos 200", async () => {
+    const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/capacidades`, { token: superToken, body: { capacidades: null } })
+    expect(r, 200, "reativa recursos")
+    const me = await req("GET", "/api/auth/me", { token: guardAdminToken })
+    if (me.data.capacidades !== null) throw new Error(`capacidades=${JSON.stringify(me.data.capacidades)}`)
+    const anexos = await req("GET", `/api/clientes/${guardClienteId}/anexos`, { token: guardAdminToken })
+    expect(anexos, 200, "anexos on → 200")
+  })
+
+  await t("PERS-5", "Idempotência: repetir PATCH → GET/:id inalterado", async () => {
+    await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    const g1 = await req("GET", `/api/admin/empresas/${guardEmpresaId}`, { token: superToken })
+    await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    const g2 = await req("GET", `/api/admin/empresas/${guardEmpresaId}`, { token: superToken })
+    if (JSON.stringify(g1.data.modulos?.sort()) !== JSON.stringify(g2.data.modulos?.sort())) throw new Error("modulos mudou sem necessidade")
+  })
+
   // ---------- HIERARQUIA DE PAPÉIS (PLAN-032) ----------
   let socioId, socioEmail, socioOpId, socioToken
   await t("SC-001", "Admin cria sócio (201, chefe = admin)", async () => {
@@ -1304,9 +1370,9 @@ async function main() {
   // ---------- TRANSIÇÕES DE PAPEL (WS7) — CTs 120+ ----------
   // Cada teste cria seus próprios usuários (isolamento; emails com Date.now()).
   const adminId = adminLogin.data.usuario.id
-  const criarUsuario = async (role) => {
+  const criarUsuario = async (role, chefeId) => {
     const email = `tr.${role}.${Date.now()}.${Math.floor(Math.random() * 1e4)}@uorak.com`
-    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: `TR ${role}`, email, senha: SENHA, role } })
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: `TR ${role}`, email, senha: SENHA, role, chefeId } })
     expect(r, 201, `criar ${role}`)
     return { id: r.data.id, email }
   }
@@ -1440,23 +1506,16 @@ async function main() {
   })
 
   // ---------- MATRIZ DE REBAIXAMENTO (PLAN-061): ator super + variações de órfão + reassign atômico ----------
-  const criarUser = async (role, chefeId) => {
-    const email = `rb.${role}.${Date.now()}.${Math.floor(Math.random() * 1e4)}@uorak.com`
-    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: `RB ${role}`, email, senha: SENHA, role, chefeId } })
-    expect(r, 201, `criar ${role}`)
-    return { id: r.data.id, email }
-  }
-
   await t("SUP-1", "super rebaixa admin→operator sem subordinado → 200", async () => {
-    const a = await criarUser("admin")
+    const a = await criarUsuario("admin")
     const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: superToken, body: { role: "operator" } })
     expect(r, 200, "super rebaixa admin→op")
     if (r.data.role !== "operator") throw new Error(`role=${r.data.role}`)
   })
 
   await t("SUP-2", "super rebaixa admin→operator COM subordinado → 422 + count (regressão do bug)", async () => {
-    const a = await criarUser("admin")
-    await criarUser("operator", a.id)
+    const a = await criarUsuario("admin")
+    await criarUsuario("operator", a.id)
     const bloqueado = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: superToken, body: { role: "operator" } })
     expect(bloqueado, 422, "super: órfão bloqueia")
     if (bloqueado.data.code !== "OPERATOR_HAS_SUBORDINATES") throw new Error(`code=${bloqueado.data.code}`)
@@ -1464,18 +1523,18 @@ async function main() {
   })
 
   await t("SUP-3", "super admin→socio: com subordinado sócio → 422; sem → 200", async () => {
-    const a = await criarUser("admin")
-    await criarUser("socio", a.id)
+    const a = await criarUsuario("admin")
+    await criarUsuario("socio", a.id)
     const bloqueado = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: superToken, body: { role: "socio" } })
     expect(bloqueado, 422, "admin→socio com subord sócio")
-    const b = await criarUser("admin")
+    const b = await criarUsuario("admin")
     const ok = await req("PATCH", `/api/admin/operadores/${b.id}`, { token: superToken, body: { role: "socio" } })
     expect(ok, 200, "admin→socio sem subord sócio")
   })
 
   await t("SUP-4", "super socio→operator: com subordinado → 422; reassign separado → 200", async () => {
-    const s = await criarUser("socio")
-    const sub = await criarUser("operator", s.id)
+    const s = await criarUsuario("socio")
+    const sub = await criarUsuario("operator", s.id)
     const bloqueado = await req("PATCH", `/api/admin/operadores/${s.id}`, { token: superToken, body: { role: "operator" } })
     expect(bloqueado, 422, "socio→op com subord")
     await req("PATCH", `/api/admin/operadores/${sub.id}`, { token: superToken, body: { chefeId: null } })
@@ -1484,9 +1543,9 @@ async function main() {
   })
 
   await t("SUP-5", "super promove operator→socio · operator→admin · socio→admin → 200", async () => {
-    const op1 = await criarUser("operator")
-    const op2 = await criarUser("operator")
-    const s = await criarUser("socio")
+    const op1 = await criarUsuario("operator")
+    const op2 = await criarUsuario("operator")
+    const s = await criarUsuario("socio")
     const r1 = await req("PATCH", `/api/admin/operadores/${op1.id}`, { token: superToken, body: { role: "socio", chefeId: adminId } })
     expect(r1, 200, "op→socio")
     const r2 = await req("PATCH", `/api/admin/operadores/${op2.id}`, { token: superToken, body: { role: "admin" } })
@@ -1505,33 +1564,33 @@ async function main() {
   })
 
   await t("ORF-1", "admin admin→socio com subordinado SÓCIO → 422", async () => {
-    const a = await criarUser("admin")
-    await criarUser("socio", a.id)
+    const a = await criarUsuario("admin")
+    await criarUsuario("socio", a.id)
     const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: adminToken, body: { role: "socio" } })
     expect(r, 422, "admin→socio com subord sócio")
     if (r.data.code !== "OPERATOR_HAS_SUBORDINATES") throw new Error(`code=${r.data.code}`)
   })
 
   await t("ORF-2", "admin admin→operator com subordinado SÓCIO → 422", async () => {
-    const a = await criarUser("admin")
-    await criarUser("socio", a.id)
+    const a = await criarUsuario("admin")
+    await criarUsuario("socio", a.id)
     const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: adminToken, body: { role: "operator" } })
     expect(r, 422, "admin→op com subord sócio")
     if (r.data.code !== "OPERATOR_HAS_SUBORDINATES") throw new Error(`code=${r.data.code}`)
   })
 
   await t("ORF-3", "admin admin→socio com subordinados só operator → 200", async () => {
-    const a = await criarUser("admin")
-    await criarUser("operator", a.id)
+    const a = await criarUsuario("admin")
+    await criarUsuario("operator", a.id)
     const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: adminToken, body: { role: "socio" } })
     expect(r, 200, "admin→socio com operator subordinado")
     if (r.data.role !== "socio") throw new Error(`role=${r.data.role}`)
   })
 
   await t("REAS-1", "rebaixar + reatribuirParaChefeId no MESMO PATCH → 200 e subordinados movem", async () => {
-    const alvo = await criarUser("admin")
-    const sub = await criarUser("operator", alvo.id)
-    const novoChefe = await criarUser("admin")
+    const alvo = await criarUsuario("admin")
+    const sub = await criarUsuario("operator", alvo.id)
+    const novoChefe = await criarUsuario("admin")
     const r = await req("PATCH", `/api/admin/operadores/${alvo.id}`, { token: adminToken, body: { role: "operator", reatribuirParaChefeId: novoChefe.id } })
     expect(r, 200, "reassign atômico")
     if (r.data.role !== "operator") throw new Error(`role=${r.data.role}`)
@@ -1541,19 +1600,14 @@ async function main() {
   })
 
   await t("POS-1", "novo chefe passa a ver o subordinado reatribuído na equipe", async () => {
-    const novoChefe = await criarUser("admin")
-    const alvo = await criarUser("admin")
-    const sub = await criarUser("operator", alvo.id)
+    const novoChefe = await criarUsuario("admin")
+    const alvo = await criarUsuario("admin")
+    const sub = await criarUsuario("operator", alvo.id)
     await req("PATCH", `/api/admin/operadores/${alvo.id}`, { token: adminToken, body: { role: "operator", reatribuirParaChefeId: novoChefe.id } })
     const nLogin = await req("POST", "/api/auth/login", { body: { email: novoChefe.email, senha: SENHA } })
     expect(nLogin, 200, "login novo chefe")
     const eq = await req("GET", "/api/admin/equipe", { token: nLogin.data.token })
     if (!eq.data.operadores.some((o) => o.id === sub.id)) throw new Error("novo chefe não vê o subordinado")
-  })
-
-  await t("EMP-074", "Admin email duplicado (409)", async () => {
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: "Duplicada", adminNome: "X", adminEmail: "admin@cobranca.com", adminSenha: SENHA } })
-    expect(r, 409, "email admin duplicado")
   })
 
   // ---------- VARIAÇÕES (V1–V8) ----------
@@ -1633,12 +1687,6 @@ async function main() {
     expect(r, 401, "clientes token inválido")
     const c = await req("GET", "/api/caixa", { token: "token-invalido" })
     expect(c, 401, "caixa token inválido")
-  })
-
-  // ---------- SAÚDE ----------
-  await t("HEA-001", "GET /api/health (200)", async () => {
-    const r = await req("GET", "/api/health")
-    expect(r, 200, "health")
   })
 
   // aguarda todos terminarem

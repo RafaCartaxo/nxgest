@@ -71,7 +71,7 @@
                 }
               }
             },
-            "description": "API-UC-002 · 200 {token, usuario} · 401 inválido · 429 rate limit (10/15min)"
+            "description": "API-UC-002 · 200 {token, usuario} · 401 inválido · 403 EMPRESA_INATIVA (BR-106) · 429 rate limit (10/15min)"
           }
         },
         {
@@ -100,7 +100,7 @@
                 }
               ]
             },
-            "description": "API-UC-003 · 200 dados do usuário logado"
+            "description": "API-UC-003 · 200 dados do usuário logado · 403 EMPRESA_INATIVA (BR-106)"
           }
         },
         {
@@ -1443,14 +1443,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Maria Atualizada\",\n  \"senha\": \"novaSenha123\"\n}",
+              "raw": "{\n  \"role\": \"operator\",\n  \"reatribuirParaChefeId\": \"{{novoChefeAdminId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "API-UC-035 · 200 · 403 auto-rebaixar"
+            "description": "API-UC-035 · 200 · 403 auto-rebaixar · 422 OPERATOR_HAS_SUBORDINATES (rebaixar com subordinados) · reatribuirParaChefeId move os subordinados no mesmo ato (PLAN-061)"
           }
         },
         {
@@ -1692,7 +1692,7 @@
                 }
               }
             },
-            "description": "API-UC-047 · 200 dados atualizados · 404"
+            "description": "API-UC-047 · 200 dados atualizados · 404 · ativa:false SUSPENDE a empresa (403 EMPRESA_INATIVA nos usuários — BR-106)"
           }
         },
         {

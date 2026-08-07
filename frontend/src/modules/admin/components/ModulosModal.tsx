@@ -5,7 +5,7 @@ import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { Button } from "../../../shared/components/Button.js"
 import { Switch } from "../../../shared/components/Switch/Switch.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
-import { MODULES, type ModuleId } from "../../../shared/modules/modules.js"
+import { MODULES, completarDependencias, type ModuleId } from "../../../shared/modules/modules.js"
 
 interface Props {
   open: boolean
@@ -23,24 +23,6 @@ const GRUPOS: Array<{ key: string; ids: ModuleId[] }> = [
   { key: "superAdmin.modulosGrupoCobranca", ids: ["rota", "cobrancas", "atendidos"] },
 ]
 
-/** Fecha o grafo: adiciona dependências (direta/indireta) ausentes do conjunto. */
-function completarDependencias(modulos: string[]): string[] {
-  const set = new Set(modulos)
-  let mudou = true
-  while (mudou) {
-    mudou = false
-    for (const m of MODULES) {
-      for (const d of m.dependsOn) {
-        if (!set.has(d)) {
-          set.add(d)
-          mudou = true
-        }
-      }
-    }
-  }
-  return [...set]
-}
-
 export function ModulosModal({ open, empresaNome, initial, saving, onSave, onOpenCapacidades, onClose }: Props) {
   const { t } = useTranslation()
   const [selected, setSelected] = useState<string[]>(() => {
@@ -54,7 +36,7 @@ export function ModulosModal({ open, empresaNome, initial, saving, onSave, onOpe
 
   function alternar(id: string, v: boolean) {
     setSelected((prev) => {
-      if (v) return [...prev, id]
+      if (v) return completarDependencias([...prev, id])
       const remover = new Set<string>([id])
       let mudou = true
       while (mudou) {
