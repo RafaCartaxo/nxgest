@@ -43,11 +43,14 @@
 | 12 | Detalhe do Contrato | ✅ | ParcelaList, pagamentos (Card), estorno, comprovante | ✅ Canônico |
 | 13 | Caixa (`CaixaPage`) | ✅ | KpiCard, auditoria + movimentações (Card), ajuste (input canônico + Button) | ✅ Canônico |
 | 14 | Gastos (`GastoPage`) | ✅ | GastoForm (Field) + GastoList (Card) | ✅ Canônico |
-| 15 | Administração (`AdminPage`) | ✅ | Equipe/Operação (KpiCard), EquipeModal, OperadoresList | ✅ Canônico |
+| 15 | Administração (`AdminPage`) | ✅ | Equipe/Operação (KpiCard), EquipeModal, OperadoresList (badge "Convite pendente" + reenviar — PLAN-065) | ✅ Canônico |
 | 16 | Detalhe do Operador | ✅ | KpiCard, ajuste, auditoria (Card), contratos (Card) | ✅ Canônico |
 | 17 | Empresas (`SuperAdminPage`) | ✅ | EmpresaList, EmpresaForm (Field), ModulosModal | ✅ Canônico |
 | 18 | Perfil (`PerfilPage`) | ✅ | Field (senha) + Card | ✅ Canônico |
-| 19 | Login | ✅ (redesenhado) | Field (email/senha + mostrar) | ✅ Canônico |
+| 19 | Login | ✅ (redesenhado) | Field (email/senha + mostrar) · link "Esqueci minha senha" → `/recuperar-senha` (PLAN-065) | ✅ Canônico |
+| 20 | Recuperar Senha (`/recuperar-senha`) | ✅ (novo, PLAN-065) | PublicPageShell + Field email + SuccessState (resposta genérica) | ✅ Canônico |
+| 21 | Redefinir Senha (`/resetar-senha?token=`) | ✅ (novo, PLAN-065) | PublicPageShell + Field (senha+confirmar) + ErrorBanner token | ✅ Canônico |
+| 22 | Ativar Conta (`/ativar?token=`) | ✅ (novo, PLAN-065) | PublicPageShell + Field (senha+confirmar) + ErrorBanner token | ✅ Canônico |
 
 ## 3. Componentes compartilhados
 

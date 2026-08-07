@@ -53,10 +53,16 @@ export async function getOperador(id: string, empresaId?: string): Promise<Opera
   return apiRequest<OperadorRow>(`GET`, `/admin/operadores/${id}${params}`)
 }
 
-export async function createOperador(data: { nome: string; email: string; senha: string; role: "admin" | "socio" | "operator"; empresaId?: string; chefeId?: string | null }): Promise<OperadorRow> {
+export async function createOperador(data: { nome: string; email: string; senha?: string; role: "admin" | "socio" | "operator"; empresaId?: string; chefeId?: string | null }): Promise<OperadorRow> {
   const params = data.empresaId ? `?empresaId=${data.empresaId}` : ""
   const { empresaId, ...body } = data
   return apiRequest<OperadorRow>("POST", `/admin/operadores${params}`, body)
+}
+
+/** PLAN-065: novo token + novo e-mail de convite (conta convidada). */
+export async function reenviarConvite(id: string, empresaId?: string): Promise<{ ok: boolean }> {
+  const params = empresaId ? `?empresaId=${empresaId}` : ""
+  return apiRequest<{ ok: boolean }>("PATCH", `/admin/operadores/${id}/reenviar-convite${params}`)
 }
 
 export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null; reatribuirParaChefeId?: string | null }, empresaId?: string): Promise<OperadorRow> {

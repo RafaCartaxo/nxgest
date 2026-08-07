@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
@@ -7,6 +7,7 @@ import { Button } from "../../../shared/components/Button.js"
 import { Field } from "../../../shared/components/Field/Field.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { Logo } from "../../../shared/components/Logo.js"
+import { ApiError } from "../../../api/client.js"
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -33,7 +34,8 @@ export function LoginPage() {
         setLoading(false)
         return
       }
-      setErro(t("auth.erroLogin"))
+      // ApiError já traz a mensagem traduzida (ex.: ACCOUNT_PENDING do convidado).
+      setErro(err instanceof ApiError ? err.message : t("auth.erroLogin"))
     } finally {
       setLoading(false)
     }
@@ -107,6 +109,13 @@ export function LoginPage() {
               {!loading && <ArrowRight className="size-4" aria-hidden />}
             </Button>
           </form>
+
+          <Link
+            to="/recuperar-senha"
+            className="mt-4 block text-center text-sm font-medium text-primary hover:underline"
+          >
+            {t("auth.esqueciSenha")}
+          </Link>
         </div>
       </div>
     </div>

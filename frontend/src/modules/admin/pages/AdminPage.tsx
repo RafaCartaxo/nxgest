@@ -20,7 +20,7 @@ import { OperadorForm } from "../components/OperadorForm.js"
 import { ReassignModal, type ReassignState } from "../components/ReassignModal.js"
 import { EquipeModal } from "../components/EquipeModal.js"
 import { ContribuicaoModal } from "../components/ContribuicaoModal.js"
-import { listOperadores, getDashboard, getEquipe, createOperador, updateOperador, deleteOperador, type OperadorRow, type EquipeResult, type ContribuicaoMetric } from "../services/admin.service.js"
+import { listOperadores, getDashboard, getEquipe, createOperador, updateOperador, deleteOperador, reenviarConvite, type OperadorRow, type EquipeResult, type ContribuicaoMetric } from "../services/admin.service.js"
 import { getEmpresa, type EmpresaComStats } from "../services/empresa.service.js"
 import { getCaixaStatus, type CaixaStatus } from "../../caixa/services/caixa.service.js"
 import { ApiError } from "../../../api/client.js"
@@ -108,9 +108,8 @@ export function AdminPage() {
   )
 
   async function handleCreate(data: { nome: string; email: string; role: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null }) {
-    if (!data.senha) return
     await feedback.run({
-      action: async () => { await createOperador({ nome: data.nome, email: data.email, senha: data.senha!, role: data.role, empresaId, chefeId: data.chefeId }) },
+      action: async () => { await createOperador({ nome: data.nome, email: data.email, senha: data.senha, role: data.role, empresaId, chefeId: data.chefeId }) },
       loading: t("common.saving"),
       success: t("admin.criarSucesso"),
       error: t("admin.erroCarregar"),
@@ -169,6 +168,15 @@ export function AdminPage() {
     })
     setDeleteId(null)
     fetchData()
+  }
+
+  async function handleReenviarConvite(id: string) {
+    await feedback.run({
+      action: async () => { await reenviarConvite(id, empresaId) },
+      loading: t("common.saving"),
+      success: t("admin.reenviarSucesso"),
+      error: t("admin.erroCarregar"),
+    })
   }
 
   const emptyMessage = search ? undefined : t("admin.emptyMessage")
@@ -274,6 +282,7 @@ export function AdminPage() {
               empresaId={empresaId}
               onEdit={(op) => setEditingOp(op)}
               onDelete={(id) => setDeleteId(id)}
+              onReenviarConvite={handleReenviarConvite}
             />
           </EstadoTela>
         </>

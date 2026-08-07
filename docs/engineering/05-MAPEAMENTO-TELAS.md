@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.25
+**Versão:** 1.26
 
-**Última atualização:** 03/08/2026
+**Última atualização:** 07/08/2026
 
 ---
 
@@ -31,6 +31,9 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 9 | Detalhe do Contrato | `/contratos/:id` | contrato | Detalhe |
 | 10 | Editar Contrato | `/contratos/:id/editar` | contrato | Formulário |
 | 11 | Login | `/login` | auth | Formulário |
+| 11a | Recuperar Senha | `/recuperar-senha` | auth | Formulário |
+| 11b | Redefinir Senha | `/resetar-senha` | auth | Formulário |
+| 11c | Ativar Conta | `/ativar` | auth | Formulário |
 | 12 | Administração | `/admin` | admin | Dashboard |
 | 13 | Super Admin (Empresas) | `/admin/empresas` | admin | Dashboard |
 | 14 | Admin em contexto de empresa | `/admin/empresas/:id` | admin | Dashboard |
@@ -39,7 +42,7 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 17 | Gastos | `/gastos` | gasto | Formulário |
 | 18 | Perfil (Meus dados) | `/perfil` | auth | Formulário |
 
-**Total:** 19 telas (páginas) · 20 rotas | 7 módulos | 45 componentes (15 shared + 2 feedback + 3 auth + 25 módulo)
+**Total:** 22 telas (páginas) · 23 rotas | 7 módulos | 45 componentes (15 shared + 2 feedback + 3 auth + 25 módulo)
 
 > **Nota de navegação:** esta tabela é o espelho das rotas de `frontend/src/App.tsx`. Qualquer rota nova (ou removida) exige atualizar esta tabela + a seção correspondente — ver `SKILL-009-documentation-sync.md`.
 
@@ -713,12 +716,38 @@ App
 | Erro | ✅ `ErrorBanner` condicional abaixo do botão | |
 | Acessibilidade | ✅ `type="email"`, `type="password"`, `autoComplete` | |
 | i18n | ✅ `auth.*` (pt-BR, en, es) | |
-
 **Pós-login (roteado por perfil, PLAN-021 / BR-081):** `operator` → `/`; `admin` → `/admin`; `super_admin` → `/admin/empresas`.
 
+**Link "Esqueci minha senha"** (PLAN-065) → `/recuperar-senha`. Erro de login via `ApiError.message` (traduzido — ex.: `ACCOUNT_PENDING` do convidado).
+
+---
+
+## 11a. Recuperar Senha / 11b. Redefinir Senha / 11c. Ativar Conta
+**Formulários públicos** (fora do `ProtectedRoute`), mesmo shell visual do Login (`PublicPageShell`: gradient-page + mesh + card centralizado) (PLAN-065).
+
+**Arquivos:** `frontend/src/modules/auth/pages/RecuperarSenhaPage.tsx`, `ResetarSenhaPage.tsx`, `AtivarPage.tsx` · componente `PublicPageShell.tsx`
+
+**Comportamento:**
+- **Recuperar (`/recuperar-senha`):** e-mail → `POST /auth/forgot` — resposta **sempre genérica** (não revela existência da conta); sucesso mostra `SuccessState` "verifique seu e-mail".
+- **Redefinir (`/resetar-senha?token=`):** nova senha + confirmação (mín. 6, iguais) → `POST /auth/reset`; `TOKEN_EXPIRED`/`TOKEN_INVALID` → erro + link "solicitar novo link" → `/recuperar-senha`.
+- **Ativar (`/ativar?token=`):** define a senha do convidado → `POST /auth/ativar`; token expirado/inválido → erro + orientação de reenviar convite.
+- Sem `token` na URL → `ErrorBanner` "link inválido ou incompleto".
+
+**Aderência ao Design System:**
+
+| Regra | Status | Observação |
+|-------|--------|------------|
+| Header | — | Tela isolada pré-auth (sem Navbar), como o Login |
+| Inputs | ✅ `Field` padrão (`rounded-md`, focus ring) | senha com toggle mostrar/ocultar |
+| Feedback | ✅ `ErrorBanner` (erros de token/validação) + `SuccessState` (sucesso) | |
+| Botões | ✅ `Button` primário + link para o login | |
+| Acessibilidade | ✅ `type="email"`/`type="password"`, `autoComplete`, labels | |
+| i18n | ✅ `auth.*` (pt-BR, en, es) + `errors.ACCOUNT_PENDING`/`TOKEN_INVALID` | |
+
 ---
 
 ---
+
 ## 12. Administração (14 — contexto de empresa)
 **Header:** PageHeader limpo — ícone suave + `Settings` + título dinâmico (empresa/nome) + subtítulo; badge de papel; voltar quando dentro de empresa (PLAN-035).
 
@@ -785,12 +814,14 @@ Modal OperadorForm (criação/edição):
 ├──────────────────────────────────┤
 │ Nome *        [_____________]    │
 │ E-mail *      [_____________]    │
-│ Senha *       [_____________]    │  ← Oculto na edição
+│ Senha         [_____________]    │  ← Opcional: sem senha = convite por e-mail (PLAN-065)
 │ Papel *       [admin ▾]          │  ← Select admin/operator
 │                                  │
 │ [Cancelar]        [Salvar]       │
 └──────────────────────────────────┘
 ```
+
+> **PLAN-065:** operador `convidado` (sem senha) ganha badge **"Convite pendente"** (`StatusBadge warning`) + ação **reenviar convite** (`Mail`) no `OperadoresList`; `EmpresaForm` também permite `adminSenha` em branco → convite pro admin.
 
 **Aderência ao Design System:**
 

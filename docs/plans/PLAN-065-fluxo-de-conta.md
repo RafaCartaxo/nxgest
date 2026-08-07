@@ -1,6 +1,6 @@
 # PLAN-065 — Fluxo de conta: convite/ativação + esqueci a senha + infra de e-mail
 
-**Status:** ✅ Pronto para execução (handoff)
+**Status:** ✅ Implementado (backend + frontend) — 07/08/2026
 
 **Versão:** 1.0
 

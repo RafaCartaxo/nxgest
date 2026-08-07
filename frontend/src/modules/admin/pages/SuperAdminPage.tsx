@@ -59,7 +59,7 @@ export function SuperAdminPage() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  async function handleCreate(data: { nome: string; documento?: string; nomeFantasia?: string; ativa: boolean; adminNome: string; adminEmail: string; adminSenha: string }) {
+  async function handleCreate(data: { nome: string; documento?: string; nomeFantasia?: string; ativa: boolean; adminNome: string; adminEmail: string; adminSenha?: string }) {
     await feedback.run({
       action: async () => { await createEmpresa(data) },
       loading: t("common.saving"),
@@ -85,7 +85,7 @@ export function SuperAdminPage() {
     }
   }
 
-  function handleUpdateEmpresa(data: { nome: string; documento?: string; nomeFantasia?: string; ativa: boolean; adminNome: string; adminEmail: string; adminSenha: string }) {
+  function handleUpdateEmpresa(data: { nome: string; documento?: string; nomeFantasia?: string; ativa: boolean; adminNome: string; adminEmail: string; adminSenha?: string }) {
     if (!editarTarget) return
     const ativaAntes = editarTarget.ativa !== false
     if (ativaAntes && !data.ativa) {

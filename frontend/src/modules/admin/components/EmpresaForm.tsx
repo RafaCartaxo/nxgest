@@ -13,7 +13,7 @@ interface EmpresaFormData {
   ativa: boolean
   adminNome: string
   adminEmail: string
-  adminSenha: string
+  adminSenha?: string
 }
 
 export interface EmpresaFormInitial {
@@ -102,8 +102,7 @@ export function EmpresaForm({ onSubmit, onCancel, initial }: EmpresaFormProps) {
           <Field
             label={t("superAdmin.adminSenha")}
             type="password"
-            required
-            minLength={6}
+            hint={t("superAdmin.adminSenhaHint")}
             value={adminSenha}
             onChange={(e) => setAdminSenha(e.target.value)}
           />

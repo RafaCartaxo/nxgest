@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { ArrowRight, Edit3, Trash2 } from "lucide-react"
+import { ArrowRight, Edit3, Mail, Trash2 } from "lucide-react"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
@@ -13,6 +13,7 @@ interface Props {
   empresaId?: string
   onEdit: (op: OperadorRow) => void
   onDelete: (id: string) => void
+  onReenviarConvite: (id: string) => void
 }
 
 const roleRank: Record<string, number> = { super_admin: 0, admin: 1, socio: 2, operator: 3 }
@@ -25,7 +26,7 @@ function isSocioRole(role: OperadorRow["role"]): boolean {
   return role === "socio"
 }
 
-export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Props) {
+export function OperadoresList({ operadores, empresaId, onEdit, onDelete, onReenviarConvite }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -63,6 +64,9 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Prop
                   <Card.Header className="flex-wrap">
                     <Avatar nome={op.nome} foto={op.foto ?? null} size="md" />
                     <span className="min-w-0 flex-1 truncate text-base font-semibold">{op.nome}</span>
+                    {op.status === "convidado" && (
+                      <StatusBadge variant="warning" size="sm" label={t("admin.convitePendente")} />
+                    )}
                     {isSelf && <StatusBadge variant="success" size="sm" label={t("admin.eu")} />}
                     <StatusBadge
                       variant={roleVariant(op.role)}
@@ -83,6 +87,12 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete }: Prop
                         icon: ArrowRight,
                         label: t("admin.acessar"),
                         onClick: () => navigate(`/admin/operadores/${op.id}${empresaId ? `?empresaId=${empresaId}` : ""}`),
+                      },
+                      {
+                        icon: Mail,
+                        label: t("admin.reenviarConvite"),
+                        onClick: () => onReenviarConvite(op.id),
+                        show: op.status === "convidado" && !isSelf,
                       },
                       {
                         icon: Edit3,

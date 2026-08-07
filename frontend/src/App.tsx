@@ -9,6 +9,9 @@ import { SuperAdminRoute } from "./shared/auth/SuperAdminRoute.js"
 import { RequireModule } from "./shared/auth/RequireModule.js"
 import { LoginPage } from "./modules/auth/pages/LoginPage.js"
 import { PerfilPage } from "./modules/auth/pages/PerfilPage.js"
+import { RecuperarSenhaPage } from "./modules/auth/pages/RecuperarSenhaPage.js"
+import { ResetarSenhaPage } from "./modules/auth/pages/ResetarSenhaPage.js"
+import { AtivarPage } from "./modules/auth/pages/AtivarPage.js"
 import { OperacoesDashboard } from "./modules/operacoes/pages/OperacoesDashboard.js"
 import { CobrancaListPage } from "./modules/operacoes/pages/CobrancaListPage.js"
 import { AtendidosPage } from "./modules/operacoes/pages/AtendidosPage.js"
@@ -34,6 +37,9 @@ export function App() {
       <FeedbackProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/recuperar-senha" element={<RecuperarSenhaPage />} />
+        <Route path="/resetar-senha" element={<ResetarSenhaPage />} />
+        <Route path="/ativar" element={<AtivarPage />} />
         <Route path="*" element={
           <ProtectedRoute>
             <AppLayout>

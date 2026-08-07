@@ -2,6 +2,20 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — PLAN-065 frontend (Checkpoint 2): telas de conta + convite no admin
+
+**Implementado (frontend — fecha o PLAN-065)**
+- **Páginas públicas** (fora do `ProtectedRoute`, shell `PublicPageShell` no estilo do Login): `/recuperar-senha` (resposta genérica + `SuccessState`) · `/resetar-senha?token=` · `/ativar?token=` (senha + confirmação mín. 6; `TOKEN_EXPIRED`/`TOKEN_INVALID` → erro + ação de refazer/reenviar).
+- **Login:** link **"Esqueci minha senha"** → `/recuperar-senha`; erro agora vem do `ApiError.message` (traduzido — ex.: `ACCOUNT_PENDING` do convidado).
+- **Admin:** `OperadorForm` senha **opcional** (sem senha = convite por e-mail) · `OperadoresList` badge **"Convite pendente"** + ação **reenviar convite** (`PATCH /admin/operadores/:id/reenviar-convite`) · `AdminPage` sem o guard de senha vazia.
+- **Super:** `EmpresaForm` `adminSenha` **opcional** (convite pro admin) + hint.
+- **Tipos:** `status` (`convidado`/`ativo`) em `MeResponse`/`LoginResponse`/`AuthUser`; serviços `ativarConta`/`esquecerSenha`/`redefinirSenha`/`reenviarConvite`.
+- **i18n** pt/en/es: `errors.ACCOUNT_PENDING`/`TOKEN_INVALID` + chaves `auth.*` (recuperar/resetar/ativar/convite).
+
+**QA:** tsc · build · audit:ui/styles/modules · vitest 36 · docs:audit (22 telas mapeadas).
+
+Referência: [PLAN-065](plans/PLAN-065-fluxo-de-conta.md) · `05-MAPEAMENTO-TELAS.md` (§11a–11c) · `UI-COVERAGE.md` (20–22)
+
 ## 07/08/2026 — PLAN-065 backend: fluxo de conta (convite/ativação + forgot/reset + Resend)
 
 **Implementado (backend — Checkpoint 1)**
@@ -13,7 +27,7 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 
 **QA:** smoke 213 → **235/235** (AC-13..20 · ES-02..11 · SE-01/04 · SM-1/2) · vitest 36 · build · audits · docs:audit · migracao:test.
 
-Referência: [PLAN-065](plans/PLAN-065-fluxo-de-conta.md) · frontend (Checkpoint 2) pendente
+Referência: [PLAN-065](plans/PLAN-065-fluxo-de-conta.md) · frontend implementado (seção acima)
 
 ## 07/08/2026 — Planos de conta e aquisição (handoff)
 

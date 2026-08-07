@@ -134,4 +134,4 @@ O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context*
 - [x] forgot/reset (resposta genérica + rate limit e-mail+IP) + rotas públicas
 - [x] Fix leak: OperadorRow status + strip senhaHash
 - [x] Smoke 213 → 235/235 (AC/ES/SE/SM) · vitest 36 · docs:audit · collection 55
-- [ ] Frontend (Checkpoint 2): páginas públicas, login link, AuthContext status, OperadorForm/EmpresaForm senha opcional, badge convite
+- [x] Frontend (Checkpoint 2): páginas públicas (recuperar/resetar/ativar) · login link + ApiError · AuthContext status · OperadorForm/EmpresaForm senha opcional · badge convite + reenviar · i18n

@@ -51,7 +51,8 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
     const e: FieldErrors = {}
     if (nome.trim().length < 3) e.nome = t("admin.validacao.nomeObrigatorio")
     if (!email.trim() || !email.includes("@")) e.email = t("admin.validacao.emailInvalido")
-    if (!editing && senha.length < 6) e.senha = t("admin.validacao.senhaCurta")
+    // PLAN-065: senha opcional ao criar (sem senha → convite). Só valida se preenchida.
+    if (!editing && senha.length > 0 && senha.length < 6) e.senha = t("admin.validacao.senhaCurta")
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -103,6 +104,7 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
         value={senha}
         onChange={(e) => setSenha(e.target.value)}
         placeholder={editing ? t("admin.senhaOpcional") : ""}
+        hint={!editing ? t("admin.conviteHint") : undefined}
         error={errors.senha}
       />
 
