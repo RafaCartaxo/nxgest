@@ -59,3 +59,28 @@ O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context*
 - [x] `SuperAdminRoute` (só super em /admin/empresas*) · `maxLength={200}` motivo · auditoria idempotente · `apiRequest` interpolação `{{n}}`
 - [x] Smoke **189 → 203/203** (SUSP-1..4 · SUP-1..6 · ORF-1..3 · REAS-1 · POS-1 · IMP-003/004 · MOD-G-14 · TR-123/127 atualizados)
 - [x] Docs: PLAN-061 · plans/README · UPDATES · 02-API (EMPRESA_INATIVA/OPERATOR_HAS_SUBORDINATES/reatribuirParaChefeId) · 07 CTs · BR-106 + BR-103 · UI-COVERAGE · MAPEAMENTO
+
+---
+
+# CHECKLIST — Handoff de execução (planos prontos)
+
+**Data:** 07/08/2026
+
+> Planos fechados e prontos para execução pelo próximo chat/agente. Regras do repo em `AGENTS.md`.
+
+## PLAN-062 — Rota do dia (Lovable)
+
+- [ ] `docs/plans/PLAN-062-rota-dia-lovable.md` criado
+- [ ] `docs/engineering/tasks/2026-08-07/ROTA-REGRESSAO-CT.md` criado (~50 CTs, Grupos A–G)
+- [ ] Aguardando execução (progresso Lovable · card de ações · "Parada X de Y" · modais 3→2 · alça Modal · html lang · FAB)
+
+## PLAN-063 — Contexto do operador (clientes)
+
+- [ ] `docs/plans/PLAN-063-contexto-operador-clientes.md` criado (fecha P13: `resolveUsuarioAlvo` na lista de clientes + front)
+- [ ] Aguardando execução
+
+## Backlog
+
+- [ ] P016 marcado ✅ (PLAN-055/056 + decisão navegação única)
+- [ ] P13 marcado ✅ (PLAN-063)
+- [ ] P20 re-escopado (convite + esqueci senha + e-mail) — aguardando decisões de produto

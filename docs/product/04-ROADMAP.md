@@ -33,7 +33,7 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 
 | Módulo | BRs | Depende de |
 |--------|-----|------------|
-| "Esqueci minha senha" | — | Backlog P020 (precisa de infra de e-mail) |
+| "Esqueci minha senha" + convite/ativação de conta | — | Backlog P020 (novo escopo: fluxo de conta + infra de e-mail) |
 | Mapa | — | Fase 5.3 |
 | PWA | — | Fase 5.4 |
 | Testes | — | Fase 5.5 |
@@ -594,7 +594,7 @@ A autenticação multi-usuário e o painel de administração são implementados
 - **PLAN-036** — Whitelabel **enforcement no backend**: 403 `MODULE_DISABLED` por módulo desativado (P024) — `requireModule` no mount das rotas + por endpoint em `/operacoes`.
 - **PLAN-037** — Coerência do whitelabel: `contratos ⇒ clientes` + validação **transitiva** de combos + **Central se adapta por módulo** (P025) — dado de módulo off nunca aparece.
 
-Backlog de refinamentos em `plans/BACKLOG.md` (itens P013, P015–P017, P019, P020, P021, P022, P023 pendentes).
+Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/055/056/063; P017, P019, P020 [novo fluxo de conta], P021, P022, P023 pendentes).
 
 > **Whitelabel futuro (5.10) — visão multi-negócio:** o princípio de coerência (PLAN-037) é a base para **um app, vários negócios** (cobrança hoje, agendamentos/vendas amanhã). Evolução em fases:
 > - **F2 — Branding por tenant:** `empresa.tema` (paleta padrão do cliente) + nome/logo no login/navbar;

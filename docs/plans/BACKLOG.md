@@ -92,6 +92,8 @@ Evitando utilizar "Operadores" como nome genérico para todos.
 
 > **Fatia 1 concluída** — Estorno de Pagamento pelo Admin (PLAN-028): corrige o caso de uso "corrigir pagamentos registrados incorretamente". Admin vê os contratos do operador no `OperadorDetail` e estorna um pagamento (modal de motivo + auditoria dedicada + `?usuarioId=` em contrato/pagamento/cliente). Demais casos de uso (consultar clientes/contratos/pagamentos completos, acompanhar caixa do operador em navegação) seguem pendentes.
 
+> **✅ Concluído** (07/08, PLAN-063): fatia restante fechada — **lista de clientes do operador** com `?usuarioId=` (`resolveUsuarioAlvo` no `GET /api/clientes`) + seção "Clientes do operador" no `OperadorDetail` + `ClienteDetail` com drill-down coerente. Caixa/ajuste/auditoria/contratos/estorno já cobertos (PLAN-020/025/027/028).
+
 ### Objetivo
 
 Permitir que um administrador consiga acessar o contexto operacional de qualquer operador da equipe sem necessidade de trocar de login.
@@ -152,6 +154,8 @@ O valor deverá ser calculado a partir dos contratos vinculados ao cliente.
 ---
 
 ## P016 — Padronização dos Endereços
+
+> **Concluído** (PLAN-055/056 + decisão 07/08): captura GPS nos 2 endereços (`GpsControl` 3 estados, comércio + principal) · editar texto descarta coords (recapturar) · detalhe exibe os 2 endereços. **Decisão registrada:** navegação é **QuickAction única** (alvo comércio→principal), não 2 botões "Navegar" por endereço.
 
 ### Problema
 
@@ -295,6 +299,8 @@ Novos refinamentos deverão ser adicionados aqui conforme evolução do produto.
 # EPIC 5 — Autenticação e Perfil
 
 ## P020 — Perfil do usuário: troca de senha e recuperação
+
+> **Escopo revisado (07/08):** evoluir para **fluxo de conta completo** — **convite por e-mail** (admin cria usuário com nome+email, sem senha → link de ativação → usuário define a própria senha) + **esqueci a senha** (token por e-mail) + **infra de e-mail** (provider + env `MAIL_*` + templates HTML/texto). **Aguardando decisões de produto:** modelo de cadastro (convite recomendado vs auto-cadastro público) e provedor de e-mail (Resend recomendado). Virará um PLAN dedicado.
 
 ### Situação atual
 
