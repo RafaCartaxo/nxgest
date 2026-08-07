@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Navigation, MessageCircle, Phone, FileText, Share2, UserCheck, MapPinOff, CalendarClock, Route } from "lucide-react"
+import { Navigation, MessageCircle, Phone, FileText, Share2, UserCheck, MapPinOff, CalendarClock, Route, Loader2 } from "lucide-react"
 import { listarCobrancasDoDia, listarPagamentosHoje, registrarVisita, ResultadoOperacional, type CobrancaItem, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
 import { ApiError } from "../../../api/client.js"
 import { sortByDistance, sortByDistanceOnly, useWatchPosition } from "../../../shared/utils/distance.js"
@@ -80,7 +80,6 @@ export function RotaPage() {
   const coordsRef = useRef({ lat: operadorLat, lng: operadorLng, gpsAtivo })
   coordsRef.current = { lat: operadorLat, lng: operadorLng, gpsAtivo }
 
-  const canvasRef = useRef<HTMLCanvasElement>(null)
   const idsAntesFetchRef = useRef<Set<string>>(new Set())
   const itemKeyAntesFetchRef = useRef<string | null>(null)
   const itemsRef = useRef(items)
@@ -348,7 +347,6 @@ export function RotaPage() {
   }
 
   async function handlePagamentoSuccess(data: PagamentoSuccessData) {
-    setPagamentoOpen(false)
     if (!item) return
 
     feedback.show({ status: "loading", message: t("operacoes.gerandoComprovante") })
@@ -369,12 +367,17 @@ export function RotaPage() {
     const texto = montarTextoComprovante(item.clienteNome, data.valor, parcelasTexto, data.saldoRestante, dataTexto)
     const waUrl = `https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(texto)}`
 
+    // Modal fica ABERTO no passo comprovante (sucessoContent) — o refetch acontece ao fechar.
     setComprovante({ canvas, file, waUrl })
-    feedback.show({ status: "success", message: t("cliente.pagamentoSucesso") })
+  }
 
+  function finalizarPagamento() {
+    setPagamentoOpen(false)
+    setComprovante(null)
     fetch()
     fetchPagamentos()
     eventBus.emit("operacao:atualizada")
+    feedback.show({ status: "success", message: t("cliente.pagamentoSucesso") })
   }
 
   async function handleCompartilharComprovante() {
@@ -383,31 +386,19 @@ export function RotaPage() {
     if (comprovante.file && navigator.canShare && navigator.canShare({ files: [comprovante.file] })) {
       try {
         await navigator.share({ files: [comprovante.file], title: "Comprovante de pagamento" })
-        setComprovante(null)
         return
       } catch {}
     }
 
     try {
       await navigator.share({ text: "Comprovante de pagamento" })
-      setComprovante(null)
     } catch {}
   }
 
   function handleWhatsAppComprovante() {
     if (!comprovante) return
     window.open(comprovante.waUrl, "_blank")
-    setComprovante(null)
   }
-
-  useEffect(() => {
-    if (!comprovante?.canvas || !canvasRef.current) return
-    const display = canvasRef.current
-    display.width = comprovante.canvas.width
-    display.height = comprovante.canvas.height
-    const ctx = display.getContext("2d")
-    if (ctx) ctx.drawImage(comprovante.canvas, 0, 0)
-  }, [comprovante])
 
   return (
     <div className="mx-auto max-w-2xl p-4">
@@ -447,6 +438,12 @@ export function RotaPage() {
           <div className="h-64 animate-pulse rounded-xl bg-surface-hover" />
         ) : (
         <>
+          {sortedItems.length > 0 && (
+            <p className="mb-2 text-center text-sm font-semibold text-text-primary">
+              {t("operacoes.paradaDe", { atual: indiceAtual + 1, total: sortedItems.length })}
+            </p>
+          )}
+
           <Carousel
             mode="slide"
             items={sortedItems}
@@ -459,8 +456,6 @@ export function RotaPage() {
                 <CobrancaCard item={slideItem} />
 
                 <Card.Root variant="collection">
-                  {operando && <div className="h-1 animate-pulse bg-primary" />}
-
                   <div className="border-b border-border-light px-4 py-4">
                     <QuickActions
                       layout="grid"
@@ -470,7 +465,7 @@ export function RotaPage() {
                         { icon: Navigation, label: t("operacoes.navegar"), onClick: () => handleNavegar(slideItem), variant: "blue", show: hasCapability(user?.capacidades, user?.modulos, "rota:navegar") && alvoNavegavel(alvoDeItemCobranca(slideItem)) },
                         { icon: MessageCircle, label: t("operacoes.whatsapp"), onClick: () => handleWhatsApp(slideItem), variant: "green", show: hasCapability(user?.capacidades, user?.modulos, "rota:whatsapp") },
                         { icon: Phone, label: t("operacoes.ligar"), onClick: () => handleLigar(slideItem), variant: "blue", show: hasCapability(user?.capacidades, user?.modulos, "rota:ligar") },
-                        { icon: FileText, label: t("operacoes.abrir"), onClick: () => handleAbrirContrato(slideItem), variant: "gray" },
+                        { icon: FileText, label: t("operacoes.abrirContrato"), onClick: () => handleAbrirContrato(slideItem), variant: "gray" },
                       ]}
                     />
                   </div>
@@ -482,21 +477,34 @@ export function RotaPage() {
                       disabled={operando}
                       className="w-full shadow-sm"
                     >
-                      {t("operacoes.pagar")}
+                      {operando ? (
+                        <span className="inline-flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Processando…
+                        </span>
+                      ) : (
+                        t("operacoes.registrarPagamento")
+                      )}
                     </Button>
                   </div>
 
                   <div className="border-t border-border-light px-4 py-4">
-                    <QuickActions
-                      layout="grid"
-                      singleRow
-                      disabled={operando}
-                      actions={[
-                        { icon: UserCheck, label: t("operacoes.visitado"), onClick: () => handleVisitado(slideItem), variant: "gray", show: slideItem.resultadoOperacional !== ResultadoOperacional.VISITADO },
-                        { icon: MapPinOff, label: t("operacoes.naoEncontrado"), onClick: () => handleNaoEncontrado(slideItem), variant: "gray", show: slideItem.resultadoOperacional !== ResultadoOperacional.NAO_ENCONTRADO },
-                        { icon: CalendarClock, label: t("operacoes.promessa"), onClick: handleAbrirPromessa, variant: "warning", show: slideItem.resultadoOperacional !== ResultadoOperacional.PROMESSA },
-                      ]}
-                    />
+                    <div className="grid grid-cols-3 gap-2">
+                      {slideItem.resultadoOperacional !== ResultadoOperacional.PROMESSA && (
+                        <Button variant="outline" size="sm" disabled={operando} onClick={handleAbrirPromessa}>
+                          <CalendarClock className="size-4" /> {t("operacoes.promessa")}
+                        </Button>
+                      )}
+                      {slideItem.resultadoOperacional !== ResultadoOperacional.VISITADO && (
+                        <Button variant="outline" size="sm" disabled={operando} onClick={() => handleVisitado(slideItem)}>
+                          <UserCheck className="size-4" /> {t("operacoes.visitado")}
+                        </Button>
+                      )}
+                      {slideItem.resultadoOperacional !== ResultadoOperacional.NAO_ENCONTRADO && (
+                        <Button variant="outline" size="sm" disabled={operando} onClick={() => handleNaoEncontrado(slideItem)}>
+                          <MapPinOff className="size-4" /> {t("operacoes.naoEncontrado")}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </Card.Root>
               </div>
@@ -563,37 +571,34 @@ export function RotaPage() {
             : undefined}
           onClose={() => setPagamentoOpen(false)}
           onSuccess={handlePagamentoSuccess}
-        />
-      )}
-
-      {comprovante && (
-        <Modal
-          open
-          onClose={() => setComprovante(null)}
-          backdropClose
-          maxWidth="max-w-sm"
-          title={t("operacoes.comprovanteTitulo")}
-        >
-          <canvas
-            ref={canvasRef}
-            className="w-full rounded-xl border border-border"
-          />
-          <div className="mt-4 flex gap-4">
-            <Button onClick={handleCompartilharComprovante} className="flex flex-1 items-center justify-center gap-1">
-              <Share2 className="h-4 w-4" />
-              Compartilhar
-            </Button>
-            {hasCapability(user?.capacidades, user?.modulos, "pagamento:comprovante_whatsapp") && (
-              <Button variant="secondary" onClick={handleWhatsAppComprovante} className="flex flex-1 items-center justify-center gap-1">
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp
+          sucessoContent={(data, fechar) => (
+            <>
+              <canvas
+                ref={(el) => {
+                  if (el && comprovante?.canvas) {
+                    el.width = comprovante.canvas.width
+                    el.height = comprovante.canvas.height
+                    el.getContext("2d")?.drawImage(comprovante.canvas, 0, 0)
+                  }
+                }}
+                className="w-full rounded-xl border border-border"
+              />
+              <div className="mt-4 flex gap-4">
+                <Button onClick={handleCompartilharComprovante} className="flex flex-1 items-center justify-center gap-1">
+                  <Share2 className="h-4 w-4" /> Compartilhar
+                </Button>
+                {hasCapability(user?.capacidades, user?.modulos, "pagamento:comprovante_whatsapp") && (
+                  <Button variant="secondary" onClick={handleWhatsAppComprovante} className="flex flex-1 items-center justify-center gap-1">
+                    <MessageCircle className="h-4 w-4" /> WhatsApp
+                  </Button>
+                )}
+              </div>
+              <Button variant="ghost" onClick={() => { fechar(); finalizarPagamento() }} className="mt-2 w-full">
+                {t("common.cancel")}
               </Button>
-            )}
-          </div>
-          <Button variant="ghost" onClick={() => setComprovante(null)} className="mt-2 w-full">
-            {t("common.cancel")}
-          </Button>
-        </Modal>
+            </>
+          )}
+        />
       )}
     </div>
   )

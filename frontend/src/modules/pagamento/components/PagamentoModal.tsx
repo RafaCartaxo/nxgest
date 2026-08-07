@@ -1,5 +1,5 @@
 import { Check, Loader2 } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { createPagamento, previewPagamento, type PreviewDistribuicao } from "../services/pagamento.service.js"
 import { ApiError } from "../../../api/client.js"
@@ -20,6 +20,8 @@ interface PagamentoModalProps {
   parcelaLabel?: string
   onClose: () => void
   onSuccess: (data: PagamentoSuccessData) => void
+  /** PLAN-062: passo comprovante DENTRO do mesmo modal (modais 3→2). `fechar` fecha o modal. */
+  sucessoContent?: (data: PagamentoSuccessData, fechar: () => void) => ReactNode
 }
 
 export function PagamentoModal({
@@ -29,6 +31,7 @@ export function PagamentoModal({
   parcelaLabel,
   onClose,
   onSuccess,
+  sucessoContent,
 }: PagamentoModalProps) {
   const { t } = useTranslation()
   const [rawValor, setRawValor] = useState(() => String(Math.round(valorSugerido * 100)))
@@ -36,6 +39,7 @@ export function PagamentoModal({
   const [erro, setErro] = useState<string | null>(null)
   const [preview, setPreview] = useState<PreviewDistribuicao | null>(null)
   const [carregandoPreview, setCarregandoPreview] = useState(false)
+  const [sucesso, setSucesso] = useState<PagamentoSuccessData | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const previewRef = useRef<PreviewDistribuicao | null>(null)
 
@@ -68,6 +72,12 @@ export function PagamentoModal({
     }
   }, [contratoId, valor])
 
+  function fechar() {
+    setSucesso(null)
+    setEnviando(false)
+    onClose()
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErro(null)
@@ -95,7 +105,9 @@ export function PagamentoModal({
         }
       }
 
-      onSuccess({ valor, pagasRange, saldoRestante: Math.max(0, saldoDevedor - valor) })
+      const data = { valor, pagasRange, saldoRestante: Math.max(0, saldoDevedor - valor) }
+      if (sucessoContent) setSucesso(data)
+      onSuccess(data)
     } catch (err) {
       setEnviando(false)
       if (err instanceof ApiError) {
@@ -104,6 +116,21 @@ export function PagamentoModal({
         setErro(t("pagamento.erroRegistrar"))
       }
     }
+  }
+
+  // Passo comprovante integrado (PLAN-062): o modal permanece aberto.
+  if (sucesso && sucessoContent) {
+    return (
+      <Modal
+        open
+        onClose={fechar}
+        backdropClose
+        maxWidth="max-w-sm"
+        title={t("operacoes.comprovanteTitulo")}
+      >
+        {sucessoContent(sucesso, fechar)}
+      </Modal>
+    )
   }
 
   return (

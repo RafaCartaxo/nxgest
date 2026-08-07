@@ -84,3 +84,17 @@ O header mobile (`AppLayout.tsx`) é `sticky top-0 z-40` → **stacking context*
 - [ ] P016 marcado ✅ (PLAN-055/056 + decisão navegação única)
 - [ ] P13 marcado ✅ (PLAN-063)
 - [ ] P20 re-escopado (convite + esqueci senha + e-mail) — aguardando decisões de produto
+
+---
+
+# CHECKLIST — PLAN-062 (Rota Lovable) implementado
+
+**Data:** 07/08/2026
+
+- [x] i18n rota (progresso/paradaDe/registrarPagamento/abrirContrato/progresso.*)
+- [x] RouteProgress Lovable (% + aria + grid 4) · contador "Parada X de Y"
+- [x] Card de ações (4 ícones gated + Registrar pagamento + 3 outline grid-cols-3; barra do topo removida)
+- [x] Modais 3→2: PagamentoModal.sucessoContent (comprovante integrado, gating comprovante_whatsapp preservado) · refetch no fechar
+- [x] Extras: alça Modal · html lang dinâmico · FAB (FabContext + ClienteList/ContratoList)
+- [x] Gates: build · vitest 36 · audit:ui/styles/modules · docs:audit
+- [ ] Regressão ROT-CTs em DEV (Grupos A–G) — pendente de validação manual

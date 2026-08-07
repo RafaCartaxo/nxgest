@@ -11,9 +11,11 @@ import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { Button, ButtonLink } from "../../../shared/components/Button.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
+import { useFab } from "../../../shared/fab/FabContext.js"
 
 export function ContratoList() {
   const { t } = useTranslation()
+  const { setFab } = useFab()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [contratos, setContratos] = useState<Contrato[]>([])
@@ -84,6 +86,12 @@ export function ContratoList() {
       searchInputRef.current.focus()
     }
   }, [filterOpen])
+
+  // FAB mobile (PLAN-062): "Novo contrato" — limpa no unmount.
+  useEffect(() => {
+    setFab({ label: t("contrato.novo"), to: `/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}` })
+    return () => setFab(null)
+  }, [setFab, t, clienteId])
 
   function handleClienteFilter(value: string) {
     const params = new URLSearchParams(searchParams)

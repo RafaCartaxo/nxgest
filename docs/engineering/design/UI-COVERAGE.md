@@ -74,6 +74,7 @@
 | `ImpactConfirmModal` | ✅ | SuperAdminPage — confirmação/forçar de desativação com contagens do impacto (BR-105) |
 | `ReassignModal` | ✅ | AdminPage — reassign guiado ao rebaixar com subordinados (OPERATOR_HAS_SUBORDINATES, PLAN-061) |
 | `SuperAdminRoute` | ✅ | `shared/auth` — guard de rota exclusivo do super admin (`/admin/empresas*`, PLAN-061) |
+| `Fab` / `FabContext` | ✅ | `shared/fab` — FAB mobile acima da tab bar; registrado em ClienteList ("Novo cliente") e ContratoList ("Novo contrato") via useEffect (PLAN-062) |
 
 ## 4. Legado conhecido / planejado (rastreado)
 

@@ -12,10 +12,12 @@ import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { ButtonLink } from "../../../shared/components/Button.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
+import { useFab } from "../../../shared/fab/FabContext.js"
 
 
 export function ClienteList() {
   const { t } = useTranslation()
+  const { setFab } = useFab()
   const navigate = useNavigate()
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,6 +42,12 @@ export function ClienteList() {
       setLoading(false)
     }
   }, [])
+
+  // FAB mobile (PLAN-062): "Novo cliente" — limpa no unmount.
+  useEffect(() => {
+    setFab({ label: t("cliente.novo"), to: "/clientes/novo" })
+    return () => setFab(null)
+  }, [setFab, t])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)

@@ -61,6 +61,10 @@ export function Modal({
         aria-label={title}
         className={`animate-slide-in-from-bottom relative flex max-h-[90dvh] w-full ${maxWidth} flex-col overflow-hidden rounded-t-xl border border-border bg-card sm:rounded-xl sm:animate-none`}
       >
+        {/* alça do bottom-sheet (PLAN-062) — mobile apenas */}
+        <div className="flex justify-center pt-2 sm:hidden">
+          <span className="h-1.5 w-10 rounded-full bg-border-strong" />
+        </div>
         {(title || descricao) && (
           <div className="flex items-start gap-3 border-b border-border px-4 py-3.5">
             <div className="min-w-0 flex-1">

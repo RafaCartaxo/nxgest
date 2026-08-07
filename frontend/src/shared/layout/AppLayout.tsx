@@ -13,6 +13,8 @@ import {
 import { Logo } from "../components/Logo.js"
 import { BottomTabBar } from "./BottomTabBar.js"
 import { UserMenu } from "./UserMenu.js"
+import { FabProvider } from "../fab/FabContext.js"
+import { Fab } from "../fab/Fab.js"
 import { hasModule } from "../modules/modules.js"
 import { useAuth } from "../auth/AuthContext.js"
 
@@ -126,27 +128,30 @@ function SidebarContent() {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-[100dvh]">
-      {/* topo fino — mobile: marca + menu do usuário (sem hamburger, sem engrenagem) */}
-      <header className="sticky top-0 z-40 flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 py-2 lg:hidden">
-        <Link to="/" className="flex min-w-0 flex-1 items-center gap-2.5">
-          <Logo variant="sm" className="h-7 w-7 text-primary" />
-          <span className="font-display font-semibold text-sidebar-foreground">
-            NX <span className="text-brand-gradient">Gestão</span>
-          </span>
-        </Link>
-        <UserMenu mostrarAdmin className="shrink-0" />
-      </header>
+    <FabProvider>
+      <div className="min-h-[100dvh]">
+        {/* topo fino — mobile: marca + menu do usuário (sem hamburger, sem engrenagem) */}
+        <header className="sticky top-0 z-40 flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 py-2 lg:hidden">
+          <Link to="/" className="flex min-w-0 flex-1 items-center gap-2.5">
+            <Logo variant="sm" className="h-7 w-7 text-primary" />
+            <span className="font-display font-semibold text-sidebar-foreground">
+              NX <span className="text-brand-gradient">Gestão</span>
+            </span>
+          </Link>
+          <UserMenu mostrarAdmin className="shrink-0" />
+        </header>
 
-      {/* sidebar desktop — fixa, sem header superior duplicado */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar lg:flex">
-        <SidebarContent />
-      </aside>
+        {/* sidebar desktop — fixa, sem header superior duplicado */}
+        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar lg:flex">
+          <SidebarContent />
+        </aside>
 
-      {/* conteúdo — folga inferior para não ficar atrás da tab bar */}
-      <main className="min-w-0 pb-28 lg:pl-64 lg:pb-16">{children}</main>
+        {/* conteúdo — folga inferior para não ficar atrás da tab bar */}
+        <main className="min-w-0 pb-28 lg:pl-64 lg:pb-16">{children}</main>
 
-      <BottomTabBar />
-    </div>
+        <BottomTabBar />
+        <Fab />
+      </div>
+    </FabProvider>
   )
 }

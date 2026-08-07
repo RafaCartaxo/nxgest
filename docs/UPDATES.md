@@ -2,6 +2,19 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — PLAN-062: Rota do dia (Lovable) — progresso, card de ações, modais 3→2, FAB
+
+**Implementado (Rota `/rota`)**
+- **`RouteProgress`** novo layout: "Progresso" + % (tabular) + `role="progressbar"` (aria) + grid 4 (Pagos · Promessas · Visitados · Pendentes).
+- **Contador "Parada X de Y"** acima do carrossel (quando há pendentes).
+- **Card de ações:** 4 ícones (Navegar/WhatsApp/Ligar/Abrir contrato — gating de capacidade preservado) · **"Registrar pagamento"** success block com spinner "Processando…" · 3 outline (Promessa · Visitado · Não encontrado) em `grid-cols-3`; barra de progresso do topo do card removida.
+- **Modais 3 → 2:** `PagamentoModal.sucessoContent` mantém o modal aberto no passo **comprovante** (canvas + Compartilhar + WhatsApp com gating `pagamento:comprovante_whatsapp` + Fechar); refetch no fechar. 3º modal de comprovante removido.
+- **Extras:** alça no `Modal` (bottom-sheet mobile) · `<html lang>` dinâmico · **FAB** (`FabContext`+slot no `AppLayout`) em ClienteList ("Novo cliente") e ContratoList ("Novo contrato").
+
+**QA:** build · vitest 36 · audit:ui/styles/modules · docs:audit · regressão `ROTA-REGRESSAO-CT.md` em DEV (Grupos A–G).
+
+Referência: [PLAN-062](plans/PLAN-062-rota-dia-lovable.md) · `tasks/2026-08-07/ROTA-REGRESSAO-CT.md`
+
 ## 07/08/2026 — P13 (contexto do operador): lista de clientes com `?usuarioId=` (PLAN-063)
 
 **Implementado (fecha P13)**

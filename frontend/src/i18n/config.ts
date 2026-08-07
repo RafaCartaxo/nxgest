@@ -25,4 +25,9 @@ i18n
     },
   })
 
+// `<html lang>` dinâmico (PLAN-062) — acessibilidade/SEO acompanha o idioma.
+i18n.on("languageChanged", (lng) => {
+  document.documentElement.lang = lng
+})
+
 export default i18n
