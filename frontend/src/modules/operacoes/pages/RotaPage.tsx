@@ -351,24 +351,31 @@ export function RotaPage() {
 
     feedback.show({ status: "loading", message: t("operacoes.gerandoComprovante") })
 
-    const parcelasTexto = formatarParcelasTexto(data.pagasRange)
-    const dataTexto = formatarDataHora()
+    try {
+      const parcelasTexto = formatarParcelasTexto(data.pagasRange)
+      const dataTexto = formatarDataHora()
 
-    const canvas = gerarComprovante({
-      nome: item.clienteNome,
-      valor: data.valor,
-      parcelasTexto,
-      saldoRestante: data.saldoRestante,
-      dataTexto,
-    })
+      const canvas = gerarComprovante({
+        nome: item.clienteNome,
+        valor: data.valor,
+        parcelasTexto,
+        saldoRestante: data.saldoRestante,
+        dataTexto,
+      })
 
-    const file = canvasToFile(canvas)
-    const tel = unmask(item.clienteTelefone)
-    const texto = montarTextoComprovante(item.clienteNome, data.valor, parcelasTexto, data.saldoRestante, dataTexto)
-    const waUrl = `https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(texto)}`
+      const file = canvasToFile(canvas)
+      const tel = unmask(item.clienteTelefone)
+      const texto = montarTextoComprovante(item.clienteNome, data.valor, parcelasTexto, data.saldoRestante, dataTexto)
+      const waUrl = `https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(texto)}`
 
-    // Modal fica ABERTO no passo comprovante (sucessoContent) — o refetch acontece ao fechar.
-    setComprovante({ canvas, file, waUrl })
+      // Modal fica ABERTO no passo comprovante (sucessoContent) — o refetch acontece ao fechar.
+      setComprovante({ canvas, file, waUrl })
+      // Substitui o loading na hora (o sucesso auto-dispensa em ~1.2s).
+      feedback.show({ status: "success", message: t("cliente.pagamentoSucesso") })
+    } catch {
+      feedback.show({ status: "error", message: t("operacoes.erroGerarComprovante") })
+      setPagamentoOpen(false)
+    }
   }
 
   function finalizarPagamento() {
@@ -377,7 +384,6 @@ export function RotaPage() {
     fetch()
     fetchPagamentos()
     eventBus.emit("operacao:atualizada")
-    feedback.show({ status: "success", message: t("cliente.pagamentoSucesso") })
   }
 
   async function handleCompartilharComprovante() {

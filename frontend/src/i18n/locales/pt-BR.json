@@ -83,6 +83,7 @@
     "progresso.pendentes": "Pendentes",
     "paradaDe": "Parada {{atual}} de {{total}}",
     "registrarPagamento": "Registrar pagamento",
+    "erroGerarComprovante": "Erro ao gerar o comprovante.",
     "parcelas": "parcela(s)",
     "parcelaDe": "Parcela {{atual}} de {{total}}",
     "diasAtraso_one": "{{count}} dia de atraso",

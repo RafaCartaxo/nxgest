@@ -83,6 +83,7 @@
     "progresso.pendentes": "Pending",
     "paradaDe": "Stop {{atual}} of {{total}}",
     "registrarPagamento": "Register payment",
+    "erroGerarComprovante": "Error generating the receipt.",
     "parcelas": "installment(s)",
     "parcelaDe": "Installment {{atual}} of {{total}}",
     "diasAtraso_one": "{{count}} day overdue",
