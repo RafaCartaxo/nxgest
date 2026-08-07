@@ -33,7 +33,6 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 
 | Módulo | BRs | Depende de |
 |--------|-----|------------|
-| "Esqueci minha senha" + convite/ativação de conta + onboarding comercial | — | Backlog P020 → PLAN-065 (fluxo de conta) · P026 → PLAN-064 (onboarding de empresas) |
 | Mapa | — | Fase 5.3 |
 | PWA | — | Fase 5.4 |
 | Testes | — | Fase 5.5 |
@@ -43,6 +42,8 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 | Módulo | Onde |
 |--------|------|
 | Multi-Tenant (super admin + empresas) | Fase 5.7 (PLAN-019) |
+| Fluxo de conta (convite/ativação + esqueci a senha + infra de e-mail Resend) | P020 → PLAN-065 |
+| Onboarding comercial (Leads: `/quero-conhecer` + painel `/admin/leads`) | P026 → PLAN-064 |
 | Caixa e Gasto | Fase 4 (PLAN-014) |
 | Auditoria de caixa, modais, nomenclatura, estorno | Backlog → PLAN-026/027/028 |
 
@@ -562,7 +563,7 @@ A autenticação multi-usuário e o painel de administração são implementados
 - Frontend: LoginPage, AuthContext, ProtectedRoute, logout no Navbar
 - **Prioridade:** Média
 
-> **Pendência registrada (PLAN-015):** a "tela de perfil" (troca de senha pelo próprio usuário) foi **adiada** na implementação original — agora coberta pelo **PLAN-029** (BR-089/BR-090). "Esqueci minha senha" segue **fora de escopo** (backlog P020).
+> **Pendência registrada (PLAN-015):** a "tela de perfil" (troca de senha pelo próprio usuário) foi **adiada** na implementação original — agora coberta pelo **PLAN-029** (BR-089/BR-090). "Esqueci minha senha" → **entregue no PLAN-065** (P020).
 
 #### 5.2b — Admin Panel + Permissões (PLAN-017)
 
@@ -594,7 +595,7 @@ A autenticação multi-usuário e o painel de administração são implementados
 - **PLAN-036** — Whitelabel **enforcement no backend**: 403 `MODULE_DISABLED` por módulo desativado (P024) — `requireModule` no mount das rotas + por endpoint em `/operacoes`.
 - **PLAN-037** — Coerência do whitelabel: `contratos ⇒ clientes` + validação **transitiva** de combos + **Central se adapta por módulo** (P025) — dado de módulo off nunca aparece.
 
-Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/055/056/063; P017, P019, P020 [novo fluxo de conta], P021, P022, P023 pendentes).
+Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/055/056/063; **P020 ✅ — PLAN-065** (fluxo de conta); **P026 ✅ — PLAN-064** (Leads); P017, P019, P021, P022, P023 pendentes).
 
 > **Whitelabel futuro (5.10) — visão multi-negócio:** o princípio de coerência (PLAN-037) é a base para **um app, vários negócios** (cobrança hoje, agendamentos/vendas amanhã). Evolução em fases:
 > - **F2 — Branding por tenant:** `empresa.tema` (paleta padrão do cliente) + nome/logo no login/navbar;
@@ -675,7 +676,7 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 | Seção "Meus dados" p/ todos os perfis | Perfil com dados + troca de senha; admin funde com a aba existente (UC-042) |
 | i18n | Chaves `auth.*`/`perfil.*` nos 3 idiomas |
 
-**Fora de escopo:** "esqueci minha senha" → backlog **P020** (sem infraestrutura de e-mail hoje; admin redefine via `PATCH /api/admin/operadores/:id`).
+**Fora de escopo:** ~~"esqueci minha senha"~~ → **entregue no PLAN-065** (convite/ativação + forgot/reset + infra Resend, P020).
 
 **Regras:** `02-BUSINESS-RULES.md` BR-089, BR-090
 

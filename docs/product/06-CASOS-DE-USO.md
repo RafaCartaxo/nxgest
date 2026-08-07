@@ -1552,6 +1552,111 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+# FLUXO DE CONTA (PLAN-065) — convite/ativação + esqueci a senha
+
+> Ciclo de vida da conta: admin convida (sem senha) → usuário ativa pelo link → quem esqueceu recupera por e-mail. Cenários de API em `07` (AC-* · ES-*).
+
+### UC-082 — Admin convida um usuário (cria sem senha)
+
+**Ator:** admin / super admin
+
+**Ação:** no formulário de operador (ou empresa), deixa o campo senha **em branco** e salva.
+
+**O que DEVE acontecer:** usuário nasce **`convidado`** (sem senha) e recebe **e-mail de convite** com link `/ativar?token=...`. Na lista, badge **"Convite pendente"** + ação **reenviar convite**.
+
+**Conferências:**
+- [ ] Usuário convidado não consegue logar (403 ACCOUNT_PENDING)?
+- [ ] E-mail de convite chega com o link de ativação?
+- [ ] Reenviar convite gera novo token e invalida o anterior?
+- [ ] Criar com senha (legado) não envia convite?
+
+**Regras:** PLAN-065 · API-CT-AC-*
+
+---
+
+### UC-083 — Usuário ativa a própria conta (definir senha)
+
+**Ator:** usuário convidado (via link do e-mail)
+
+**Ação:** abre `/ativar?token=...`, define senha (mín. 6) e confirma.
+
+**O que DEVE acontecer:** token validado (single-use, 7 dias) → senha definida → conta **`ativo`** → login funciona. Token expirado → erro + orientação de reenviar; token já usado → erro.
+
+**Conferências:**
+- [ ] Após ativar, login com a nova senha funciona?
+- [ ] Link expirado/já usado mostra erro tratado (não 500)?
+- [ ] Conta ativada some o badge "Convite pendente"?
+
+**Regras:** PLAN-065 · API-CT-AC-*
+
+---
+
+### UC-084 — Esqueci a senha (recuperação)
+
+**Ator:** qualquer usuário (login `/recuperar-senha`)
+
+**Ação:** informa o e-mail → "Enviar link".
+
+**O que DEVE acontecer:** resposta **sempre genérica 200** (não revela existência) + e-mail com link `/resetar-senha?token=...` (30 min). Se o e-mail não existe/convidado, **nenhum** e-mail é enviado (sem vazar).
+
+**Conferências:**
+- [ ] E-mail existente e inexistente retornam a MESMA mensagem?
+- [ ] Link de reset redefine a senha → login com a nova?
+- [ ] Token expirado/usado → erro tratado + "solicitar novo link"?
+
+**Regras:** PLAN-065 · BR-089/090 · API-CT-ES-*
+
+---
+
+# LEADS COMERCIAIS (PLAN-064) — aquisição de empresas
+
+> Separação comercial × operacional: interessado vira **Lead** (NOVO → EMAIL_CONFIRMADO → EM_ONBOARDING → CONVERTIDO/DESCARTADO). Empresa **nunca** nasce automática. Cenários de API em `07` (LD-*).
+
+### UC-085 — Interessado demonstra interesse (`/quero-conhecer`)
+
+**Ator:** público (sem login)
+
+**Ação:** preenche Nome · Empresa · E-mail · Telefone (opcional) e envia.
+
+**O que DEVE acontecer:** cria Lead `NOVO` + **e-mail de confirmação** (24h). Não cria empresa/usuário/tenant. E-mail duplicado → mensagem amigável (não duplica); e-mail já usuário → aviso. Após o envio: `SuccessState` + opção "Não recebeu? Reenviar".
+
+**Conferências:**
+- [ ] Enviar cria só o Lead (sem empresa/usuário)?
+- [ ] E-mail duplicado não duplica e mostra mensagem?
+- [ ] E-mail de confirmação chega com link válido?
+
+**Regras:** PLAN-064 · API-CT-LD-01/02/03/05/15
+
+---
+
+### UC-086 — Confirmação de e-mail do lead
+
+**Ator:** público (via link do e-mail)
+
+**Ação:** abre `/quero-conhecer/confirmar?token=...`.
+
+**O que DEVE acontecer:** token validado (single-use, 24h) → status **`EMAIL_CONFIRMADO`** + confirmação visual. Token expirado/usado → erro + form de reenviar confirmação.
+
+**Regras:** PLAN-064 · API-CT-LD-06/07/08
+
+---
+
+### UC-087 — Painel do super admin: gerir leads (`/admin/leads`)
+
+**Ator:** super admin (não-super → redirect)
+
+**Ação:** filtra por status; nas ações do card: **Iniciar onboarding** (→ EM_ONBOARDING), **Converter** (cria Empresa + admin convidado + auditoria quem/quando), **Descartar** (motivo obrigatório; LGPD — dados anonimizados).
+
+**Conferências:**
+- [ ] Ações aparecem só nos estados válidos (gating)?
+- [ ] Converter cria a empresa e o admin recebe o convite de ativação?
+- [ ] Descartar pede motivo e anonimiza os dados pessoais?
+- [ ] Não-super é redirecionado/bloqueado?
+
+**Regras:** PLAN-064 · API-CT-LD-09..13
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)

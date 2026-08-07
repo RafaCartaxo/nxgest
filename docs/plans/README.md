@@ -63,8 +63,8 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-059-modularizacao-fina-capacidades-guard.md](PLAN-059-modularizacao-fina-capacidades-guard.md) | Modularização fina: capacidades por empresa (BR-104) + guard de desativação com dados em aberto (BR-105, 409/force/auditoria) + arquitetura (use-cases+ports, controller sem infra) | Concluído |
 | [PLAN-060-Stitch-Nav-AppFirst-NXGestao.md](PLAN-060-Stitch-Nav-AppFirst-NXGestao.md) | Navegação app-first: `BottomTabBar` mobile + `UserMenu` + sidebar desktop sem drawer/Topbar + fix link morto `/design` | Concluído |
 | [PLAN-061-empresa-card-suspensao-rebaixamento.md](PLAN-061-empresa-card-suspensao-rebaixamento.md) | Card da empresa (Recursos/Editar) + suspensão por `ativa` (403 EMPRESA_INATIVA, BR-106) + rebaixamento com reassign atômico (OPERATOR_HAS_SUBORDINATES) + SuperAdminRoute + fixes | Concluído |
-| [PLAN-062-rota-dia-lovable.md](PLAN-062-rota-dia-lovable.md) | Rota do dia: progresso Lovable, card de ações, "Parada X de Y", modais 3→2, alça Modal, html lang, FAB (handoff) | 🔵 Pronto p/ execução |
-| [PLAN-063-contexto-operador-clientes.md](PLAN-063-contexto-operador-clientes.md) | Contexto do operador: clientes do operador (`?usuarioId=` na lista) — fecha P13 (handoff) | 🔵 Pronto p/ execução |
-| [PLAN-064-onboarding-comercial-leads.md](PLAN-064-onboarding-comercial-leads.md) | Onboarding comercial: Lead → confirmação de e-mail → painel super → converter (reusa createEmpresa + convite) | 🔵 Pronto p/ execução |
-| [PLAN-065-fluxo-de-conta.md](PLAN-065-fluxo-de-conta.md) | Fluxo de conta: convite/ativação + esqueci a senha + infra de e-mail (Resend) — P020 | 🔵 Pronto p/ execução |
+| [PLAN-062-rota-dia-lovable.md](PLAN-062-rota-dia-lovable.md) | Rota do dia: progresso Lovable, card de ações, "Parada X de Y", modais 3→2, alça Modal, html lang, FAB | Concluído |
+| [PLAN-063-contexto-operador-clientes.md](PLAN-063-contexto-operador-clientes.md) | Contexto do operador: clientes do operador (`?usuarioId=` na lista) — fecha P13 | Concluído |
+| [PLAN-064-onboarding-comercial-leads.md](PLAN-064-onboarding-comercial-leads.md) | Onboarding comercial: Lead → confirmação de e-mail → painel super → converter (reusa createEmpresa + convite) — P026 | Concluído |
+| [PLAN-065-fluxo-de-conta.md](PLAN-065-fluxo-de-conta.md) | Fluxo de conta: convite/ativação + esqueci a senha + infra de e-mail (Resend) — P020 | Concluído |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |

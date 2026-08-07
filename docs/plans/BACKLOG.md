@@ -300,7 +300,7 @@ Novos refinamentos deverão ser adicionados aqui conforme evolução do produto.
 
 ## P020 — Perfil do usuário: troca de senha e recuperação
 
-> **Escopo revisado (07/08):** evoluir para **fluxo de conta completo** — **convite por e-mail** (admin cria usuário com nome+email, sem senha → link de ativação → usuário define a própria senha) + **esqueci a senha** (token por e-mail) + **infra de e-mail** (**Resend**; env `MAIL_*`; templates). ✅ **Plano pronto:** `PLAN-065-fluxo-de-conta.md`. Pré-requisito de produção: domínio real `nxgest.com.br` + DNS (SPF/DKIM/DMARC) — sem bloquear dev.
+> ✅ **Implementado (07/08, PLAN-065):** fluxo de conta completo — **convite por e-mail** (admin cria usuário com nome+email, sem senha → link de ativação → usuário define a própria senha) + **esqueci a senha** (token por e-mail, 30min, single-use) + **infra de e-mail** (**Resend**; env `MAIL_*`; templates pt/en/es). Pré-requisito de produção: domínio real `nxgest.com.br` + DNS (SPF/DKIM/DMARC) — sem bloquear dev.
 
 ### Situação atual
 
@@ -317,7 +317,7 @@ O usuário **não** pode gerenciar a própria senha:
 
 ### Fora de escopo (fatia 2 — pendente)
 
-- **"Esqueci minha senha"**: sem infraestrutura de e-mail hoje. Quando houver, avaliar token de recuperação + serviço de envio. Até lá, admin redefine a senha manualmente.
+- ~~**"Esqueci minha senha"**~~ → **entregue no PLAN-065** (token por e-mail + `POST /auth/forgot` + `POST /auth/reset`).
 
 ---
 
@@ -368,7 +368,7 @@ Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já cobe
 
 ## P026 — Onboarding Comercial (Leads)
 
-> **Planejado (07/08):** `PLAN-064-onboarding-comercial-leads.md` — pronto p/ execução (depende do PLAN-065).
+> ✅ **Implementado (07/08, PLAN-064):** `PLAN-064-onboarding-comercial-leads.md` — `/quero-conhecer` (lead + confirmação de e-mail) + painel super `/admin/leads` (onboarding, converter — reusa `createEmpresa` + convite — e descartar/LGPD).
 
 - Separar o **fluxo comercial** (aquisição de empresas) do **fluxo operacional** (que permanece intacto).
 - Empresa **nunca nasce automaticamente**: todo interessado vira **Lead** (NOVO → EMAIL_CONFIRMADO → EM_ONBOARDING → CONVERTIDO/DESCARTADO).
