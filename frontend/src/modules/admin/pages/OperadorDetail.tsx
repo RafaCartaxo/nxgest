@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom"
-import { Check, User } from "lucide-react"
+import { User } from "lucide-react"
 import { getOperador, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
+import { AjusteCaixaCard } from "../components/AjusteCaixaCard.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
 import { ContratoCard } from "../../contrato/components/ContratoCard.js"
 import { listClientes, type Cliente } from "../../cliente/services/cliente.service.js"
@@ -16,7 +17,7 @@ import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.
 import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { Button } from "../../../shared/components/Button.js"
-import { maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
+import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 
@@ -35,8 +36,6 @@ export function OperadorDetail() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [ajusteValor, setAjusteValor] = useState("")
-  const [ajusteMotivo, setAjusteMotivo] = useState("")
 
   const fetch = useCallback(async () => {
     if (!id) return
@@ -64,23 +63,11 @@ export function OperadorDetail() {
 
   useEffect(() => { fetch() }, [fetch])
 
-  async function handleAjustar() {
+  async function onAjustarCaixa(valor: number, motivo: string) {
     if (!id) return
-    const valor = unmaskMonetario(ajusteValor)
-    const motivo = ajusteMotivo.trim()
-    if (valor <= 0) {
-      feedback.show({ status: "error", message: t("caixa.ajustarValorInvalido") })
-      return
-    }
-    if (!motivo) {
-      feedback.show({ status: "error", message: t("caixa.motivoObrigatorio") })
-      return
-    }
     await feedback.run({
       action: async () => {
         await ajustarCaixaBase(valor, motivo, id)
-        setAjusteValor("")
-        setAjusteMotivo("")
         await fetch()
       },
       loading: t("common.saving"),
@@ -138,27 +125,7 @@ export function OperadorDetail() {
               <KpiCard title={t("caixa.cobradoHoje")} value={`R$ ${caixa.recebidoHoje.toFixed(2)}`} variant="green" />
             </div>
 
-            <SectionHeader title={t("admin.ajustarCaixaOperador")} />
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="text"
-                inputMode="decimal"
-                value={ajusteValor}
-                onChange={(e) => setAjusteValor(maskMonetario(e.target.value))}
-                placeholder="R$ 0,00"
-                className="min-h-12 w-full min-w-0 rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <Button type="button" variant="soft" size="sm" onClick={handleAjustar} className="shrink-0">
-                <Check className="size-4" /> {t("caixa.ajustarSalvar")}
-              </Button>
-            </div>
-            <input
-              type="text"
-              value={ajusteMotivo}
-              onChange={(e) => setAjusteMotivo(e.target.value)}
-              placeholder={t("caixa.motivoPlaceholder")}
-              className="mt-2 min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <AjusteCaixaCard caixaBase={caixa.caixaBase} saldoAtual={caixa.saldoAtual} onAjustar={onAjustarCaixa} />
 
             <SectionHeader title={t("caixa.historicoAjustes")} />
             {auditoria.length === 0 ? (

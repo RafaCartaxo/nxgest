@@ -1,6 +1,6 @@
 # PLAN-069 — Polimento de UI (port-back do Lovable)
 
-**Status:** ✅ Pronto para execução (protótipo Lovable aprovado em 07/08 — commit `42f1adcb`)
+**Status:** 🔵 Em execução — **Configurações (PreferenciasModal + SegmentedControl) ✅ · Ajuste caixa (AjusteCaixaCard) ✅ · Fechar caixa na Central (FecharCaixaModal) ✅** · Admin (parcial — KPIs/badges já existentes) · 08/08
 
 **Versão:** 1.1
 

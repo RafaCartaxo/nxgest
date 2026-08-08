@@ -81,6 +81,9 @@
 | `ReassignModal` | ✅ | AdminPage — reassign guiado ao rebaixar com subordinados (OPERATOR_HAS_SUBORDINATES, PLAN-061) |
 | `SuperAdminRoute` | ✅ | `shared/auth` — guard de rota exclusivo do super admin (`/admin/empresas*`, PLAN-061) |
 | `Fab` / `FabContext` | ✅ | `shared/fab` — FAB mobile acima da tab bar; registrado em ClienteList ("Novo cliente") e ContratoList ("Novo contrato") via useEffect (PLAN-062) |
+| `SegmentedControl` | ✅ | `shared/components/SegmentedControl` — pills segmentadas (modo do tema; port Lovable, PLAN-069) |
+| `AjusteCaixaCard` | ✅ | `modules/admin/components` — ajuste da caixa base do operador com contexto + validação inline (port Lovable, PLAN-069) |
+| `FecharCaixaModal` | ✅ | `modules/operacoes/components` — fechamento na Central: resumo do dia + confirmar → `/caixa` (port Lovable, PLAN-069) |
 
 ## 4. Legado conhecido / planejado (rastreado)
 

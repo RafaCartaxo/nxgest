@@ -748,3 +748,14 @@ Referência: `plans/PLAN-068-migracao-url-email-producao.md` · `06-PRODUCAO.md`
 - **Fix infra**: root alinhado ao **React 18.3.1** + `dedupe` (removida cópia aninhada do frontend — quebrava hooks no jsdom).
 
 Referência: `plans/PLAN-067-testes.md` · `engineering/TESTES.md`
+
+## 08/08/2026 — PLAN-069: polimento de UI (port-back do Lovable) — parte 1
+
+- **Configurações**: `PreferenciasModal` reescrito — **preview ao vivo** (reflete o tema global), **`SegmentedControl`** (novo shared) p/ modo claro/escuro/sistema com ícones, **swatches circulares com anel** de seleção, lista de **idioma com sigla+nome** (PT/EN/ES). Port de `preferencias.tsx`.
+- **Ajuste de caixa do operador**: novo **`AjusteCaixaCard`** (contexto base+saldo + validação inline + feedback no lugar) substituindo os inputs crus no `OperadorDetail` — ligado à API real `ajustarCaixaBase`.
+- **Fechar caixa na Central**: novo **`FecharCaixaModal`** (resumo do dia: resultado/recebido/gastos + confirmar) ligado à QuickAction "Fechar caixa" → confirma e vai pro fluxo real (`/caixa`). Correção do protótipo aplicada: "Receber" → `/cobrancas`.
+- i18n: chaves `prefs.*` (preview/concluido/lang*) · `admin.*` (novoValor/valorInvalido/ajusteSalvo/salvarAjuste) · `caixa.*` (confirmarDesc/resumoDia/fechado/semMovimento/gastosHoje) · `common.confirm`.
+- QA: tsc · build · audit:ui/styles/modules (147 arquivos, 0 legado) · docs:audit.
+- **Admin (superfície 4)**: KPIs/badges de role + convite já presentes (PLAN-061/065) — redesign completo fica como follow-up.
+
+Referência: `plans/PLAN-069-polimento-ui-app.md` · protótipo `site-personality-plus@42f1adcb`

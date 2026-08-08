@@ -29,7 +29,8 @@
     "edit": "Edit",
     "delete": "Delete",
     "loading": "Loading...",
-    "back": "Back"
+    "back": "Back",
+    "confirm": "Confirm"
   },
   "months": {
     "jan": "Jan",
@@ -334,7 +335,12 @@
     "liquidarSucesso": "Week closed.",
     "erroCarregar": "Error loading Cash data.",
     "entradas": "Inflows",
-    "saidas": "Outflows"
+    "saidas": "Outflows",
+    "confirmarDesc": "Confirm the cash closing?",
+    "resumoDia": "Day summary",
+    "fechado": "Cash closed!",
+    "semMovimento": "No movements today.",
+    "gastosHoje": "Expenses today"
   },
   "gasto": {
     "title": "Expenses",
@@ -498,7 +504,11 @@
     "operadorData": "Operation data",
     "caixaOperador": "Operator cash",
     "eu": "Me",
-    "ajustarCaixaOperador": "Adjust operator cash base",
+    "ajustarCaixaOperador": "Adjust operator base cash",
+    "novoValor": "New base value",
+    "valorInvalido": "Enter a value greater than zero.",
+    "ajusteSalvo": "Adjustment saved.",
+    "salvarAjuste": "Save adjustment",
     "contratosOperador": "Operator contracts",
     "semContratosOperador": "No contracts found for this operator.",
     "clientesOperador": "Operator's clients",
@@ -664,7 +674,15 @@
     "escuro": "Dark",
     "sistema": "System",
     "cor": "Color",
-    "idioma": "Language"
+    "idioma": "Language",
+    "preview": "Preview",
+    "previewTitulo": "Day summary",
+    "previewKpi": "Received today",
+    "previewBotao": "Close cash",
+    "concluido": "Done",
+    "langPt": "Português (BR)",
+    "langEn": "English",
+    "langEs": "Español"
   },
   "avatar": {
     "foto": "Photo",

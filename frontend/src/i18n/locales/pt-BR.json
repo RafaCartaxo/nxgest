@@ -29,7 +29,8 @@
     "edit": "Editar",
     "delete": "Excluir",
     "loading": "Carregando...",
-    "back": "Voltar"
+    "back": "Voltar",
+    "confirm": "Confirmar"
   },
   "months": {
     "jan": "Jan",
@@ -334,7 +335,12 @@
     "liquidarSucesso": "Semana fechada.",
     "erroCarregar": "Erro ao carregar dados do Caixa.",
     "entradas": "Entradas",
-    "saidas": "Saídas"
+    "saidas": "Saídas",
+    "confirmarDesc": "Confirmar o fechamento do caixa?",
+    "resumoDia": "Resumo do dia",
+    "fechado": "Caixa fechado!",
+    "semMovimento": "Nenhuma movimentação hoje.",
+    "gastosHoje": "Gastos hoje"
   },
   "gasto": {
     "title": "Gastos",
@@ -499,6 +505,10 @@
     "caixaOperador": "Caixa do operador",
     "eu": "Eu",
     "ajustarCaixaOperador": "Ajustar caixa base do operador",
+    "novoValor": "Novo valor da base",
+    "valorInvalido": "Informe um valor maior que zero.",
+    "ajusteSalvo": "Ajuste salvo.",
+    "salvarAjuste": "Salvar ajuste",
     "contratosOperador": "Contratos do operador",
     "semContratosOperador": "Nenhum contrato encontrado para este operador.",
     "clientesOperador": "Clientes do operador",
@@ -664,7 +674,15 @@
     "escuro": "Escuro",
     "sistema": "Sistema",
     "cor": "Cor",
-    "idioma": "Idioma"
+    "idioma": "Idioma",
+    "preview": "Visualização",
+    "previewTitulo": "Resumo do dia",
+    "previewKpi": "Recebido hoje",
+    "previewBotao": "Fechar caixa",
+    "concluido": "Concluído",
+    "langPt": "Português (BR)",
+    "langEn": "English",
+    "langEs": "Español"
   },
   "avatar": {
     "foto": "Foto",
