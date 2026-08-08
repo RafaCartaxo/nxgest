@@ -34,3 +34,17 @@
 - [ ] CT-ROT-02: rota concluída/parcial — contadores e empty state
 - [ ] CT-PWA-01: reinstalar/abrir o app instalado e conferir ícone/nome/theme
 - [ ] CT-GEO-01/02: capturar localização no form → campos preenchem + navegar disponível
+
+---
+
+# Deploy produção (08/08) — lote de correções
+
+**Alvo:** `nxgestao.duckdns.org` · **commit:** `55cfeca`
+
+- [x] VPS `git pull` → `55cfeca` + `./scripts/deploy.sh` (backup + gates UI + build + up)
+- [x] Pós-deploy: health ok · `/` 200 · CSP `frame-src 'self' blob:` + `connect-src ... nominatim` · manifest+icons 200
+- [x] **E-mail fail-closed ativo**: `forgot` de e-mail **existente** → **503 EMAIL_UNAVAILABLE** (sem o 200 verde) · **inexistente** → **200** genérico (anti-enumeração)
+- [x] Log sem `ERR_ERL_KEY_GEN_IPV6` (0 ocorrências) · causa do 503 logada (`[EMAIL] Falha no envio do reset`)
+- [x] Banco íntegro: 7 usuários · 0 leads · 1 anexo · 1 token reset órfão (do teste de forgot; expira em 30min)
+
+**Verificações manuais pendentes (pós-deploy):** CT-ANX-02 (upload imagem + abrir) · CT-ROT-02 (estado concluído) · CT-PWA-01 (ícone do instalado) · CT-GEO-01/02 (captura → campos + navegar)
