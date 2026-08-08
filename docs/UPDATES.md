@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — Polimento de UI (handoff Lovable)
+
+- **Briefing:** `plans/Lovable-Polimento-UI-NXGestao.md` — estado-alvo app-feel de 4 superfícies: Configurações (preview ao vivo/modo segmentado/paleta com anel/idioma), Fechar caixa na Central (modal com resumo do dia), Ajuste de caixa base do operador (Card + Field/validação inline), Página Admin (hierarquia de KPIs, avatar+badge+status de convite).
+- **PLAN-069-polimento-ui-app.md** — port-back do protótipo Lovable aprovado (aguardando protótipo).
+- Fluxo: **briefing → Lovable → protótipo aprovado → PLAN-069 executa** (fora deste chat).
+
+Referência: `plans/Lovable-Polimento-UI-NXGestao.md` · `plans/PLAN-069-polimento-ui-app.md`
+
 ## 07/08/2026 — Migração de URL + e-mail em produção (handoff)
 
 - **PLAN-068-migracao-url-email-producao.md** — app em `https://nxgest.com.br` (oficial) + e-mail transacional em produção (Resend **verified ✅**).

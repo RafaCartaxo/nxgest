@@ -70,4 +70,6 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-066-hardening-seguranca.md](PLAN-066-hardening-seguranca.md) | Hardening de segurança P0/P1/P2 (trust proxy · helmet/CSP · CORS fail-closed · rate limit · backup cripto · CTs) | 🔵 Pronto p/ execução |
 | [PLAN-067-testes.md](PLAN-067-testes.md) | Implementação de testes: infra vitest/jsdom/RTL + coverage + CI; unit use-cases + shared/segurança + lógica front + UI crítica (P022) | 🔵 Pronto p/ execução |
 | [PLAN-068-migracao-url-email-producao.md](PLAN-068-migracao-url-email-producao.md) | Migração de URL para `nxgest.com.br` + e-mail em produção (Resend · Caddy www→apex · env/compose · SSL Full strict · duckdns transitório) | 🔵 Pronto p/ execução |
+| [Lovable-Polimento-UI-NXGestao.md](Lovable-Polimento-UI-NXGestao.md) | Briefing Lovable: polimento de 4 superfícies (Configurações · Fechar caixa Central · Ajuste caixa operador · Admin) — estado-alvo app-feel | 🔵 Briefing (→ Lovable) |
+| [PLAN-069-polimento-ui-app.md](PLAN-069-polimento-ui-app.md) | Port-back do polimento de UI (segue o protótipo Lovable aprovado como referência) | 🔵 Aguardando protótipo |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |
