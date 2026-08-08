@@ -8,7 +8,11 @@ export const MAX_IMAGEM_BYTES = 1024 * 1024 // 1MB
 export const MAX_PDF_BYTES = 5 * 1024 * 1024 // 5MB
 export const MAX_LADO_ANEXO = 1600 // px
 
-export const MIMES_OK = ["image/jpeg", "image/png", "image/webp", "application/pdf"]
+const MIMES_IMAGEM = ["image/jpeg", "image/png", "image/webp"]
+const MIMES_OK = [...MIMES_IMAGEM, "application/pdf"]
+// HEIC/HEIF (iPhone "Alta eficiência") e tipos sem rótulo do browser: tentar decodificar
+// e converter p/ JPEG — o servidor revalida por magic bytes.
+const MIMES_DECODIFICAVEIS = [...MIMES_IMAGEM, "image/heic", "image/heif", "application/octet-stream", ""]
 
 export type ErroAnexo = "ANEXO_TIPO" | "ANEXO_LIMITE" | "FALHA"
 
@@ -17,12 +21,15 @@ export type ResultadoAnexo =
   | { ok: false; erro: ErroAnexo }
 
 export async function processarAnexo(file: File): Promise<ResultadoAnexo> {
-  if (!MIMES_OK.includes(file.type)) return { ok: false, erro: "ANEXO_TIPO" }
+  const tipo = file.type || "application/octet-stream"
 
-  if (file.type === "application/pdf") {
+  if (tipo === "application/pdf") {
     if (file.size > MAX_PDF_BYTES) return { ok: false, erro: "ANEXO_LIMITE" }
-    return { ok: true, nome: file.name, mime: file.type, tamanho: file.size, thumb: null }
+    return { ok: true, nome: file.name, mime: tipo, tamanho: file.size, thumb: null }
   }
+
+  // Imagens conhecidas OU HEIC/HEIF/desconhecidas (iPhone) → tenta converter p/ JPEG.
+  if (!MIMES_DECODIFICAVEIS.includes(tipo)) return { ok: false, erro: "ANEXO_TIPO" }
 
   try {
     const bitmap = await createImageBitmap(file)
@@ -39,10 +46,11 @@ export async function processarAnexo(file: File): Promise<ResultadoAnexo> {
     const tamanho = Math.round((dataUrl.length * 3) / 4)
     if (tamanho > MAX_IMAGEM_BYTES) return { ok: false, erro: "ANEXO_LIMITE" }
 
-    const nome = file.name.replace(/\.(png|webp|jpeg|jpg)$/i, "") + ".jpg"
+    const nome = file.name.replace(/\.(png|webp|jpeg|jpg|heic|heif)$/i, "") + ".jpg"
     return { ok: true, nome, mime: "image/jpeg", tamanho, thumb: dataUrl }
   } catch {
-    return { ok: false, erro: "FALHA" }
+    // Não decodificou (ex.: HEIC num browser sem suporte) → orienta o usuário.
+    return { ok: false, erro: "ANEXO_TIPO" }
   }
 }
 

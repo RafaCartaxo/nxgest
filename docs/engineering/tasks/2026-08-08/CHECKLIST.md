@@ -48,3 +48,13 @@
 - [x] Banco íntegro: 7 usuários · 0 leads · 1 anexo · 1 token reset órfão (do teste de forgot; expira em 30min)
 
 **Verificações manuais pendentes (pós-deploy):** CT-ANX-02 (upload imagem + abrir) · CT-ROT-02 (estado concluído) · CT-PWA-01 (ícone do instalado) · CT-GEO-01/02 (captura → campos + navegar)
+
+---
+
+# Fase 5+6 — Fix HEIC anexos + link /quero-conhecer no login (08/08)
+
+- [x] `processarAnexo` aceita `image/heic`·`image/heif`·tipo vazio/`application/octet-stream` → tenta decodificar + converter p/ JPEG (iPhone "Alta eficiência"); não decodificou → `ANEXO_TIPO` com orientação
+- [x] i18n `anexos.tipoErro` orienta iPhone ("Formato mais compatível")
+- [x] `LoginPage` ganhou link "Interessado em usar o NX Gestão? → Quero conhecer" (`/quero-conhecer`)
+- [x] i18n `auth.interesse`/`auth.queroConhecerLink` ×3
+- [x] QA: tsc · build · vitest 74 · audit:ui (147) · docs:audit 0

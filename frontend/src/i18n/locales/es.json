@@ -430,7 +430,9 @@
     "ativarConta": "Activar cuenta",
     "erroAtivar": "Error al activar la cuenta.",
     "ativarFeito": "¡Cuenta activada!",
-    "ativarFeitoDetail": "Tu acceso está listo. Inicia sesión para comenzar."
+    "ativarFeitoDetail": "Tu acceso está listo. Inicia sesión para comenzar.",
+    "interesse": "¿Interesado en usar NX Gestão?",
+    "queroConhecerLink": "Quiero conocer"
   },
   "perfil": {
     "title": "Mis datos",
@@ -709,7 +711,7 @@
     "tipoComprovante": "Comprobante de residencia",
     "tipoDocumento": "Documento",
     "tipoOutro": "Otro",
-    "tipoErro": "Formato no aceptado. Envía JPEG, PNG, WebP o PDF.",
+    "tipoErro": "Formato no aceptado. Envía JPEG, PNG, WebP o PDF. (¿iPhone en 'Alta eficiencia'? Usa 'Formato más compatible'.)",
     "limiteErro": "Archivo por encima del límite (imagen 1MB · PDF 5MB).",
     "falha": "No se pudo preparar el archivo. Inténtalo de nuevo.",
     "erroCarregar": "No se pudieron cargar los adjuntos.",

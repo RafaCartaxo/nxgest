@@ -116,6 +116,13 @@ export function LoginPage() {
           >
             {t("auth.esqueciSenha")}
           </Link>
+
+          <div className="mt-5 border-t border-border-light pt-4 text-center">
+            <p className="text-xs text-text-muted">{t("auth.interesse")}</p>
+            <Link to="/quero-conhecer" className="mt-1 block text-sm font-medium text-primary hover:underline">
+              {t("auth.queroConhecerLink")} →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

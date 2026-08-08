@@ -430,7 +430,9 @@
     "ativarConta": "Activate account",
     "erroAtivar": "Error activating the account.",
     "ativarFeito": "Account activated!",
-    "ativarFeitoDetail": "Your access is ready. Sign in to get started."
+    "ativarFeitoDetail": "Your access is ready. Sign in to get started.",
+    "interesse": "Interested in using NX Gestão?",
+    "queroConhecerLink": "Get to know us"
   },
   "perfil": {
     "title": "My profile",
@@ -709,7 +711,7 @@
     "tipoComprovante": "Proof of residence",
     "tipoDocumento": "Document",
     "tipoOutro": "Other",
-    "tipoErro": "Format not accepted. Send JPEG, PNG, WebP or PDF.",
+    "tipoErro": "Format not accepted. Send JPEG, PNG, WebP or PDF. (iPhone on 'High Efficiency'? Use 'Most Compatible'.)",
     "limiteErro": "File above the limit (image 1MB · PDF 5MB).",
     "falha": "Could not prepare the file. Try again.",
     "erroCarregar": "Could not load the attachments.",
