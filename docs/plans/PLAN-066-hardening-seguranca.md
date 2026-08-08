@@ -32,9 +32,10 @@ Fechar os gaps de segurança identificados. Não reinventa o que já está bom �
 
 ### 1. `trust proxy` — destrava o rate limit atrás do Caddy 🔴
 - **Arquivo:** `src/main.ts`
-- **Mudança:** `app.set("trust proxy", 1)` logo após `const app = express()`.
+- **Mudança:** `app.set("trust proxy", 1)` logo após `const app = express()` **+ helper `clientIp(req)`** que prioriza o header **`CF-Connecting-IP`** (quando presente) e cai pra `req.ip` (trust proxy) caso contrário. Usar `clientIp(req)` no `keyGenerator` dos rate limiters.
 - **Por quê:** hoje `req.ip` = IP do Caddy → todos compartilham o bucket do rate limit (brute-force efetivo). Com `trust proxy: 1`, o Express usa o `X-Forwarded-For` do Caddy (único proxy).
-- **CTs:** T-01, T-02.
+- **⚠️ Coordenação com PLAN-068:** após a migração pro `nxgest.com.br`, o **Cloudflare** fica na frente → **2 proxies** (Cloudflare + Caddy); `trust proxy: 1` sozinho pegaria o IP do Cloudflare. O `CF-Connecting-IP` resolve (é o IP real do cliente setado pelo Cloudflare). Sem isso, o rate limit fica cego de novo pós-migração.
+- **CTs:** T-01, T-02 (validados **em produção, após o PLAN-068**, com Cloudflare na frente).
 
 ### 2. Security headers — `helmet` + Caddy
 - **Backend:** `npm i helmet` · em `src/main.ts`: `app.use(helmet())` (antes das rotas).

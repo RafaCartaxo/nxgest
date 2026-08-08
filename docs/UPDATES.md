@@ -2,6 +2,15 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — Migração de URL + e-mail em produção (handoff)
+
+- **PLAN-068-migracao-url-email-producao.md** — app em `https://nxgest.com.br` (oficial) + e-mail transacional em produção (Resend **verified ✅**).
+- Inclui: fix do `docker-compose.prod.yml` (passar `APP_URL`/`MAIL_*`), Caddyfile com www→apex + **duckdns transitório**, sequência do `APP_URL`, SSL mode **Full (strict)**, e **coordenação com o PLAN-066** (`CF-Connecting-IP` p/ rate limit com Cloudflare).
+- **Ponto de atenção futuro:** caixa corporativa (`rafael@nxgest.com.br`) — hoje MX nulo na raiz; contratar provedor quando quiser.
+- Docs atualizados: `06-PRODUCAO.md` (URL/env/e-mail), `AGENTS.md` (URL produção), `.env.production.example` (exemplos p/ `nxgest.com.br`), `PLAN-066` (nota `CF-Connecting-IP`).
+
+Referência: `plans/PLAN-068-migracao-url-email-producao.md` · `engineering/06-PRODUCAO.md`
+
 ## 07/08/2026 — Testes: estratégia integrada (handoff)
 
 - **Assessment:** base atual 7 arquivos/40 testes vitest · 2/50 use-cases · 0 UI · smoke 248/248 · sem CI/coverage.

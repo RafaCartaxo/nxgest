@@ -14,7 +14,7 @@
 
 | Item | Valor |
 |------|-------|
-| URL | `https://nxgestao.duckdns.org` |
+| URL | **oficial:** `https://nxgest.com.br` (pós PLAN-068) · hoje: `https://nxgestao.duckdns.org` |
 | IP do VPS | `172.245.152.223` |
 | Provedor | VPS Hosting Service (`vpshostingservice.co`) |
 | SO | AlmaLinux 8.10 |
@@ -248,10 +248,10 @@ git reset --hard <commit-bom>   # cuidado: descarta mudanças locais no repo
 
 - [x] Domínio `nxgest.com.br` **registrado** no registro.br
 - [x] **Add Domain** no Resend (`no-reply@nxgest.com.br`)
-- [x] **DNS movido para o Cloudflare** (plano Free) — NS `lara.ns.cloudflare.com` / `hunts.ns.cloudflare.com` (via "Alterar servidores DNS" do registro.br; transição ~2h)
+- [x] **DNS movido para o Cloudflare** (plano Free) — NS `lara.ns.cloudflare.com` / `hunts.ns.cloudflare.com`
 - [x] **Records no Cloudflare**: DKIM `resend._domainkey` · MX `send` (prioridade 10) · SPF `send` (`include:amazonses.com`) · **SPF da raiz corrigido** (`v=spf1 include:amazonses.com ~all`) · **DMARC `p=none`**
-- [ ] Verificação no Resend **verde** (aguardando propagação do NS)
-- [ ] `.env` da VPS: `MAIL_PROVIDER=resend` · `RESEND_API_KEY=…` · `MAIL_FROM=no-reply@nxgest.com.br` · `APP_URL=…` (com o deploy do PLAN-065)
+- [x] **Verificação no Resend ✅ verde** (07/08)
+- [ ] **E-mail em produção**: deploy do PLAN-068 — `.env` do VPS (`MAIL_PROVIDER`/`RESEND_API_KEY`/`MAIL_FROM`/`APP_URL`) + fix do `docker-compose.prod.yml` (passar `APP_URL`/`MAIL_*`)
 
 ### Por que Cloudflare (e não o painel do registro.br)
 
@@ -283,9 +283,10 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
 
 ### Notas
 
-- **`APP_URL`** ainda aponta para o duckdns — links de convite/reset funcionam; migrar a URL do app para `nxgest.com.br` é passo separado (roadmap).
-- Já existem **A record** `nxgest.com.br → 172.245.152.223` (VPS, Proxied) e `www` CNAME → raiz — inofensivos; decidir proxy vs DNS-only na migração do app.
+- **`APP_URL`** ainda aponta para o duckdns — links de convite/reset funcionam. Migração da URL + e-mail em produção: **PLAN-068** (duckdns mantido até confirmação total).
+- Já existem **A record** `nxgest.com.br → 172.245.152.223` (VPS, Proxied) e `www` CNAME → raiz. Na migração (PLAN-068): SSL mode **Full (strict)** no Cloudflare + decidir proxy vs DNS-only.
 - Modo dev sem `RESEND_API_KEY` loga o link no console (não quebra desenvolvimento).
+- **Caixa corporativa (ponto de atenção — futuro):** o Cloudflare tem **MX nulo na raiz** (`nxgest.com.br MX → .`) = "não recebe e-mail" (proposital). Quando quiser `rafael@nxgest.com.br` (inbox/webmail): contratar provedor de caixa (Zoho Mail free / Google Workspace / M365) e **substituir o MX nulo** pelo MX real + SPF/DKIM dele. **Não conflita com o Resend** (que usa `send.nxgest.com.br`).
 - **Enquanto o domínio não estiver verificado no Resend** (verde), o envio real falha e os endpoints de e-mail devolvem **503 `EMAIL_UNAVAILABLE`** (`forgot`/`reconfirmar`/convite/lead) — tratado no front como "tente novamente". Validar antes do go-live de e-mail com: `npm run mail:test -- <email>` (usa `RESEND_API_KEY`/`MAIL_FROM` do ambiente).
 
 ---
@@ -294,5 +295,5 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
 
 1. **Sem snapshot do provedor** → backup cron + off-site são obrigatórios (seção 5).
 2. **Provedor com reputação mista** (Trustpilot ~2,9/5; relatos de troca de IP e nulling) → plano de migração de host para o próximo mês; domínio DuckDNS independente do provedor facilita a troca.
-3. **Domínio `.duckdns.org` é provisório** → `nxgest.com.br` já registrado (07/08); falta a migração da URL do app (DOMAIN/CORS_ORIGIN/APP_URL) — o e-mail (Resend) usa o `nxgest.com.br` independente da URL do app (ver seção 9).
+3. **Domínio `.duckdns.org` é provisório** → `nxgest.com.br` já registrado e DNS/Resend verificados (07/08); migração da URL + e-mail em produção segue o **PLAN-068** (o e-mail/Resend já usa o `nxgest.com.br`, independente da URL do app — ver seção 9).
 4. **Latência ~120-180ms** (VPS nos EUA, clientes no Brasil) — aceitável para MVP; melhorar na migração para datacenter BR.
