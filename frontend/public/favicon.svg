@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Marca Nexus real (mínima, <sm> do Logo.tsx) sobre badge azul. Fallback estático — o favicon.ts re-renderiza com as cores do tema após o JS. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 124" fill="none">
-  <rect width="112" height="124" rx="26" fill="#1D3F9E"/>
+  <rect width="112" height="124" rx="26" fill="#2763D7"/>
   <g stroke="#F3F6FF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
     <line x1="46" y1="30" x2="22" y2="46"/>
-    <line x1="46" y1="30" x2="30" y2="84"/>
+    <line x1="46" y1="30" x2="50" y2="72"/>
     <line x1="46" y1="30" x2="76" y2="40"/>
     <line x1="22" y1="46" x2="30" y2="84"/>
-    <line x1="30" y1="84" x2="86" y2="78"/>
+    <line x1="30" y1="84" x2="50" y2="72"/>
+    <line x1="50" y1="72" x2="86" y2="78"/>
     <line x1="76" y1="40" x2="92" y2="34"/>
     <line x1="76" y1="40" x2="86" y2="78"/>
-    <line x1="30" y1="84" x2="64" y2="108"/>
+    <line x1="50" y1="72" x2="64" y2="108"/>
     <line x1="86" y1="78" x2="64" y2="108"/>
+    <path d="M66 108 L74 118 Q76 124 70 124 L54 124 Q48 124 50 118 L50 102"/>
+    <path d="M22 46 L22 84 M22 46 L50 72 M50 72 L50 34" opacity="0.28"/>
   </g>
   <g fill="#F3F6FF">
     <circle cx="46" cy="30" r="9"/>
@@ -18,11 +22,12 @@
     <circle cx="76" cy="40" r="9"/>
     <circle cx="86" cy="78" r="9"/>
   </g>
-  <g fill="#2DD4BF">
+  <g fill="#00C0A6">
     <circle cx="22" cy="46" r="9"/>
+    <circle cx="50" cy="72" r="9"/>
     <circle cx="92" cy="34" r="9"/>
     <circle cx="64" cy="108" r="9"/>
-    <circle cx="50" cy="62" r="13"/>
+    <circle cx="40" cy="58" r="12.5"/>
   </g>
-  <circle cx="50" cy="62" r="6" fill="#12306E"/>
+  <circle cx="40" cy="58" r="7" fill="#F3F6FF" opacity="0.85"/>
 </svg>
