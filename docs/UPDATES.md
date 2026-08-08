@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — Polimento de UI: protótipo aprovado + PLAN-069 pronto
+
+- **Protótipo Lovable aprovado** (commit `42f1adcb`): 100% do briefing entregue (Config com preview ao vivo · Fechar caixa na Central · Ajuste de caixa do operador · Admin com KPIs/filtro/convite). i18n 3/3.
+- **PLAN-069-polimento-ui-app.md** → ✅ pronto p/ execução, com seção **"Verificação do protótipo — adaptações e correções"**: dead codes (Skeleton/moeda/etapa erro) + inconsistências (Receber→/caixa, filtro duplicado, Meus dados mock, Desfazer sem ação) + adaptações de stack (sonner→useFeedback, moeda→masks, APIs reais).
+- Execução: fora deste chat, seguindo o protótipo como referência.
+
+Referência: `plans/PLAN-069-polimento-ui-app.md` · `plans/Lovable-Polimento-UI-NXGestao.md`
+
 ## 07/08/2026 — Polimento de UI (handoff Lovable)
 
 - **Briefing:** `plans/Lovable-Polimento-UI-NXGestao.md` — estado-alvo app-feel de 4 superfícies: Configurações (preview ao vivo/modo segmentado/paleta com anel/idioma), Fechar caixa na Central (modal com resumo do dia), Ajuste de caixa base do operador (Card + Field/validação inline), Página Admin (hierarquia de KPIs, avatar+badge+status de convite).
