@@ -30,9 +30,9 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 
 ## Produção
 
-- **URL:** `https://nxgest.com.br` (oficial — pós PLAN-068) · hoje: `https://nxgestao.duckdns.org`
+- **URL:** `https://nxgest.com.br` (oficial — pós PLAN-068) · `https://nxgestao.duckdns.org` transitório (ainda servido, aposentar após confirmação)
 - **VPS:** `172.245.152.223` (root, somente chave SSH), AlmaLinux 8.10, Docker + Compose
-- **Domínio:** DuckDNS (`nxgestao.duckdns.org`) é **provisório** — `nxgest.com.br` já registrado, DNS/Cloudflare/Resend verificados (07/08); migração da URL + e-mail em produção segue o **PLAN-068** (ver `06-PRODUCAO.md` e `foundation/ADR-004-Infra-Deploy.md`)
+- **Domínio:** `nxgest.com.br` — DNS no Cloudflare (proxied), SSL funcionando, **e-mail transacional ativo** (Resend, `no-reply@nxgest.com.br`); DuckDNS (`nxgestao.duckdns.org`) provisório (ver `06-PRODUCAO.md` e `foundation/ADR-004-Infra-Deploy.md`)
 - **Backup:** cron 2x/dia no VPS → `/opt/backups`; **host não tem snapshot** — nunca assumir recuperação pelo provedor
 - Para operar (deploy, backup, logs, rollback, usuários): seguir `docs/engineering/06-PRODUCAO.md`
 

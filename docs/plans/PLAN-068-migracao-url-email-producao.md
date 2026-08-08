@@ -1,6 +1,6 @@
 # PLAN-068 — Migração de URL para `nxgest.com.br` + e-mail em produção
 
-**Status:** ✅ Pronto para execução (handoff)
+**Status:** ✅ Implementado (08/08) — URL oficial + e-mail ativo · F5 (aposentar duckdns) aguardando confirmação
 
 **Versão:** 1.0
 

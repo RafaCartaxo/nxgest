@@ -729,3 +729,12 @@ Referência: [PLAN-056](plans/PLAN-056-port-material-lovable-botoes-gps-form-pre
 - CTs H-CT-01..08 + EM-503-01..03 em `07`. P1 pendente (npm audit/drizzle · firewall/fail2ban · rate limit por usuário · backup cripto · **timeouts do Caddy** — syntax a validar).
 
 Referência: `plans/PLAN-066-hardening-seguranca.md` · `engineering/SEGURANCA.md` · `plans/BACKLOG.md` (P027)
+
+## 08/08/2026 — PLAN-068: migração de URL para `nxgest.com.br` + e-mail em produção
+
+- **Código**: `docker-compose.prod.yml` passa `APP_URL`/`MAIL_*`/`RATE_LIMIT_*` · Caddyfile serve 3 hostnames (duckdns transitório + `nxgest.com.br` + **www→apex 301**) · `.env.production.example` com DOMAIN/CORS/APP_URL do domínio novo.
+- **VPS**: `.env` → `DOMAIN=nxgest.com.br` · `CORS_ORIGIN=https://nxgest.com.br` · `MAIL_PROVIDER=resend` · `RESEND_API_KEY` · `MAIL_FROM=no-reply@nxgest.com.br` · `APP_URL=https://nxgest.com.br` → `compose up -d`.
+- **Validado**: `https://nxgest.com.br` **200** · `www` → **301** → apex · duckdns **vivo** (transitório) · **e-mail real enviando** (`forgot` de e-mail existente → 200 via Resend; fail-closed 503 se falhar).
+- **Pendências**: F5 (aposentar duckdns após confirmação) · Cloudflare SSL Full (strict) recomendado (site já funcionando).
+
+Referência: `plans/PLAN-068-migracao-url-email-producao.md` · `06-PRODUCAO.md` §9
