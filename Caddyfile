@@ -1,4 +1,7 @@
-{$DOMAIN} {
+# PLAN-068: migração de URL — serve duckdns (transitório) + nxgest.com.br + www→apex.
+{$DOMAIN}, www.{$DOMAIN}, nxgestao.duckdns.org {
+	@www host www.{$DOMAIN}
+	redir @www https://{$DOMAIN}{uri} permanent
 	header {
 		# PLAN-066 (P0): HSTS — forçar HTTPS no cliente
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"

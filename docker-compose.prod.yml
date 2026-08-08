@@ -9,6 +9,12 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - ADMIN_DEFAULT_PASSWORD=${ADMIN_DEFAULT_PASSWORD}
       - CORS_ORIGIN=${CORS_ORIGIN}
+      - APP_URL=${APP_URL}
+      - MAIL_PROVIDER=${MAIL_PROVIDER}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - MAIL_FROM=${MAIL_FROM}
+      - LOGIN_RATE_LIMIT_MAX=${LOGIN_RATE_LIMIT_MAX}
+      - USER_RATE_LIMIT_MAX=${USER_RATE_LIMIT_MAX}
     volumes:
       - nxgestao_data:/data
     expose:
