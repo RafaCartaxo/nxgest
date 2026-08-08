@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 07/08/2026 — Testes: estratégia integrada (handoff)
+
+- **Assessment:** base atual 7 arquivos/40 testes vitest · 2/50 use-cases · 0 UI · smoke 248/248 · sem CI/coverage.
+- **Plano:** `PLAN-067-testes.md` — F0 (vitest/jsdom/RTL/coverage/**CI GitHub Actions**) · F1 (use-cases prioritários + shared/segurança: `resolveUsuarioAlvo`, `jwt`, `foto`, middlewares) · F2 (utils/schemas/AuthContext/ThemeProvider/api-client) · F3 (**P022** destravado + RotaPage/PagamentoModal/leads) · F4 coverage 50% gradual · F5 docs.
+- `docs/engineering/TESTES.md` — estratégia/rotina/convenções. Backlog P022 saiu de "adiado" (07/08).
+
+Referência: `plans/PLAN-067-testes.md` · `engineering/TESTES.md` · `plans/BACKLOG.md`
+
 ## 07/08/2026 — Segurança: assessment + plano de hardening (handoff)
 
 - **Assessment:** `docs/engineering/SEGURANCA.md` — postura de segurança viva (o que já está bom, gaps, processos, responsabilidades).

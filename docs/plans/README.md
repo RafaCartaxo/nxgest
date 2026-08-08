@@ -68,4 +68,5 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-064-onboarding-comercial-leads.md](PLAN-064-onboarding-comercial-leads.md) | Onboarding comercial: Lead → confirmação de e-mail → painel super → converter (reusa createEmpresa + convite) — P026 | Concluído |
 | [PLAN-065-fluxo-de-conta.md](PLAN-065-fluxo-de-conta.md) | Fluxo de conta: convite/ativação + esqueci a senha + infra de e-mail (Resend) — P020 | Concluído |
 | [PLAN-066-hardening-seguranca.md](PLAN-066-hardening-seguranca.md) | Hardening de segurança P0/P1/P2 (trust proxy · helmet/CSP · CORS fail-closed · rate limit · backup cripto · CTs) | 🔵 Pronto p/ execução |
+| [PLAN-067-testes.md](PLAN-067-testes.md) | Implementação de testes: infra vitest/jsdom/RTL + coverage + CI; unit use-cases + shared/segurança + lógica front + UI crítica (P022) | 🔵 Pronto p/ execução |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |

@@ -617,7 +617,7 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 
 ### 5.5 Testes automatizados
 - **API/backend:** `scripts/smoke-api.mjs` (91 cenários da `07` — validado 03/08/2026) ✅; testes unitários pendentes.
-- **UI/frontend:** **pendente (T1)** — Vitest + React Testing Library para as telas alteradas (login, perfil, admin/equipe, navbar); `npm test` hoje não encontra arquivos (exit 1).
+- **UI/frontend:** **em plano** — `PLAN-067-testes.md` (vitest + jsdom + RTL + coverage + CI; P022 destravado 07/08). Base atual: 7 arquivos/40 testes (use-cases + shared).
 - **Prioridade:** Média — cobertura de UI atual = 0%
 
 ### 5.6 Endereço do Comércio + GPS
@@ -658,7 +658,7 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 
 ### 5.8 Testes automatizados
 - **API:** `scripts/smoke-api.mjs` ✅ (91 cenários, validado 03/08)
-- **UI (pendente T1):** Vitest + React Testing Library — telas alteradas (login, perfil, admin/equipe, navbar); `npm test` sem arquivos hoje
+- **UI (T1):** **em plano** — `PLAN-067-testes.md` (vitest + jsdom + RTL + coverage + CI; P022 destravado 07/08)
 - **Prioridade:** Média — cobertura de UI atual = 0%
 
 ---

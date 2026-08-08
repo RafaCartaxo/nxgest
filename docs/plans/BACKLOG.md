@@ -323,9 +323,9 @@ O usuário **não** pode gerenciar a própria senha:
 
 # EPIC 6 — Testes e validação
 
-## P022 — Testes de UI das telas alteradas (pendente)
+## P022 — Testes de UI das telas alteradas
 
-> **Adiado por decisão (03/08):** registrar apenas, não implementar agora.
+> **✅ Saiu de "adiado" (07/08):** virou o **PLAN-067-testes.md** — estratégia integrada (unit use-cases + shared/segurança + lógica front + UI crítica + smoke + CI). A rodada 1 destrava o escopo original (LoginPage/PerfilPage/AdminPage/ContribuicaoModal/EquipeModal/Navbar) + críticos novos (RotaPage/PagamentoModal/UserMenu/BottomTabBar/leads).
 
 ### Escopo (quando entrar)
 
