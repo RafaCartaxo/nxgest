@@ -2,7 +2,7 @@ import { Router } from "express"
 import { AuthController } from "../controllers/auth.controller.js"
 import { AuthRepository } from "../../infrastructure/repositories/auth.repository.impl.js"
 import { authMiddleware } from "../../../../shared/middleware/auth.middleware.js"
-import rateLimit from "express-rate-limit"
+import rateLimit, { ipKeyGenerator } from "express-rate-limit"
 
 const router = Router()
 const repository = new AuthRepository()
@@ -21,8 +21,8 @@ const forgotLimiter = rateLimit({
   max: 3,
   standardHeaders: true,
   legacyHeaders: false,
-  // PLAN-065: limite por e-mail + IP (não só por IP).
-  keyGenerator: (req) => `${req.ip}-${String((req.body as { email?: string })?.email ?? "").toLowerCase()}`,
+  // PLAN-065: limite por e-mail + IP (não só por IP). ipKeyGenerator normaliza IPv6 (IPv6 não burla).
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? "")}-${String((req.body as { email?: string })?.email ?? "").toLowerCase()}`,
   message: { code: "RATE_LIMIT", message: "Muitas tentativas. Tente novamente em 15 minutos." },
 })
 

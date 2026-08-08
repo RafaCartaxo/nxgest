@@ -1,0 +1,36 @@
+# CHECKLIST — Lote de fixes (anexos/CSP · GPS · rota · PWA · e-mail · IPv6)
+
+**Data:** 08/08/2026
+
+> Fixes levantados de observações em produção (07–08/08). **Deploy pendente** — o usuário pediu pra juntar antes de subir.
+
+## CTs padronizados (origem → causa → fix)
+
+| CT | Módulo | Sintoma | Causa raiz | Status |
+|---|---|---|---|---|
+| CT-ANX-01 | Anexos (PDF) | modal abre, iframe em **branco** | CSP `frame-src` (fallback `default-src 'self'`) bloqueia `blob:` no `<iframe>` (`AnexosSection.tsx:211`) — regressão do P0/CSP de 07/08 | ✅ fix: `frameSrc: ['self','blob:']` (validado no preview) |
+| CT-ANX-02 | Anexos (imagem) | imagem "não carrega/erro" (foto de perfil carrega) | **sem anexo imagem em prod** pra reproduzir (só 1 PDF no banco/uploads, com permissões ok); `img-src` já tem `blob:` + fetch autenticado → deve renderizar | ⏳ verificação manual pós-deploy (upload de imagem + abrir) |
+| CT-GEO-01 | Geo/endereço | captura coords ok, **campos vazios** | CSP `connect-src 'self'` bloqueia o reverse geocode `nominatim.openstreetmap.org` (`geocoding.ts:29`) — regressão do P0/CSP | ✅ fix: `connectSrc: ['self','https://nominatim.openstreetmap.org']` (validado no preview) |
+| CT-GEO-02 | Geo/navegação | localização "não fica disponível para navegar" | `maps.ts:14` navega por coords (primeiro); coords são salvas mesmo sem texto (`ClienteForm.capturarBloco`) → indisponibilidade = coords não persistidas (não salvou). Com CT-GEO-01 resolvido, fluxo normal volta | ✅ coberto pelo fix do CT-GEO-01 + verificar coords-only no preview |
+| CT-ROT-01 | Rota | lista **não atualiza** após pagar | refetch só no botão "Concluir" (`RotaPage:602`); fechar por X/backdrop no passo comprovante não refaz `fetch()` (`PagamentoModal` sucesso `onClose={fechar}`). Backend já exclui pagos (`WHERE saldoPendente > 0`) | ✅ fix: refetch em **qualquer** fechamento pós-pagamento (`handlePagamentoClose` + flag `pagamentoFeitoRef`) |
+| CT-ROT-02 | Rota | verificar estado de "atendimento concluído" | empty state + `RouteProgress` + resumo; depende do CT-ROT-01 (contadores) | ⏳ verificação manual pós-deploy |
+| CT-PWA-01 | PWA | instala na área de trabalho, **ícone genérico** | `public/` só tinha `favicon.svg`; sem `manifest.webmanifest`/ícones/apple metas | ✅ fix: manifest + icons 192/512/maskable + apple-touch-icon + metas (validado no preview: assets 200) |
+
+## Fixes extras (do diagnóstico de produção)
+
+- [x] **E-mail fail-closed em prod** (`criarMailer`): `NODE_ENV=production` sem `RESEND_API_KEY` → `FailingMailer` (503 `EMAIL_UNAVAILABLE`), **nunca mente o 200 verde**; dev continua `ConsoleMailer`. Validado no preview: forgot existente → **503** · inexistente → **200** genérico (anti-enumeração mantida). `vitest` novo (`mailers.test.ts`).
+- [x] **IPv6 rate-limit** (`ERR_ERL_KEY_GEN_IPV6`): `ipKeyGenerator(req.ip ?? "")` nos limiters custom (`forgot` em `auth.routes.ts` · `reconfirmar` em `lead.routes.ts`).
+- [x] **CSP refinada** (`src/main.ts`): `frameSrc: ['self','blob:']` (PDF) + `connectSrc` com Nominatim (GPS).
+
+## QA
+
+- [x] `tsc` · `build` · `audit:ui/styles/modules` · `vitest` **43/43** (40 + 3 mailer) · `docs:audit` 0 divergências
+- [x] **Preview CSP (NODE_ENV=production)**: headers com `frame-src blob:` + `connect-src nominatim` · forgot 503/200 · manifest+icons 200
+- [x] Smoke **248/248** (instância isolada; NODE_ENV ≠ produção → console mailer, sem impacto)
+
+## Pendências pós-deploy (verificação manual)
+
+- [ ] CT-ANX-02: upload de anexo **imagem** e abrir no modal (confirmar render)
+- [ ] CT-ROT-02: rota concluída/parcial — contadores e empty state
+- [ ] CT-PWA-01: reinstalar/abrir o app instalado e conferir ícone/nome/theme
+- [ ] CT-GEO-01/02: capturar localização no form → campos preenchem + navegar disponível

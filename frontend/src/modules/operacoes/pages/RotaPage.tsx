@@ -346,6 +346,9 @@ export function RotaPage() {
     return new File([new Blob([array], { type: "image/png" })], "comprovante.png", { type: "image/png" })
   }
 
+  // CT-ROT-01: sinaliza que um pagamento foi concluído (para refrescar a rota em QUALQUER fechamento do modal).
+  const pagamentoFeitoRef = useRef(false)
+
   async function handlePagamentoSuccess(data: PagamentoSuccessData) {
     if (!item) return
 
@@ -370,6 +373,7 @@ export function RotaPage() {
 
       // Modal fica ABERTO no passo comprovante (sucessoContent) — o refetch acontece ao fechar.
       setComprovante({ canvas, file, waUrl })
+      pagamentoFeitoRef.current = true
       // Substitui o loading na hora (o sucesso auto-dispensa em ~1.2s).
       feedback.show({ status: "success", message: t("cliente.pagamentoSucesso") })
     } catch {
@@ -378,12 +382,17 @@ export function RotaPage() {
     }
   }
 
-  function finalizarPagamento() {
+  // Fecha o modal de pagamento (qualquer via: "Concluir", X ou backdrop). Se houve pagamento,
+  // refaz a rota + pagamentos do dia — o backend já exclui itens pagos (CT-ROT-01).
+  function handlePagamentoClose() {
     setPagamentoOpen(false)
     setComprovante(null)
-    fetch()
-    fetchPagamentos()
-    eventBus.emit("operacao:atualizada")
+    if (pagamentoFeitoRef.current) {
+      pagamentoFeitoRef.current = false
+      fetch()
+      fetchPagamentos()
+      eventBus.emit("operacao:atualizada")
+    }
   }
 
   async function handleCompartilharComprovante() {
@@ -575,7 +584,7 @@ export function RotaPage() {
           parcelaLabel={item.proximoNumeroParcela > 0
             ? t("contrato.parcelaTemplate", { num: String(item.proximoNumeroParcela).padStart(2, "0"), total: item.totalParcelasContrato })
             : undefined}
-          onClose={() => setPagamentoOpen(false)}
+          onClose={handlePagamentoClose}
           onSuccess={handlePagamentoSuccess}
           sucessoContent={(data, fechar) => (
             <>
@@ -599,7 +608,7 @@ export function RotaPage() {
                   </Button>
                 )}
               </div>
-              <Button variant="ghost" onClick={() => { fechar(); finalizarPagamento() }} className="mt-2 w-full">
+              <Button variant="ghost" onClick={() => fechar()} className="mt-2 w-full">
                 {t("common.cancel")}
               </Button>
             </>

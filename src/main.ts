@@ -30,6 +30,7 @@ const app = express()
 app.set("trust proxy", 1)
 
 // PLAN-066 (P0): security headers (helmet) + CSP. Estilos inline (React style attr) + Google Fonts permitidos.
+// blob: no frame-src (viewer de PDF) e nominatim no connect-src (reverse geocode) — senão CSP quebra o app.
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -38,7 +39,8 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'"],
+      frameSrc: ["'self'", "blob:"],
+      connectSrc: ["'self'", "https://nominatim.openstreetmap.org"],
       frameAncestors: ["'none'"],
     },
   },
