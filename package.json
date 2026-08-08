@@ -10,6 +10,8 @@
     "build": "tsc && cd frontend && npm run build",
     "start": "NODE_ENV=production node dist/main.js",
     "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "docs:audit": "node scripts/audit-docs.mjs",
     "audit:styles": "node scripts/audit-styles.mjs",
     "audit:ui": "node scripts/audit-ui.mjs",
@@ -34,6 +36,9 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.11",
     "@types/cors": "^2.8.17",
@@ -41,8 +46,12 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.2.0",
     "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^1.6.1",
     "concurrently": "^9.2.4",
     "drizzle-kit": "^0.24.0",
+    "jsdom": "^26.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0",
     "vitest": "^1.6.0"

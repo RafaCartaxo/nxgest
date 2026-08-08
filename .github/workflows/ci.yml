@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: tsc · build · audits · unit/UI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run build
+      - run: npm run audit:ui
+      - run: npm run audit:styles
+      - run: npm run audit:modules
+      - run: npm test
+      - run: npm run docs:audit
+
+  smoke:
+    name: smoke-api (DB isolado)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: |
+          set -e
+          # 1) boot cria as tabelas; 2) seed; 3) sobe de novo com rate limit ampliado
+          DB_PATH=/tmp/nxgestao-smoke.db PORT=3002 npx tsx src/main.ts &
+          sleep 6
+          kill %1 2>/dev/null || true
+          DB_PATH=/tmp/nxgestao-smoke.db node scripts/seed-demo.mjs
+          DB_PATH=/tmp/nxgestao-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=1000 npx tsx src/main.ts &
+          sleep 6
+          node scripts/smoke-api.mjs --baseUrl http://localhost:3002

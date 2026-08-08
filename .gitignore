@@ -11,3 +11,6 @@ NUL
 .obsidian/
 
 uploads/
+
+# Cobertura de testes (PLAN-067) — artefato gerado
+coverage/

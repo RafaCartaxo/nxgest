@@ -1,52 +1,39 @@
 # TESTES — Estratégia e rotina
 
-**Status:** Ativo
-
-**Última atualização:** 07/08/2026
-
-> Estratégia de testes do NX Gestão. Implementação priorizada em `plans/PLAN-067-testes.md`.
-
----
-
-## Visão
-
-Testes são **parte integrada do projeto**: rodam no CI, cobrem o negócio (use-cases), a segurança (shared/middleware), a lógica front e a UI crítica — além do smoke de API.
-
-## Camadas
-
-| Camada | Ferramenta | O que cobre |
-|---|---|---|
-| **Unit — use-cases (back)** | vitest | regras de negócio, escopo, distribuição financeira |
-| **Unit — shared/segurança** | vitest | `resolveUsuarioAlvo`, `jwt`, `foto` (magic bytes), middlewares |
-| **Unit — lógica/estado (front)** | vitest | utils, schemas, AuthContext, ThemeProvider, api/client |
-| **Component/UI** | vitest + jsdom + RTL | telas críticas, fluxos de conta, rota, pagamento, leads |
-| **Integração API** | `scripts/smoke-api.mjs` | cenários da `07` (248) — exige DB isolado (seed-demo) |
-| **CI** | GitHub Actions | gate: tsc/build/audits/test/docs:audit/smoke |
+**Status:** Ativo · **PLAN-067** (07/08/2026) — destrava o backlog P022.
 
 ## Como rodar
 
 ```bash
-npm test              # unit + UI (vitest)
-npm run test:coverage # com cobertura (meta 50% statements, subir gradual)
-npm run test:watch    # desenvolvimento
-# smoke (DB isolado):
-DB_PATH=/tmp/nxgestao-smoke.db node scripts/seed-demo.mjs && node scripts/smoke-api.mjs
+npm test              # unit (backend) + UI (RTL/jsdom) — gate obrigatório
+npm run test:watch    # watch
+npm run test:coverage # report v8 (reporta, NÃO bloqueia no início — meta sobe gradual)
 ```
+
+## Camadas
+
+`Unit use-case (back)` → `Unit shared/segurança` → `Unit lógica/estado (front)` → `Component/UI (RTL)` → `smoke API` → `CI + coverage`.
+
+| Camada | Onde | Exemplo |
+|---|---|---|
+| Unit use-case | `src/modules/*/application/use-cases/**/*.test.ts` | Login, CriarLead (rollback), ConfirmarLead (single-use), DescartarLead (LGPD), Convidar (SE-04) |
+| Unit shared/segurança | `src/shared/utils/*.test.ts` | `scope` (resolveUsuarioAlvo), `foto` (magic bytes/sem SVG), `jwt` (fail-closed), `clientIp` (CF-Connecting-IP) |
+| Unit front lógica | `frontend/src/shared/**/*.test.ts` | `geo/alvo`, `modules`, `capacidades`, `geo/estadoGps` |
+| Component/UI | `frontend/src/**/*.test.tsx` (`// @vitest-environment jsdom`) | `LoginPage` (toggle senha UC-041, submit) — destrava P022 |
+| Integração API | `scripts/smoke-api.mjs` | 248 cenários (DB isolado + seed) |
 
 ## Convenções
 
-- **Use-cases (back):** mock de ports com `vi.fn` — modelo `EsquecerSenhaUseCase.test.ts` / `CriarLeadUseCase.test.ts`.
-- **Componentes/UI:** `render` com providers (Auth/Theme/I18n) + mock de `apiRequest`/serviços; docblock `// @vitest-environment jsdom`.
-- **Fluxos de conta:** cobrir convite (inclui reenvio que invalida anterior — SE-04), ativação, forgot/reset, convidado bloqueado.
-- **Segurança:** `resolveUsuarioAlvo` (todos os papéis), `jwt` (fail-closed), `foto` (sem SVG), middlewares (401/403).
-- **Mock necessários:** `navigator.geolocation` (RotaPage) · canvas (comprovante — polyfill no setup).
+- **Backend use-case**: mocks de ports com `vi.fn` (modelo `EsquecerSenhaUseCase.test.ts`/`CriarLeadUseCase.test.ts`).
+- **Componentes**: `render` com providers mínimos (Auth/Theme/I18n mockados) + `vi.mock` de `api/client`/serviços; jest-dom; docblock `// @vitest-environment jsdom`.
+- **Segredos/env**: nunca em teste hardcoded; `JWT_SECRET` setado por teste (com restore).
+- **React**: root tem React **18.3.1** (alinha com o frontend) + `resolve.dedupe: ["react","react-dom"]` no `vitest.config.ts` — **não** reinstalar react 19 no root nem manter cópia aninhada no frontend (quebra hooks).
+- **Feature nova inclui teste** (gate de review): pelo menos o use-case/lógica + smoke quando aplicável.
 
-## Rotina
+## Coverage
 
-- **Feature nova inclui teste** (gate de review) — ver `AGENTS.md`.
-- `npm test` obrigatório antes de subir/commitar.
-- `npm run test:coverage` para monitorar o drift de cobertura.
+`npm run test:coverage` (v8, text+html). Meta inicial 0% **reportando**; subir gradual conforme a rotina amadurece. `AGENTS.md` lista `npm test` como obrigatório.
 
-## Referências
+## CI
 
-- `plans/PLAN-067-testes.md` · `AGENTS.md` · `docs/product/07-CASOS-DE-USO-API.md` (smoke/CTs)
+`.github/workflows/ci.yml` (GitHub Actions): job `test` (tsc · build · audits · npm test · docs:audit) + job `smoke` (instância isolada: boot → seed-demo → smoke-api).

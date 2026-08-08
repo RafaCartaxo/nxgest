@@ -738,3 +738,13 @@ Referência: `plans/PLAN-066-hardening-seguranca.md` · `engineering/SEGURANCA.m
 - **Pendências**: F5 (aposentar duckdns após confirmação) · Cloudflare SSL Full (strict) recomendado (site já funcionando).
 
 Referência: `plans/PLAN-068-migracao-url-email-producao.md` · `06-PRODUCAO.md` §9
+
+## 08/08/2026 — PLAN-067: testes integrados (unit + UI + CI) — destrava P022
+
+- **F0 infra**: `vitest.config.ts` (node default + `@vitest-environment jsdom` + coverage v8 report-only) · `frontend/src/test/setup.ts` (jest-dom + stub canvas) · scripts `test:watch`/`test:coverage` · **CI** (`.github/workflows/ci.yml`: job `test` + job `smoke` isolado).
+- **F1 unit**: Login (inválido/convidado/sucesso) · Convidar (SE-04 reenvio) · ConfirmarLead (single-use/expirado) · DescartarLead (LGPD) · shared/segurança: `scope` (resolveUsuarioAlvo), `foto` (magic bytes/sem SVG), `jwt` (fail-closed), `clientIp`.
+- **F3-P022**: `LoginPage.test.tsx` (toggle senha UC-041 + submit chama login) — destrava o backlog P022.
+- **QA**: vitest 43 → **74 testes** (17 arquivos) · `test:coverage` report-only (meta sobe gradual).
+- **Fix infra**: root alinhado ao **React 18.3.1** + `dedupe` (removida cópia aninhada do frontend — quebrava hooks no jsdom).
+
+Referência: `plans/PLAN-067-testes.md` · `engineering/TESTES.md`

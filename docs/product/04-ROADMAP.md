@@ -35,7 +35,6 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 |--------|-----|------------|
 | Mapa | — | Fase 5.3 |
 | PWA | — | Fase 5.4 |
-| Testes | — | Fase 5.5 |
 
 ## O que foi entregue além do roadmap
 
@@ -44,6 +43,7 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 | Multi-Tenant (super admin + empresas) | Fase 5.7 (PLAN-019) |
 | Fluxo de conta (convite/ativação + esqueci a senha + infra de e-mail Resend) | P020 → PLAN-065 |
 | Onboarding comercial (Leads: `/quero-conhecer` + painel `/admin/leads`) | P026 → PLAN-064 |
+| Testes integrados (unit use-cases + shared/segurança + UI RTL + smoke + CI) | P022 → PLAN-067 |
 | Caixa e Gasto | Fase 4 (PLAN-014) |
 | Auditoria de caixa, modais, nomenclatura, estorno | Backlog → PLAN-026/027/028 |
 
