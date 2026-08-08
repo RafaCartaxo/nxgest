@@ -169,6 +169,16 @@ scp root@172.245.152.223:/opt/backups/uploads-<DATA>.tar.gz ~/.config/nxgestao/b
 >
 > **Desde PLAN-042:** baixar também o `uploads-<DATA>.tar.gz` (anexos). 
 >
+> **PLAN-066 (P1): criptografar a cópia off-site** — contém dados pessoais/financeiros (LGPD). Usar `age` ou `gpg` simétrico:
+> ```bash
+> # gpg (simétrico, senha forte) — na origem e no destino
+> gpg --symmetric --cipher-algo AES256 --output backup-offsite-gestao.db.gpg ~/.config/nxgestao/backups/backup-offsite-gestao.db
+> rm ~/.config/nxgestao/backups/backup-offsite-gestao.db   # só a versão cifrada fica off-site
+> # restaurar:
+> gpg --decrypt backup-offsite-gestao.db.gpg > gestao-<DATA>.db
+> ```
+> A senha da cifra vai em `~/.config/nxgestao/ACESSOS.md` (fora do repo). A cópia **sem** cifra NÃO deve permanecer em armazenamento externo.
+>
 > Se o VPS for perdido por completo (falha de hardware/provedor), a cópia off-site é a única via de recuperação.
 
 ### 5.3 — Restauração
@@ -297,3 +307,25 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
 2. **Provedor com reputação mista** (Trustpilot ~2,9/5; relatos de troca de IP e nulling) → plano de migração de host para o próximo mês; domínio DuckDNS independente do provedor facilita a troca.
 3. **Domínio `.duckdns.org` é provisório** → `nxgest.com.br` já registrado e DNS/Resend verificados (07/08); migração da URL + e-mail em produção segue o **PLAN-068** (o e-mail/Resend já usa o `nxgest.com.br`, independente da URL do app — ver seção 9).
 4. **Latência ~120-180ms** (VPS nos EUA, clientes no Brasil) — aceitável para MVP; melhorar na migração para datacenter BR.
+
+---
+
+## 11. Hardening do host (PLAN-066 · P1)
+
+> Verificar/aplicar no VPS (AlmaLinux 8.10, root):
+
+- **firewalld** — liberar apenas 80/443 + SSH:
+  ```bash
+  systemctl enable --now firewalld
+  firewall-cmd --permanent --add-service=http --add-service=https
+  firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address=SEU_IP service name=ssh accept'
+  firewall-cmd --permanent --remove-service=ssh   # SSH só do seu IP
+  firewall-cmd --reload
+  ```
+- **fail2ban** no SSH (evita brute-force):
+  ```bash
+  dnf install -y fail2ban
+  systemctl enable --now fail2ban
+  # /etc/fail2ban/jail.local → [sshd] enabled = true, bantime = 1h, maxretry = 3
+  ```
+- **Confirmar** com `firewall-cmd --list-all` e `fail2ban-client status sshd`; registrar o resultado no CHECKLIST do dia.

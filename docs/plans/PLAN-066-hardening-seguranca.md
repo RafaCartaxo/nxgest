@@ -1,6 +1,6 @@
 # PLAN-066 — Hardening de Segurança (P0/P1/P2)
 
-**Status:** 🔵 Em execução — **P0 implementado (07/08)** · P1/P2 pendentes
+**Status:** 🔵 Em execução — **P0 ✅** · **P1 parcial (08/08)** · P2 = decisões pendentes
 
 **Versão:** 1.0
 
@@ -8,7 +8,7 @@
 
 **Origem:** assessment de segurança 07/08 (resumo em `docs/engineering/SEGURANCA.md`)
 
-**Execução:** P0 concluído (trust proxy · helmet/CSP · CORS fail-closed · HSTS no Caddy). Próximo: P1. Regras em `AGENTS.md`.
+**Execução:** P0 concluído (trust proxy · helmet/CSP · CORS fail-closed · HSTS no Caddy) + P1 parcial: `clientIp` (CF-Connecting-IP) nos limiters · `npm audit fix` (12→9) · drizzle-orm 0.45.2 (major validado: tsc/build/smoke 248) · uuid ^11.1.1 · **rate limit por usuário** (D-03, `userRateLimit`) · backup off-site criptografado (doc §5.2) · firewall/fail2ban (doc §11). Regras em `AGENTS.md`.
 
 ---
 
@@ -52,25 +52,11 @@ Fechar os gaps de segurança identificados. Não reinventa o que já está bom �
 
 ## P1 — Médio
 
-### 4. Dependências
-- `npm audit fix` (body-parser — não-breaking).
-- Avaliar `drizzle-orm` → 0.45.2 (fix de SQL injection em identifiers; **major bump**, testar `tsc`/build/smoke).
-- **Rotina:** `npm audit` como checagem periódica (registrar em `SEGURANCA.md`).
-
-### 5. Hardening do VPS (documentar em `06-PRODUCAO.md`)
-- Verificar/ativar `firewalld` (só 80/443 + SSH) e `fail2ban` no SSH. Documentar.
-
-### 6. Rate limit global / por usuário
-- Avaliar middleware de rate limit nas rotas autenticadas (ex.: 300 req/min por usuário) — protege abuso/carga.
-- **CTs:** D-03.
-
-### 7. Backup off-site criptografado
-- Criptografar a cópia off-site (gpg/age) — contém dados pessoais/financeiros.
-- **CT/processo:** P-04.
-
-### 8. Timeouts no Caddy (slowloris)
-- Adicionar timeouts (`request_timeout`/`read_timeout`/`write_timeout`) no Caddyfile.
-- **CT:** T-08.
+- [x] **4. Dependências** — `npm audit fix` (12→9; restantes: esbuild dev-only, uuid já em ^11.1.1) · **drizzle-orm → 0.45.2** (major validado: tsc · build · smoke 248/248) · rotina `npm audit` (registrar em `SEGURANCA.md`).
+- [x] **5. Hardening do VPS** — documentado em `06-PRODUCAO.md` §11 (firewalld + fail2ban). ⏳ executar no VPS (checklist do dia).
+- [x] **6. Rate limit global / por usuário** — `userRateLimit` middleware (600 req/min por usuário/IP real) aplicado nas rotas autenticadas (CT D-03).
+- [x] **7. Backup off-site criptografado** — doc em `06-PRODUCAO.md` §5.2 (gpg AES256; senha em ACESSOS.md).
+- [ ] **8. Timeouts no Caddy (slowloris, CT T-08)** — syntax do `servers` block não reconhecida pelo adapter do Caddyfile desta versão e **validação via docker indisponível no host** → **PENDENTE** (não arriscar Caddyfile quebrado no deploy).
 
 ---
 

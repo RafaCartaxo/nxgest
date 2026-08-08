@@ -8,6 +8,7 @@ import { createTables } from "./database.js"
 import { healthRoutes } from "./modules/health/presentation/routes/health.routes.js"
 import { authRoutes } from "./modules/auth/presentation/routes/auth.routes.js"
 import { authMiddleware } from "./shared/middleware/auth.middleware.js"
+import { userRateLimit } from "./shared/middleware/userRateLimit.middleware.js"
 import { requireModule } from "./shared/middleware/module.middleware.js"
 import { adminRoutes } from "./modules/admin/presentation/routes/admin.routes.js"
 import { clienteRoutes } from "./modules/cliente/presentation/routes/cliente.routes.js"
@@ -59,17 +60,17 @@ app.use(express.json({ limit: "2mb" }))
 
 app.use("/api/health", healthRoutes)
 app.use("/api/auth", authRoutes)
-app.use("/api/admin", authMiddleware, adminRoutes)
-app.use("/api/admin/empresas", authMiddleware, empresaRoutes)
+app.use("/api/admin", authMiddleware, userRateLimit, adminRoutes)
+app.use("/api/admin/empresas", authMiddleware, userRateLimit, empresaRoutes)
 app.use("/api/leads", leadPublicRoutes)
-app.use("/api/admin/leads", authMiddleware, leadAdminRoutes)
+app.use("/api/admin/leads", authMiddleware, userRateLimit, leadAdminRoutes)
 
-app.use("/api/clientes", authMiddleware, requireModule("clientes"), clienteRoutes)
-app.use("/api/contratos", authMiddleware, requireModule("contratos"), contratoRoutes)
-app.use("/api/pagamentos", authMiddleware, requireModule("contratos"), pagamentoRoutes)
-app.use("/api/operacoes", authMiddleware, operacoesRoutes)
-app.use("/api/caixa", authMiddleware, requireModule("caixa"), caixaRoutes)
-app.use("/api/gastos", authMiddleware, requireModule("gastos"), gastoRoutes)
+app.use("/api/clientes", authMiddleware, userRateLimit, requireModule("clientes"), clienteRoutes)
+app.use("/api/contratos", authMiddleware, userRateLimit, requireModule("contratos"), contratoRoutes)
+app.use("/api/pagamentos", authMiddleware, userRateLimit, requireModule("contratos"), pagamentoRoutes)
+app.use("/api/operacoes", authMiddleware, userRateLimit, operacoesRoutes)
+app.use("/api/caixa", authMiddleware, userRateLimit, requireModule("caixa"), caixaRoutes)
+app.use("/api/gastos", authMiddleware, userRateLimit, requireModule("gastos"), gastoRoutes)
 
 if (process.env.NODE_ENV === "production") {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
