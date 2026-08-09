@@ -58,3 +58,12 @@
 - [x] `LoginPage` ganhou link "Interessado em usar o NX Gestão? → Quero conhecer" (`/quero-conhecer`)
 - [x] i18n `auth.interesse`/`auth.queroConhecerLink` ×3
 - [x] QA: tsc · build · vitest 74 · audit:ui (147) · docs:audit 0
+
+---
+
+# HOTFIX — rate limit bloqueava login/API em prod (09/08)
+
+- [x] Causa: `Number(process.env.LOGIN_RATE_LIMIT_MAX ?? 10)` com string vazia (compose injetava '' — chave ausente no `.env` do VPS) → `max:0` → express-rate-limit v7/v8 bloqueia TUDO (429 no login)
+- [x] Fix: `envNumber()` (src/shared/utils/env.ts + test) aplicado em loginLimiter + userRateLimit
+- [x] VPS `.env`: LOGIN_RATE_LIMIT_MAX=10 · USER_RATE_LIMIT_MAX=600 · SUPER_ADMIN_EMAIL/SUPER_ADMIN_DEFAULT_PASSWORD (random) — compose agora passa SUPER_ADMIN_*
+- [x] Deploy ec1530b · validado: login NÃO mais 429 (401 credencial; rate limit ok) · health ok
