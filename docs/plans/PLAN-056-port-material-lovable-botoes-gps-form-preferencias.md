@@ -8,7 +8,7 @@
 
 **Última atualização:** 06/08/2026
 
-**Roadmap:** identidade visual "Nexus" — aplicação do material Lovable (briefing `Lovable-Cadastro-Rota-NXGestao.md`)
+**Roadmap:** identidade visual "Nexus" — aplicação do material Lovable (briefing `Lovable-Cadastro-Rota-NXGest.md`)
 
 ---
 
@@ -41,5 +41,5 @@ Portar para o app os entregáveis prontos do Lovable (`site-personality-plus`): 
 - smoke: API inalterada (frontend-only)
 
 ## Referências
-- Briefing: `Lovable-Cadastro-Rota-NXGestao.md` · Material: `site-personality-plus/src/components/nx/{kit,gps,ClienteForm,ClienteSelect,preferencias}.tsx`
+- Briefing: `Lovable-Cadastro-Rota-NXGest.md` · Material: `site-personality-plus/src/components/nx/{kit,gps,ClienteForm,ClienteSelect,preferencias}.tsx`
 - `Button.tsx` · `shared/geo/GpsControl.tsx` · `ClienteForm.tsx` · `ClienteSelect.tsx` · `ThemeProvider.tsx` · `PreferenciasModal.tsx` · `Topbar.tsx`

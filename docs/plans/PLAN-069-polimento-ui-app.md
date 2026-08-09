@@ -6,7 +6,7 @@
 
 **Início:** 07/08/2026
 
-**Origem:** polimento de 4 superfícies — briefing `Lovable-Polimento-UI-NXGestao.md` + protótipo `RafaCartaxo/site-personality-plus` (commit `42f1adcb`)
+**Origem:** polimento de 4 superfícies — briefing `Lovable-Polimento-UI-NXGest.md` + protótipo `RafaCartaxo/site-personality-plus` (commit `42f1adcb`)
 
 **Execução:** fora deste chat — **seguir o protótipo Lovable como referência** (não inventar layout).
 
@@ -81,5 +81,5 @@
 
 ## Referência
 
-- Briefing: `docs/plans/Lovable-Polimento-UI-NXGestao.md`
+- Briefing: `docs/plans/Lovable-Polimento-UI-NXGest.md`
 - Protótipo (referência visual): `RafaCartaxo/site-personality-plus` commit `42f1adcb` → `src/components/nx/preferencias.tsx` · `FecharCaixaModal.tsx` · `AjusteCaixaCard.tsx` · `src/routes/admin.index.tsx` · `src/routes/central.tsx` · `src/components/nx/kit.tsx` · `src/lib/moeda.ts`

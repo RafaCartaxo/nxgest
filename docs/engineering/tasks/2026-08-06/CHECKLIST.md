@@ -41,7 +41,7 @@
 
 **Data:** 06/08/2026
 
-- [x] `docs/plans/Lovable-Cadastro-Rota-NXGestao.md` — briefing consolidado (4 entregáveis): botões (`Button` variantes + vocabulário único) · form de cliente (seções em Card + controle GPS 3 estados, comércio E residencial) · form de contrato (seletor buscável + condições + resumo + edit bloqueado) · rota (StatusBadge GPS, card de ações coerente, RouteProgress em Card, Modal p/ comprovante/promessa)
+- [x] `docs/plans/Lovable-Cadastro-Rota-NXGest.md` — briefing consolidado (4 entregáveis): botões (`Button` variantes + vocabulário único) · form de cliente (seções em Card + controle GPS 3 estados, comércio E residencial) · form de contrato (seletor buscável + condições + resumo + edit bloqueado) · rota (StatusBadge GPS, card de ações coerente, RouteProgress em Card, Modal p/ comprovante/promessa)
 - [x] Regra de ouro: descreve **como deve ficar** (estado-alvo), não o estado atual
 - [x] Seção "não esquecer" com 14 detalhes críticos (GPS 2 endereços, variante success, sem "→", tokens, i18n, mobile-first, etc.)
 

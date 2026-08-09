@@ -14,7 +14,7 @@
 
 ## Objetivo
 
-Padronizar a **área administrativa** com a identidade "Nexus" (PLAN-038/039) e melhorar a **UX de gerenciamento de módulos (whitelabel) e empresas**. Serve de referência de implementação e de briefing para ferramentas de IA (`Lovable-Admin-NXGestao.md`).
+Padronizar a **área administrativa** com a identidade "Nexus" (PLAN-038/039) e melhorar a **UX de gerenciamento de módulos (whitelabel) e empresas**. Serve de referência de implementação e de briefing para ferramentas de IA (`Lovable-Admin-NXGest.md`).
 
 ## Escopo
 
@@ -51,6 +51,6 @@ Padronizar a **área administrativa** com a identidade "Nexus" (PLAN-038/039) e 
 - `npm run build` · `npm run audit:styles` · `npm run docs:audit` · conferência manual (super → Empresas → configurar módulos; admin → Painel/equipe)
 
 ## Referências
-- Briefing para IA: `docs/plans/Lovable-Admin-NXGestao.md`
+- Briefing para IA: `docs/plans/Lovable-Admin-NXGest.md`
 - DS v2 (`engineering/design/02-DESIGN-SYSTEM.md`) · mapa de forms (`engineering/07-FORMS-INPUTS.md`)
 - PLAN-038 (identidade) · PLAN-039 (forms/inputs) · BR-092/093 · PLAN-036/037 (whitelabel)

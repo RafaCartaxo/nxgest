@@ -10,7 +10,7 @@
 
 **Roadmap:** identidade visual "Nexus" (follow-up do PLAN-038/039/040) + whitelabel
 
-**Briefing para IA:** `Lovable-Avatar-NXGestao.md`
+**Briefing para IA:** `Lovable-Avatar-NXGest.md`
 
 ---
 
@@ -74,4 +74,4 @@ Levar o avatar de **iniciais** (hoje só na sidebar, `AppLayout`) para a **opç�
 
 ## Referências
 - `PLAN-038` (tokens/sidebar) · `PLAN-039` (forms/inputs — base do `Field`) · `PLAN-040` (painel admin)
-- `Lovable-Avatar-NXGestao.md` (briefing para IA)
+- `Lovable-Avatar-NXGest.md` (briefing para IA)

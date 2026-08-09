@@ -14,7 +14,7 @@
 
 ## Objetivo
 
-Corrigir o **bug de navegação** (editar o endereço capturado com GPS não reflete no "Navegar") e **modularizar** a lógica de endereço/localização/navegação num único módulo `shared/geo/` — camada de base para o redesign visual dos cadastros (briefing `Lovable-Cadastro-Rota-NXGestao.md`).
+Corrigir o **bug de navegação** (editar o endereço capturado com GPS não reflete no "Navegar") e **modularizar** a lógica de endereço/localização/navegação num único módulo `shared/geo/` — camada de base para o redesign visual dos cadastros (briefing `Lovable-Cadastro-Rota-NXGest.md`).
 
 ## Decisões (confirmadas)
 
@@ -56,6 +56,6 @@ Corrigir o **bug de navegação** (editar o endereço capturado com GPS não ref
 - **06-CASOS-DE-USO**: UC "Cadastro de endereço, localização e navegação".
 
 ## Referências
-- Briefing do redesign visual: `Lovable-Cadastro-Rota-NXGestao.md`
+- Briefing do redesign visual: `Lovable-Cadastro-Rota-NXGest.md`
 - Bug confirmado: `ClienteEdit.tsx:116-119` (reenvia coords antigas) · `maps.ts` (coords > texto) · `UpdateClienteUseCase.ts:47-49` (null limpa)
 - `shared/utils/{maps,geocoding,distance}.ts` · `frontend/src/modules/cliente/`

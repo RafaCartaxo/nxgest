@@ -87,5 +87,5 @@ Ver `docs/engineering/tasks/2026-08-07/ROTA-REGRESSAO-CT.md`.
 ## Referências
 
 - Protótipo Lovable: `src/components/nx/RotaCarrossel.tsx` (repo `RafaCartaxo/site-personality-plus`)
-- Briefing navegação: `docs/plans/Stitch-Nav-AppFirst-NXGestao.md` (concluído)
+- Briefing navegação: `docs/plans/Stitch-Nav-AppFirst-NXGest.md` (concluído)
 - Regras de UI: `docs/engineering/design/UI-COVERAGE.md` · `AGENTS.md`

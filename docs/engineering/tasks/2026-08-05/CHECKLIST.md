@@ -122,8 +122,8 @@
 
 - [x] `docs/plans/PLAN-041-avatar-foto.md` — Avatar com foto (usuário/operador/cliente): componente `Avatar`, `processarImagem` (data URL ≤200px), `usuarios.foto`/`clientes.foto`, `PATCH /api/auth/foto`, mapa de superfícies, nota do `CobrancaCard` (fora de escopo)
 - [x] `docs/plans/PLAN-042-anexos-cliente.md` — Anexos do cliente: tabela `anexos`, `/data/uploads`, `multer` + limites (imagem ≤1MB / PDF ≤5MB / 413 global), endpoints escopados, **backup inclui uploads**
-- [x] `docs/plans/Lovable-Avatar-NXGestao.md` — briefing (padrão do `Lovable-Admin-NXGestao.md`)
-- [x] `docs/plans/Lovable-Anexos-NXGestao.md` — briefing
+- [x] `docs/plans/Lovable-Avatar-NXGest.md` — briefing (padrão do `Lovable-Admin-NXGest.md`)
+- [x] `docs/plans/Lovable-Anexos-NXGest.md` — briefing
 - [x] `docs/plans/README.md` — PLAN-038/039/040/041/042 no registro (status: 038 Concluído · 039 Em andamento · 040 Concluído · 041/042 Planejado)
 - [x] `docs/UPDATES.md` — entrada de registro
 
@@ -172,5 +172,5 @@
 - [x] `audit:ui` estendido: `<select>`/`<textarea>` cru · header inline de modal · `role="tab"` fora do Tabs · `<Modal>` sem `title`
 - [x] Fix de revisão: `Card.Root` da Rota voltou a `variant="collection"` (padding duplo com `p-4` do default)
 - [x] `AGENTS.md` (descrição do audit + convenção de UI)
-- [x] `04-UI-COMPONENTS.md` v1.7 · `06-PRODUCAO.md` (gates) · `Lovable-NXGestao.md` superseded · `UI-COVERAGE.md`
+- [x] `04-UI-COMPONENTS.md` v1.7 · `06-PRODUCAO.md` (gates) · `Lovable-NXGest.md` superseded · `UI-COVERAGE.md`
 - [x] `npm run audit:ui` limpo (105 arquivos)

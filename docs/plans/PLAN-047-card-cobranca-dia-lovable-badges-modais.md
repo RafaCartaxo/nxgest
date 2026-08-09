@@ -73,7 +73,7 @@ Redesenhar o **card de cobrança** (Central, fila `/cobrancas` e Rota) no padrã
 
 - `04-UI-COMPONENTS.md` v1.7 (novos componentes + Modal/StatusBadge/EstadoTela; Bottom Sheet coberto pelo Modal).
 - `06-PRODUCAO.md` (deploy cita os 3 gates `audit:ui/styles/modules`).
-- `Lovable-NXGestao.md` **superseded** (fonte viva = `Lovable-Admin-NXGestao.md` + repo `site-personality-plus`).
+- `Lovable-NXGest.md` **superseded** (fonte viva = `Lovable-Admin-NXGest.md` + repo `site-personality-plus`).
 - `UI-COVERAGE.md` · `docs/plans/README.md` · CHECKLISTs diários.
 
 ## Mudanças de comportamento

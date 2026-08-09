@@ -10,7 +10,7 @@
 
 **Roadmap:** identidade visual "Nexus" + facilitação da operação (follow-up do PLAN-041)
 
-**Briefing para IA:** `Lovable-Anexos-NXGestao.md`
+**Briefing para IA:** `Lovable-Anexos-NXGest.md`
 
 ---
 
@@ -80,4 +80,4 @@ Dar ao cliente uma seção de **anexos** (attachments) — começando pelo **com
 
 ## Referências
 - `PLAN-041` (avatar/foto — base visual) · `PLAN-038/039/040` (identidade)
-- `Lovable-Anexos-NXGestao.md` (briefing para IA)
+- `Lovable-Anexos-NXGest.md` (briefing para IA)

@@ -8,15 +8,15 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 - **PLAN-069-polimento-ui-app.md** → ✅ pronto p/ execução, com seção **"Verificação do protótipo — adaptações e correções"**: dead codes (Skeleton/moeda/etapa erro) + inconsistências (Receber→/caixa, filtro duplicado, Meus dados mock, Desfazer sem ação) + adaptações de stack (sonner→useFeedback, moeda→masks, APIs reais).
 - Execução: fora deste chat, seguindo o protótipo como referência.
 
-Referência: `plans/PLAN-069-polimento-ui-app.md` · `plans/Lovable-Polimento-UI-NXGestao.md`
+Referência: `plans/PLAN-069-polimento-ui-app.md` · `plans/Lovable-Polimento-UI-NXGest.md`
 
 ## 07/08/2026 — Polimento de UI (handoff Lovable)
 
-- **Briefing:** `plans/Lovable-Polimento-UI-NXGestao.md` — estado-alvo app-feel de 4 superfícies: Configurações (preview ao vivo/modo segmentado/paleta com anel/idioma), Fechar caixa na Central (modal com resumo do dia), Ajuste de caixa base do operador (Card + Field/validação inline), Página Admin (hierarquia de KPIs, avatar+badge+status de convite).
+- **Briefing:** `plans/Lovable-Polimento-UI-NXGest.md` — estado-alvo app-feel de 4 superfícies: Configurações (preview ao vivo/modo segmentado/paleta com anel/idioma), Fechar caixa na Central (modal com resumo do dia), Ajuste de caixa base do operador (Card + Field/validação inline), Página Admin (hierarquia de KPIs, avatar+badge+status de convite).
 - **PLAN-069-polimento-ui-app.md** — port-back do protótipo Lovable aprovado (aguardando protótipo).
 - Fluxo: **briefing → Lovable → protótipo aprovado → PLAN-069 executa** (fora deste chat).
 
-Referência: `plans/Lovable-Polimento-UI-NXGestao.md` · `plans/PLAN-069-polimento-ui-app.md`
+Referência: `plans/Lovable-Polimento-UI-NXGest.md` · `plans/PLAN-069-polimento-ui-app.md`
 
 ## 07/08/2026 — Migração de URL + e-mail em produção (handoff)
 
@@ -160,7 +160,7 @@ Referência: [PLAN-061](plans/PLAN-061-empresa-card-suspensao-rebaixamento.md) �
 
 **QA:** `tsc` + `build` + Vite ao vivo (módulos novos transformam sem erro) · audit:ui/styles · docs:audit.
 
-Referência: [PLAN-060](plans/PLAN-060-Stitch-Nav-AppFirst-NXGestao.md) · briefing `plans/Stitch-Nav-AppFirst-NXGestao.md`
+Referência: [PLAN-060](plans/PLAN-060-Stitch-Nav-AppFirst-NXGest.md) · briefing `plans/Stitch-Nav-AppFirst-NXGest.md`
 
 ## 06/08/2026 — Modularização fina: capacidades (BR-104) + guard de desativação (BR-105)
 
@@ -197,7 +197,7 @@ Referência: [PLAN-059](plans/PLAN-059-modularizacao-fina-capacidades-guard.md) 
 - **Rota** entrou na navegação principal (tab bar mobile + sidebar desktop) — a ação diária do operador não fica mais escondida.
 - Removido `Topbar.tsx`; adicionados `BottomTabBar.tsx` e `UserMenu.tsx`.
 
-Referência: [Stitch-Nav-AppFirst-NXGestao](plans/Stitch-Nav-AppFirst-NXGestao.md) · `AppLayout.tsx` · `BottomTabBar.tsx` · `UserMenu.tsx`
+Referência: [Stitch-Nav-AppFirst-NXGest](plans/Stitch-Nav-AppFirst-NXGest.md) · `AppLayout.tsx` · `BottomTabBar.tsx` · `UserMenu.tsx`
 
 ## 06/08/2026 — P11: empresa aceita CPF ou CNPJ · P10: viewer de anexos in-app + modal iOS
 
@@ -287,7 +287,7 @@ Referência: [PLAN-041](plans/PLAN-041-avatar-foto.md) · [PLAN-042](plans/PLAN-
 - **Componentes compartilhados:** `Modal` com assinatura Lovable (`title`/`descricao`/`footer`) + **bottom-sheet mobile** (sweep dos 14 consumidores) · `FieldSelect`/`FieldTextarea` (migrados 3 `<select>`) · `Tabs` · `EstadoTela` unificado · `PageHeader`/`SectionHeader` (icon `size-11 rounded-xl`, título 28px/22px) · `StatusBadge` com **dot** · `Switch` canônico · `ParcelaList` com badges.
 - **Admin:** `ModulosModal` v2 (descrição por módulo, Central sempre ativa, auto-completar deps, cascata-off) · `OperadorDetail` com `ContratoCard list-item`.
 - **Anti-drift:** `npm run audit:ui` estendido (select/textarea cru, header inline de modal, `role="tab"` fora do Tabs, `<Modal>` sem `title`) — gate no deploy.
-- **Docs:** `04-UI-COMPONENTS` v1.7 · `06-PRODUCAO` (gates) · `Lovable-NXGestao` superseded · `UI-COVERAGE` · índice de planos.
+- **Docs:** `04-UI-COMPONENTS` v1.7 · `06-PRODUCAO` (gates) · `Lovable-NXGest` superseded · `UI-COVERAGE` · índice de planos.
 
 **Por quê:** fechar a identidade "Nexus" ponta a ponta (referência `site-personality-plus`), padronizar componentes e travar o padrão contra regressão — em um único plano rastreável.
 
@@ -363,7 +363,7 @@ Referência: [PLAN-043](plans/PLAN-043-polimento-final-identidade-nexus.md)
 **Registrado**
 - **PLAN-041 — Avatar com foto** (usuário/operador/cliente): componente `Avatar` + `processarImagem` (data URL ≤200px) + `usuarios.foto`/`clientes.foto`; self-service + admin define; foto normalizada na entrada.
 - **PLAN-042 — Anexos do cliente** (comprovante de residência): foto ou PDF, limites rígidos (imagem ≤1MB / PDF ≤5MB / `multer` 5MB → 413), `/data/uploads` no volume, endpoints autenticados/escopados (LGPD), **backup passa a incluir uploads**.
-- **Briefings Lovable** no padrão do `Lovable-Admin-NXGestao.md`: `Lovable-Avatar-NXGestao.md` (041) e `Lovable-Anexos-NXGestao.md` (042).
+- **Briefings Lovable** no padrão do `Lovable-Admin-NXGest.md`: `Lovable-Avatar-NXGest.md` (041) e `Lovable-Anexos-NXGest.md` (042).
 - `docs/plans/README.md`: PLAN-038/039/040/041/042 adicionados ao registro (estavam ausentes).
 
 **Status dos planos de identidade:** PLAN-038 Concluído · PLAN-039 Em andamento · PLAN-040 Concluído · PLAN-041/042 Planejado.
@@ -381,7 +381,7 @@ Referência: [PLAN-041](plans/PLAN-041-avatar-foto.md) · [PLAN-042](plans/PLAN-
 - i18n pt/en/es (grupos de módulos, "Requer", "Todos ativos", contagem).
 - **Deploy em prod** do acúmulo (PLAN-038/039 + admin) — `git push` + `deploy.sh` no VPS.
 
-Referência: [PLAN-040](plans/PLAN-040-admin-identidade.md) · [Lovable-Admin-NXGestao](plans/Lovable-Admin-NXGestao.md)
+Referência: [PLAN-040](plans/PLAN-040-admin-identidade.md) · [Lovable-Admin-NXGest](plans/Lovable-Admin-NXGest.md)
 
 ## 04/08/2026 — PLAN-039 · Padronização de Forms & Inputs (FOCO) + mapa
 
@@ -695,7 +695,7 @@ Referência: [PLAN-021](plans/PLAN-021-admin-contexto-kpis.md) · [PLAN-022](pla
 - **`ClienteForm` compartilhado** (extrai ClienteNovo/ClienteEdit duplicados) com o fix embutido.
 - **Smoke +7 CTs (GEO-001..007, total 116/116)** · UC-080 (06) · API-CT-100..105 (07).
 
-**Por quê:** correção de dado (navegador ia pro endereço errado) + camada de base para o redesign visual dos cadastros (briefing `Lovable-Cadastro-Rota-NXGestao.md`).
+**Por quê:** correção de dado (navegador ia pro endereço errado) + camada de base para o redesign visual dos cadastros (briefing `Lovable-Cadastro-Rota-NXGest.md`).
 
 Referência: [PLAN-055](plans/PLAN-055-modulo-localizacao-navegacao-fix-endereco.md)
 

@@ -2,7 +2,7 @@
 
 **Data:** 07/08/2026
 
-> Implementação no app real do briefing `docs/plans/Stitch-Nav-AppFirst-NXGestao.md` (decisões travadas §5, regras §6).
+> Implementação no app real do briefing `docs/plans/Stitch-Nav-AppFirst-NXGest.md` (decisões travadas §5, regras §6).
 
 ## Entregue
 

@@ -14,7 +14,7 @@
 
 ## Objetivo
 
-Reorganizar a **arquitetura de navegação e o fluxo de configurações** do NX Gest para mobile-first (app-like), **sem redesenhar a identidade** (tokens/cores/fontes permanecem). Base: briefing `docs/plans/Stitch-Nav-AppFirst-NXGestao.md`.
+Reorganizar a **arquitetura de navegação e o fluxo de configurações** do NX Gest para mobile-first (app-like), **sem redesenhar a identidade** (tokens/cores/fontes permanecem). Base: briefing `docs/plans/Stitch-Nav-AppFirst-NXGest.md`.
 
 ## Decisões confirmadas (travadas no briefing §5)
 
@@ -41,7 +41,7 @@ Reorganizar a **arquitetura de navegação e o fluxo de configurações** do NX 
 ## Referências
 
 - `frontend/src/shared/layout/{BottomTabBar,UserMenu}.tsx` · `AppLayout.tsx` · `index.css` (`.pb-safe`)
-- `docs/plans/Stitch-Nav-AppFirst-NXGestao.md` (briefing) · `04-UI-COMPONENTS.md` · `UI-COVERAGE.md`
+- `docs/plans/Stitch-Nav-AppFirst-NXGest.md` (briefing) · `04-UI-COMPONENTS.md` · `UI-COVERAGE.md`
 - Precedente de padrão de plano: PLAN-056 (port do material Lovable)
 
 ## Fora de escopo / próximos passos
