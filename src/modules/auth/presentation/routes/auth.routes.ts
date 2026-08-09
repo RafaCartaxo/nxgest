@@ -4,6 +4,7 @@ import { AuthRepository } from "../../infrastructure/repositories/auth.repositor
 import { authMiddleware } from "../../../../shared/middleware/auth.middleware.js"
 import rateLimit, { ipKeyGenerator } from "express-rate-limit"
 import { clientIp } from "../../../../shared/utils/clientIp.js"
+import { envNumber } from "../../../../shared/utils/env.js"
 
 const router = Router()
 const repository = new AuthRepository()
@@ -14,7 +15,7 @@ const ipDe = (req: Parameters<typeof clientIp>[0]) => ipKeyGenerator(clientIp(re
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: Number(process.env.LOGIN_RATE_LIMIT_MAX ?? 10),
+  max: envNumber("LOGIN_RATE_LIMIT_MAX", 10),
   keyGenerator: ipDe,
   message: { code: "RATE_LIMIT", message: "Muitas tentativas. Tente novamente em 15 minutos." },
   standardHeaders: true,

@@ -1,5 +1,6 @@
 import rateLimit, { ipKeyGenerator } from "express-rate-limit"
 import { clientIp } from "../utils/clientIp.js"
+import { envNumber } from "../utils/env.js"
 
 /**
  * Rate limit por usuário em rotas autenticadas (PLAN-066 · CT D-03).
@@ -8,7 +9,7 @@ import { clientIp } from "../utils/clientIp.js"
  */
 export const userRateLimit = rateLimit({
   windowMs: 60_000,
-  max: Number(process.env.USER_RATE_LIMIT_MAX ?? 600),
+  max: envNumber("USER_RATE_LIMIT_MAX", 600),
   keyGenerator: (req) => `u:${req.userId ?? ipKeyGenerator(clientIp(req))}`,
   standardHeaders: true,
   legacyHeaders: false,
