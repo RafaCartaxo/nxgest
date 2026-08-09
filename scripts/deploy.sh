@@ -11,11 +11,11 @@ fi
 # Backup pré-deploy: snapshot do banco antes de reconstruir (cron de 12h não é
 # suficiente — cada implementação ganha um ponto de restauração). Script vive em
 # /opt/scripts no VPS; se ausente (ex.: rodando fora do VPS), segue sem backup.
-if [ -x /opt/scripts/backup-nxgestao.sh ]; then
+if [ -x /opt/scripts/backup-nxgest.sh ]; then
   echo "==> Backup pré-deploy"
-  /opt/scripts/backup-nxgestao.sh
+  /opt/scripts/backup-nxgest.sh
 else
-  echo "!! Script de backup não encontrado (/opt/scripts/backup-nxgestao.sh) — deploy sem snapshot"
+  echo "!! Script de backup não encontrado (/opt/scripts/backup-nxgest.sh) — deploy sem snapshot"
 fi
 
 # Gate de UI (PLAN-044/045): nenhum padrão legado/anti-drift nem manifest incoerente

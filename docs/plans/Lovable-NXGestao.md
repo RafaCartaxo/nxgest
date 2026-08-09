@@ -1,4 +1,4 @@
-# NX Gestão — Redesign de Identidade Visual (briefing para IA)
+# NX Gest — Redesign de Identidade Visual (briefing para IA)
 
 > [!warning] **SUPERSEDED — breve desatualizado**
 > Este briefing é a **primeira versão** da identidade (pré-redesign "Nexus" e anterior à referência de UI viva).
@@ -9,7 +9,7 @@
 
 ## 1. O produto
 
-**NX Gestão** ("Nexus Gestão") é uma plataforma de **gestão multi-negócio (whitelabel)**.
+**NX Gest** ("Nexus Gestão") é uma plataforma de **gestão multi-negócio (whitelabel)**.
 Hoje atende **cobrança em campo** (microcrédito/financeira popular): o operador coleta
 pagamentos na rua, pelo celular. Amanhã pode atender **outros segmentos** (associados,
 mensalidades, pedidos, etc.). Por isso a identidade precisa ser **agnóstica a vertical**.
@@ -75,7 +75,7 @@ Layout atual: navbar de **topo** (abas horizontais) + conteúdo `max-w-2xl`.
 3. **Tipografia:** manter Inter ou propor um par (títulos × corpo) coeso.
 4. **Estilo de componentes** com personalidade de marca — cards, KPIs, badges, botões,
    inputs — sem perder leitura rápida no celular.
-5. **Login/landing redesenhado**: logo grande + "NX Gestão" + tagline + card de acesso.
+5. **Login/landing redesenhado**: logo grande + "NX Gest" + tagline + card de acesso.
 6. **Navbar lateral (sidebar)**:
    - **Desktop:** painel fixo à esquerda — **logo no topo**, navegação vertical
      (Central, Clientes, Contratos, Caixa; + Admin/Empresas por papel),

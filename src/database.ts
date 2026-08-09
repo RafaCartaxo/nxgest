@@ -735,7 +735,7 @@ export async function createTables() {
   }
 
   // Seed: super_admin (se ainda nao existir)
-  const superEmail = process.env.SUPER_ADMIN_EMAIL ?? "super@nxgestao.com"
+  const superEmail = process.env.SUPER_ADMIN_EMAIL ?? "super@nxgest.com"
   const superPassword = process.env.SUPER_ADMIN_DEFAULT_PASSWORD ?? "super123"
   const superExists = sqlite.prepare("SELECT id FROM usuarios WHERE email = ?").get(superEmail)
   if (!superExists) {

@@ -37,7 +37,7 @@ Transformar o sistema de single-tenant para multi-tenant, introduzindo:
 | Isolamento entre admins | **Inexistente** — admin vê TUDO de TODOS | Filtrar admin queries por `empresaId` |
 | Conceito de empresa/cliente | **Inexistente** | Tabela `empresas` + `empresaId` na tabela `usuarios` |
 | Criação de admins | Admin cria qualquer usuário | Super_admin cria empresa + admin vinculado |
-| Seed super_admin | **Inexistente** | `super@nxgestao.com` (super_admin) + empresa "Desenvolvimento" para admin existente |
+| Seed super_admin | **Inexistente** | `super@nxgest.com` (super_admin) + empresa "Desenvolvimento" para admin existente |
 | Middleware admin | `role === "admin"` | Aceitar também `super_admin` |
 | `GET /api/auth/me` | Retorna `{ id, nome, email, role }` | Adicionar `empresaId`, `empresaNome` |
 
@@ -63,7 +63,7 @@ Transformar o sistema de single-tenant para multi-tenant, introduzindo:
 | Criação de empresa | Atômica: INSERT empresa + INSERT admin na mesma transação | Consistência — sem empresa sem admin |
 | `adminMiddleware` | Passa a aceitar `admin` E `super_admin` | Super_admin usa AdminPage para drill-down |
 | `superAdminMiddleware` | `role === "super_admin"` | Rotas de gestão de empresas são exclusivas |
-| Seed | `super@nxgestao.com` com senha via `SUPER_ADMIN_EMAIL` + `SUPER_ADMIN_DEFAULT_PASSWORD` | Separado do admin de desenvolvimento |
+| Seed | `super@nxgest.com` com senha via `SUPER_ADMIN_EMAIL` + `SUPER_ADMIN_DEFAULT_PASSWORD` | Separado do admin de desenvolvimento |
 | Operadores herdam `empresaId` | Do admin que os criou | Transparente — admin não escolhe empresa |
 | Rate limiting | `express-rate-limit` no login apenas | Proteção mínima; endpoints operacionais já exigem token |
 | Validação no middleware | `auth.middleware` consulta banco após decodificar JWT | Bloqueia tokens de usuários removidos imediatamente |
@@ -320,7 +320,7 @@ try {
 
 ```typescript
 // Super admin
-const superEmail = process.env.SUPER_ADMIN_EMAIL ?? "super@nxgestao.com"
+const superEmail = process.env.SUPER_ADMIN_EMAIL ?? "super@nxgest.com"
 const superPassword = process.env.SUPER_ADMIN_DEFAULT_PASSWORD ?? "super123"
 
 if (!sqlite.prepare("SELECT id FROM usuarios WHERE email = ?").get(superEmail)) {
@@ -357,7 +357,7 @@ if (adminRow) {
 
 ```env
 # Super Admin (seed inicial)
-SUPER_ADMIN_EMAIL=super@nxgestao.com
+SUPER_ADMIN_EMAIL=super@nxgest.com
 SUPER_ADMIN_DEFAULT_PASSWORD=super123
 ```
 
@@ -366,7 +366,7 @@ SUPER_ADMIN_DEFAULT_PASSWORD=super123
 - [x] Tabela `empresas` criada
 - [x] Coluna `empresaId` adicionada em `usuarios`
 - [x] Schema Drizzle atualizado com `empresas` + `empresaId`
-- [x] Seed: `super@nxgestao.com` (super_admin, empresaId=null)
+- [x] Seed: `super@nxgest.com` (super_admin, empresaId=null)
 - [x] Seed: empresa "Desenvolvimento" criada
 - [x] Seed: `admin@cobranca.com` vinculado à empresa Desenvolvimento
 - [x] `.env.example` com novas vars do super_admin
@@ -958,7 +958,7 @@ Zero coluna empresaId nas 10 tabelas operacionais.
 - [x] `GET /api/auth/me` filtra soft-delete e retorna `empresaId` + `empresaNome`
 - [x] Tabela `empresas` criada e populada no seed
 - [x] Coluna `empresaId` em `usuarios` com backfill
-- [x] `super@nxgestao.com` funcional como super_admin
+- [x] `super@nxgest.com` funcional como super_admin
 - [x] `empresaId` no JWT, no `req`, no `AuthUser`
 - [x] `adminMiddleware` aceita `admin` e `super_admin`
 - [x] `superAdminMiddleware` restringe rotas de empresa

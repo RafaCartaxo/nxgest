@@ -1,8 +1,8 @@
-# NX Gestão — Painel Admin: identidade + UX (briefing para IA)
+# NX Gest — Painel Admin: identidade + UX (briefing para IA)
 
 ## 1. Contexto do produto
 
-**NX Gestão** ("Nexus Gestão") — plataforma de gestão multi-negócio (whitelabel).
+**NX Gest** ("Nexus Gestão") — plataforma de gestão multi-negócio (whitelabel).
 O frontend é **React + Tailwind v3**, mobile-first, identidade 100% dirigida por **CSS variables**.
 Identidade visual "Nexus" (PLAN-038) já implementada: tokens OKLCH (`--color-*`, `--brand-*`,
 gradientes `--gradient-page/brand/text`), fonte **Sora** nos títulos + Inter no corpo, sidebar

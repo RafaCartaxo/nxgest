@@ -23,7 +23,7 @@ export async function enviarAnexo(clienteId: string, file: File, tipo?: TipoAnex
   form.append("arquivo", file)
   if (tipo) form.append("tipo", tipo)
 
-  const token = localStorage.getItem("nxgestao_token")
+  const token = localStorage.getItem("nxgest_token")
   const response = await fetch(`/api${BASE(clienteId)}`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -48,7 +48,7 @@ export async function excluirAnexo(clienteId: string, anexoId: string): Promise<
  * O Blob URL é criado e revogado pelo componente que exibe (ciclo de vida controlado).
  */
 export async function baixarAnexoBlob(clienteId: string, anexoId: string): Promise<Blob> {
-  const token = localStorage.getItem("nxgestao_token")
+  const token = localStorage.getItem("nxgest_token")
   const response = await fetch(`/api${BASE(clienteId)}/${anexoId}/file`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })

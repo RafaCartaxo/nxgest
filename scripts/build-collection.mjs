@@ -257,11 +257,11 @@ const collection = {
     _postman_id: "0f5a4a5c-9c6e-4b3a-8f1d-2e5c7a9b0d1e",
     name: "Gestão de Cobranças — API",
     description:
-      "Collection espelho da base de validação docs/product/07-CASOS-DE-USO-API.md.\nVariáveis: baseUrl (ex.: https://nxgestao.duckdns.org ou http://localhost:3001) e token (Bearer).\nGerenciar: node scripts/build-collection.mjs.",
+      "Collection espelho da base de validação docs/product/07-CASOS-DE-USO-API.md.\nVariáveis: baseUrl (ex.: https://nxgest.com.br ou http://localhost:3001) e token (Bearer).\nGerenciar: node scripts/build-collection.mjs.",
     schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
   },
   variable: [
-    { key: "baseUrl", value: "https://nxgestao.duckdns.org", type: "string" },
+    { key: "baseUrl", value: "https://nxgest.com.br", type: "string" },
     { key: "token", value: "", type: "string" },
   ],
   item: endpoints,

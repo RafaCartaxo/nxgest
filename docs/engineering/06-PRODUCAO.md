@@ -4,7 +4,7 @@
 
 **Criado:** 31/07/2026
 
-**Projeto:** NX Gestão
+**Projeto:** NX Gest
 
 **Documentos relacionados:** `plans/PLAN-018-deploy.md` (deploy), `foundation/ADR-004-Infra-Deploy.md` (decisão de infra)
 
@@ -19,10 +19,10 @@
 | Provedor | VPS Hosting Service (`vpshostingservice.co`) |
 | SO | AlmaLinux 8.10 |
 | Docker | 26.1.3 + Compose v2.27.0 |
-| Repo no VPS | `/opt/nxgestao` (clone do GitHub `RafaCartaxo/nxgestao`) |
-| Arquivo `.env` | `/opt/nxgestao/.env` (chmod 600, não versionado) |
-| Banco | SQLite em volume `nxgestao_nxgestao_data`, montado em `/data/gestao.db` |
-| Proxy + HTTPS | Caddy (container `nxgestao-caddy-1`), Let's Encrypt automático |
+| Repo no VPS | `/opt/nxgest` (clone do GitHub `RafaCartaxo/nxgest`) |
+| Arquivo `.env` | `/opt/nxgest/.env` (chmod 600, não versionado) |
+| Banco | SQLite em volume `nxgest_nxgest_data`, montado em `/data/gestao.db` |
+| Proxy + HTTPS | Caddy (container `nxgest-caddy-1`), Let's Encrypt automático |
 
 > **Alerta de infra:** o provedor **não oferece snapshots/backups**. A única proteção de dados é o backup cron (seção 5). Cópia off-site é responsabilidade manual.
 
@@ -47,10 +47,10 @@ As credenciais **não ficam no repositório**. Localização dos valores:
 
 | Credencial | Onde está | Nota |
 |-----------|-----------|------|
-| Admin default (`admin@cobranca.com`) | `.env` no VPS (`ADMIN_DEFAULT_PASSWORD`) + cópia local em `~/.config/nxgestao/vps-admin-pw.txt` | Senha gerada no deploy |
-| Thalia N Medina (`thalianietomedina@hotmail.com`) | Cópia local `~/.config/nxgestao/thaliana-pw.txt` | Criada via admin em 31/07/2026 |
+| Admin default (`admin@cobranca.com`) | `.env` no VPS (`ADMIN_DEFAULT_PASSWORD`) + cópia local em `~/.config/nxgest/vps-admin-pw.txt` | Senha gerada no deploy |
+| Thalia N Medina (`thalianietomedina@hotmail.com`) | Cópia local `~/.config/nxgest/thaliana-pw.txt` | Criada via admin em 31/07/2026 |
 | `JWT_SECRET` | `.env` no VPS | Gerado com `openssl rand -hex 32` |
-| Senha root do VPS | Cópia local `~/.config/nxgestao/vps-root-pw.txt` | Trocada no primeiro acesso; SSH usa chave |
+| Senha root do VPS | Cópia local `~/.config/nxgest/vps-root-pw.txt` | Trocada no primeiro acesso; SSH usa chave |
 | Usuários do sistema | Criados via `POST /api/admin/operadores` (role `admin`/`operator`) | Ver PLAN-017 |
 
 > **Regra:** nunca versionar `.env`, senhas ou tokens. Trocar senha via `chpasswd` se vazar em chat/log.
@@ -59,12 +59,12 @@ As credenciais **não ficam no repositório**. Localização dos valores:
 
 | Serviço | Conta | Como acessar | Detalhes |
 |---------|-------|--------------|----------|
-| Painel VPS (`vpshostingservice.co`) | `rafael.cartaxo@hotmail.com` | Login no site do provedor | Senha não registrada no repo — ver `~/.config/nxgestao/ACESSOS.md` |
+| Painel VPS (`vpshostingservice.co`) | `rafael.cartaxo@hotmail.com` | Login no site do provedor | Senha não registrada no repo — ver `~/.config/nxgest/ACESSOS.md` |
 | DuckDNS (`nxgestao.duckdns.org`) | `rafael.cartaxo@hotmail.com` | Login via Google (OAuth) | Domínio provisório; migrar para `.com.br` |
-| GitHub | `RafaCartaxo` | `gh` CLI (keyring) | Repo `RafaCartaxo/nxgestao` |
+| GitHub | `RafaCartaxo` | `gh` CLI (keyring) | Repo `RafaCartaxo/nxgest` |
 | VPS SSH | `root` | Chave ed25519 local | Senha desabilitada (`PasswordAuthentication no`) |
 
-> Todos os valores de senha externos ficam em **`~/.config/nxgestao/ACESSOS.md`** (chmod 600, fora do repo).
+> Todos os valores de senha externos ficam em **`~/.config/nxgest/ACESSOS.md`** (chmod 600, fora do repo).
 
 ---
 
@@ -72,20 +72,20 @@ As credenciais **não ficam no repositório**. Localização dos valores:
 
 ```bash
 # No VPS
-cd /opt/nxgestao
+cd /opt/nxgest
 git pull                      # puxa o novo código (senha/token via chave SSH do GitHub, ou https)
 ./scripts/deploy.sh           # build + up -d + prune de imagens órfãs
 ```
 
 O `scripts/deploy.sh`:
 1. Exige `.env` presente (senão aborta)
-2. **Backup pré-deploy** — chama `/opt/scripts/backup-nxgestao.sh` (snapshot do banco antes do build; se o script estiver ausente, avisa e segue)
+2. **Backup pré-deploy** — chama `/opt/scripts/backup-nxgest.sh` (snapshot do banco antes do build; se o script estiver ausente, avisa e segue)
 3. **Gates de UI** — roda `audit:ui`, `audit:styles` e `audit:modules` via `docker run node:20-slim` (o host não tem node no PATH); **aborta o deploy se qualquer gate falhar**
 4. `docker compose -f docker-compose.prod.yml build app`
 5. `docker compose -f docker-compose.prod.yml up -d`
 6. `docker image prune -f`
 
-**Dados:** o volume `nxgestao_nxgestao_data` sobrevive a builds e `up`/`down` — o banco não é recriado.
+**Dados:** o volume `nxgest_nxgest_data` sobrevive a builds e `up`/`down` — o banco não é recriado.
 
 **Validação pós-deploy:**
 
@@ -108,7 +108,7 @@ O banco roda em **WAL mode**: os dados vivos ficam no arquivo `.db-wal` (~1MB) e
 
 | Item | Valor |
 |------|-------|
-| Script | `/opt/scripts/backup-nxgestao.sh` (fora do repo) |
+| Script | `/opt/scripts/backup-nxgest.sh` (fora do repo) |
 | Cron | `0 */12 * * *` (a cada 12h) |
 | Destino | `/opt/backups/gestao-YYYYMMDD-HHMMSS.db` + `uploads-YYYYMMDD-HHMMSS.tar.gz` |
 | Retenção | 14 dias (limpeza automática no script) |
@@ -125,7 +125,7 @@ Script (para referência/recriação):
 set -euo pipefail
 STAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_DIR=/opt/backups
-CONTAINER=nxgestao-app-1
+CONTAINER=nxgest-app-1
 DB_PATH=/data/gestao.db
 TMP_DB=/data/backup-$STAMP.db
 OUT=$BACKUP_DIR/gestao-$STAMP.db
@@ -161,8 +161,8 @@ ls -lh $BACKUP_DIR | tail -4
 ### 5.2 — Cópia off-site (manual, recomendado ao menos semanal)
 
 ```bash
-scp root@172.245.152.223:/opt/backups/gestao-<DATA>.db ~/.config/nxgestao/backups/backup-offsite-gestao.db
-scp root@172.245.152.223:/opt/backups/uploads-<DATA>.tar.gz ~/.config/nxgestao/backups/backup-offsite-uploads.tar.gz
+scp root@172.245.152.223:/opt/backups/gestao-<DATA>.db ~/.config/nxgest/backups/backup-offsite-gestao.db
+scp root@172.245.152.223:/opt/backups/uploads-<DATA>.tar.gz ~/.config/nxgest/backups/backup-offsite-uploads.tar.gz
 ```
 
 > **Corrigido em 02/08/2026:** a cópia off-site anterior estava **vazia** (4KB, gerada do `gestao.db` cru sem WAL). Substituída pelo backup consistente (`gestao-20260802-115822.db`, 241KB, 5 usuários). O `scp` deve sempre baixar um backup **válido** de `/opt/backups/` (nunca o `gestao.db` cru do volume).
@@ -172,12 +172,12 @@ scp root@172.245.152.223:/opt/backups/uploads-<DATA>.tar.gz ~/.config/nxgestao/b
 > **PLAN-066 (P1): criptografar a cópia off-site** — contém dados pessoais/financeiros (LGPD). Usar `age` ou `gpg` simétrico:
 > ```bash
 > # gpg (simétrico, senha forte) — na origem e no destino
-> gpg --symmetric --cipher-algo AES256 --output backup-offsite-gestao.db.gpg ~/.config/nxgestao/backups/backup-offsite-gestao.db
-> rm ~/.config/nxgestao/backups/backup-offsite-gestao.db   # só a versão cifrada fica off-site
+> gpg --symmetric --cipher-algo AES256 --output backup-offsite-gestao.db.gpg ~/.config/nxgest/backups/backup-offsite-gestao.db
+> rm ~/.config/nxgest/backups/backup-offsite-gestao.db   # só a versão cifrada fica off-site
 > # restaurar:
 > gpg --decrypt backup-offsite-gestao.db.gpg > gestao-<DATA>.db
 > ```
-> A senha da cifra vai em `~/.config/nxgestao/ACESSOS.md` (fora do repo). A cópia **sem** cifra NÃO deve permanecer em armazenamento externo.
+> A senha da cifra vai em `~/.config/nxgest/ACESSOS.md` (fora do repo). A cópia **sem** cifra NÃO deve permanecer em armazenamento externo.
 >
 > Se o VPS for perdido por completo (falha de hardware/provedor), a cópia off-site é a única via de recuperação.
 
@@ -185,15 +185,15 @@ scp root@172.245.152.223:/opt/backups/uploads-<DATA>.tar.gz ~/.config/nxgestao/b
 
 ```bash
 # 1. Parar o app (mantém o volume)
-cd /opt/nxgestao
+cd /opt/nxgest
 docker compose -f docker-compose.prod.yml stop app
 
 # 2. Copiar o backup para dentro do volume
-docker cp ./gestao-<DATA>.db nxgestao-app-1:/data/gestao.db
+docker cp ./gestao-<DATA>.db nxgest-app-1:/data/gestao.db
 
 # 3. Restaurar anexos (PLAN-042), se houver uploads-<DATA>.tar.gz
-docker cp ./uploads-<DATA>.tar.gz nxgestao-app-1:/data/uploads-<DATA>.tar.gz
-docker exec nxgestao-app-1 sh -c "cd /data && rm -rf uploads && tar xzf uploads-<DATA>.tar.gz && rm -f uploads-<DATA>.tar.gz"
+docker cp ./uploads-<DATA>.tar.gz nxgest-app-1:/data/uploads-<DATA>.tar.gz
+docker exec nxgest-app-1 sh -c "cd /data && rm -rf uploads && tar xzf uploads-<DATA>.tar.gz && rm -f uploads-<DATA>.tar.gz"
 
 # 4. Subir de novo
 docker compose -f docker-compose.prod.yml start app
@@ -202,7 +202,7 @@ docker compose -f docker-compose.prod.yml start app
 curl -s https://nxgestao.duckdns.org/api/health
 ```
 
-> **Cuidado:** `docker cp` para um arquivo dentro de um volume Docker aponta para a camada do container; o caminho confiável do volume é `/var/lib/docker/volumes/nxgestao_nxgestao_data/_data/`. Em dúvida, restaurar copiando direto nesse diretório com o container parado.
+> **Cuidado:** `docker cp` para um arquivo dentro de um volume Docker aponta para a camada do container; o caminho confiável do volume é `/var/lib/docker/volumes/nxgest_nxgest_data/_data/`. Em dúvida, restaurar copiando direto nesse diretório com o container parado.
 
 ---
 
@@ -210,9 +210,9 @@ curl -s https://nxgestao.duckdns.org/api/health
 
 | O que | Comando |
 |-------|---------|
-| Logs do app (tempo real) | `docker compose -f /opt/nxgestao/docker-compose.prod.yml logs -f app` |
-| Logs do Caddy | `docker compose -f /opt/nxgestao/docker-compose.prod.yml logs -f caddy` |
-| Status dos containers | `docker compose -f /opt/nxgestao/docker-compose.prod.yml ps` |
+| Logs do app (tempo real) | `docker compose -f /opt/nxgest/docker-compose.prod.yml logs -f app` |
+| Logs do Caddy | `docker compose -f /opt/nxgest/docker-compose.prod.yml logs -f caddy` |
+| Status dos containers | `docker compose -f /opt/nxgest/docker-compose.prod.yml ps` |
 | CPU/memória | `docker stats` |
 | Disco | `df -h` |
 | Processos | `docker ps` |
@@ -224,7 +224,7 @@ curl -s https://nxgestao.duckdns.org/api/health
 
 ```bash
 # Opção 1 — reverter o código para um commit anterior e redeployar
-cd /opt/nxgestao
+cd /opt/nxgest
 git checkout <commit-anterior> -- src/ frontend/
 ./scripts/deploy.sh
 
@@ -232,7 +232,7 @@ git checkout <commit-anterior> -- src/ frontend/
 docker compose -f docker-compose.prod.yml restart app
 
 # Opção 3 — reconstruir do zero (sem perder dados — volume persiste)
-cd /opt/nxgestao
+cd /opt/nxgest
 git reset --hard <commit-bom>   # cuidado: descarta mudanças locais no repo
 ./scripts/deploy.sh
 ```

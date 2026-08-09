@@ -431,7 +431,7 @@
     "erroAtivar": "Error al activar la cuenta.",
     "ativarFeito": "¡Cuenta activada!",
     "ativarFeitoDetail": "Tu acceso está listo. Inicia sesión para comenzar.",
-    "interesse": "¿Interesado en usar NX Gestão?",
+    "interesse": "¿Interesado en usar NX Gest?",
     "queroConhecerLink": "Quiero conocer"
   },
   "perfil": {
@@ -723,7 +723,7 @@
   "lead": {
     "navLeads": "Leads",
     "queroConhecerTitle": "Quiero conocerte",
-    "queroConhecerSubtitle": "Cuéntanos cómo NX Gestão puede ayudar a tu negocio de cobranzas.",
+    "queroConhecerSubtitle": "Cuéntanos cómo NX Gest puede ayudar a tu negocio de cobranzas.",
     "nomeResponsavel": "Nombre del responsable",
     "empresa": "Empresa",
     "email": "Correo electrónico",

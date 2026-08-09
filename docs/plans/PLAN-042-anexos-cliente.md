@@ -23,11 +23,11 @@ Dar ao cliente uma seção de **anexos** (attachments) — começando pelo **com
 | # | Entrega | Prioridade |
 |---|---------|------------|
 | 1 | Tabela `anexos` (`id, clienteId, tipo, nomeOriginal, mime, tamanho, caminho, criadoPor, createdAt`) + migração boot | Alta |
-| 2 | Armazenamento em arquivo: `/data/uploads/<clienteId>/` (dentro do volume `nxgestao_data`) | Alta |
+| 2 | Armazenamento em arquivo: `/data/uploads/<clienteId>/` (dentro do volume `nxgest_data`) | Alta |
 | 3 | Upload multipart (`multer`) + **validação em duas camadas** (limites abaixo) | Alta |
 | 4 | Endpoints autenticados/escopados: `POST`/`GET /api/clientes/:id/anexos` · `GET .../anexos/:anexoId/file` · `DELETE .../anexos/:anexoId` | Alta |
 | 5 | Seção **Anexos** no `ClienteDetail` (upload com compressão de imagem no front, PDF direto; prévia; lista; abrir) | Alta |
-| 6 | **Backup inclui `/data/uploads`** (`backup-nxgestao.sh` + `deploy.sh`) | **Crítica** |
+| 6 | **Backup inclui `/data/uploads`** (`backup-nxgest.sh` + `deploy.sh`) | **Crítica** |
 | 7 | i18n + 02-API + 07 (CTs) + BR + UPDATES | Média |
 
 ## Decisões de design
@@ -36,7 +36,7 @@ Dar ao cliente uma seção de **anexos** (attachments) — começando pelo **com
 |---------|---------|--------|
 | Formato | Aceita **imagem (foto)** e **PDF** | Cliente manda foto pelo celular OU PDF — facilitar, sem distinguir pro usuário |
 | Pipeline | **Imagem**: front comprime (canvas ≤1600px, JPEG/WebP) antes de enviar · **PDF**: envia como está | Navegador faz o trabalho de imagem (sem `sharp`); servidor valida |
-| Armazenamento | Arquivo em `/data/uploads/<clienteId>/` + metadados em `anexos` | Volume `nxgestao_data` já monta `/data` → **sem mudança no compose**; `Dockerfile` cria a pasta |
+| Armazenamento | Arquivo em `/data/uploads/<clienteId>/` + metadados em `anexos` | Volume `nxgest_data` já monta `/data` → **sem mudança no compose**; `Dockerfile` cria a pasta |
 | Entrega | `GET .../anexos/:anexoId/file` **autenticado e escopado** (empresa/usuário) | Dado sensível (LGPD) — nunca estático público |
 | Limites | Imagem ≤**1MB** (pós-compressão) · PDF ≤**5MB** · **guarda global `multer` 5MB** (413 antes de processar) | Comprovante simples; gigante não faz sentido no MVP |
 | Validação | Servidor valida **MIME real** (JPEG/PNG/WebP/PDF) + tamanho por tipo (`ANEXO_LIMITE` 413/422) | Não confia no front |
@@ -71,7 +71,7 @@ Dar ao cliente uma seção de **anexos** (attachments) — começando pelo **com
 ## ⚠️ Ajustes obrigatórios de infra (quando implementar)
 - `Dockerfile`: criar `/data/uploads` + chown (padrão do `/data`)
 - `package.json`: adicionar `multer`
-- **Backup**: estender `/opt/scripts/backup-nxgestao.sh` (VPS) e o `scripts/deploy.sh` para incluir `/data/uploads` — hoje só o `gestao.db` é copiado; anexo perdido no desastre = dado perdido
+- **Backup**: estender `/opt/scripts/backup-nxgest.sh` (VPS) e o `scripts/deploy.sh` para incluir `/data/uploads` — hoje só o `gestao.db` é copiado; anexo perdido no desastre = dado perdido
 - `06-PRODUCAO.md`: seção de backup atualizada
 
 ## Validação (quando implementar)

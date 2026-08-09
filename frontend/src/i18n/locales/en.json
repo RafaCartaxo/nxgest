@@ -431,7 +431,7 @@
     "erroAtivar": "Error activating the account.",
     "ativarFeito": "Account activated!",
     "ativarFeitoDetail": "Your access is ready. Sign in to get started.",
-    "interesse": "Interested in using NX Gestão?",
+    "interesse": "Interested in using NX Gest?",
     "queroConhecerLink": "Get to know us"
   },
   "perfil": {
@@ -723,7 +723,7 @@
   "lead": {
     "navLeads": "Leads",
     "queroConhecerTitle": "Get to know us",
-    "queroConhecerSubtitle": "Tell us how NX Gestão can help your collection business.",
+    "queroConhecerSubtitle": "Tell us how NX Gest can help your collection business.",
     "nomeResponsavel": "Responsible name",
     "empresa": "Company",
     "email": "Email",

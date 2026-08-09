@@ -4,9 +4,9 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 
 ## O projeto
 
-**NX Gestão** (`nxgestao`) — sistema de gestão de cobranças em campo (credores, contratos, parcelas, pagamentos, caixa). Backend Node.js + Express + TypeScript + SQLite (better-sqlite3 + Drizzle); frontend React + Vite + TailwindCSS.
+**NX Gest** (`nxgest`) — sistema de gestão de cobranças em campo (credores, contratos, parcelas, pagamentos, caixa). Backend Node.js + Express + TypeScript + SQLite (better-sqlite3 + Drizzle); frontend React + Vite + TailwindCSS.
 
-**Repo GitHub:** `RafaCartaxo/nxgestao`
+**Repo GitHub:** `RafaCartaxo/nxgest`
 
 ## Documentação — comece por aqui
 
@@ -23,9 +23,9 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 ## Segurança — regras obrigatórias
 
 - **Nunca versionar** `.env`, senhas, tokens ou segredos.
-- **Credenciais e acessos externos ficam fora do repo**, em `~/.config/nxgestao/`
+- **Credenciais e acessos externos ficam fora do repo**, em `~/.config/nxgest/`
   (ver `ACESSOS.md` lá — painel VPS, DuckDNS, GitHub, senhas do sistema).
-- O `.env` de produção vive no VPS (`/opt/nxgestao/.env`, chmod 600) — nunca copiar pro repo.
+- O `.env` de produção vive no VPS (`/opt/nxgest/.env`, chmod 600) — nunca copiar pro repo.
 - `JWT_SECRET` é obrigatório em produção (app falha ao iniciar sem ele).
 
 ## Produção

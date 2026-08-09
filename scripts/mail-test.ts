@@ -10,9 +10,9 @@ if (!para) {
 const mailer = criarMailer()
 await mailer.send({
   to: para,
-  subject: "NX Gestão — teste de envio",
-  html: "<p>E-mail de teste do NX Gestão. Se você recebeu isto, o Resend está funcionando.</p>",
-  text: "E-mail de teste do NX Gestão. Se você recebeu isto, o Resend está funcionando.",
+  subject: "NX Gest — teste de envio",
+  html: "<p>E-mail de teste do NX Gest. Se você recebeu isto, o Resend está funcionando.</p>",
+  text: "E-mail de teste do NX Gest. Se você recebeu isto, o Resend está funcionando.",
 })
 
 console.log(`E-mail de teste enviado para ${para}`)

@@ -1,4 +1,4 @@
-# NX Gestão — Cadastro (Cliente/Contrato) + Rota + Botões: identidade e UX (briefing para IA/Lovable)
+# NX Gest — Cadastro (Cliente/Contrato) + Rota + Botões: identidade e UX (briefing para IA/Lovable)
 
 **Versão:** 1.0 — 06/08/2026
 
@@ -10,7 +10,7 @@
 
 ## 1. Contexto do produto
 
-**NX Gestão** ("Nexus Gestão") — plataforma de gestão de cobranças em campo (microcrédito popular): o **operador** vai até o cliente cobrar parcelas pelo celular. Mobile-first é obrigatório (uso em pé, na rua).
+**NX Gest** ("Nexus Gestão") — plataforma de gestão de cobranças em campo (microcrédito popular): o **operador** vai até o cliente cobrar parcelas pelo celular. Mobile-first é obrigatório (uso em pé, na rua).
 
 - **Frontend:** React + Tailwind v3, identidade 100% dirigida por **CSS variables** (`--color-*`, `--brand-*`, gradientes `--gradient-*`). Fonte **Sora** (títulos, `font-display`) + Inter (corpo).
 - **Layout:** sidebar lateral (`AppLayout`), conteúdo em `max-w-2xl`.

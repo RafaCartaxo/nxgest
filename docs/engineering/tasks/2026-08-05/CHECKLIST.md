@@ -139,7 +139,7 @@
 ## Pendências operacionais (PLAN-042)
 
 - [ ] `multer` no `package.json` · `Dockerfile` cria `/data/uploads`
-- [ ] **Backup**: `/opt/scripts/backup-nxgestao.sh` + `deploy.sh` incluem `/data/uploads` · `06-PRODUCAO.md`
+- [ ] **Backup**: `/opt/scripts/backup-nxgest.sh` + `deploy.sh` incluem `/data/uploads` · `06-PRODUCAO.md`
 
 ---
 

@@ -4,7 +4,7 @@ import fs from "node:fs"
 /**
  * Diretório base dos uploads (PLAN-042).
  *
- * - Docker/compose: `DB_PATH=/data/gestao.db` → `/data/uploads` (volume `nxgestao_data`).
+ * - Docker/compose: `DB_PATH=/data/gestao.db` → `/data/uploads` (volume `nxgest_data`).
  * - Dev local: `DB_PATH=gestao.db` → `./uploads` (ao lado do banco).
  * - Sempre sobrescrevível por `UPLOADS_DIR`.
  */

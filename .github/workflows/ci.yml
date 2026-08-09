@@ -36,10 +36,10 @@ jobs:
       - run: |
           set -e
           # 1) boot cria as tabelas; 2) seed; 3) sobe de novo com rate limit ampliado
-          DB_PATH=/tmp/nxgestao-smoke.db PORT=3002 npx tsx src/main.ts &
+          DB_PATH=/tmp/nxgest-smoke.db PORT=3002 npx tsx src/main.ts &
           sleep 6
           kill %1 2>/dev/null || true
-          DB_PATH=/tmp/nxgestao-smoke.db node scripts/seed-demo.mjs
-          DB_PATH=/tmp/nxgestao-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=1000 npx tsx src/main.ts &
+          DB_PATH=/tmp/nxgest-smoke.db node scripts/seed-demo.mjs
+          DB_PATH=/tmp/nxgest-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=1000 npx tsx src/main.ts &
           sleep 6
           node scripts/smoke-api.mjs --baseUrl http://localhost:3002

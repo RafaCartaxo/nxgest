@@ -62,7 +62,7 @@
 
 ## F3 — Deploy no VPS (runbook `06-PRODUCAO.md`)
 
-1. Editar `/opt/nxgestao/.env`:
+1. Editar `/opt/nxgest/.env`:
    - `DOMAIN=nxgest.com.br` · `CORS_ORIGIN=https://nxgest.com.br`
    - `MAIL_PROVIDER=resend` · `RESEND_API_KEY=<chave do Resend>` · `MAIL_FROM=no-reply@nxgest.com.br`
    - **`APP_URL` mantém duckdns NESTA etapa** (ver sequência F4).

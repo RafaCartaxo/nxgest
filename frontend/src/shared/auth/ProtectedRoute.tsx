@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom"
 import { useAuth } from "./AuthContext.js"
 
-const TOKEN_KEY = "nxgestao_token"
+const TOKEN_KEY = "nxgest_token"
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { token, loading } = useAuth()

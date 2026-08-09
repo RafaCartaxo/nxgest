@@ -40,7 +40,7 @@ Tornar **testes parte integrada do projeto**: infra `vitest` + `jsdom` + RTL + c
 - **`vitest.config.ts`** (raiz): `environment: 'node'` default; componentes usam docblock `// @vitest-environment jsdom`; `coverage: { provider: 'v8', reporter: ['text','html'], thresholds: { statements: 50 } }` (meta inicial, **reportar sem bloquear** no começo).
 - **Setup:** `frontend/src/test/setup.ts` (`@testing-library/jest-dom` + polyfill de canvas p/ `comprovante`).
 - **Scripts:** `test` (unit+UI) · `test:coverage` · `test:watch`.
-- **CI — `.github/workflows/ci.yml`** (push/PR): node 20 → `npm ci` → `tsc` → `npm run build` → `audit:ui/styles/modules` → `npm test` → `docs:audit` · job extra: **smoke-api** com DB isolado (`DB_PATH=/tmp/nxgestao-smoke.db node scripts/seed-demo.mjs` + `node scripts/smoke-api.mjs`).
+- **CI — `.github/workflows/ci.yml`** (push/PR): node 20 → `npm ci` → `tsc` → `npm run build` → `audit:ui/styles/modules` → `npm test` → `docs:audit` · job extra: **smoke-api** com DB isolado (`DB_PATH=/tmp/nxgest-smoke.db node scripts/seed-demo.mjs` + `node scripts/smoke-api.mjs`).
 
 ## F1 — Unit: use-cases + shared/segurança (prioridade alta)
 

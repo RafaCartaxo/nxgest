@@ -29,7 +29,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" }
 
-  const token = localStorage.getItem("nxgestao_token")
+  const token = localStorage.getItem("nxgest_token")
   if (token) {
     headers["Authorization"] = `Bearer ${token}`
   }
@@ -57,7 +57,7 @@ export async function apiRequest<T>(
 
   // Sessão encerrada: 401 (token expirado) OU empresa suspensa (403 EMPRESA_INATIVA).
   if (response.status === 401 || (response.status === 403 && data?.code === "EMPRESA_INATIVA")) {
-    localStorage.removeItem("nxgestao_token")
+    localStorage.removeItem("nxgest_token")
   }
 
   if (!response.ok) {

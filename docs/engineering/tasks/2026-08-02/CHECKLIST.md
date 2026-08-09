@@ -130,8 +130,8 @@ Banco em WAL mode (dados vivos no `.db-wal` ~1MB); script copiava só `gestao.db
 
 ## Fases
 
-- [x] `/opt/scripts/backup-nxgestao.sh` corrigido: `wal_checkpoint(TRUNCATE)` + `cp` + validação embutida (`SELECT COUNT(*) FROM usuarios` > 0; inválido → `.invalid`)
-- [x] `scripts/deploy.sh`: backup pré-deploy antes do build (chama `/opt/scripts/backup-nxgestao.sh` se existir)
+- [x] `/opt/scripts/backup-nxgest.sh` corrigido: `wal_checkpoint(TRUNCATE)` + `cp` + validação embutida (`SELECT COUNT(*) FROM usuarios` > 0; inválido → `.invalid`)
+- [x] `scripts/deploy.sh`: backup pré-deploy antes do build (chama `/opt/scripts/backup-nxgest.sh` se existir)
 - [x] Cópia off-site substituída pelo backup consistente (241KB, 5 usuários, 7 clientes)
 - [x] `06-PRODUCAO.md`: seção 5.0 (alerta WAL), script corrigido, off-site atualizado, deploy pré-backup
 - [x] `UPDATES.md`: entrada da correção

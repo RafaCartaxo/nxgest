@@ -1,8 +1,8 @@
-# NX Gestão — Anexos do cliente: comprovante de residência (foto ou PDF) — briefing para IA
+# NX Gest — Anexos do cliente: comprovante de residência (foto ou PDF) — briefing para IA
 
 ## 1. Contexto do produto
 
-**NX Gestão** ("Nexus Gestão") — plataforma de gestão multi-negócio (whitelabel).
+**NX Gest** ("Nexus Gestão") — plataforma de gestão multi-negócio (whitelabel).
 Backend **Node + Express + TypeScript + SQLite** (better-sqlite3 + Drizzle); frontend
 **React + Tailwind v3**, mobile-first, identidade por **CSS variables** ("Nexus", PLAN-038).
 Multi-tenant por `empresaId` (isolamento via JOIN), papéis `operator/socio/admin/super_admin`,
@@ -27,7 +27,7 @@ coerente (sem imagens/PDFs gigantes).
 ## 4. O que quero (prioridade)
 
 1. **Tabela `anexos`**: `id, clienteId, tipo, nomeOriginal, mime, tamanho, caminho, criadoPor, createdAt` (migração idempotente no boot).
-2. **Armazenamento em arquivo**: `/data/uploads/<clienteId>/` (dentro do volume `nxgestao_data` — **sem mudar o compose**). `Dockerfile` cria a pasta + chown (padrão do `/data`).
+2. **Armazenamento em arquivo**: `/data/uploads/<clienteId>/` (dentro do volume `nxgest_data` — **sem mudar o compose**). `Dockerfile` cria a pasta + chown (padrão do `/data`).
 3. **Upload multipart (`multer`)** com validação em **duas camadas**:
    - **Front (UX):** valida tipo + tamanho antes de enviar; imagem passa por **compressão via canvas (≤1600px, JPEG/WebP)**; PDF vai como está. Mensagens i18n claras.
    - **Servidor:** `multer` `limits.fileSize = 5MB` (413 global) + valida **MIME real** (allowlist: JPEG/PNG/WebP/PDF) + **tamanho por tipo** (imagem >1MB → 422 `ANEXO_LIMITE`; PDF >5MB → 413; tipo fora → 422 `ANEXO_TIPO`).
@@ -41,7 +41,7 @@ coerente (sem imagens/PDFs gigantes).
 5. **Seção "Anexos" no `ClienteDetail`:**
    - Botão de upload (aceita imagem/PDF), prévia (thumbnail de imagem; ícone de arquivo p/ PDF), lista (nome, tipo, tamanho, data), abrir/baixar e remover.
    - Visual no padrão Nexus: `Card rounded-xl bg-card`, `PageHeader`, `StatusBadge`, tokens.
-6. **⚠️ Backup obrigatório:** estender o script de backup (VPS `/opt/scripts/backup-nxgestao.sh`) e o `deploy.sh` para incluir `/data/uploads` — senão anexo some no desastre. Atualizar `06-PRODUCAO.md`.
+6. **⚠️ Backup obrigatório:** estender o script de backup (VPS `/opt/scripts/backup-nxgest.sh`) e o `deploy.sh` para incluir `/data/uploads` — senão anexo some no desastre. Atualizar `06-PRODUCAO.md`.
 
 ## 5. Padrões a seguir (obrigatórios)
 

@@ -22,7 +22,7 @@ Fechar os gaps de segurança identificados. Não reinventa o que já está bom �
 - Autorização em camadas (auth/requireModule/admin/super/capability/`resolveUsuarioAlvo`).
 - zod em toda entrada; forgot/login com resposta **genérica** (sem enumeração).
 - Uploads seguros (MIME sem SVG, magic bytes, limites, endpoint autenticado) — PLAN-042/058.
-- Segredos fora do repo (`~/.config/nxgestao`); VPS SSH só por chave; container roda como `node`.
+- Segredos fora do repo (`~/.config/nxgest`); VPS SSH só por chave; container roda como `node`.
 - Login/me/getOperador **não retornam senha** (sanitizados).
 - Rate limit no login/forgot/ativar/reset (mas veja P0-1).
 

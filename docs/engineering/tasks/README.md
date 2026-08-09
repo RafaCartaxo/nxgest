@@ -37,7 +37,7 @@ tasks/
 | [05/07/2026](2026-07-05/CHECKLIST-FASE10.md) | Fase 10 — Atendidos Hoje | Concluído |
 | [05/07/2026](2026-07-05/CHECKLIST-FASE11.md) | Fase 11 — Resumo Operacional da Rota | Concluído |
 | [11/07/2026](2026-07-11/CHECKLIST-FASE12.md) | Fase 12 — Módulos Caixa e Gasto | Concluído |
-| [31/07/2026](2026-07-31/CHECKLIST.md) | Rename para nxgestao + Deploy do Primeiro Cliente (PLAN-018) | Concluído |
+| [31/07/2026](2026-07-31/CHECKLIST.md) | Rename para nxgest + Deploy do Primeiro Cliente (PLAN-018) | Concluído |
 | [31/07/2026](2026-07-31/CHECKLIST-MULTI-TENANT.md) | Multi-Tenant: Super Admin + Empresas (PLAN-019) | Concluído |
 | [01/08/2026](2026-08-01/CHECKLIST.md) | Drill-down Admin → Operador + Fix do Caixa (PLAN-020) | Concluído |
 | [01/08/2026](2026-08-01/CHECKLIST-PLAN-021.md) | Painel admin: contexto de empresa, KPIs, login por role (PLAN-021) | Concluído |

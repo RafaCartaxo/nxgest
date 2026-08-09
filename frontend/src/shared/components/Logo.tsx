@@ -8,13 +8,13 @@ export interface LogoProps {
 }
 
 /**
- * Marca NX Gestão — malha de nós conectados formando a silhueta de um cérebro,
+ * Marca NX Gest — malha de nós conectados formando a silhueta de um cérebro,
  * com um hub central (o Nexus) e o traço do "N" emergindo da rede.
  *
  * Monocromática: o traço herda `currentColor`. Os nós de destaque usam o accent
  * do tema (token `--accent`), então a marca acompanha tema e whitelabel.
  */
-export function Logo({ variant = "sm", className, title = "NX Gestão" }: LogoProps) {
+export function Logo({ variant = "sm", className, title = "NX Gest" }: LogoProps) {
   const stroke = variant === "mono" ? 6 : variant === "sm" ? 4.5 : 3.6
   const nodeR = variant === "mono" ? 9 : 7.5
 
@@ -143,7 +143,7 @@ export function LogoLockup({ className, tagline = false, size = "md" }: LogoLock
             size === "lg" ? "text-[28px]" : size === "sm" ? "text-base" : "text-lg"
           }`}
         >
-          NX <span className="text-brand-gradient">Gestão</span>
+          NX <span className="text-brand-gradient">Gest</span>
         </div>
         {tagline && <p className="text-sm text-text-muted">Gestão centralizada para o seu negócio</p>}
       </div>

@@ -8,13 +8,13 @@
 
 **Última atualização:** 04/08/2026
 
-**Roadmap:** evolução de marca do NX Gestão (whitelabel-ready)
+**Roadmap:** evolução de marca do NX Gest (whitelabel-ready)
 
 ---
 
 ## Objetivo
 
-Substituir o visual "MVP/genérico" por uma **identidade de marca "Nexus"**: cérebro em rede neural (hub central), paleta moderna, tipografia com presença e **navbar lateral**. Fonte de referência: protótipo gerado no **Lovable** (`RafaCartaxo/site-personality-plus`) — o design foi **portado/adaptado** (não copiado): o NX Gestão segue em React Router + Tailwind v3.
+Substituir o visual "MVP/genérico" por uma **identidade de marca "Nexus"**: cérebro em rede neural (hub central), paleta moderna, tipografia com presença e **navbar lateral**. Fonte de referência: protótipo gerado no **Lovable** (`RafaCartaxo/site-personality-plus`) — o design foi **portado/adaptado** (não copiado): o NX Gest segue em React Router + Tailwind v3.
 
 ## Conceito de marca
 
@@ -28,9 +28,9 @@ Substituir o visual "MVP/genérico" por uma **identidade de marca "Nexus"**: cé
 |---|---------|
 | 1 | **Tokens de identidade** no `index.css` (modelo OKLCH do Lovable): `--brand-1/2/accent/far`, `--primary/accent/success/warning/danger/info` + soft/text, `--sidebar-*`, `--gradient-page/brand/text/mesh`, `--radius`, `--font-display`, `--tenant-primary` (hook whitelabel p/ tema "default"). **Aliases `--color-*` mantidos** para não quebrar componentes |
 | 2 | `tailwind.config.js`: novos tokens (accent, muted, card, sidebar, ring, background/foreground) + `fontFamily.display` |
-| 3 | **Logo Nexus**: `Logo` (mark, variantes lg/sm/mono) + `LogoLockup` (mark + "NX Gestão") — port do `NexusMark`; `favicon.svg` e `logo-nexus.svg` atualizados |
+| 3 | **Logo Nexus**: `Logo` (mark, variantes lg/sm/mono) + `LogoLockup` (mark + "NX Gest") — port do `NexusMark`; `favicon.svg` e `logo-nexus.svg` atualizados |
 | 4 | **Sidebar lateral** (`AppLayout`): desktop fixa à esquerda (marca + nav vertical + usuário/configurações) + **drawer mobile** (hamburger); substitui a `Navbar` de topo (removida) |
-| 5 | **Login/landing** redesenhado: logo Nexus grande + "NX Gestão" (gradiente) + tagline + card de acesso (i18n) |
+| 5 | **Login/landing** redesenhado: logo Nexus grande + "NX Gest" (gradiente) + tagline + card de acesso (i18n) |
 | 6 | Polimento via tokens: fundo `--gradient-page`, botão primário em gradiente de marca, `PageHeader` em gradiente, Sora nos títulos |
 
 ## Decisões de design
@@ -73,7 +73,7 @@ Substituir o visual "MVP/genérico" por uma **identidade de marca "Nexus"**: cé
 - **Overscroll corrigido**: `overscroll-behavior-y: none` no `html/body` (não arrasta além da tela) + remoção do `background-attachment: fixed` (gradiente acompanha o conteúdo; quebra no iOS) + alturas em `100dvh` (login/layout).
 - **Tema**: seletor em **bolinhas de gradiente + nome do tema atual** (linha compacta — alvo de toque grande) e o botão **claro/escuro ficou só com o ícone** (Sun/Moon).
 - **Rota do dia**: `RotaCobrancaSection` **removida da Central** (a ação rápida "Minha rota" cobre a navegação); componente excluído.
-- **Sidebar/drawer**: **marca no topo** (Logo + "NX Gestão" + X na mesma linha no drawer; barra mobile fina `py-2`) e seção **"Administração" visível sem scroll** (rodapé compacto + itens `min-h-10`).
+- **Sidebar/drawer**: **marca no topo** (Logo + "NX Gest" + X na mesma linha no drawer; barra mobile fina `py-2`) e seção **"Administração" visível sem scroll** (rodapé compacto + itens `min-h-10`).
 - **Central com nova hierarquia**: **KPIs → Ações rápidas → Cobranças do dia** (estado → ação → fila). UC-001 e mapeamento §1 atualizados.
 
 ## Validação

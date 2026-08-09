@@ -1,17 +1,17 @@
-# NX Gestão — Navegação "app-first" (Bottom Nav mobile + Sidebar desktop + Configurações) — briefing para IA/Stitch
+# NX Gest — Navegação "app-first" (Bottom Nav mobile + Sidebar desktop + Configurações) — briefing para IA/Stitch
 
 **Status:** ✅ Concluído — implementado no app real em 07/08/2026 (bottom tab bar, topo fino, sidebar sem header duplicado, `UserMenu` com `PreferenciasModal`)
 
 **Versão:** 1.0 · **Data:** 06/08/2026
 
-> Briefing para gerar o redesign da **navegação e das configurações** do NX Gestão com cara de **app nativo**.
+> Briefing para gerar o redesign da **navegação e das configurações** do NX Gest com cara de **app nativo**.
 > Regra de ouro: **não redesenhar a identidade** (ela fica como está — tokens/cores/fontes) — apenas reorganizar a **arquitetura de navegação e o fluxo de configurações** para ficarem coerentes, leves e mobile-first. Referência de identidade: `docs/engineering/design/02-DESIGN-SYSTEM.md`.
 
 ---
 
 ## 1. Contexto do produto
 
-- **NX Gestão ("Nexus Gestão")** — plataforma **mobile-first** de gestão de cobranças em campo (microcrédito popular). O **operador** vai até o cliente cobrar parcelas **pelo celular, em pé, na rua** — toque com polegar, uma mão.
+- **NX Gest ("Nexus Gestão")** — plataforma **mobile-first** de gestão de cobranças em campo (microcrédito popular). O **operador** vai até o cliente cobrar parcelas **pelo celular, em pé, na rua** — toque com polegar, uma mão.
 - **Perfis:** Operador de campo (celular) · Admin/Sócio (back-office desktop) · Super Admin (multi-empresa whitelabel).
 - **Frontend:** React + Tailwind v3, identidade 100% dirigida por **CSS variables** (tokens OKLCH). Fonte **Sora** (títulos, `font-display`) + **Inter** (corpo).
 - **Tokens principais em uso:** `--color-primary` (+`hover/light/text/foreground`) · `--color-accent` · `--color-card` · `--color-surface`(+`secondary/hover`) · `--color-text-primary/secondary/muted` · `--color-border`(+`strong/light`) · `--color-success/warning/danger/info` · `--color-sidebar`(+`foreground/muted/active/border`) · gradientes `--gradient-page/brand/text`.
@@ -34,7 +34,7 @@
 
 | Área | Hoje | Arquivo |
 |---|---|---|
-| **Header** | `sticky top-0` sempre (mobile + desktop): hamburger (só mobile) + logo "NX Gestão" + engrenagem de config | `shared/layout/AppLayout.tsx` |
+| **Header** | `sticky top-0` sempre (mobile + desktop): hamburger (só mobile) + logo "NX Gest" + engrenagem de config | `shared/layout/AppLayout.tsx` |
 | **Nav mobile** | hamburger → drawer `w-72` com `SidebarContent` | `AppLayout.tsx` |
 | **Nav desktop** | sidebar fixa `w-64` (`lg:flex`) · conteúdo `lg:pl-64` | `AppLayout.tsx` |
 | **Itens (tenant)** | Central `/` (sempre) · Clientes · Contratos · Caixa — **gated por módulo** (`hasModule`) | `useNavItems()` |

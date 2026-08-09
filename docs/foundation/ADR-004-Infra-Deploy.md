@@ -12,7 +12,7 @@
 
 # Contexto
 
-O NX Gestão precisava sair do ambiente local (`localhost:3000`) e ficar acessível pela internet para o primeiro cliente, com HTTPS e persistência confiável. Duas abordagens foram consideradas:
+O NX Gest precisava sair do ambiente local (`localhost:3000`) e ficar acessível pela internet para o primeiro cliente, com HTTPS e persistência confiável. Duas abordagens foram consideradas:
 
 - **Fly.io:** deploy por aplicação, trial limitado (2h runtime ou 7 dias) e custo ~$4,27/mês **por cliente**. Como a visão de longo prazo é multi-tenant (PLAN-019 — vários clientes em um único deploy), o custo multiplicaria a cada cliente.
 - **VPS próprio:** um único servidor ($2/mês) hospeda todos os clientes (multi-tenant), custo marginal ~$0 por cliente.
@@ -23,12 +23,12 @@ O objetivo era **zero custo inicial** e arquitetura preparada para o PLAN-019.
 
 # Decisão
 
-Implantar o NX Gestão em um **VPS dedicado** com:
+Implantar o NX Gest em um **VPS dedicado** com:
 
 - **Provedor:** VPS Hosting Service (`vpshostingservice.co`) — plano de ~$2/mês, escolhido pelo custo; contratado em 31/07/2026.
 - **Containerização:** Docker Compose (`docker-compose.prod.yml`) com 2 serviços: `app` (Node 20 + Express, porta 8080) e `caddy` (proxy reverso, portas 80/443).
 - **Proxy reverso + HTTPS:** **Caddy**, que emite e renova certificados **Let's Encrypt automaticamente** — zero configuração de certbot.
-- **Persistência:** SQLite em **volume Docker** (`nxgestao_nxgestao_data` → `/data/gestao.db`), sobrevive a deploys.
+- **Persistência:** SQLite em **volume Docker** (`nxgest_nxgest_data` → `/data/gestao.db`), sobrevive a deploys.
 - **Domínio:** subdomínio grátis **DuckDNS** (`nxgestao.duckdns.org`) apontando A record para o IP do VPS — provisório para o MVP.
 - **OS do VPS:** AlmaLinux 8.10 (RHEL) — Docker instalado via repositório oficial (`get.docker.com` não suporta AlmaLinux).
 - **Backup:** cron próprio (2x/dia) copiando o banco do volume para `/opt/backups` (o provedor não oferece snapshot).

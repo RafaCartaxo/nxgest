@@ -112,7 +112,7 @@ O isolamento é resolvido por JOIN: `clientes.userId → usuarios.id → usuario
 
 O banco é populado com:
 
-1. `super@nxgestao.com` — `role = super_admin`, `empresaId = null` (credenciais via `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_DEFAULT_PASSWORD`)
+1. `super@nxgest.com` — `role = super_admin`, `empresaId = null` (credenciais via `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_DEFAULT_PASSWORD`)
 2. Empresa "Desenvolvimento" — vinculada ao admin existente (`admin@cobranca.com`)
 3. Todos os operadores órfãos (sem empresa) vinculados à empresa "Desenvolvimento" (super_admin nunca é vinculado)
 

@@ -53,7 +53,7 @@ export function LoginPage() {
             className="mx-auto h-[clamp(4.5rem,14vh,7.5rem)] w-[clamp(4.5rem,14vh,7.5rem)] text-primary lg:mx-0 lg:h-32 lg:w-32"
           />
           <h1 className="mt-3 font-display text-[clamp(1.75rem,6vw,2.5rem)] font-semibold leading-tight">
-            NX <span className="text-brand-gradient">Gestão</span>
+            NX <span className="text-brand-gradient">Gest</span>
           </h1>
           <p className="mt-1 text-sm text-text-secondary sm:text-base">{t("auth.tagline")}</p>
           {/* parágrafo só em sm+/desktop — no celular pequeno causa scroll */}

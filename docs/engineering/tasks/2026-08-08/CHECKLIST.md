@@ -55,7 +55,7 @@
 
 - [x] `processarAnexo` aceita `image/heic`·`image/heif`·tipo vazio/`application/octet-stream` → tenta decodificar + converter p/ JPEG (iPhone "Alta eficiência"); não decodificou → `ANEXO_TIPO` com orientação
 - [x] i18n `anexos.tipoErro` orienta iPhone ("Formato mais compatível")
-- [x] `LoginPage` ganhou link "Interessado em usar o NX Gestão? → Quero conhecer" (`/quero-conhecer`)
+- [x] `LoginPage` ganhou link "Interessado em usar o NX Gest? → Quero conhecer" (`/quero-conhecer`)
 - [x] i18n `auth.interesse`/`auth.queroConhecerLink` ×3
 - [x] QA: tsc · build · vitest 74 · audit:ui (147) · docs:audit 0
 

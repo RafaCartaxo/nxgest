@@ -19,7 +19,7 @@ import { copyFileSync, readdirSync, rmSync, statSync } from "node:fs"
 import { join } from "node:path"
 
 const root = join(process.cwd())
-const DST = "/tmp/nxgestao-migracao-test.db"
+const DST = "/tmp/nxgest-migracao-test.db"
 
 function latestBackup() {
   const candidates = readdirSync(root)

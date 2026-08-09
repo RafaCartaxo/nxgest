@@ -418,7 +418,7 @@ Referência: [PLAN-039](plans/PLAN-039-padronizacao-forms-inputs.md) · [07-FORM
 - **Overscroll corrigido**: não arrasta além da tela (`overscroll-behavior-y: none`), gradiente sem `background-attachment: fixed` (quebra no iOS) e alturas em `100dvh`.
 - **Seletor de tema** em **bolinhas de gradiente + nome do tema atual** (compacto, alvo de toque grande) e botão **claro/escuro só com ícone**.
 - **`RotaCobrancaSection` removida da Central** (a ação rápida "Minha rota" cobre a navegação).
-- **Marca no topo do drawer** (Logo + "NX Gestão" + botão X na mesma linha) e barra mobile mais fina; seção **"Administração" visível sem scroll** na sidebar.
+- **Marca no topo do drawer** (Logo + "NX Gest" + botão X na mesma linha) e barra mobile mais fina; seção **"Administração" visível sem scroll** na sidebar.
 - **Central com nova hierarquia**: **KPIs → Ações rápidas → Cobranças do dia** (estado → ação → fila, alinhado ao mockup). UC-001 e mapeamento §1 atualizados.
 - i18n pt/en/es (`admin.painel`, `operacoes.acoesRapidas` + rótulos).
 
@@ -430,7 +430,7 @@ Referência: [PLAN-038](plans/PLAN-038-identidade-visual-nexus.md)
 - **Logo Nexus** (cérebro em rede neural com hub central): componente `Logo`/`LogoLockup` (variantes lg/sm/mono), `favicon.svg` e `logo-nexus.svg`.
 - **Tokens de identidade** no `index.css` (modelo OKLCH, port do Lovable): brand/accent, estados semânticos soft/text, `--sidebar-*`, gradientes page/brand/text/mesh, `--font-display` (Sora), e o hook **`--tenant-primary`** para whitelabel no tema "default". Aliases `--color-*` mantidos (nada quebra).
 - **Sidebar lateral** (`AppLayout`) substituindo a navbar de topo: **desktop fixa à esquerda** (marca + navegação vertical + usuário/tema/idioma/sair) e **drawer mobile** (hamburger).
-- **Login redesenhado**: logo Nexus grande + "NX Gestão" (texto em gradiente) + tagline "Gestão centralizada para o seu negócio" + card de acesso.
+- **Login redesenhado**: logo Nexus grande + "NX Gest" (texto em gradiente) + tagline "Gestão centralizada para o seu negócio" + card de acesso.
 - Tipografia **Sora** nos títulos (h1-h3) + Inter no corpo; fundo em gradiente de marca; botão primário em gradiente.
 - **Removido:** `Navbar.tsx` (substituído pelo `AppLayout`).
 
@@ -608,9 +608,9 @@ Referência: [PLAN-028](plans/PLAN-028-estorno-pagamento.md)
 
 **Corrigido (crítico)**
 - **Backups automáticos estavam inúteis** — o banco roda em WAL mode (dados vivos no `.db-wal` ~1MB), e o script copiava só `gestao.db` cru → arquivos de 4KB **vazios** (validado: "no such table: usuarios").
-- **Script corrigido** (`/opt/scripts/backup-nxgestao.sh`): `wal_checkpoint(TRUNCATE)` antes do `cp` + **validação embutida** (`SELECT COUNT(*) FROM usuarios` > 0; backup vazio vira `.invalid`).
+- **Script corrigido** (`/opt/scripts/backup-nxgest.sh`): `wal_checkpoint(TRUNCATE)` antes do `cp` + **validação embutida** (`SELECT COUNT(*) FROM usuarios` > 0; backup vazio vira `.invalid`).
 - **Backup pré-deploy**: `scripts/deploy.sh` agora chama o backup **antes** do build — todo deploy gera snapshot do estado anterior.
-- **Cópia off-site corrigida**: `~/.config/nxgestao/backups/backup-offsite-gestao.db` estava vazia (4KB) → substituída pelo backup consistente (241KB, dados reais).
+- **Cópia off-site corrigida**: `~/.config/nxgest/backups/backup-offsite-gestao.db` estava vazia (4KB) → substituída pelo backup consistente (241KB, dados reais).
 - Backup validado: `gestao-20260802-115822.db` (236KB, 5 usuários, 7 clientes).
 
 ## 02/08/2026 — Deploy no VPS (PLAN-023 → PLAN-027)

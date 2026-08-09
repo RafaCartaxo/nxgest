@@ -29,7 +29,7 @@
 
 ## Objetivo
 
-Preparar e executar o primeiro deploy do NX Gestão para um cliente real, disponibilizando o sistema via internet com persistência confiável, HTTPS automático e zero custo inicial.
+Preparar e executar o primeiro deploy do NX Gest para um cliente real, disponibilizando o sistema via internet com persistência confiável, HTTPS automático e zero custo inicial.
 
 ---
 
@@ -43,13 +43,13 @@ Preparar e executar o primeiro deploy do NX Gestão para um cliente real, dispon
 | Domínio | DuckDNS grátis (`nxgestao.duckdns.org`, A record → IP) — provisório até registrar `.com.br` |
 | SO | AlmaLinux 8.10 (Cerulean Leopard) |
 | Docker | 26.1.3 + Docker Compose v2.27.0 |
-| Caminho do repo | `/opt/nxgestao` |
-| Containers | `nxgestao-app-1` (porta 8080) + `nxgestao-caddy-1` (80/443) |
-| Volumes Docker | `nxgestao_nxgestao_data` (banco), `nxgestao_caddy_data`, `nxgestao_caddy_config` |
+| Caminho do repo | `/opt/nxgest` |
+| Containers | `nxgest-app-1` (porta 8080) + `nxgest-caddy-1` (80/443) |
+| Volumes Docker | `nxgest_nxgest_data` (banco), `nxgest_caddy_data`, `nxgest_caddy_config` |
 | Banco | SQLite `/data/gestao.db` (volume persistente) |
 | HTTPS | Let's Encrypt emitido automaticamente pelo Caddy |
-| Admin default | `admin@cobranca.com` (senha no arquivo local `~/.config/nxgestao/vps-admin-pw.txt`, fora do repo) |
-| Backup | Cron 2x/dia → `/opt/backups` (script `/opt/scripts/backup-nxgestao.sh`, retém 14 dias) |
+| Admin default | `admin@cobranca.com` (senha no arquivo local `~/.config/nxgest/vps-admin-pw.txt`, fora do repo) |
+| Backup | Cron 2x/dia → `/opt/backups` (script `/opt/scripts/backup-nxgest.sh`, retém 14 dias) |
 
 ### Segurança aplicada no VPS
 
@@ -63,14 +63,14 @@ Preparar e executar o primeiro deploy do NX Gestão para um cliente real, dispon
 | Usuário | Email | Role | Status |
 |---------|-------|------|--------|
 | Admin | `admin@cobranca.com` | admin | Seed automático (senha via `ADMIN_DEFAULT_PASSWORD`) |
-| Thalia N Medina | `thalianietomedina@hotmail.com` | admin | Criada via `POST /api/admin/operadores` em 31/07/2026 (senha em `~/.config/nxgestao/thaliana-pw.txt`) |
+| Thalia N Medina | `thalianietomedina@hotmail.com` | admin | Criada via `POST /api/admin/operadores` em 31/07/2026 (senha em `~/.config/nxgest/thaliana-pw.txt`) |
 
 ---
 
 ## Testes executados em produção (31/07/2026)
 
 - [x] `https://nxgestao.duckdns.org/api/health` → 200 `{"status":"ok","db":"connected"}`
-- [x] Frontend carrega com `<title>NX Gestão</title>` (HTTP 200)
+- [x] Frontend carrega com `<title>NX Gest</title>` (HTTP 200)
 - [x] Login admin (`admin@cobranca.com`) retorna token JWT
 - [x] `POST /api/clientes` cria cliente (validação de CPF/campos obrigatórios funcionando)
 - [x] `GET /api/clientes` lista com paginação
@@ -88,7 +88,7 @@ Preparar e executar o primeiro deploy do NX Gestão para um cliente real, dispon
 | Containerização | **Zero** — sem Dockerfile, docker-compose, `.dockerignore` | Dockerfile multi-stage |
 | Health check | **Zero** — sem endpoint de health | `GET /api/health` com verificação de conexão DB |
 | CORS | `app.use(cors())` sem restrição de origem | Configurar `CORS_ORIGIN` via env var em produção |
-| Variáveis de ambiente | `.env.example` já contém `DB_PATH`, `JWT_SECRET`, `PORT`, `NODE_ENV`, `ADMIN_DEFAULT_PASSWORD` (adicionado pelo PLAN-017). Porém: `JWT_SECRET` ainda tem fallback hardcoded (`?? "nxgestao-dev-secret"`); `DB_PATH` está no `.env.example` mas **não é usado** no código (`database.ts:9` hardcoded `"gestao.db"`); `ADMIN_DEFAULT_PASSWORD` está no `.env.example` mas também tem fallback (`?? "admin123"`) | Remover fallback do `JWT_SECRET`; fazer `database.ts` ler `DB_PATH` da env var; adicionar `CORS_ORIGIN` ao `.env.example` |
+| Variáveis de ambiente | `.env.example` já contém `DB_PATH`, `JWT_SECRET`, `PORT`, `NODE_ENV`, `ADMIN_DEFAULT_PASSWORD` (adicionado pelo PLAN-017). Porém: `JWT_SECRET` ainda tem fallback hardcoded (`?? "nxgest-dev-secret"`); `DB_PATH` está no `.env.example` mas **não é usado** no código (`database.ts:9` hardcoded `"gestao.db"`); `ADMIN_DEFAULT_PASSWORD` está no `.env.example` mas também tem fallback (`?? "admin123"`) | Remover fallback do `JWT_SECRET`; fazer `database.ts` ler `DB_PATH` da env var; adicionar `CORS_ORIGIN` ao `.env.example` |
 | Deploy | **Zero** — sistema roda apenas local | VPS + Docker Compose + Caddy |
 | Build production | Funcional — `npm run build` compila TS + Vite corretamente | Manter — apenas garantir paths corretos no container |
 | `.gitignore` | Cobre `*.db`, `.env`, `dist/`, `node_modules/` | OK — nada a fazer |
@@ -115,7 +115,7 @@ Identificados 3 repositórios + `database.ts` que acessam diretamente a instânc
 |---------|---------|--------|
 | Banco de dados | **SQLite mantido** (sem migrar para PostgreSQL agora) | Evita reescrita de ~15 queries raw em 4 arquivos; elimina risco de conflito com PLAN-017; SQLite em volume persistente é suficiente para dezenas/centenas de registros com 2-3 usuários simultâneos |
 | Plataforma de deploy | **VPS Hosting Service (2GB RAM)** | Custo fixo ~$2/mês — 1 servidor hospeda todos os clientes (multi-tenant PLAN-019); mais barato que Fly.io (~$4,27/mês por cliente, que multiplicaria com o crescimento). **Revisado em 31/07:** provedor é VPS Hosting Service (não Hostinger), sem backups nativos — backup cron próprio (Fase E) |
-| Persistência do banco | **Volume Docker** montado em `/data/` (volume `nxgestao_data`) | Dados sobrevivem a `docker compose up`/`down` e restarts; caminho configurável via `DB_PATH=/data/gestao.db` |
+| Persistência do banco | **Volume Docker** montado em `/data/` (volume `nxgest_data`) | Dados sobrevivem a `docker compose up`/`down` e restarts; caminho configurável via `DB_PATH=/data/gestao.db` |
 | Containerização | **Dockerfile multi-stage** | Stage 1: build (tsc + vite). Stage 2: runtime Node 20 slim com apenas dist/ + frontend/dist/ + deps produção |
 | Proxy reverso + HTTPS | **Caddy** (no mesmo compose) | HTTPS automático via Let's Encrypt (mesma experiência do Fly); zero config de certbot; substitui o `fly.toml` |
 | Health check | Endpoint `GET /api/health` | Usado pelo Caddy (`health_uri`) e por monitoramento externo |
@@ -145,7 +145,7 @@ Fase A (Config env) → Fase B (Health + CORS) → Fase C (Dockerfile)
 | Arquivo | Mudança |
 |---------|---------|
 | `src/database.ts` | `new Database("gestao.db")` → `new Database(process.env.DB_PATH \|\| "gestao.db")` |
-| `src/shared/utils/jwt.ts` | Remover fallback `?? "nxgestao-dev-secret"`; lançar erro se `JWT_SECRET` não definido |
+| `src/shared/utils/jwt.ts` | Remover fallback `?? "nxgest-dev-secret"`; lançar erro se `JWT_SECRET` não definido |
 | `.env.example` | Adicionar `CORS_ORIGIN=` (demais vars `DB_PATH`, `JWT_SECRET`, `PORT`, `NODE_ENV`, `ADMIN_DEFAULT_PASSWORD` já existem — adicionadas pelo PLAN-017)
 
 ### A.2 — jwt.ts novo comportamento
@@ -315,8 +315,8 @@ No container, a estrutura é:
 
 ### C.5 — Checklist Fase C
 
-- [ ] `docker build -t nxgestao .` completa sem erros
-- [ ] `docker run -p 3000:3000 -e JWT_SECRET=test -e DB_PATH=/tmp/test.db -e NODE_ENV=development nxgestao` inicia
+- [ ] `docker build -t nxgest .` completa sem erros
+- [ ] `docker run -p 3000:3000 -e JWT_SECRET=test -e DB_PATH=/tmp/test.db -e NODE_ENV=development nxgest` inicia
 - [ ] `curl http://localhost:3000/api/health` retorna 200
 - [ ] `curl http://localhost:3000` retorna o HTML do frontend
 - [ ] Container roda como non-root (`USER node`)
@@ -353,7 +353,7 @@ services:
       - ADMIN_DEFAULT_PASSWORD=${ADMIN_DEFAULT_PASSWORD}
       - CORS_ORIGIN=${CORS_ORIGIN}
     volumes:
-      - nxgestao_data:/data
+      - nxgest_data:/data
     expose:
       - "8080"
 
@@ -371,7 +371,7 @@ services:
       - caddy_config:/config
 
 volumes:
-  nxgestao_data:
+  nxgest_data:
   caddy_data:
   caddy_config:
 ```
@@ -409,8 +409,8 @@ systemctl enable --now docker
 
 # 4. Instalar git e clonar o repo
 dnf install -y git openssl
-git clone https://github.com/RafaCartaxo/nxgestao.git /opt/nxgestao
-cd /opt/nxgestao
+git clone https://github.com/RafaCartaxo/nxgest.git /opt/nxgest
+cd /opt/nxgest
 cp .env.production.example .env
 # Editar .env: DOMAIN, CORS_ORIGIN, JWT_SECRET (openssl rand -hex 32), ADMIN_DEFAULT_PASSWORD
 
@@ -421,7 +421,7 @@ cp .env.production.example .env
 ### D.5 — Checklist Fase D
 
 - [ ] `Caddyfile` presente com `{$DOMAIN}` + proxy reverso para `app:8080`
-- [ ] `docker-compose.prod.yml` presente com app + caddy + volume `nxgestao_data`
+- [ ] `docker-compose.prod.yml` presente com app + caddy + volume `nxgest_data`
 - [ ] `scripts/deploy.sh` presente e executável
 - [ ] `fly.toml` removido do repo (decisão: VPS)
 - [ ] Domínio registrado e DNS **A** apontando para o IP do VPS
@@ -432,7 +432,7 @@ cp .env.production.example .env
 - [ ] `https://<seu-dominio>` carrega o SPA (login ou dashboard)
 - [ ] Login com admin default funcional (senha definida no `.env`)
 - [ ] HTTPS automático emitido pelo Caddy (Let's Encrypt)
-- [ ] Deploy subsequente mantém dados existentes (volume `nxgestao_data` preservado)
+- [ ] Deploy subsequente mantém dados existentes (volume `nxgest_data` preservado)
 
 ---
 
@@ -444,18 +444,18 @@ cp .env.production.example .env
 
 > **Importante:** a VPS Hosting Service **não oferece** snapshots/backups do provedor. O backup é responsabilidade própria — executado por script cron a cada 12h, retendo 14 dias.
 
-**Script:** `/opt/scripts/backup-nxgestao.sh` (fora do repo, para não interferir no `git pull`).
+**Script:** `/opt/scripts/backup-nxgest.sh` (fora do repo, para não interferir no `git pull`).
 
 ```bash
 # Cria uma cópia do banco dentro do container e copia para /opt/backups
-docker exec nxgestao-app-1 cp /data/gestao.db /data/backup-$(date +%Y%m%d-%H%M%S).db
-docker cp nxgestao-app-1:/data/backup-<STAMP>.db /opt/backups/gestao-<STAMP>.db
+docker exec nxgest-app-1 cp /data/gestao.db /data/backup-$(date +%Y%m%d-%H%M%S).db
+docker cp nxgest-app-1:/data/backup-<STAMP>.db /opt/backups/gestao-<STAMP>.db
 # Retenção: apaga backups com mais de 14 dias
 ```
 
 **Cron instalado** (`crontab -l`):
 ```
-0 */12 * * * /opt/scripts/backup-nxgestao.sh >/dev/null 2>&1
+0 */12 * * * /opt/scripts/backup-nxgest.sh >/dev/null 2>&1
 ```
 
 **Cópia off-site (manual):** baixar um backup para a máquina local:
@@ -468,7 +468,7 @@ scp root@<ip-do-vps>:/opt/backups/gestao-YYYYMMDD-HHMMSS.db .
 ### E.2 — Deploy de atualizações (fluxo normal)
 
 ```bash
-# No VPS, dentro de /opt/nxgestao
+# No VPS, dentro de /opt/nxgest
 git pull
 ./scripts/deploy.sh
 
@@ -515,7 +515,7 @@ docker compose -f docker-compose.prod.yml restart app
 
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|--------------|---------|-----------|
-| Volume Docker `nxgestao_data` corrompido | Baixa | Alto | Backup cron a cada 12h em `/opt/backups` (retém 14 dias) + cópia off-site manual; ver `06-PRODUCAO.md` |
+| Volume Docker `nxgest_data` corrompido | Baixa | Alto | Backup cron a cada 12h em `/opt/backups` (retém 14 dias) + cópia off-site manual; ver `06-PRODUCAO.md` |
 | VPS indisponível / queda do provedor | Baixa | Alto | Backup cron + cópia off-site; migração de host planejada (próximo mês) — domínio DuckDNS facilita troca de IP |
 | Provedor com má reputação / risco de nulling | Média | Alto | Backups próprios a cada 12h (dados nunca ficam "reféns" no host); migrar de host no próximo mês (decisão registrada no ADR-004) |
 | Promoção VPS termina e renovação encarece | Média | Médio | Custo ainda competitivo (~$2-4/mês) vs. múltiplos deploys Fly; revisão na migração de host |
@@ -555,7 +555,7 @@ docker compose -f docker-compose.prod.yml restart app
 - [ ] Aplicação acessível via `https://<seu-dominio>`
 - [ ] HTTPS automático emitido pelo Caddy (Let's Encrypt)
 - [ ] Login admin default funcional em produção
-- [ ] Volume `nxgestao_data` mantém dados entre deploys
+- [ ] Volume `nxgest_data` mantém dados entre deploys
 - [ ] `tsc --noEmit` passa em todo o projeto
 - [ ] `.env.example` documenta todas variáveis de ambiente (incluindo `CORS_ORIGIN` e `ADMIN_DEFAULT_PASSWORD`)
 - [ ] Procedimento de backup manual documentado e testado

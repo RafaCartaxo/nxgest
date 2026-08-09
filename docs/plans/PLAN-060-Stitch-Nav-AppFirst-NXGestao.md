@@ -14,7 +14,7 @@
 
 ## Objetivo
 
-Reorganizar a **arquitetura de navegação e o fluxo de configurações** do NX Gestão para mobile-first (app-like), **sem redesenhar a identidade** (tokens/cores/fontes permanecem). Base: briefing `docs/plans/Stitch-Nav-AppFirst-NXGestao.md`.
+Reorganizar a **arquitetura de navegação e o fluxo de configurações** do NX Gest para mobile-first (app-like), **sem redesenhar a identidade** (tokens/cores/fontes permanecem). Base: briefing `docs/plans/Stitch-Nav-AppFirst-NXGestao.md`.
 
 ## Decisões confirmadas (travadas no briefing §5)
 

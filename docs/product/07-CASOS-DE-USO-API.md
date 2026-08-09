@@ -33,12 +33,12 @@ Os cenários desta base são executados por `scripts/smoke-api.mjs` (`npm run sm
 
 ```bash
 # 1) instância isolada (tabelas criadas no boot, seed aplicado depois)
-rm -f /tmp/nxgestao-smoke.db*
-DB_PATH=/tmp/nxgestao-smoke.db PORT=3002 npx tsx src/main.ts &   # cria tabelas
+rm -f /tmp/nxgest-smoke.db*
+DB_PATH=/tmp/nxgest-smoke.db PORT=3002 npx tsx src/main.ts &   # cria tabelas
 # parar, então:
-DB_PATH=/tmp/nxgestao-smoke.db node scripts/seed-demo.mjs        # seed (senha teste123!)
+DB_PATH=/tmp/nxgest-smoke.db node scripts/seed-demo.mjs        # seed (senha teste123!)
 # subir de novo com limite de login ampliado (o smoke faz ~12 logins):
-DB_PATH=/tmp/nxgestao-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=1000 npx tsx src/main.ts &
+DB_PATH=/tmp/nxgest-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=1000 npx tsx src/main.ts &
 
 # 2) rodar
 node scripts/smoke-api.mjs --baseUrl http://localhost:3002       # ou npm run smoke:api

@@ -1,4 +1,4 @@
-# CHECKLIST — Deploy do Primeiro Cliente (PLAN-018) + Rename para nxgestao
+# CHECKLIST — Deploy do Primeiro Cliente (PLAN-018) + Rename para nxgest
 
 **Status:** Concluído
 
@@ -12,19 +12,19 @@
 
 ## Objetivo
 
-Publicar o NX Gestão em produção (VPS + Caddy + HTTPS) e renomear o projeto para `nxgestao` (marca "NX Gestão").
+Publicar o NX Gest em produção (VPS + Caddy + HTTPS) e renomear o projeto para `nxgest` (marca "NX Gest").
 
 ---
 
-## 1 — Rename do projeto para nxgestao
+## 1 — Rename do projeto para nxgest
 
-- [x] UI: `LoginPage.tsx` h1 → "NX Gestão"; `index.html` title → "NX Gestão"
-- [x] localStorage: `nexus_token` → `nxgestao_token` (client.ts, AuthContext, ProtectedRoute)
-- [x] package.json names → `nxgestao` / `nxgestao-frontend` (+ lockfiles)
-- [x] Volumes Docker → `nxgestao_data` (docker-compose.yml + docker-compose.prod.yml)
-- [x] Docs: README, PLAN-018, PLAN-019 (`super@nxgestao.com`), plans/README
-- [x] GitHub repo renomeado para `RafaCartaxo/nxgestao` (via gh CLI); remote atualizado
-- [x] Pasta local renomeada para `nxgestao` (git intacto)
+- [x] UI: `LoginPage.tsx` h1 → "NX Gest"; `index.html` title → "NX Gest"
+- [x] localStorage: `nexus_token` → `nxgest_token` (client.ts, AuthContext, ProtectedRoute)
+- [x] package.json names → `nxgest` / `nxgest-frontend` (+ lockfiles)
+- [x] Volumes Docker → `nxgest_data` (docker-compose.yml + docker-compose.prod.yml)
+- [x] Docs: README, PLAN-018, PLAN-019 (`super@nxgest.com`), plans/README
+- [x] GitHub repo renomeado para `RafaCartaxo/nxgest` (via gh CLI); remote atualizado
+- [x] Pasta local renomeada para `nxgest` (git intacto)
 - [x] Commit `a02dd0e` + push; build verde (`npm run build`)
 
 ## 2 — Deploy em produção (VPS)
@@ -32,18 +32,18 @@ Publicar o NX Gestão em produção (VPS + Caddy + HTTPS) e renomear o projeto p
 - [x] DNS `nxgestao.duckdns.org` → `172.245.152.223` (verificado em 8.8.8.8 e 1.1.1.1)
 - [x] Segurança: senha root trocada; `PasswordAuthentication no`; `PermitRootLogin prohibit-password`; chave SSH ed25519 instalada
 - [x] Docker instalado (AlmaLinux: repositório oficial — `get.docker.com` falha) + `systemctl enable --now docker`
-- [x] Repo clonado em `/opt/nxgestao`; `.env` criado (JWT_SECRET e senhas via `openssl rand`)
+- [x] Repo clonado em `/opt/nxgest`; `.env` criado (JWT_SECRET e senhas via `openssl rand`)
 - [x] `./scripts/deploy.sh` — build + containers `app` e `caddy` no ar
 - [x] Certificado Let's Encrypt emitido automaticamente pelo Caddy
 
 ### Testes em produção
 
 - [x] `GET /api/health` → 200 `{"status":"ok","db":"connected"}`
-- [x] Frontend HTTP 200 com `<title>NX Gestão</title>`
+- [x] Frontend HTTP 200 com `<title>NX Gest</title>`
 - [x] Login `admin@cobranca.com` → token JWT válido
 - [x] CRUD cliente: criar (validação CPF/campos) → listar → deletar (204); banco limpo após teste
 - [x] Conta admin criada: `thalianietomedina@hotmail.com` (Thalia N Medina) via `POST /api/admin/operadores`; login validado
-- [x] Backup cron: script `/opt/scripts/backup-nxgestao.sh` testado (arquivo gerado em `/opt/backups`); cron `0 */12 * * *` instalado; cópia off-site baixada
+- [x] Backup cron: script `/opt/scripts/backup-nxgest.sh` testado (arquivo gerado em `/opt/backups`); cron `0 */12 * * *` instalado; cópia off-site baixada
 
 ## 3 — Documentação
 

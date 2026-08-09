@@ -11,19 +11,19 @@ export function resolverLang(header?: string): EmailLang {
 
 const textos = {
   convite: {
-    "pt-BR": { assunto: "Defina sua senha — NX Gestão", titulo: "Bem-vindo(a)!", corpo: "Seu acesso ao NX Gestão foi criado. Defina sua senha para ativar a conta.", botao: "Definir senha" },
-    en: { assunto: "Set your password — NX Gestão", titulo: "Welcome!", corpo: "Your NX Gestão access was created. Set your password to activate your account.", botao: "Set password" },
-    es: { assunto: "Define tu contraseña — NX Gestão", titulo: "¡Bienvenido!", corpo: "Se creó tu acceso a NX Gestão. Define tu contraseña para activar la cuenta.", botao: "Definir contraseña" },
+    "pt-BR": { assunto: "Defina sua senha — NX Gest", titulo: "Bem-vindo(a)!", corpo: "Seu acesso ao NX Gest foi criado. Defina sua senha para ativar a conta.", botao: "Definir senha" },
+    en: { assunto: "Set your password — NX Gest", titulo: "Welcome!", corpo: "Your NX Gest access was created. Set your password to activate your account.", botao: "Set password" },
+    es: { assunto: "Define tu contraseña — NX Gest", titulo: "¡Bienvenido!", corpo: "Se creó tu acceso a NX Gest. Define tu contraseña para activar la cuenta.", botao: "Definir contraseña" },
   },
   reset: {
-    "pt-BR": { assunto: "Recuperar senha — NX Gestão", titulo: "Recuperar senha", corpo: "Recebemos um pedido para redefinir sua senha. Use o link abaixo (válido por 30 minutos).", botao: "Redefinir senha" },
-    en: { assunto: "Reset password — NX Gestão", titulo: "Reset password", corpo: "We received a request to reset your password. Use the link below (valid for 30 minutes).", botao: "Reset password" },
-    es: { assunto: "Recuperar contraseña — NX Gestão", titulo: "Recuperar contraseña", corpo: "Recibimos una solicitud para redefinir tu contraseña. Usa el enlace de abajo (válido por 30 minutos).", botao: "Redefinir contraseña" },
+    "pt-BR": { assunto: "Recuperar senha — NX Gest", titulo: "Recuperar senha", corpo: "Recebemos um pedido para redefinir sua senha. Use o link abaixo (válido por 30 minutos).", botao: "Redefinir senha" },
+    en: { assunto: "Reset password — NX Gest", titulo: "Reset password", corpo: "We received a request to reset your password. Use the link below (valid for 30 minutes).", botao: "Reset password" },
+    es: { assunto: "Recuperar contraseña — NX Gest", titulo: "Recuperar contraseña", corpo: "Recibimos una solicitud para redefinir tu contraseña. Usa el enlace de abajo (válido por 30 minutos).", botao: "Redefinir contraseña" },
   },
   lead: {
-    "pt-BR": { assunto: "Confirme seu e-mail — NX Gestão", titulo: "Confirme seu e-mail", corpo: "Para avançar com o interesse, confirme seu e-mail.", botao: "Confirmar e-mail" },
-    en: { assunto: "Confirm your email — NX Gestão", titulo: "Confirm your email", corpo: "To move forward with your interest, confirm your email.", botao: "Confirm email" },
-    es: { assunto: "Confirma tu correo — NX Gestão", titulo: "Confirma tu correo", corpo: "Para avanzar con el interés, confirma tu correo.", botao: "Confirmar correo" },
+    "pt-BR": { assunto: "Confirme seu e-mail — NX Gest", titulo: "Confirme seu e-mail", corpo: "Para avançar com o interesse, confirme seu e-mail.", botao: "Confirmar e-mail" },
+    en: { assunto: "Confirm your email — NX Gest", titulo: "Confirm your email", corpo: "To move forward with your interest, confirm your email.", botao: "Confirm email" },
+    es: { assunto: "Confirma tu correo — NX Gest", titulo: "Confirma tu correo", corpo: "Para avanzar con el interés, confirma tu correo.", botao: "Confirmar correo" },
   },
 }
 

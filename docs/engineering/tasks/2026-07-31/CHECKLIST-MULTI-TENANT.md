@@ -37,7 +37,7 @@ Isolamento via JOIN nas queries (zero novas colunas nas tabelas operacionais).
 - [x] Tabela `empresas` (id, nome, createdAt)
 - [x] Coluna `empresaId` (UUID, nullable FK) adicionada a `usuarios`
 - [x] CHECK constraint `role IN ('admin','operator')` removida via table rebuild
-- [x] Seed: super_admin (`super@nxgestao.com`, `empresaId=null`) + empresa "Desenvolvimento" + backfill de admin/operators existentes
+- [x] Seed: super_admin (`super@nxgest.com`, `empresaId=null`) + empresa "Desenvolvimento" + backfill de admin/operators existentes
 - [x] `.env.example` e `.env.production.example` atualizados com `SUPER_ADMIN_*` vars
 
 **Commit:** `b2ddcd9`

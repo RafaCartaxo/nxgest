@@ -4,7 +4,7 @@
  *
  * Uso: node scripts/smoke-api.mjs [--baseUrl http://localhost:3002]
  *
- * Requer instância isolada (ex.: PORT=3002 DB_PATH=/tmp/nxgestao-smoke.db npx tsx src/main.ts)
+ * Requer instância isolada (ex.: PORT=3002 DB_PATH=/tmp/nxgest-smoke.db npx tsx src/main.ts)
  * com o seed aplicado (senha padrão teste123!).
  *
  * Não testa rate limit (429) — bloquearia o IP da própria execução.
@@ -12,7 +12,7 @@
 import Database from "better-sqlite3"
 import { createHash, randomUUID } from "node:crypto"
 
-const SMOKE_DB_PATH = process.env.SMOKE_DB_PATH || "/tmp/nxgestao-smoke.db"
+const SMOKE_DB_PATH = process.env.SMOKE_DB_PATH || "/tmp/nxgest-smoke.db"
 
 /** Leituras diretas no banco isolado (auditoria). Retorna -1 se indisponível. */
 function auditoriaCount(tipo, empresaId) {
@@ -116,7 +116,7 @@ const CPF_B = "11144477735"  // CPF válido (diferente)
 async function main() {
   // ---------- LOGIN ----------
   const adminLogin = await req("POST", "/api/auth/login", { body: { email: "admin@cobranca.com", senha: SENHA } })
-  const superLogin = await req("POST", "/api/auth/login", { body: { email: "super@nxgestao.com", senha: SENHA } })
+  const superLogin = await req("POST", "/api/auth/login", { body: { email: "super@nxgest.com", senha: SENHA } })
   const opLogin = await req("POST", "/api/auth/login", { body: { email: "gabriel.nx@uorak.com", senha: SENHA } })
   const adminToken = adminLogin.data?.token
   const superToken = superLogin.data?.token

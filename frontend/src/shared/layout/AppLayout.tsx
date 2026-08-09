@@ -67,7 +67,7 @@ function SidebarContent() {
       <div className="flex items-center gap-2.5 px-4 py-4">
         <Logo variant="sm" className="h-8 w-8 text-primary" />
         <span className="font-display text-lg font-semibold text-sidebar-foreground">
-          NX <span className="text-brand-gradient">Gestão</span>
+          NX <span className="text-brand-gradient">Gest</span>
         </span>
       </div>
 
@@ -137,7 +137,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <Link to="/" className="flex min-w-0 flex-1 items-center gap-2.5">
             <Logo variant="sm" className="h-7 w-7 text-primary" />
             <span className="font-display font-semibold text-sidebar-foreground">
-              NX <span className="text-brand-gradient">Gestão</span>
+              NX <span className="text-brand-gradient">Gest</span>
             </span>
           </Link>
           <UserMenu mostrarAdmin className="shrink-0" />

@@ -1,8 +1,8 @@
-# NX Gestão — Avatar com foto (usuário/operador/cliente) — briefing para IA
+# NX Gest — Avatar com foto (usuário/operador/cliente) — briefing para IA
 
 ## 1. Contexto do produto
 
-**NX Gestão** ("Nexus Gestão") — plataforma de gestão multi-negócio (whitelabel).
+**NX Gest** ("Nexus Gestão") — plataforma de gestão multi-negócio (whitelabel).
 Frontend **React + Tailwind v3**, mobile-first, identidade 100% por **CSS variables**.
 Identidade "Nexus" (PLAN-038) implementada: tokens OKLCH, fonte Sora (títulos) + Inter,
 sidebar lateral (`AppLayout`), `PageHeader`, `KpiCard`, `Card rounded-xl`, `Modal` base,

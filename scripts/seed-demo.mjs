@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Seed de demonstração — dataset fake realista para o NX Gestão.
+// Seed de demonstração — dataset fake realista para o NX Gest.
 //
 // RESET TOTAL: apaga todos os dados operacionais, usuários e empresas, e recria:
-//   - Super admin "NX Gestão" (super@nxgestao.com)
+//   - Super admin "NX Gest" (super@nxgest.com)
 //   - 4 empresas × 2 admins (admin@cobranca.com = conta de sistema, 1º admin da E1)
 //   - 4 empresas × 5 operadores
 //   - 10 clientes por operador (endereços de João Pessoa/PB e região)
@@ -212,7 +212,7 @@ sqlite.exec(`
 const hash = bcrypt.hashSync(PASSWORD, 10)
 const superId = randomUUID()
 sqlite.prepare("INSERT INTO usuarios (id, nome, email, senhaHash, role, createdAt, empresaId) VALUES (?, ?, ?, ?, 'super_admin', ?, NULL)")
-  .run(superId, "NX Gestão", "super@nxgestao.com", hash, nowISO)
+  .run(superId, "NX Gest", "super@nxgest.com", hash, nowISO)
 
 const empresaIds = empresas.map(() => randomUUID())
 const stmtEmpresa = sqlite.prepare("INSERT INTO empresas (id, nome, createdAt) VALUES (?, ?, ?)")
@@ -412,6 +412,6 @@ console.log(`Backup: ${DB_PATH}.backup-${ts}`)
 console.log(`Empresas: ${totalEmp} | Usuários: ${totalUsers} (1 super + ${admins.length} admins + ${operadores.length} operadores)`)
 console.log(`Clientes: ${totalClientes} | Contratos: ${totalContratos} | Pagamentos: ${totalPagamentos} | Gastos: ${totalGastos} | Movimentações: ${totalMov}`)
 console.log(`Senha padrão: ${PASSWORD}`)
-console.log(`Super admin: NX Gestão (super@nxgestao.com)`)
+console.log(`Super admin: NX Gest (super@nxgest.com)`)
 console.log(`Admin de sistema: admin@cobranca.com`)
 sqlite.close()

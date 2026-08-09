@@ -4,8 +4,8 @@ import { atualizarFavicon } from "./favicon.js"
 
 export type ThemeMode = "light" | "dark" | "system"
 
-const PALETTE_KEY = "nxgestao_palette"
-const MODE_KEY = "nxgestao_mode"
+const PALETTE_KEY = "nxgest_palette"
+const MODE_KEY = "nxgest_mode"
 
 interface ThemeContextValue {
   /** Paleta ativa (default/aurora/ocean/grape/sunset). */
@@ -36,7 +36,7 @@ function getInitialMode(): ThemeMode {
   const stored = localStorage.getItem(MODE_KEY)
   if (stored === "light" || stored === "dark" || stored === "system") return stored
   // compat com as chaves antigas de tema (PLAN-013/PLAN-046)
-  const legacy = localStorage.getItem("nxgestao_dark") ?? localStorage.getItem("theme")
+  const legacy = localStorage.getItem("nxgest_dark") ?? localStorage.getItem("theme")
   if (legacy === "dark" || legacy === "light") return legacy
   return "system"
 }

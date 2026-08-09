@@ -1,4 +1,4 @@
-# NX Gestão
+# NX Gest
 
 Sistema de gestão de cobranças em campo.
 
@@ -24,8 +24,8 @@ scripts/                      — Scripts utilitários
 ## Instalação
 
 ```bash
-git clone https://github.com/RafaCartaxo/nxgestao.git
-cd nxgestao
+git clone https://github.com/RafaCartaxo/nxgest.git
+cd nxgest
 
 # Instala dependências do backend e do frontend
 npm install
