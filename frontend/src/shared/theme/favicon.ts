@@ -4,11 +4,24 @@
  * `getComputedStyle` após o `applyTheme`. Fallback: o `favicon.svg` estático até
  * o JS rodar. Segurança: o SVG é construído só com valores de tokens internos
  * (nenhum input de usuário) via `encodeURIComponent`.
+ *
+ * Cores resolvidas para `rgb(...)` (probe element) de propósito: o rasterizador
+ * de ícone do Android/shortcut não aceita `oklch()`/`var()` no SVG — só valores
+ * concretos como `rgb(r, g, b)` (precedente: favicon "N solto com fundo branco").
  */
 
 function cor(name: string, fallback: string): string {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-  return v || fallback
+  try {
+    const probe = document.createElement("span")
+    probe.style.display = "none"
+    probe.style.color = `var(${name})`
+    document.body.appendChild(probe)
+    const resolved = getComputedStyle(probe).color
+    probe.remove()
+    return resolved && resolved !== "rgba(0, 0, 0, 0)" ? resolved : fallback
+  } catch {
+    return fallback
+  }
 }
 
 /**
