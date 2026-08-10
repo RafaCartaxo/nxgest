@@ -381,11 +381,11 @@ Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já cobe
 
 ## P027 — Hardening de segurança (P0/P1/P2)
 
-> **Em execução (07/08):** `PLAN-066-hardening-seguranca.md` — **P0 implementado** (trust proxy · helmet/CSP · CORS fail-closed · HSTS no Caddy). Postura: `docs/engineering/SEGURANCA.md`.
+> **Em execução (08/08):** `PLAN-066-hardening-seguranca.md` — **P0+P1 implementados** (trust proxy + `CF-Connecting-IP` · helmet/CSP · CORS fail-closed · HSTS · rate limit por usuário · deps/drizzle · backup cripto · firewall). Postura: `docs/engineering/SEGURANCA.md`. **P2 pendente.**
 
-- **P0 ✅:** `trust proxy` (rate limit real atrás do Caddy) · `helmet`/CSP/HSTS + headers no Caddy · CORS fail-closed.
-- **P1:** `npm audit` + avaliar `drizzle-orm` · firewall/fail2ban no VPS · rate limit global/por usuário · backup off-site criptografado · timeouts no Caddy.
-- **P2:** JWT mais curto/revogação · Cloudflare WAF (migração de URL) · 2FA admin · senha mín. 8.
+- **P0 ✅:** `trust proxy` + `CF-Connecting-IP` (rate limit real atrás do Caddy/Cloudflare) · `helmet`/CSP/HSTS + headers no Caddy · CORS fail-closed.
+- **P1 ✅:** `npm audit` + `drizzle-orm` 0.45.2 · firewall/fail2ban no VPS (doc) · rate limit global/por usuário · backup off-site criptografado · timeouts no Caddy.
+- **P2 ⏳:** JWT mais curto/revogação · Cloudflare WAF (URL já migrada) · 2FA admin · senha mín. 8.
 - **CTs:** ~22 novos (T/A/I/D/P) + regressão referenciando os existentes no `07`.
 
 ---
