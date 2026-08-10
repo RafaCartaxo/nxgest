@@ -29,6 +29,9 @@
 - [04-BACKEND.md](engineering/04-BACKEND.md) — Implementação do backend, Use Cases e Ports
 - [05-MAPEAMENTO-TELAS.md](engineering/05-MAPEAMENTO-TELAS.md) — Mapeamento de telas, componentes e aderência ao Design System
 - [06-PRODUCAO.md](engineering/06-PRODUCAO.md) — Runbook de operação: acesso, deploy, backup, rollback
+- [07-FORMS-INPUTS.md](engineering/07-FORMS-INPUTS.md) — Padrões de formulários e inputs (Field, validação, máscaras)
+- [TESTES.md](engineering/TESTES.md) — Estratégia de testes, rotina e convenções (PLAN-067)
+- [SEGURANCA.md](engineering/SEGURANCA.md) — Postura de segurança, gaps e processos (PLAN-066)
 
 ### Design
 
@@ -38,6 +41,7 @@
 - [04-UI-COMPONENTS.md](engineering/design/04-UI-COMPONENTS.md) — Catálogo oficial de componentes da UI
 - [05-TOKEN.md](engineering/design/05-TOKEN.md) — Design tokens implementados no código
 - [06-UI-PATTERNS.md](engineering/design/06-UI-PATTERNS.md) — Padrões de composição, templates de tela e anti-patterns
+- [UI-COVERAGE.md](engineering/design/UI-COVERAGE.md) — Inventário de cobertura da UI por tela/componente (PLAN-044)
 
 ## Decisions
 
@@ -46,6 +50,10 @@
 ## Plans
 
 Consulte o [índice completo de planos](plans/README.md).
+
+## Status
+
+- [STATUS.md](STATUS.md) — Visão de relance: planos em aberto, pendências de produção, últimos deploys
 
 ## Skills
 

@@ -336,7 +336,7 @@ Vitest + React Testing Library (jsdom) para as telas alteradas em PLAN-029/030:
 - ContribuicaoModal / EquipeModal — total, ordenação, navegação ao operador com `?empresaId=` (UC-024/053);
 - Navbar — links Administração/Empresas por role (UC-054).
 
-Hoje `npm test` sai com **exit 1** ("No test files found"). Backend/API já coberto por `scripts/smoke-api.mjs` (91 cenários).
+Hoje `npm test` roda **78 testes verdes** (vitest unit + UI RTL) e o CI valida no push; backend/API coberto por `scripts/smoke-api.mjs` (248 cenários).
 
 ## P023 — Validação manual de fim de fluxo e empty states
 

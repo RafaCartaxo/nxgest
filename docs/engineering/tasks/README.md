@@ -26,7 +26,7 @@ tasks/
 
 | Data | Tarefa | Status |
 |------|--------|--------|
-| [02/07/2026](2026-07-02/CHECKLIST.md) | Componentização — preparação e checklist | Em andamento |
+| [02/07/2026](2026-07-02/CHECKLIST.md) | Componentização — preparação e checklist | Concluído |
 | [03/07/2026](2026-07-03/CHECKLIST-FASE3.md) | Fase 3 — Qualidade Técnica | Concluído |
 | [04/07/2026](2026-07-04/CHECKLIST-FASE4.md) | Fase 4 — ClienteCard | Concluído |
 | [04/07/2026](2026-07-04/CHECKLIST-FASE5.md) | Fase 5 — Tokens + ContratoCard | Concluído |
@@ -44,3 +44,10 @@ tasks/
 | [01/08/2026](2026-08-01/CHECKLIST-PLAN-022.md) | Ajuste de KPIs + deploy no VPS (PLAN-022) | Concluído |
 | [01/08/2026](2026-08-01/CHECKLIST-PLAN-025.md) | Ajuste do Caixa Base exclusivo de admin (PLAN-025) | Concluído |
 | [02/08/2026](2026-08-02/CHECKLIST.md) | Sprint 1 do backlog: Auditoria de Caixa, Modais, Nomenclatura admin (PLAN-026) | Concluído |
+| [03/08/2026](2026-08-03/CHECKLIST.md) | Temas em componentes + Hero headers nos módulos (PLAN-035) | Concluído |
+| [05/08/2026](2026-08-05/CHECKLIST.md) | Fix switch + engrenagem + coerência do grafo (PLAN-046) | Concluído |
+| [06/08/2026](2026-08-06/CHECKLIST.md) | Card de cobrança: iterações de refinamento (PLAN-047 consolidado) | Concluído |
+| [07/08/2026](2026-08-07/CHECKLIST.md) | Navegação app-first: bottom tab bar + menu do usuário (Stitch-Nav) + fix portal do Modal + PLAN-061 | Concluído |
+| [08/08/2026](2026-08-08/CHECKLIST.md) | Lote de fixes (anexos/CSP · GPS · rota · PWA · e-mail · IPv6) + deploy prod | Concluído |
+| [08/08/2026](2026-08-08/HANDOFF.md) | Handoff consolidado — estado e pendências | Concluído |
+| [10/08/2026](2026-08-10/CHECKLIST.md) | Sincronização de documentação + organização (paths infra, índices, planos, ROADMAP, STATUS.md) | Concluído |

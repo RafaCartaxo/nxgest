@@ -13,6 +13,9 @@ Documentos técnicos que definem a arquitetura, o banco de dados, a API, o front
 | [04-BACKEND.md](04-BACKEND.md) | Implementação do backend, Use Cases e Ports | Aprovado |
 | [05-MAPEAMENTO-TELAS.md](05-MAPEAMENTO-TELAS.md) | Mapeamento de telas, componentes e aderência ao Design System | Aprovado |
 | [06-PRODUCAO.md](06-PRODUCAO.md) | Runbook de operação: acesso, deploy, backup, rollback, monitoramento | Aprovado |
+| [07-FORMS-INPUTS.md](07-FORMS-INPUTS.md) | Padrões de formulários e inputs (Field, validação, máscaras) | Aprovado |
+| [TESTES.md](TESTES.md) | Estratégia de testes, rotina e convenções (PLAN-067) | Aprovado |
+| [SEGURANCA.md](SEGURANCA.md) | Postura de segurança, gaps e processos (PLAN-066) | Aprovado |
 
 ## Design
 
@@ -26,6 +29,7 @@ A subpasta [design/](design/) contém os documentos de identidade visual e exper
 | [04-UI-COMPONENTS.md](design/04-UI-COMPONENTS.md) | Catálogo oficial de componentes da UI | Aprovado |
 | [05-TOKEN.md](design/05-TOKEN.md) | Design tokens implementados no código | Aprovado |
 | [06-UI-PATTERNS.md](design/06-UI-PATTERNS.md) | Padrões de composição e anti-patterns | Aprovado |
+| [UI-COVERAGE.md](design/UI-COVERAGE.md) | Inventário de cobertura da UI por tela/componente (PLAN-044) | Aprovado |
 
 ## Ordem de leitura recomendada
 

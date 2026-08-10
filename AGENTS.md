@@ -15,7 +15,7 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 | Índice geral | `docs/README.md` e `docs/INDEX.md` |
 | Produto (domínio, regras, PRD, roadmap) | `docs/product/` |
 | Arquitetura, banco, API, backend, frontend | `docs/engineering/` |
-| Planos de implementação (PLAN-001 a PLAN-019) | `docs/plans/README.md` |
+| Planos de implementação (PLAN-001 a PLAN-069) | `docs/plans/README.md` |
 | Decisões arquiteturais (ADRs) | `docs/decisions/ADR-INDEX.md` |
 | **Produção / operação (runbook)** | `docs/engineering/06-PRODUCAO.md` |
 | Deploy do primeiro cliente | `docs/plans/PLAN-018-deploy.md` |
@@ -23,9 +23,9 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 ## Segurança — regras obrigatórias
 
 - **Nunca versionar** `.env`, senhas, tokens ou segredos.
-- **Credenciais e acessos externos ficam fora do repo**, em `~/.config/nxgest/`
+- **Credenciais e acessos externos ficam fora do repo**, em `~/.config/nxgestao/`
   (ver `ACESSOS.md` lá — painel VPS, DuckDNS, GitHub, senhas do sistema).
-- O `.env` de produção vive no VPS (`/opt/nxgest/.env`, chmod 600) — nunca copiar pro repo.
+- O `.env` de produção vive no VPS (`/opt/nxgestao/.env`, chmod 600) — nunca copiar pro repo.
 - `JWT_SECRET` é obrigatório em produção (app falha ao iniciar sem ele).
 
 ## Produção
@@ -72,7 +72,7 @@ Bug reportado "em produção" nem sempre é bug de código. Antes de investigar,
 - Backend em Clean Architecture: `src/modules/<modulo>/{domain,application,infrastructure,presentation}`
 - Endpoints da API documentados em `docs/engineering/02-API.md` e `docs/api-collection.json`
 - Alterações de features seguem um plano em `docs/plans/` (padrão do projeto)
-- Registro diário de trabalho em `docs/engineering/tasks/YYYY-MM-DD/CHECKLIST.md`
+- Registro diário de trabalho em `docs/engineering/tasks/YYYY-MM-DD/CHECKLIST.md` (usar `docs/templates/CHECKLIST.template.md` como base; catálogo de status ✅/🔵/⏳/🚨/❌ no próprio template)
 - **UI (PLAN-044/047):** novas telas/módulos usam **apenas componentes compartilhados** (PageHeader, Card, KpiCard, Field/FieldSelect/FieldTextarea, Modal com `title`, Tabs, Switch, QuickActions, Button, StatusBadge) e tokens — sem padrão legado (`rounded-md` em inputs/rows, `bg-secondary-light`, `border-l-*`, `variant="onDark"`, `RotaCobrancaSection`, `<select>`/`<textarea>` cru, `<Modal>` sem `title`, `role="tab"` fora do Tabs). Rodar `npm run audit:ui` + `npm run audit:styles` após qualquer mudança visual; atualizar `docs/engineering/design/UI-COVERAGE.md`.
 - **Componente compartilhado mudou? (PLAN-044):** varrer TODOS os consumidores (`node scripts/consumers.mjs <componente>`) e atualizá-los **no mesmo PR**, com `audit:ui` limpo.
 

@@ -2,6 +2,18 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 10/08/2026 — Sincronização de documentação + organização
+
+**Sem mudança de código** — rodada de organização do acervo de docs (pós-handoff 09/08):
+
+- **Infra paths corrigidos** (realidade confirmada no VPS): `AGENTS.md` · `06-PRODUCAO.md` · `.opencode/agents/{ops-runner,docs-sync}.md` · `ADR-004` · `PLAN-018` · `PLAN-068` → `/opt/nxgestao` · `~/.config/nxgestao/` · volume `nxgestao_nxgestao_data`; ops-runner URL → `nxgest.com.br`.
+- **Índices/READMEs sincronizados**: `INDEX.md` (+TESTES/SEGURANCA/07-FORMS/UI-COVERAGE/STATUS) · `product/README` (BR-106, roadmap v2.7, 06/07/08) · `engineering/README` · `ADR-INDEX` + `foundation` (ADR-004/005/006 órfãs) · `tasks/README` (histórico até 10/08) · `templates/README.md` criado.
+- **Planos**: `plans/README.md` reestruturado (seção "Backlog e briefings auxiliares"); briefs Lovable históricos marcados (Admin→040, Avatar→041, Anexos→042, Cadastro-Rota→055/056/062, NXGest→superseded, Stitch-Nav→060); **rename `Lovable-Icone-Marca-NXGestao.md` → `NXGest`**; duplicata `PLAN-005-padronização-cliente-card.md` → `plans/arquivo/…-HISTORICO.md`; `BACKLOG.md` sem referência obsoleta.
+- **ROADMAP**: 5.5/5.8 → 248 cenários + 78 testes/CI; 5.6 → Concluído (PLAN-055/056); 5.4 PWA parcial; entregas PLAN-066/068/069; marcos M8/M9.
+- **Novidades de rotina**: `docs/templates/CHECKLIST.template.md` (estrutura fixa + catálogo de status ✅/🔵/⏳/🚨/❌/🐛/🔁) · **`docs/STATUS.md`** (hub de relance: prod, planos em aberto, pendências, backlog, métricas).
+
+Referência: `docs/engineering/tasks/2026-08-10/CHECKLIST.md` · `docs/STATUS.md`
+
 ## 07/08/2026 — Polimento de UI: protótipo aprovado + PLAN-069 pronto
 
 - **Protótipo Lovable aprovado** (commit `42f1adcb`): 100% do briefing entregue (Config com preview ao vivo · Fechar caixa na Central · Ajuste de caixa do operador · Admin com KPIs/filtro/convite). i18n 3/3.

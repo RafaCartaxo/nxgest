@@ -28,7 +28,7 @@ Implantar o NX Gest em um **VPS dedicado** com:
 - **Provedor:** VPS Hosting Service (`vpshostingservice.co`) — plano de ~$2/mês, escolhido pelo custo; contratado em 31/07/2026.
 - **Containerização:** Docker Compose (`docker-compose.prod.yml`) com 2 serviços: `app` (Node 20 + Express, porta 8080) e `caddy` (proxy reverso, portas 80/443).
 - **Proxy reverso + HTTPS:** **Caddy**, que emite e renova certificados **Let's Encrypt automaticamente** — zero configuração de certbot.
-- **Persistência:** SQLite em **volume Docker** (`nxgest_nxgest_data` → `/data/gestao.db`), sobrevive a deploys.
+- **Persistência:** SQLite em **volume Docker** (`nxgestao_nxgestao_data` → `/data/gestao.db`), sobrevive a deploys.
 - **Domínio:** subdomínio grátis **DuckDNS** (`nxgestao.duckdns.org`) apontando A record para o IP do VPS — provisório para o MVP.
 - **OS do VPS:** AlmaLinux 8.10 (RHEL) — Docker instalado via repositório oficial (`get.docker.com` não suporta AlmaLinux).
 - **Backup:** cron próprio (2x/dia) copiando o banco do volume para `/opt/backups` (o provedor não oferece snapshot).

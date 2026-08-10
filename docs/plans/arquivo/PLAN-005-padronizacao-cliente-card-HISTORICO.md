@@ -1,6 +1,8 @@
 ﻿# PLAN-005 — Padronização da Apresentação de Cliente
 
-**Status:** Planejado
+> **ARQUIVADO (histórico).** Duplicata da versão canônica `docs/plans/PLAN-005-cliente-card.md` (cliente-card + componente compartilhado), que foi a implementada (Concluído). Este arquivo é mantido como registro da proposta original ("Padronização da Apresentação de Cliente", status Planejado) — não é referência ativa.
+
+**Status:** Planejado (arquivado)
 
 ---
 

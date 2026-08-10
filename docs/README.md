@@ -16,15 +16,17 @@ Bem-vindo à documentação oficial do sistema de gestão de cobranças em campo
 | [Templates](templates/README.md) | Templates para documentação |
 | [Tasks](engineering/tasks/README.md) | Checklists de execução por data |
 | [Atualizações](UPDATES.md) | Registro resumido de melhorias e correções recentes |
+| [Status](STATUS.md) | Visão de relance: planos em aberto, pendências de produção, deploys |
 
 ## Como navegar
 
 1. Comece pelo [INDEX.md](INDEX.md) para visão geral completa
-2. Consulte o [ROADMAP.md](product/04-ROADMAP.md) para saber a fase atual
-3. Veja o [MAPEAMENTO-TELAS.md](engineering/05-MAPEAMENTO-TELAS.md) para as telas existentes
-4. Veja os casos de uso de validação: [fluxos](product/06-CASOS-DE-USO.md) e [API](product/07-CASOS-DE-USO-API.md)
-5. Para manter tudo alinhado (fonte única de verdade), use a [SKILL-009](skills/SKILL-009-documentation-sync.md) ou o comando `audita-docs`
-6. Cada seção possui seu próprio README com a lista de documentos disponíveis
+2. Veja o [STATUS.md](STATUS.md) para a situação atual (planos em aberto, prod, pendências)
+3. Consulte o [ROADMAP.md](product/04-ROADMAP.md) para saber a fase atual
+4. Veja o [MAPEAMENTO-TELAS.md](engineering/05-MAPEAMENTO-TELAS.md) para as telas existentes
+5. Veja os casos de uso de validação: [fluxos](product/06-CASOS-DE-USO.md) e [API](product/07-CASOS-DE-USO-API.md)
+6. Para manter tudo alinhado (fonte única de verdade), use a [SKILL-009](skills/SKILL-009-documentation-sync.md) ou o comando `audita-docs`
+7. Cada seção possui seu próprio README com a lista de documentos disponíveis
 
 ## Convenções
 

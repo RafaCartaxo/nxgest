@@ -70,7 +70,23 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-066-hardening-seguranca.md](PLAN-066-hardening-seguranca.md) | Hardening de segurança (trust proxy/CF-Connecting-IP · helmet/CSP · CORS fail-closed · rate limit por usuário · backup cripto) — P0+P1 ✅ · P2 pendente | 🔵 P2 pendente |
 | [PLAN-067-testes.md](PLAN-067-testes.md) | Implementação de testes: infra vitest/jsdom/RTL + coverage + CI; unit use-cases + shared/segurança + lógica front + UI crítica (P022) | 🔵 Em execução (F0+F1+F3-P022+CI+coverage, 08/08) |
 | [PLAN-068-migracao-url-email-producao.md](PLAN-068-migracao-url-email-producao.md) | Migração de URL para `nxgest.com.br` + e-mail em produção (Resend · Caddy www→apex · env/compose · SSL Full strict · duckdns transitório) | ✅ Em produção (08/08) |
-| [Lovable-Polimento-UI-NXGest.md](Lovable-Polimento-UI-NXGest.md) | Briefing Lovable: polimento de 4 superfícies (Configurações · Fechar caixa Central · Ajuste caixa operador · Admin) — estado-alvo app-feel | 🔵 Briefing (→ Lovable) |
-| [Lovable-Icone-Marca-NXGestao.md](Lovable-Icone-Marca-NXGestao.md) | Briefing Lovable: ícone/marca — "N" limpo e centralizado + fundo full-bleed + legível a 16px (favicon/logo/PWA) | 🔵 Briefing (→ Lovable) |
 | [PLAN-069-polimento-ui-app.md](PLAN-069-polimento-ui-app.md) | Port-back do polimento de UI (protótipo Lovable `42f1adcb` — Config/Fechar caixa/Ajuste caixa/Admin) | 🔵 Em execução — parte 1 ✅ (08/08) · parte 2 (Admin) pendente |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |
+
+## Backlog e briefings auxiliares
+
+> **Backlog do produto** (refinamentos priorizados por epic): [BACKLOG.md](BACKLOG.md).
+
+Briefings para ferramentas de IA/Lovable e artefatos de referência — históricos quando o trabalho já foi portado para o app real:
+
+| Documento | Descrição | Status |
+|---|---|---|
+| [BACKLOG.md](BACKLOG.md) | Refinamentos do produto por epic (P011..P027) — prioridade sugerida | 🔵 Em andamento |
+| [Lovable-Polimento-UI-NXGest.md](Lovable-Polimento-UI-NXGest.md) | Briefing Lovable: polimento de 4 superfícies (Configurações · Fechar caixa Central · Ajuste caixa operador · Admin) — estado-alvo app-feel | ✅ Portado (PLAN-069) |
+| [Lovable-Icone-Marca-NXGest.md](Lovable-Icone-Marca-NXGest.md) | Briefing Lovable: ícone/marca — "N" limpo e centralizado + fundo full-bleed + legível a 16px (favicon/logo/PWA) | 🔵 Briefing (→ Lovable) |
+| [Lovable-Admin-NXGest.md](Lovable-Admin-NXGest.md) | Briefing Lovable: área administrativa — `Field`, `ModulosModal` v2, AdminPage, EmpresaList | ✅ Histórico (portado em PLAN-040) |
+| [Lovable-Avatar-NXGest.md](Lovable-Avatar-NXGest.md) | Briefing Lovable: Avatar com foto (usuário/operador/cliente) | ✅ Histórico (portado em PLAN-041) |
+| [Lovable-Anexos-NXGest.md](Lovable-Anexos-NXGest.md) | Briefing Lovable: anexos do cliente (comprovante de residência, foto/PDF) | ✅ Histórico (portado em PLAN-042) |
+| [Lovable-Cadastro-Rota-NXGest.md](Lovable-Cadastro-Rota-NXGest.md) | Briefing Lovable: cadastro (cliente/contrato) + rota + botões na identidade Nexus | ✅ Histórico (portado em PLAN-055/056/062) |
+| [Lovable-NXGest.md](Lovable-NXGest.md) | Briefing original de identidade visual (pré-"Nexus") | ✅ Superseded (mantido como histórico) |
+| [Stitch-Nav-AppFirst-NXGest.md](Stitch-Nav-AppFirst-NXGest.md) | Briefing Lovable: navegação app-first (bottom tab bar + UserMenu + sidebar) | ✅ Histórico (implementado em 07/08, PLAN-060) |

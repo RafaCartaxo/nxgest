@@ -25,6 +25,8 @@
 - IP: `172.245.152.223`
 - Detalhes completos de operação: [engineering/06-PRODUCAO.md](../engineering/06-PRODUCAO.md)
 
+> **Migração de URL (08/08, PLAN-068):** a URL oficial é agora **`https://nxgest.com.br`** (Cloudflare proxied + e-mail Resend ativo); `nxgestao.duckdns.org` segue servido pelo Caddy apenas como transitório, até a confirmação total, e depois é aposentado. O repo no VPS é `/opt/nxgestao` (volume docker `nxgestao_*`). Este plano documenta o **primeiro deploy (31/07)** — operação atual em `engineering/06-PRODUCAO.md`.
+
 ---
 
 ## Objetivo
@@ -48,7 +50,7 @@ Preparar e executar o primeiro deploy do NX Gest para um cliente real, disponibi
 | Volumes Docker | `nxgest_nxgest_data` (banco), `nxgest_caddy_data`, `nxgest_caddy_config` |
 | Banco | SQLite `/data/gestao.db` (volume persistente) |
 | HTTPS | Let's Encrypt emitido automaticamente pelo Caddy |
-| Admin default | `admin@cobranca.com` (senha no arquivo local `~/.config/nxgest/vps-admin-pw.txt`, fora do repo) |
+| Admin default | `admin@cobranca.com` (senha no arquivo local `~/.config/nxgestao/vps-admin-pw.txt`, fora do repo) |
 | Backup | Cron 2x/dia → `/opt/backups` (script `/opt/scripts/backup-nxgest.sh`, retém 14 dias) |
 
 ### Segurança aplicada no VPS
@@ -63,7 +65,7 @@ Preparar e executar o primeiro deploy do NX Gest para um cliente real, disponibi
 | Usuário | Email | Role | Status |
 |---------|-------|------|--------|
 | Admin | `admin@cobranca.com` | admin | Seed automático (senha via `ADMIN_DEFAULT_PASSWORD`) |
-| Thalia N Medina | `thalianietomedina@hotmail.com` | admin | Criada via `POST /api/admin/operadores` em 31/07/2026 (senha em `~/.config/nxgest/thaliana-pw.txt`) |
+| Thalia N Medina | `thalianietomedina@hotmail.com` | admin | Criada via `POST /api/admin/operadores` em 31/07/2026 (senha em `~/.config/nxgestao/thaliana-pw.txt`) |
 
 ---
 

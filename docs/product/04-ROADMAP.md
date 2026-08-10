@@ -46,6 +46,9 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 | Testes integrados (unit use-cases + shared/segurança + UI RTL + smoke + CI) | P022 → PLAN-067 |
 | Caixa e Gasto | Fase 4 (PLAN-014) |
 | Auditoria de caixa, modais, nomenclatura, estorno | Backlog → PLAN-026/027/028 |
+| Hardening de segurança (trust proxy · helmet/CSP · CORS fail-closed · rate limit por usuário · backup cripto) | P027 → PLAN-066 (P2 pendente) |
+| Migração de URL para `nxgest.com.br` + e-mail em produção (Resend) | PLAN-068 |
+| Polimento de UI app-first (Config/Fechar caixa/Ajuste caixa; Admin pendente) | PLAN-069 |
 
 ## O que está inconsistente
 
@@ -610,21 +613,19 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 - **Prioridade:** Média — já existe `RotaCobrancaSection`
 
 ### 5.4 PWA / instalação mobile
-- Service worker
-- Manifest.json
-- Cache de assets
+- **Parcial (08/08):** manifest.webmanifest + ícones 192/512/maskable + apple-touch-icon + metas já em produção (lote de fixes 08/08). **Faltam:** service worker, cache de assets, offline.
 - **Prioridade:** Média — melhor experiência mobile
 
 ### 5.5 Testes automatizados
-- **API/backend:** `scripts/smoke-api.mjs` (91 cenários da `07` — validado 03/08/2026) ✅; testes unitários pendentes.
-- **UI/frontend:** **em plano** — `PLAN-067-testes.md` (vitest + jsdom + RTL + coverage + CI; P022 destravado 07/08). Base atual: 7 arquivos/40 testes (use-cases + shared).
-- **Prioridade:** Média — cobertura de UI atual = 0%
+- **API/backend:** `scripts/smoke-api.mjs` (**248 cenários** da `07` — validado 08/08) ✅.
+- **UI/frontend:** em execução — `PLAN-067-testes.md` (vitest + jsdom + RTL + coverage + CI). **Base atual: 78 testes verdes** (18 arquivos: use-cases auth/leads + shared/segurança + lógica front + LoginPage UI); CI valida `tsc · build · audits · npm test · docs:audit` + job smoke isolado.
+- **Prioridade:** Média — cobertura de UI ainda cresce via PLAN-067 (F1/F2/F3)
 
 ### 5.6 Endereço do Comércio + GPS
 - Separar endereço pessoal do endereço do comércio
 - Botão "Usar local atual" via GPS do dispositivo
 - Botão Navegar usa endereço do comércio como destino
-- **Status:** Planejado — `plans/PLAN-016-endereco-comercio.md`
+- **Status:** Concluído ✅ — `PLAN-055/056` (módulo `shared/geo` + fix do endereço + GpsControl 3 estados + decisão de navegação QuickAction única)
 - **Prioridade:** Média — melhora usabilidade do operador em campo
 
 ### 5.7 Multi-Tenant: Super Admin + Empresas
@@ -657,9 +658,9 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 ---
 
 ### 5.8 Testes automatizados
-- **API:** `scripts/smoke-api.mjs` ✅ (91 cenários, validado 03/08)
-- **UI (T1):** **em plano** — `PLAN-067-testes.md` (vitest + jsdom + RTL + coverage + CI; P022 destravado 07/08)
-- **Prioridade:** Média — cobertura de UI atual = 0%
+- **API:** `scripts/smoke-api.mjs` ✅ (**248 cenários**, validado 08/08)
+- **UI (T1):** em execução — `PLAN-067-testes.md` (vitest + jsdom + RTL + coverage + CI; **78 testes verdes** + CI no push)
+- **Prioridade:** Média — cobertura de UI cresce via PLAN-067
 
 ---
 
@@ -695,8 +696,8 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 | M6 — Caixa + Gasto | F4 | ✅ Concluído | BR-018 a BR-028 implementados, testados |
 | M7a — Autenticação base (PLAN-015) | F5 | ✅ Concluído | Login JWT, isolamento de dados, LoginPage, AuthContext, ProtectedRoute |
 | M7b — Admin Panel (PLAN-017) | F5 | ✅ Concluído | Coluna `role`, admin.middleware, CRUD operadores, AdminPage, dashboard consolidado |
-| M8 — PWA + Mapa | F5 | TBD | Funcionalidades extras |
-| M9 — Endereço do Comércio | F5 | Planejado | PLAN-016: endereço comércio separado + GPS |
+| M8 — PWA + Mapa | F5 | Parcial | PWA: manifest/ícones em prod (08/08); service worker/offline pendente · Mapa: pendente |
+| M9 — Endereço do Comércio | F5 | Concluído | PLAN-055/056: endereço comércio separado + GPS + navegação |
 | M10 — Multi-Tenant (PLAN-019) | F5 | Concluído | Super admin, empresas, isolamento por empresaId, hardening de auth |
 
 ---

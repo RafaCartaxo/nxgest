@@ -8,6 +8,8 @@
 | [ADR-002](../foundation/ADR-002-Arquitetura-Front.md) | Arquitetura do Frontend | Aprovado | 27/06/2026 |
 | [ADR-003](../foundation/ADR-003-Auth-Autorizacao.md) | Subsistema de Autenticação e Autorização | Aprovado | 30/07/2026 |
 | [ADR-004](../foundation/ADR-004-Infra-Deploy.md) | Infraestrutura de Deploy (VPS + Caddy + DuckDNS) | Aprovado | 31/07/2026 |
+| [ADR-005](../foundation/ADR-005-UI-Governance.md) | Governança de UI: débito do redesign + guardrails anti-drift | Aprovado | 05/08/2026 |
+| [ADR-006](../foundation/ADR-006-Module-Manifest.md) | Module Manifest: fonte única do whitelabel granular | Aprovado | 05/08/2026 |
 
 ## Template
 
