@@ -83,7 +83,7 @@ Briefings para ferramentas de IA/Lovable e artefatos de referência — históri
 |---|---|---|
 | [BACKLOG.md](BACKLOG.md) | Refinamentos do produto por epic (P011..P027) — prioridade sugerida | 🔵 Em andamento |
 | [Lovable-Polimento-UI-NXGest.md](Lovable-Polimento-UI-NXGest.md) | Briefing Lovable: polimento de 4 superfícies (Configurações · Fechar caixa Central · Ajuste caixa operador · Admin) — estado-alvo app-feel | ✅ Portado (PLAN-069) |
-| [Lovable-Icone-Marca-NXGest.md](Lovable-Icone-Marca-NXGest.md) | Briefing Lovable: ícone/marca — "N" limpo e centralizado + fundo full-bleed + legível a 16px (favicon/logo/PWA) | 🔵 Briefing (→ Lovable) |
+| [Lovable-Icone-Marca-NXGest.md](Lovable-Icone-Marca-NXGest.md) | Briefing Lovable: ícone/marca — "N" limpo e centralizado + fundo full-bleed + legível a 16px (favicon/logo/PWA) | ✅ Portado (10/08) |
 | [Lovable-Admin-NXGest.md](Lovable-Admin-NXGest.md) | Briefing Lovable: área administrativa — `Field`, `ModulosModal` v2, AdminPage, EmpresaList | ✅ Histórico (portado em PLAN-040) |
 | [Lovable-Avatar-NXGest.md](Lovable-Avatar-NXGest.md) | Briefing Lovable: Avatar com foto (usuário/operador/cliente) | ✅ Histórico (portado em PLAN-041) |
 | [Lovable-Anexos-NXGest.md](Lovable-Anexos-NXGest.md) | Briefing Lovable: anexos do cliente (comprovante de residência, foto/PDF) | ✅ Histórico (portado em PLAN-042) |

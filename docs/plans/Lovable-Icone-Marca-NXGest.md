@@ -1,8 +1,12 @@
 # Lovable — Ícone e Marca: "N" limpo, centralizado e preenchido
 
-**Versão:** 1.0
+**Versão:** 1.1
 
 **Data:** 08/08/2026
+
+**Status:** ✅ Portado (10/08) — geometria nova no app real: `frontend/src/shared/components/Logo.tsx` (+ prop `boxed`) · `frontend/src/shared/theme/favicon.ts` · `frontend/public/favicon.svg` + PNGs PWA regenerados (icon-192/512, maskable, apple-touch).
+
+**Fonte (protótipo):** `RafaCartaxo/site-personality-plus` commit `f5a8156` (10/08) — `src/components/brand/NexusMark.tsx` + `public/favicon.svg` (usado como **referência visual**; port mantém API `Logo`/`LogoLockup` do app real).
 
 > Refinar o ícone/marca Nexus. **Regra de ouro:** estado-alvo (como deve ficar), mantendo a identidade Nexus (malha de nós + hub + "N"). Referência atual: `frontend/src/shared/components/Logo.tsx` · `frontend/src/shared/theme/favicon.ts` · `frontend/public/favicon.svg` + ícones PWA.
 
@@ -20,7 +24,15 @@
 
 ## Regras
 - Só tokens (sem cor fixa da paleta) · mesma geometria reutilizada entre ícone e logo · a11y (`aria-label`).
-
 ## Entregáveis
+
 - O desenho do ícone (N centralizado + fundo full-bleed) **e** a geometria (nós/arestas) para portar nos 3 lugares: `Logo.tsx` · `favicon.ts` · `favicon.svg` (+ regenerar PNGs PWA: icon-192/512/maskable/apple-touch).
 - Variações: 16px · 32px · 57px · logo transparente · dark · 5 paletas.
+
+## Port-back (10/08) — no jeito do app real
+
+- **`Logo.tsx`**: geometria nova (viewBox `0 0 64 64`, "N" primário + malha decorativa + hub accent) mantendo a API `Logo`/`LogoLockup` (`variant: lg|sm|mono`) — consumidores intactos (`LoginPage`, `PublicPageShell`, `QueroConhecerPage`, `AppLayout`). Nova prop `boxed` (fundo `--color-primary` full-bleed + `rx=14`, app icon). Title padrão **"NX Gest"** (marca atual).
+- **`favicon.ts`**: geometria nova theme-aware (dark + 5 paletas + whitelabel), **full-bleed sem `rx`** — resolve os cantos transparentes.
+- **`favicon.svg`** (estático): quadrado full-bleed, cores literais da paleta default (`#1D3F9E`/`#F3F6FF`/`#2DD4BF`).
+- **PNGs PWA**: regenerados do favicon novo via ImageMagick (192/512/maskable 512/180).
+- **Não portado** (fora de escopo): correção `admin.index.tsx` do protótipo (`schema.catch` — AdminPage real não usa zod-adapter) e página `/design` (rota inexistente no app).

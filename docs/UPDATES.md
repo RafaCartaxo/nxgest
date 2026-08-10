@@ -2,6 +2,15 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 10/08/2026 — Ícone/marca NX: identidade nova portada (N limpo + full-bleed)
+
+- **`Logo.tsx`**: geometria nova do protótipo (commit `f5a8156`) — viewBox quadrado `0 0 64 64`, "N" primário centralizado + malha decorativa + hub accent. API `Logo`/`LogoLockup` mantida (consumidores intactos); nova prop `boxed` (fundo `--color-primary` full-bleed + `rx=14`, app icon). Title padrão "NX Gest".
+- **`favicon.ts`** (theme-aware) e **`favicon.svg`** (estático): full-bleed **sem `rx`** — resolve os cantos transparentes do favicon (16/32px agora com o "N" legível).
+- **PNGs PWA regenerados** (icon-192/512 · maskable com safe-zone · apple-touch 180) via ImageMagick.
+- Protótipo usado **só como referência visual**; correção do `admin.index.tsx` do protótipo (`schema.catch`) não se aplica ao AdminPage real.
+
+Referência: `plans/Lovable-Icone-Marca-NXGest.md` · `docs/engineering/tasks/2026-08-10/CHECKLIST.md`
+
 ## 10/08/2026 — Sincronização de documentação + organização
 
 **Sem mudança de código** — rodada de organização do acervo de docs (pós-handoff 09/08):

@@ -71,7 +71,8 @@
 | `GpsControl` | ✅ | ClienteForm (comércio + residencial) — port Lovable, 3 estados (PLAN-056) |
 | `PreferenciasModal` | ✅ | `UserMenu` (avatar) — tema light/dark/system + paletas + idioma (PLAN-056; nav app-first 07/08) |
 | `ClienteSelect` | ✅ | `ContratoForm` (novo) — seletor de cliente buscável (PLAN-056) |
-| `StatusBadge` (pill com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` · `Logo` | ✅ | — |
+| `StatusBadge` (pill com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` | ✅ | — |
+| `Logo` | ✅ | Login, PublicPageShell, QueroConhecer, AppLayout (sidebar/topo) — geometria nova (10/08): "N" primário 64×64, malha + hub, prop `boxed` (app icon); favicon.svg/favicon.ts/PWA PNGs sync |
 | `BottomTabBar` | ✅ | `AppLayout` (mobile) — 5 abas gated por módulo, `role="navigation"`, `aria-current`, `pb-safe` (nav app-first) |
 | `UserMenu` | ✅ | `AppLayout` (topo fino mobile + rodapé da sidebar) — Perfil · Configurações (`PreferenciasModal`) · Sair; admin/super no mobile (nav app-first) |
 | `Avatar` / `AvatarField` | ✅ | ClienteCard (list-item/detail), ClienteForm, EmpresaList, AppLayout (sidebar), OperadorDetail, OperadoresList, modais — foto data URL **≤640px** + **lightbox** (`ampliar`: ClienteCard, OperadorDetail, sidebar, AvatarField) (PLAN-057/058) |
