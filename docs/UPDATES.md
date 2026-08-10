@@ -2,6 +2,16 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 10/08/2026 — Ícone/marca NX v2: a LOGO nos ícones + service worker (PWA instalável)
+
+- **Ícones agora usam a variante `sm`** (a **LOGO**: N + malha de nós + hub) em vez do "N" isolado (`mono`) — ocupa ~83% da largura (antes ~54%). Aplicada em `favicon.ts`/`favicon.svg`/`favicon.ico`/PNGs (icon-192/512, maskable, apple-touch).
+- **`favicon.ts`**: seletor corrigido (`link[rel="icon"][type="image/svg+xml"]` — antes sobrescrevia o primeiro link, o `.ico`, fazendo o atalho Android cair na "letra inicial") + cores resolvidas para `rgb()` (probe element; `oklch()` quebrava no rasterizador de ícone do Android).
+- **Service worker mínimo** (`frontend/public/sw.js` + registro no `main.tsx`): torna o site **PWA instalável no Android** → o atalho usa o manifest (ícone correto de vez). iOS não requer SW (usa `apple-touch-icon`).
+- **`favicon.ico`** (256/64/48/32/16) + `manifest.webmanifest` com `"id": "/"`.
+- Validado: tsc · build · audits · 78 testes · docs:audit 0 · dev servindo sw/ico/svg/PNGs 200.
+
+Referência: `plans/Lovable-Icone-Marca-NXGest.md` (§ v1.2) · `docs/engineering/tasks/2026-08-10/CHECKLIST.md`
+
 ## 10/08/2026 — Ícone/marca NX: identidade nova portada (N limpo + full-bleed)
 
 - **`Logo.tsx`**: geometria nova do protótipo (commit `f5a8156`) — viewBox quadrado `0 0 64 64`, "N" primário centralizado + malha decorativa + hub accent. API `Logo`/`LogoLockup` mantida (consumidores intactos); nova prop `boxed` (fundo `--color-primary` full-bleed + `rx=14`, app icon). Title padrão "NX Gest".

@@ -613,7 +613,7 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 - **Prioridade:** Média — já existe `RotaCobrancaSection`
 
 ### 5.4 PWA / instalação mobile
-- **Parcial (08/08):** manifest.webmanifest + ícones 192/512/maskable + apple-touch-icon + metas já em produção (lote de fixes 08/08). **Faltam:** service worker, cache de assets, offline.
+- **Parcial (08/08→10/08):** manifest.webmanifest + ícones 192/512/maskable + apple-touch-icon + metas já em produção (08/08) · **service worker mínimo** (`sw.js`, 10/08) → PWA **instalável no Android** (atalho usa o manifest). **Faltam:** cache de assets/offline (network-first já cobre navegação), manifest `display` refine.
 - **Prioridade:** Média — melhor experiência mobile
 
 ### 5.5 Testes automatizados
@@ -696,7 +696,7 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 | M6 — Caixa + Gasto | F4 | ✅ Concluído | BR-018 a BR-028 implementados, testados |
 | M7a — Autenticação base (PLAN-015) | F5 | ✅ Concluído | Login JWT, isolamento de dados, LoginPage, AuthContext, ProtectedRoute |
 | M7b — Admin Panel (PLAN-017) | F5 | ✅ Concluído | Coluna `role`, admin.middleware, CRUD operadores, AdminPage, dashboard consolidado |
-| M8 — PWA + Mapa | F5 | Parcial | PWA: manifest/ícones em prod (08/08); service worker/offline pendente · Mapa: pendente |
+| M8 — PWA + Mapa | F5 | Parcial | PWA: manifest/ícones em prod (08/08) + SW instalável (10/08); offline pendente · Mapa: pendente |
 | M9 — Endereço do Comércio | F5 | Concluído | PLAN-055/056: endereço comércio separado + GPS + navegação |
 | M10 — Multi-Tenant (PLAN-019) | F5 | Concluído | Super admin, empresas, isolamento por empresaId, hardening de auth |
 

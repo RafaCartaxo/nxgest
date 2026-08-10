@@ -1,10 +1,10 @@
 # Lovable — Ícone e Marca: "N" limpo, centralizado e preenchido
 
-**Versão:** 1.1
+**Versão:** 1.2
 
 **Data:** 08/08/2026
 
-**Status:** ✅ Portado (10/08) — geometria nova no app real: `frontend/src/shared/components/Logo.tsx` (+ prop `boxed`) · `frontend/src/shared/theme/favicon.ts` · `frontend/public/favicon.svg` + PNGs PWA regenerados (icon-192/512, maskable, apple-touch).
+**Status:** ✅ Portado (10/08, v1.1 + v1.2) — geometria nova no app real: `frontend/src/shared/components/Logo.tsx` (+ prop `boxed`) · `frontend/src/shared/theme/favicon.ts` · `frontend/public/favicon.svg` + PNGs PWA + `favicon.ico` · **variante `sm` (a LOGO: N + malha + hub)**.
 
 **Fonte (protótipo):** `RafaCartaxo/site-personality-plus` commit `f5a8156` (10/08) — `src/components/brand/NexusMark.tsx` + `public/favicon.svg` (usado como **referência visual**; port mantém API `Logo`/`LogoLockup` do app real).
 
@@ -36,3 +36,16 @@
 - **`favicon.svg`** (estático): quadrado full-bleed, cores literais da paleta default (`#1D3F9E`/`#F3F6FF`/`#2DD4BF`).
 - **PNGs PWA**: regenerados do favicon novo via ImageMagick (192/512/maskable 512/180).
 - **Não portado** (fora de escopo): correção `admin.index.tsx` do protótipo (`schema.catch` — AdminPage real não usa zod-adapter) e página `/design` (rota inexistente no app).
+
+## Port-back v1.2 (10/08) — a LOGO, não o "N" isolado
+
+**Problema (relatado em validação):** os ícones usavam a variante **`mono`** (só o "N" + hub, sem malha) → no atalho da tela inicial o ícone parecia "N genérico/letra inicial" e pequeno.
+
+**Correção:**
+- **Ícones agora usam a variante `sm`** — a **LOGO** (N + 3 nós de malha `[9,27][55,25][32,57]` + 4 arestas + hub), ocupando ~83% da largura (antes ~54%). Aplicada em `favicon.ts`, `favicon.svg`, `favicon.ico` e todos os PNGs (icon-192/512, maskable, apple-touch).
+- **`favicon.ts`**: seletor corrigido para `link[rel="icon"][type="image/svg+xml"]` (o `.ico` estático fica intocado como fallback do atalho — antes sobrescrevia o primeiro link, caindo na "letra inicial" no Android).
+- **Cores resolvidas para `rgb()`** via probe element (o rasterizador de ícone do Android/shortcut não aceita `oklch()`/`var()` no SVG — precedente: "N solto com fundo branco").
+- **`favicon.ico`** criado (256/64/48/32/16) + link no `index.html`.
+- **Service worker mínimo** (`public/sw.js`, registro no `main.tsx`): torna o site PWA instalável no Android → o atalho usa o manifest (ícone correto de vez). iOS não requer SW (usa `apple-touch-icon` como web clip).
+- **`manifest.webmanifest`**: adicionado `"id": "/"`.
+- **Cobertura**: iOS via `apple-touch-icon` (logo `sm`) ✅ · Android via manifest + SW + favicon corrigido ✅ · desktop via favicon.ico/svg ✅.

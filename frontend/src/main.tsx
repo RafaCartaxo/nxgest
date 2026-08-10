@@ -9,6 +9,14 @@ import "./index.css"
 
 const queryClient = new QueryClient()
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // PWA é melhoria progressiva — falha de registro não bloqueia o app.
+    })
+  })
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
