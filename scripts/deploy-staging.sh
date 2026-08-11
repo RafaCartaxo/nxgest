@@ -38,26 +38,43 @@ set -a; source "$ENV_FILE"; set +a
 # 3) Traz o código (o runner já puxou, mas garante consistência local).
 git pull --ff-only origin main 2>/dev/null || true
 
-# 4) Sobe a stack (build da imagem + containers). O boot cria as tabelas.
+# 4) Sobe a stack (build da imagem + containers). O boot cria as tabelas
+#    e o seed básico (super/admin) — terminando em "Servidor rodando".
 docker compose $COMPOSE up -d --build
 
-# 4b) Recarrega o Caddy de produção com o Caddyfile atualizado
-#     (duckdns → staging-app:8081). Sem downtime para nxgest.com.br.
-CADDY=$(docker ps -qf ancestor=caddy:2-alpine | head -1)
-if [ -n "$CADDY" ]; then
-  echo "==> Recarregando Caddy ($CADDY)"
-  docker exec "$CADDY" caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || true
-fi
+# 4b) Espera o boot terminar (a porta responde health) antes de qualquer seed.
+echo "==> Aguardando o staging-app ficar pronto..."
+for i in $(seq 1 30); do
+  if docker exec staging-app sh -c 'wget -qO- http://127.0.0.1:8081/api/health >/dev/null 2>&1' 2>/dev/null; then
+    echo "==> staging-app pronto (health OK)"
+    break
+  fi
+  if [ "$i" = 30 ]; then
+    echo "ERRO: staging-app não ficou pronto em 30 tentativas" >&2
+    docker logs staging-app --tail 30 2>&1 || true
+    exit 1
+  fi
+  sleep 2
+done
 
-# 5) Seed fake SÓ na primeira vez (DB vazio) — não destrói dados de QA.
-if docker exec staging-app sh -c 'node -e "const s=require(\"better-sqlite3\")(\"/data/gestao.db\",{readonly:true}).prepare(\"SELECT COUNT(*) c FROM usuarios\").get().c; process.exit(s>0?0:1)"' 2>/dev/null; then
+# 5) Seed fake SÓ na primeira vez (banco sem clientes — o boot não cria
+#    clientes, então esse critério distingue "vazio" de "já seedado").
+if docker exec staging-app sh -c 'node -e "const s=require(\"better-sqlite3\")(\"/data/gestao.db\",{readonly:true}).prepare(\"SELECT COUNT(*) c FROM clientes\").get().c; process.exit(s>0?0:1)"' 2>/dev/null; then
   echo "==> Staging já tem dados — seed ignorado"
 else
   echo "==> DB de staging vazio — aplicando seed de demonstração"
   docker exec staging-app node scripts/seed-demo.mjs
 fi
 
-# 6) Health check no domínio público (via Caddy de produção).
+# 6) Recarrega o Caddy de produção com o Caddyfile atualizado
+#    (duckdns → staging-app:8081). Sem downtime para nxgest.com.br.
+CADDY=$(docker ps -qf ancestor=caddy:2-alpine | head -1)
+if [ -n "$CADDY" ]; then
+  echo "==> Recarregando Caddy ($CADDY)"
+  docker exec "$CADDY" caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || true
+fi
+
+# 7) Health check no domínio público (via Caddy de produção).
 for i in 1 2 3 4 5; do
   if curl -fsS https://nxgestao.duckdns.org/api/health >/dev/null 2>&1; then
     echo "==> Staging OK: https://nxgestao.duckdns.org"
