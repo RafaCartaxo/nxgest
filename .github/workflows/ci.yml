@@ -3,29 +3,52 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     name: tsc · build · audits · unit/UI
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - run: cd frontend && npm ci
       - run: npx tsc --noEmit
       - run: npm run build
       - run: npm run audit:ui
       - run: npm run audit:styles
       - run: npm run audit:modules
       - run: npm test
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
       - run: npm run docs:audit
 
   smoke:
     name: smoke-api (DB isolado)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,12 +57,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: |
-          set -e
-          # 1) boot cria as tabelas; 2) seed; 3) sobe de novo com rate limit ampliado
-          DB_PATH=/tmp/nxgest-smoke.db PORT=3002 npx tsx src/main.ts &
-          sleep 6
-          kill %1 2>/dev/null || true
+          set -euo pipefail
+          # 1) schema isolado; 2) seed; 3) sobe UMA instância (rate limit ampliado) e roda o smoke
+          DB_PATH=/tmp/nxgest-smoke.db npx tsx scripts/create-schema.mjs
           DB_PATH=/tmp/nxgest-smoke.db node scripts/seed-demo.mjs
-          DB_PATH=/tmp/nxgest-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=1000 npx tsx src/main.ts &
+          DB_PATH=/tmp/nxgest-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
           sleep 6
-          node scripts/smoke-api.mjs --baseUrl http://localhost:3002
+          node scripts/smoke-api.mjs --baseUrl http://127.0.0.1:3002

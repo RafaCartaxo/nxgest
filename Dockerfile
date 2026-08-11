@@ -22,6 +22,9 @@ RUN npm ci --omit=dev
 COPY --from=build /app/dist/ ./dist/
 COPY --from=build /app/frontend/dist/ ./frontend/dist/
 
+# Scripts utilitários (seed/schema p/ staging; melhor-sqlite3/bcryptjs já são deps de runtime)
+COPY scripts/ ./scripts/
+
 EXPOSE 8080
 ENV NODE_ENV=production
 RUN mkdir -p /data/uploads && chown node:node /data /data/uploads && chown node:node /app
