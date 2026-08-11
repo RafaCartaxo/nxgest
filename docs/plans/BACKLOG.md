@@ -390,6 +390,23 @@ Hoje `npm test` roda **78 testes verdes** (vitest unit + UI RTL) e o CI valida n
 
 ---
 
+# EPIC 9 — Performance
+
+## P028 — Índices por `userId` + reescrita da query de cobranças do dia
+
+> **Feito (11/08):** índices por `userId` no `database.ts` (`createTables`, `CREATE INDEX IF NOT EXISTS` — idempotentes, criam no boot): `clientes(userId,deletedAt)` · `contratos(userId,deletedAt)` · `parcelas(contratoId,dataVencimento,saldoPendente)` · `pagamentos(userId,data)` · `historico_operacional(userId,createdAt)` · `gastos(userId,data)` · `movimentacoesFinanceiras(userId,data)` · `fechamentos_semanais(userId,dataInicio)`.
+
+### Problema
+
+O isolamento multi-tenant filtra `userId = ?` em toda consulta, mas nenhuma tabela operacional tinha índice nessa coluna → **table scan** em clientes/contratos/cobranças/caixa/gastos conforme os dados crescem (demora sistêmica). A query de cobranças do dia (`listarCobrancasDoDia`) agrava com **~4 subqueries correlacionadas por linha** (saldoTotal · proximaParcela · proximoNumeroParcela · diasEmAtraso) + resultado operacional aninhado.
+
+### Pendências (follow-up)
+
+- [ ] **Reescrever `listarCobrancasDoDia`** com joins/agregação (eliminar subqueries correlacionadas por linha) — roadmap 5.10.
+- [ ] Medir/validar ganho real de performance após os índices (dev + prod).
+
+---
+
 # Prioridade sugerida
 
 ## Sprint 1 — Concluído (PLAN-026)

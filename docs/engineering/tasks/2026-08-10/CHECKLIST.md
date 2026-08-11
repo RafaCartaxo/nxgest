@@ -29,6 +29,8 @@
 - [x] **Ícone v2**: `tsc` · `build` (dist com sw.js/ico/svg/PNGs) · audits · `npm test` (78/78) · `docs:audit` · dev servindo sw.js/favicon/PNGs 200
 - [x] **Ajuste/Config**: `tsc` · `build` · audits · `npm test` (78/78) · `docs:audit` · JSONs i18n válidos (prefs.preview* removidas, 0 ocorrências)
 - [x] **Fix anexos (11/08)**: `tsc` · `build` · audits · `npm test` (78/78) · `docs:audit` · backend intocado (multer/magic bytes/limites) — smoke ANE-089..094 inalterado
+- [x] **Pendentes do dia — contadores dos chips (11/08)**: `CobrancaListPage` `countFor` retornava 0 no modo normal (`atrasadosCounts` só existia p/ `?filter=atrasado`). Criados `situacaoCounts` (clientes distintos por `situacao`: Todos/Vence hoje/Atrasado); modo atrasado mantém `atrasadosCounts`
+- [x] **Performance — índices por userId (11/08, P028)**: 8 índices `CREATE INDEX IF NOT EXISTS` em `createTables` (`clientes/contratos/parcelas/pagamentos/historico/gastos/movimentacoes/fechamentos`) — eliminam table scan do isolamento multi-tenant. Validado: boot em DB isolado cria os 8 índices · ROADMAP 5.10 + BACKLOG P028 registram a reescrita da query de cobranças como follow-up
 - [x] **Fix anexos (11/08) — imagem + PDF** — imagem: `processarAnexo` `toDataURL`→`toBlob` (retorna Blob; upload sem `fetch(dataUrl)` que era bloqueado pela CSP `connectSrc` sem `data:` — o POST nunca chegava) · PDF: desktop mantém `<iframe>` no modal; **mobile** (`pointer: coarse`) mostra **botão "Baixar PDF"** no footer (evita o bug documentado `f9a9000` — blob em nova guia trava scroll no Chrome); i18n `anexos.baixarPdf`/`anexos.previewMobile` (pt/en/es)
 
 ## Pendências

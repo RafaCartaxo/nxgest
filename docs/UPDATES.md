@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 11/08/2026 — Pendentes do dia: contadores dos filtros corrigidos + performance (índices por userId)
+
+- **Bug dos chips** (`CobrancaListPage`): `countFor` retornava **0** no modo normal de pendentes — os contadores de `situacao` (Todos/Vence hoje/Atrasado) nunca existiam; só `atrasadosCounts` (para `?filter=atrasado`) estava implementado. Criados `situacaoCounts` (clientes distintos por situação, coerente com `clientesParaCobrar`/`AtendidosPage`).
+- **Performance (P028)**: o isolamento multi-tenant filtra `userId = ?` em toda consulta, mas nenhuma tabela operacional tinha índice → table scan sistêmico (clientes/contratos/cobranças/caixa/gastos). Adicionados **8 índices** (`CREATE INDEX IF NOT EXISTS`, criam no boot) em `clientes/contratos/parcelas/pagamentos/historico_operacional/gastos/movimentacoes/fechamentos`. Validado em DB isolado.
+- **Follow-up registrado** (ROADMAP 5.10 + BACKLOG P028): reescrita da query `listarCobrancasDoDia` (subqueries correlacionadas por linha).
+
+Referência: `docs/engineering/tasks/2026-08-10/CHECKLIST.md` · `docs/plans/BACKLOG.md` (P028) · `docs/product/04-ROADMAP.md` (§5.10)
+
 ## 11/08/2026 — Fix anexos: imagem (upload bloqueado pela CSP) + PDF no mobile
 
 - **Imagem não anexava** (computador + celular, todos navegadores): `processarAnexo` gerava um **data URL** (`canvas.toDataURL`) e o upload fazia `fetch(dataUrl)` — **bloqueado pela CSP** (`connectSrc` sem `data:`), então o POST nunca chegava ao servidor. **Fix:** imagem agora é convertida via **`canvas.toBlob`** e o `File` é montado direto do Blob (sem `fetch`). Limite de 1MB mantido via `blob.size`.

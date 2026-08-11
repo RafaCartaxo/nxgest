@@ -125,6 +125,19 @@ export function CobrancaListPage() {
     }
   }, [filter, pendentes])
 
+  // Contadores dos chips de situação (pendentes) — clientes distintos por situacao
+  const situacaoCounts = useMemo(() => {
+    if (filter === "atrasado") return null
+    const pendentesSituacao = data?.cobrancas.filter((i) => i.resultadoOperacional === ResultadoOperacional.PENDENTE) ?? []
+    const sets = { all: new Set<string>(), venceHoje: new Set<string>(), atrasado: new Set<string>() }
+    for (const i of pendentesSituacao) {
+      sets.all.add(i.clienteId)
+      if (i.situacao === "venceHoje") sets.venceHoje.add(i.clienteId)
+      else if (i.situacao === "atrasado") sets.atrasado.add(i.clienteId)
+    }
+    return { all: sets.all.size, venceHoje: sets.venceHoje.size, atrasado: sets.atrasado.size }
+  }, [data, filter])
+
   // Contadores dos chips de resultado (atrasados) — clientes distintos por subtipo
   const atrasadosCounts = useMemo(() => {
     if (filter !== "atrasado") return null
@@ -139,8 +152,10 @@ export function CobrancaListPage() {
   }, [data, filter])
 
   const countFor = (key: string): number => {
-    if (!atrasadosCounts) return 0
-    return atrasadosCounts[key as keyof typeof atrasadosCounts] ?? 0
+    if (filter === "atrasado") {
+      return atrasadosCounts?.[key as keyof typeof atrasadosCounts] ?? 0
+    }
+    return situacaoCounts?.[key as keyof typeof situacaoCounts] ?? 0
   }
 
   const totalResolvidos = totalClientesAtendidos(data?.cobrancas ?? [], pagamentosHoje)

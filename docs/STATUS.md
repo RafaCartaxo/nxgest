@@ -19,6 +19,8 @@
 ## Entregas recentes
 
 - **Ícone/logo v2 (10-11/08)** — favicon/PNGs/PWA com a **LOGO** (variante `sm`: N + malha + hub) · `favicon.ico` · `favicon.ts` com seletor correto + cores `rgb()` · **service worker mínimo** (`sw.js`, **só em produção** via `import.meta.env.PROD` + cache v2) → PWA instalável no Android · manifest com `id`. **Ajuste de Caixa Base** no layout do `FecharCaixaModal` (KpiCard) · **`PreviewAoVivo` removido do config**. ✅ **Deployado em prod (11/08)** — health ok, favicon/PNGs/sw.js 200, SW v2 ativo. **Pendente:** validação manual da tela inicial (Android/iOS/desktop).
+- **Fix anexos (11/08, sem deploy ainda)** — imagem (`toBlob` elimina `fetch(dataUrl)` bloqueado pela CSP) · PDF mobile (botão "Baixar PDF"; desktop mantém iframe). **Pendente:** deploy.
+- **Pendentes do dia + performance (11/08, sem deploy ainda)** — contadores dos chips (Todos/Vence hoje/Atrasado) corrigidos · **8 índices por `userId`** (P028) eliminam table scan do isolamento multi-tenant. **Follow-up:** reescrita da query de cobranças (ROADMAP 5.10 / BACKLOG P028). **Pendente:** deploy.
 
 ## Planos em aberto
 

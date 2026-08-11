@@ -529,6 +529,18 @@ export async function createTables() {
     CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
     CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
 
+    -- Índices por userId (isolamento multi-tenant): toda consulta filtra
+    -- userId = ? — sem índice, cada listagem vira table scan conforme os dados
+    -- crescem (demora sistêmica em clientes/contratos/cobranças/caixa/gastos).
+    CREATE INDEX IF NOT EXISTS idx_clientes_user ON clientes(userId, deletedAt);
+    CREATE INDEX IF NOT EXISTS idx_contratos_user ON contratos(userId, deletedAt);
+    CREATE INDEX IF NOT EXISTS idx_parcelas_venc ON parcelas(contratoId, dataVencimento, saldoPendente);
+    CREATE INDEX IF NOT EXISTS idx_pagamentos_user ON pagamentos(userId, data);
+    CREATE INDEX IF NOT EXISTS idx_historico_user ON historico_operacional(userId, createdAt);
+    CREATE INDEX IF NOT EXISTS idx_gastos_user ON gastos(userId, data);
+    CREATE INDEX IF NOT EXISTS idx_movimentacoes_user ON movimentacoesFinanceiras(userId, data);
+    CREATE INDEX IF NOT EXISTS idx_fechamentos_user ON fechamentos_semanais(userId, dataInicio);
+
   `)
 
   // Migração incremental (PLAN-031): coluna `modulos` em empresas já existentes.

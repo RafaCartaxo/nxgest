@@ -683,6 +683,13 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 
 ---
 
+### 5.10 Performance — índices por `userId` + reescrita de cobranças
+
+- **P028 — índices por `userId` (feito, 11/08):** o isolamento multi-tenant filtra `userId = ?` em toda consulta, mas nenhuma tabela operacional tinha índice nessa coluna → table scan em clientes/contratos/cobranças/caixa/gastos conforme os dados crescem. Adicionados índices `CREATE INDEX IF NOT EXISTS` (criam no boot, idempotentes): `clientes(userId,deletedAt)` · `contratos(userId,deletedAt)` · `parcelas(contratoId,dataVencimento,saldoPendente)` · `pagamentos(userId,data)` · `historico_operacional(userId,createdAt)` · `gastos(userId,data)` · `movimentacoesFinanceiras(userId,data)` · `fechamentos_semanais(userId,dataInicio)`.
+- **Pendência (follow-up): reescrita da query de cobranças do dia** — `listarCobrancasDoDia` tem ~4 subqueries correlacionadas por linha (saldoTotal · proximaParcela · proximoNumeroParcela · diasEmAtraso) + resultado operacional aninhado. Índices já reduzem o custo; reescrever com joins/agregação é o próximo passo (via `docs/plans/BACKLOG.md` P028).
+
+---
+
 # Marcos (Milestones)
 
 | Marco | Fase | Prazo estimado | Critério de conclusão |
