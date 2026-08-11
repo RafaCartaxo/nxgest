@@ -7,6 +7,7 @@ dist/
 *.log
 *.err
 .env
+.env.staging
 NUL
 .obsidian/
 
