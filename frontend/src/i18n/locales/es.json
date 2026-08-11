@@ -340,7 +340,9 @@
     "resumoDia": "Resumen del día",
     "fechado": "¡Caja cerrada!",
     "semMovimento": "Sin movimientos hoy.",
-    "gastosHoje": "Gastos hoy"
+    "gastosHoje": "Gastos hoy",
+    "motivoMaximo": "El motivo debe tener como máximo 200 caracteres.",
+    "ajustarTituloModal": "Ajustar Caja Total"
   },
   "gasto": {
     "title": "Gastos",

@@ -340,7 +340,9 @@
     "resumoDia": "Day summary",
     "fechado": "Cash closed!",
     "semMovimento": "No movements today.",
-    "gastosHoje": "Expenses today"
+    "gastosHoje": "Expenses today",
+    "motivoMaximo": "The reason must be at most 200 characters.",
+    "ajustarTituloModal": "Adjust Total Cash"
   },
   "gasto": {
     "title": "Expenses",

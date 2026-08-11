@@ -2,6 +2,16 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 11/08/2026 — Ajuste de Caixa Total em modal + form compartilhado + liberação do sócio
+
+- **`AjusteCaixaForm`** (novo, caixa): formulário reutilizável com **react-hook-form + zod** (padrão do `GastoForm`) — KPIs (Base do Caixa/Saldo Atual), valor com máscara, motivo obrigatório (máx 200, espelha o backend), `useFeedback` + mapeamento de 422.
+- **`AjustarCaixaModal`** (novo): `CaixaPage` agora tem **botão "Ajustar Caixa Total" → modal → salvar** (era um bloco inline com inputs crus).
+- **`AjusteCaixaCard`** (OperadorDetail): **refatorado** para usar o mesmo `AjusteCaixaForm` — eliminada a duplicação de lógica de ajuste (antes 2 implementações divergentes).
+- **Sócio liberado no ajuste**: `canAdjust` inclui `socio` (BR-325: mesmas funções do admin na subárvore) — alinha o front com o backend (`adminMiddleware` + `resolveUsuarioAlvo` já aceitavam). **Docs sincronizadas:** BR-079, `02-API`, `07-CASOS` (API-UC-025 auth + CT 045b). **Smoke:** `SC-006b` (sócio ajusta caixa da subárvore → 201) + `SC-006c` (fora → 404) — validados.
+- i18n: `caixa.ajustarTituloModal` + `caixa.motivoMaximo` (pt/en/es).
+
+Referência: `docs/engineering/tasks/2026-08-10/CHECKLIST.md`
+
 ## 11/08/2026 — Pendentes do dia: contadores dos filtros corrigidos + performance (índices por userId)
 
 - **Bug dos chips** (`CobrancaListPage`): `countFor` retornava **0** no modo normal de pendentes — os contadores de `situacao` (Todos/Vence hoje/Atrasado) nunca existiam; só `atrasadosCounts` (para `?filter=atrasado`) estava implementado. Criados `situacaoCounts` (clientes distintos por situação, coerente com `clientesParaCobrar`/`AtendidosPage`).

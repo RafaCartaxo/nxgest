@@ -409,7 +409,7 @@ O admin define o Caixa Base de um operador via `POST /api/caixa/ajuste?usuarioId
 
 ## BR-079
 
-O ajuste do Caixa Base (`POST /api/caixa/ajuste`) é **regra exclusiva de `admin`/`super_admin`** — `operator` recebe `403 FORBIDDEN`. O `?usuarioId=` é sempre ignorado para `operator`. **Reativada pelo PLAN-025** (o PLAN-021 havia liberado o operador via BR-084, revogada em seguida).
+O ajuste do Caixa Base (`POST /api/caixa/ajuste`) é **regra exclusiva de `admin`/`super_admin`/`socio`** — `operator` recebe `403 FORBIDDEN`. O `?usuarioId=` é sempre ignorado para `operator`. **Reativada pelo PLAN-025** (o PLAN-021 havia liberado o operador via BR-084, revogada em seguida). **Sócio (PLAN-032):** "mesmas funções do admin em escopo menor" (BR-325) — pode ajustar o caixa dos operadores da **própria subárvore** (`resolveUsuarioAlvo` valida; fora → 404) e o próprio caixa.
 
 ---
 

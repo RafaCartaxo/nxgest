@@ -750,7 +750,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ## API-UC-025 — Ajustar caixa base
 
-**Endpoint:** `POST /api/caixa/ajuste` · **Auth:** admin/super_admin apenas
+**Endpoint:** `POST /api/caixa/ajuste` · **Auth:** admin/super_admin/socio (BR-079/BR-325; sócio limitado à subárvore)
 
 **Request:** `{ valor, motivo }` · **Query:** `usuarioId?`
 
@@ -769,6 +769,9 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### API-CT-045 — Operador proibido
 **Dado** token de operator (com ou sem `?usuarioId=`) → **Então** 403.
+
+### API-CT-045b — Sócio ajusta caixa da subárvore (BR-325)
+**Dado** sócio com `?usuarioId=` de operador da **própria subárvore** → **Então** 201 e auditoria registra. **Dado** `?usuarioId=` fora da subárvore → **Então** 404 `OPERATOR_NOT_FOUND`.
 
 ### API-CT-046 — Sem motivo
 **Dado** `motivo` vazio → **Então** 422 e auditoria **não** é gerada.

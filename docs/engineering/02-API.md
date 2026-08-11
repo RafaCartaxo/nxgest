@@ -1127,8 +1127,9 @@ Estorna **por completo** um pagamento registrado (PLAN-028). Reverte cada parcel
 > **Escopo por usuário (PLAN-020):** `GET /api/caixa`, `POST /api/caixa/ajuste` e `GET /api/caixa/movimentacoes` aceitam o query parameter `usuarioId`, que aponta o caixa-alvo:
 > - **operator:** ignora `usuarioId` — opera sempre sobre o caixa próprio (`req.userId`).
 > - **admin:** valida que `usuarioId` pertence à própria empresa (via `empresaId` do token); inexistente/outra empresa → `404 OPERATOR_NOT_FOUND`.
+> - **socio (PLAN-032):** valida que `usuarioId` pertence à **subárvore** do sócio (ele + operadores sob ele); fora → `404 OPERATOR_NOT_FOUND` (BR-325).
 > - **super_admin:** valida apenas a existência do usuário; pode apontar caixa de qualquer empresa.
-> - `POST /api/caixa/ajuste` é **restrito a admin/super_admin** (403 para `operator`) — o ajuste do Caixa Base é exclusivo de administradores (BR-079); `?usuarioId=` é sempre ignorado para operator (segurança preservada).
+> - `POST /api/caixa/ajuste` é **restrito a admin/super_admin/socio** (403 para `operator`) — o ajuste do Caixa Base é exclusivo de administradores e sócios (BR-079/BR-325); `?usuarioId=` é sempre ignorado para operator (segurança preservada).
 > - `POST /api/caixa/liquidar` opera sempre sobre o caixa próprio (`req.userId`).
 
 ---

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { Check, ChevronLeft, ChevronRight, Receipt, Wallet } from "lucide-react"
+import { ChevronLeft, ChevronRight, Receipt, Wallet } from "lucide-react"
 import { getCaixaStatus, ajustarCaixaBase, listarMovimentacoes, listarAuditoriaCaixa, liquidarSemana, type CaixaStatus, type MovimentacaoItem, type AuditoriaCaixaItem } from "../services/caixa.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { hasModule } from "../../../shared/modules/modules.js"
@@ -17,10 +17,11 @@ import { ParcelasHojeModal } from "../../operacoes/components/ParcelasHojeModal.
 import { PagamentosHojeModal } from "../../operacoes/components/PagamentosHojeModal.js"
 import { PagamentosPeriodoModal } from "../../operacoes/components/PagamentosPeriodoModal.js"
 import { ContratosSemanaModal } from "../components/ContratosSemanaModal.js"
-import { maskMonetario, unmaskMonetario, formatCurrency } from "../../../shared/utils/masks.js"
+import { maskMonetario, formatCurrency } from "../../../shared/utils/masks.js"
 import { Button } from "../../../shared/components/Button.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { GastosPeriodoModal } from "../components/GastosPeriodoModal.js"
+import { AjustarCaixaModal } from "../components/AjustarCaixaModal.js"
 import { listGastos, type GastoItem } from "../../gasto/services/gasto.service.js"
 import { CATEGORIA_ICONES } from "../../gasto/schemas/gasto.schema.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
@@ -31,7 +32,9 @@ export function CaixaPage() {
   const feedback = useFeedback()
   const { user } = useAuth()
 
-  const canAdjust = user?.role === "admin" || user?.role === "super_admin"
+  // Ajuste do Caixa Base é exclusivo de admin/super_admin/socio (BR-325: sócio
+  // com mesmas funções do admin em escopo de subárvore — backend já aceita).
+  const canAdjust = user?.role === "admin" || user?.role === "super_admin" || user?.role === "socio"
   const gastosAtivo = hasModule(user?.modulos, "gastos")
 
   const [status, setStatus] = useState<CaixaStatus | null>(null)
@@ -39,8 +42,7 @@ export function CaixaPage() {
   const [auditoria, setAuditoria] = useState<AuditoriaCaixaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [ajusteValor, setAjusteValor] = useState("")
-  const [ajusteMotivo, setAjusteMotivo] = useState("")
+  const [ajustarModalOpen, setAjustarModalOpen] = useState(false)
   const [liquidarModalOpen, setLiquidarModalOpen] = useState(false)
 
   const [parcelasHoje, setParcelasHoje] = useState<ParcelaHojeCliente[]>([])
@@ -166,22 +168,14 @@ export function CaixaPage() {
       .finally(() => setGastosPeriodoLoading(false))
   }
 
-  async function handleAjustar() {
-    const valor = unmaskMonetario(ajusteValor)
-    const motivo = ajusteMotivo.trim()
-    if (valor <= 0) return
-    if (!motivo) {
-      feedback.show({ status: "error", message: t("caixa.motivoObrigatorio") })
-      return
-    }
+  async function handleAjustar(valor: number, motivo: string) {
     await feedback.run({
       loading: t("common.saving"),
       success: t("caixa.ajustarSucesso"),
-      error: t("caixa.erroCarregar"),
+      error: t("caixa.ajustarErro"),
       action: async () => {
         await ajustarCaixaBase(valor, motivo)
-        setAjusteValor("")
-        setAjusteMotivo("")
+        setAjustarModalOpen(false)
         await fetch()
       },
     })
@@ -443,27 +437,9 @@ export function CaixaPage() {
 
           {canAdjust && (
             <div className="mt-8">
-              <SectionHeader title={t("caixa.ajustar")} />
-              <div className="mt-2 flex items-center gap-2">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={ajusteValor}
-                  onChange={(e) => setAjusteValor(maskMonetario(e.target.value))}
-                  placeholder="R$ 0,00"
-                  className="min-h-12 w-full min-w-0 rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <Button type="button" variant="soft" size="sm" onClick={handleAjustar} className="shrink-0">
-                  <Check className="size-4" /> {t("caixa.ajustarSalvar")}
-                </Button>
-              </div>
-              <input
-                type="text"
-                value={ajusteMotivo}
-                onChange={(e) => setAjusteMotivo(e.target.value)}
-                placeholder={t("caixa.ajustarMotivoPlaceholder")}
-                className="mt-2 min-h-12 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+              <Button type="button" variant="soft" className="w-full" onClick={() => setAjustarModalOpen(true)}>
+                <Wallet className="size-4" /> {t("caixa.ajustar")}
+              </Button>
             </div>
           )}
 
@@ -514,6 +490,16 @@ export function CaixaPage() {
         onConfirm={handleLiquidar}
         onCancel={() => setLiquidarModalOpen(false)}
       />
+
+      {status && (
+        <AjustarCaixaModal
+          open={ajustarModalOpen}
+          onClose={() => setAjustarModalOpen(false)}
+          caixaBase={status.caixaBase}
+          saldoAtual={status.saldoAtual}
+          onAjustar={handleAjustar}
+        />
+      )}
     </div>
   )
 }

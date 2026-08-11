@@ -1614,6 +1614,16 @@ async function main() {
     expect(r, 404, "operador fora da subárvore")
   })
 
+  await t("SC-006b", "Sócio ajusta caixa do operador da subárvore (201, BR-325)", async () => {
+    const r = await req("POST", "/api/caixa/ajuste", { token: socioToken, body: { valor: 2500, motivo: "smoke sócio subárvore" }, query: { usuarioId: socioOpId } })
+    expect(r, 201, "sócio ajusta caixa da subárvore")
+    if (r.data.caixaBase !== 2500) throw new Error(`caixaBase=${r.data.caixaBase}`)
+  })
+  await t("SC-006c", "Sócio ajusta caixa fora da subárvore (404)", async () => {
+    const r = await req("POST", "/api/caixa/ajuste", { token: socioToken, body: { valor: 100, motivo: "smoke" }, query: { usuarioId: gabrielId } })
+    expect(r, 404, "sócio ajusta fora da subárvore")
+  })
+
   // ---------- TRANSIÇÕES DE PAPEL (WS7) — CTs 120+ ----------
   // Cada teste cria seus próprios usuários (isolamento; emails com Date.now()).
   const adminId = adminLogin.data.usuario.id
