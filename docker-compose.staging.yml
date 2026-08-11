@@ -1,10 +1,17 @@
+# Homologação (staging) — mesmo VPS da produção, stack/DB separados.
+#
+# - Domínio: https://nxgestao.duckdns.org (apontado pelo Caddy de produção)
+# - Caddy único (docker-compose.prod.yml) encaminha duckdns → staging-app:8081
+# - Volume próprio (nxgestao_staging_data) — produção intacta
+# - Seed fake só na primeira vez (DB vazio) via deploy-staging.sh
 services:
-  app:
+  staging-app:
     build: .
+    container_name: staging-app
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - PORT=8080
+      - PORT=8081
       - DB_PATH=/data/gestao.db
       - JWT_SECRET=${JWT_SECRET}
       - ADMIN_DEFAULT_PASSWORD=${ADMIN_DEFAULT_PASSWORD}
@@ -18,31 +25,14 @@ services:
       - LOGIN_RATE_LIMIT_MAX=${LOGIN_RATE_LIMIT_MAX}
       - USER_RATE_LIMIT_MAX=${USER_RATE_LIMIT_MAX}
     volumes:
-      - nxgestao_data:/data
+      - nxgestao_staging_data:/data
     expose:
-      - "8080"
-    networks:
-      - shared
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - DOMAIN=${DOMAIN}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro,z
-      - caddy_data:/data
-      - caddy_config:/config
+      - "8081"
     networks:
       - shared
 
 volumes:
-  nxgestao_data:
-  caddy_data:
-  caddy_config:
+  nxgestao_staging_data:
 
 networks:
   shared:

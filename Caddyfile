@@ -1,5 +1,5 @@
-# PLAN-068: migração de URL — serve duckdns (transitório) + nxgest.com.br + www→apex.
-{$DOMAIN}, www.{$DOMAIN}, nxgestao.duckdns.org {
+# PLAN-068: URL oficial nxgest.com.br (produção) + www→apex.
+{$DOMAIN}, www.{$DOMAIN} {
 	@www host www.{$DOMAIN}
 	redir @www https://{$DOMAIN}{uri} permanent
 	header {
@@ -7,4 +7,13 @@
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 	}
 	reverse_proxy app:8080
+}
+
+# Homologação (staging): duckdns (transitório de prod, agora QA) → staging-app:8081.
+# A stack de staging roda no MESMO VPS, com volume/DB próprios (docker-compose.staging.yml).
+nxgestao.duckdns.org {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+	}
+	reverse_proxy staging-app:8081
 }

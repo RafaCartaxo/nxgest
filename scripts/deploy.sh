@@ -8,6 +8,9 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
+# Rede compartilhada com o staging (homologação) — o Caddy roteia os dois domínios.
+docker network create nxgestao_net 2>/dev/null || true
+
 # Backup pré-deploy: snapshot do banco antes de reconstruir (cron de 12h não é
 # suficiente — cada implementação ganha um ponto de restauração). Script vive em
 # /opt/scripts no VPS; se ausente (ex.: rodando fora do VPS), segue sem backup.
