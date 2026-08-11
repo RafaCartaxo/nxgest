@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 11/08/2026 — Deploy em produção: lote ícone/logo v2 + docs sync + ajuste caixa
+
+- **VPS atualizado** para `79c132b` (`git pull && ./scripts/deploy.sh`): sobe docs sync + ícone v1 (N full-bleed) + maskable + favicon rgb/`.ico` + **ícone v2 (a LOGO sm)** + **service worker PWA** + ajuste de caixa base (layout do fechar caixa) + config sem preview.
+- **Pós-deploy validado:** `https://nxgest.com.br/api/health` ok · `favicon.ico`/`favicon.svg`/`icon-192/512`/`maskable`/`apple-touch-icon`/`manifest`/`sw.js` → **200** · SW servindo `CACHE = "nxgest-v2"` · manifest com `id: /`.
+- **Pendente (validação manual):** ícone na tela inicial — Android (PWA via manifest) · iOS (apple-touch-icon) · desktop. **Regra:** com HTTPS válido o Android agora instala como PWA e usa o manifest; em dev (cert auto-assinado) esse comportamento nunca valida.
+
+Referência: `docs/engineering/tasks/2026-08-10/CHECKLIST.md` · `docs/STATUS.md`
+
 ## 10/08/2026 — SW prod-only + Ajuste de Caixa Base (layout do fechar caixa) + Config limpo
 
 - **Service worker só em produção** (`main.tsx` com `import.meta.env.PROD`): em dev o SW não registra/cacheia — volta a testar limpo no local (cert auto-assinado de qualquer forma não instala PWA). Bump `sw.js` `nxgest-v1` → `nxgest-v2` (invalida cache antigo do browser). Criado `frontend/src/vite-env.d.ts` (types do Vite).

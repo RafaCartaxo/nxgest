@@ -13,12 +13,12 @@
 | URL oficial | `https://nxgest.com.br` (PLAN-068) · `nxgestao.duckdns.org` transitório (aposentar) |
 | VPS | `172.245.152.223` · repo `/opt/nxgestao` · volume `nxgestao_nxgestao_data` |
 | E-mail | Resend ativo (`no-reply@nxgest.com.br`) — fail-closed (503 se indisponível) |
-| Deploy mais recente | 08/08 — lote de fixes (anexos/CSP · GPS · rota · PWA · e-mail · IPv6) |
+| Deploy mais recente | 11/08 — lote ícone/logo v2 (LOGO sm + favicon.ico + SW PWA) + docs sync + ajuste caixa (commit `79c132b`) |
 | CI | GitHub Actions (tsc · build · audits · test · docs:audit + smoke isolado) |
 
-## Entregas recentes (sem deploy em prod ainda)
+## Entregas recentes
 
-- **Ícone/logo v2 (10/08)** — favicon/PNGs/PWA com a **LOGO** (variante `sm`: N + malha + hub) · `favicon.ico` · `favicon.ts` com seletor correto + cores `rgb()` · **service worker mínimo** (`sw.js`, **só em produção** via `import.meta.env.PROD` + cache v2) → PWA instalável no Android · manifest com `id`. **Ajuste de Caixa Base** no layout do `FecharCaixaModal` (KpiCard) · **`PreviewAoVivo` removido do config**. **Pendente:** deploy em prod + validação final da tela inicial (Android/iOS).
+- **Ícone/logo v2 (10-11/08)** — favicon/PNGs/PWA com a **LOGO** (variante `sm`: N + malha + hub) · `favicon.ico` · `favicon.ts` com seletor correto + cores `rgb()` · **service worker mínimo** (`sw.js`, **só em produção** via `import.meta.env.PROD` + cache v2) → PWA instalável no Android · manifest com `id`. **Ajuste de Caixa Base** no layout do `FecharCaixaModal` (KpiCard) · **`PreviewAoVivo` removido do config**. ✅ **Deployado em prod (11/08)** — health ok, favicon/PNGs/sw.js 200, SW v2 ativo. **Pendente:** validação manual da tela inicial (Android/iOS/desktop).
 
 ## Planos em aberto
 

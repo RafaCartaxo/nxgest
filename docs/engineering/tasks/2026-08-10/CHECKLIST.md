@@ -36,7 +36,7 @@
 - [ ] PLAN-066 P2: JWT curto/revogação · Cloudflare WAF · 2FA · senha mín. 8
 - [ ] PLAN-067 F1/F2/F3 restantes + threshold de coverage no CI
 - [ ] CTs manuais pós-deploy (ANX-02 · ROT-02 · PWA-01 · GEO-01/02) — ver `docs/STATUS.md`
-- [ ] **Deploy em prod** (lote pendente: docs sync + ícone v1 + maskable + favicon rgb + ícone v2/SW) → `git pull && ./scripts/deploy.sh` no VPS
+- [x] **Deploy em prod (11/08)** — lote completo no VPS (`git pull && ./scripts/deploy.sh`): docs sync + ícone v1/v2 + maskable + favicon rgb/ico + SW. HEAD VPS `79c132b`. Pós-deploy: health ok · favicon.ico/svg + PNGs + manifest + sw.js **200** · SW `nxgest-v2` ativo
 - [ ] **Validação final da tela inicial** (após deploy): Android (atalho com a LOGO via manifest+SW) · iOS (apple-touch-icon) · desktop (favicon)
 - [ ] Conferência visual do ícone novo (favicon 16/32px no navegador · login/sidebar · PWA instalado) — preferencialmente no preview
 
