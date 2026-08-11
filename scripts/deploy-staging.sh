@@ -45,7 +45,7 @@ docker compose $COMPOSE up -d --build
 # 4b) Espera o boot terminar (a porta responde health) antes de qualquer seed.
 echo "==> Aguardando o staging-app ficar pronto..."
 for i in $(seq 1 30); do
-  if docker exec staging-app sh -c 'wget -qO- http://127.0.0.1:8081/api/health >/dev/null 2>&1' 2>/dev/null; then
+  if docker exec staging-app node -e 'fetch("http://127.0.0.1:8081/api/health").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))' >/dev/null 2>&1; then
     echo "==> staging-app pronto (health OK)"
     break
   fi
@@ -59,7 +59,7 @@ done
 
 # 5) Seed fake SÓ na primeira vez (banco sem clientes — o boot não cria
 #    clientes, então esse critério distingue "vazio" de "já seedado").
-if docker exec staging-app sh -c 'node -e "const s=require(\"better-sqlite3\")(\"/data/gestao.db\",{readonly:true}).prepare(\"SELECT COUNT(*) c FROM clientes\").get().c; process.exit(s>0?0:1)"' 2>/dev/null; then
+if docker exec staging-app node -e 'const s=require("better-sqlite3")("/data/gestao.db",{readonly:true}).prepare("SELECT COUNT(*) c FROM clientes").get().c; process.exit(s>0?0:1)' >/dev/null 2>&1; then
   echo "==> Staging já tem dados — seed ignorado"
 else
   echo "==> DB de staging vazio — aplicando seed de demonstração"
