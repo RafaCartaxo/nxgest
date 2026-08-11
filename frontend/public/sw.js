@@ -1,8 +1,11 @@
 /* NX Gest — service worker mínimo (PLAN 5.4 / fatia de instalação PWA).
  * Torna o site instalável como PWA no Android (o atalho passa a usar o manifest
  * em vez do favicon). Estratégia leve: network-first p/ navegação (sempre atual),
- * cache-first p/ assets estáticos e ícones. Sem cache de API (dados sensíveis). */
-const CACHE = "nxgest-v1"
+ * cache-first p/ assets estáticos e ícones. Sem cache de API (dados sensíveis).
+ *
+ * IMPORTANTE: bump do CACHE a cada deploy de assets estáticos (invalida o cache
+ * antigo do browser). Registro ocorre só em produção (main.tsx: import.meta.env.PROD). */
+const CACHE = "nxgest-v2"
 
 self.addEventListener("install", () => {
   self.skipWaiting()

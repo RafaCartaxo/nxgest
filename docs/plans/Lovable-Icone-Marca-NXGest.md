@@ -48,4 +48,5 @@
 - **`favicon.ico`** criado (256/64/48/32/16) + link no `index.html`.
 - **Service worker mínimo** (`public/sw.js`, registro no `main.tsx`): torna o site PWA instalável no Android → o atalho usa o manifest (ícone correto de vez). iOS não requer SW (usa `apple-touch-icon` como web clip).
 - **`manifest.webmanifest`**: adicionado `"id": "/"`.
+- **Service worker só em produção** (refinamento 10/08): `main.tsx` registra `sw.js` apenas com `import.meta.env.PROD` — em dev (cert auto-assinado/IP local) o SW não registra, voltando os testes locais a limpo; bump `CACHE` `nxgest-v1`→`nxgest-v2` invalida o cache antigo já gravado no browser.
 - **Cobertura**: iOS via `apple-touch-icon` (logo `sm`) ✅ · Android via manifest + SW + favicon corrigido ✅ · desktop via favicon.ico/svg ✅.

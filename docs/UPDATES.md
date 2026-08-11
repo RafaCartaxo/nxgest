@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 10/08/2026 — SW prod-only + Ajuste de Caixa Base (layout do fechar caixa) + Config limpo
+
+- **Service worker só em produção** (`main.tsx` com `import.meta.env.PROD`): em dev o SW não registra/cacheia — volta a testar limpo no local (cert auto-assinado de qualquer forma não instala PWA). Bump `sw.js` `nxgest-v1` → `nxgest-v2` (invalida cache antigo do browser). Criado `frontend/src/vite-env.d.ts` (types do Vite).
+- **`AjusteCaixaCard`** (ajuste de caixa base do operador): mini-KPIs manuais → **`KpiCard`** (Caixa base blue · Saldo atual gray), mesmo padrão visual do `FecharCaixaModal`; valor novo flui via `fetch()` pós-ajuste; removido ternário morto.
+- **`PreferenciasModal`**: **`PreviewAoVivo` removido** (era um mock "Fechar caixa"/R$ 4.820,50 que confundia — não faz sentido em Configurações) + chaves `prefs.preview*` removidas de pt-BR/en/es.
+
+Referência: `docs/engineering/tasks/2026-08-10/CHECKLIST.md`
+
 ## 10/08/2026 — Ícone/marca NX v2: a LOGO nos ícones + service worker (PWA instalável)
 
 - **Ícones agora usam a variante `sm`** (a **LOGO**: N + malha de nós + hub) em vez do "N" isolado (`mono`) — ocupa ~83% da largura (antes ~54%). Aplicada em `favicon.ts`/`favicon.svg`/`favicon.ico`/PNGs (icon-192/512, maskable, apple-touch).

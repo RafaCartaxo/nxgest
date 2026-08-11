@@ -18,7 +18,7 @@
 
 ## Entregas recentes (sem deploy em prod ainda)
 
-- **Ícone/logo v2 (10/08)** — favicon/PNGs/PWA com a **LOGO** (variante `sm`: N + malha + hub) · `favicon.ico` · `favicon.ts` com seletor correto + cores `rgb()` · **service worker mínimo** (`sw.js`) → PWA instalável no Android · manifest com `id`. Cobertura iOS (apple-touch-icon) + Android (manifest+SW) + desktop. **Pendente:** deploy em prod + validação final da tela inicial.
+- **Ícone/logo v2 (10/08)** — favicon/PNGs/PWA com a **LOGO** (variante `sm`: N + malha + hub) · `favicon.ico` · `favicon.ts` com seletor correto + cores `rgb()` · **service worker mínimo** (`sw.js`, **só em produção** via `import.meta.env.PROD` + cache v2) → PWA instalável no Android · manifest com `id`. **Ajuste de Caixa Base** no layout do `FecharCaixaModal` (KpiCard) · **`PreviewAoVivo` removido do config**. **Pendente:** deploy em prod + validação final da tela inicial (Android/iOS).
 
 ## Planos em aberto
 

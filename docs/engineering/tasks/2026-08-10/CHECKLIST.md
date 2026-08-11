@@ -17,6 +17,9 @@
 - [x] **B3 — catálogo de emojis/status** — ✅/🔵/⏳/🚨/❌/🐛/🔁 no template CHECKLIST + nota no `AGENTS.md`
 - [x] **Ícone/marca portado (PLAN Lovable-Icone-Marca)** — geometria nova do protótipo (`f5a8156`): `Logo.tsx` (viewBox 64×64, "N" primário + malha + hub, nova prop `boxed`, title "NX Gest") · `favicon.ts` (theme-aware full-bleed sem `rx` — resolve cantos transparentes) · `favicon.svg` (full-bleed, cores literais default) · PNGs PWA regenerados (icon-192/512, maskable c/ safe-zone, apple-touch 180) via ImageMagick. Consumidores intactos (API `Logo`/`LogoLockup` mantida)
 - [x] **Ícone v2 (10/08) — a LOGO nos ícones + PWA** — variante `sm` (N + malha + hub, ~83% da largura) em favicon.ts/svg/ico/PNGs; `favicon.ts` com seletor `link[rel="icon"][type="image/svg+xml"]` (corrige atalho Android) + cores `rgb()` via probe; `favicon.ico` (256/64/48/32/16); **service worker mínimo** (`sw.js` + registro no `main.tsx`) → PWA instalável; manifest com `"id": "/"`
+- [x] **SW prod-only + cache v2** — `main.tsx` registra SW só com `import.meta.env.PROD` (em dev o SW não cacheia/atrapalha testes); `sw.js` bump `nxgest-v1` → `nxgest-v2` (invalida cache antigo do browser). `vite-env.d.ts` criado (types do Vite p/ `import.meta.env`)
+- [x] **AjusteCaixaCard no layout do FecharCaixaModal** — mini-KPIs manuais (`dl`) → `KpiCard` (Caixa base blue · Saldo atual gray); valor novo flui via `fetch()` pós-ajuste; removido ternário morto `salvo ? caixaBase : caixaBase`
+- [x] **Preview removido do config** — `PreviewAoVivo` (mock "Fechar caixa"/R$ 4.820,50) removido do `PreferenciasModal` + chaves `prefs.preview*` removidas de pt-BR/en/es
 
 ## Validação
 
@@ -24,6 +27,7 @@
 - [x] Revisão do `git diff` (paths, renames, links) — sem segredos, sem mudança de código
 - [x] **Ícone**: `tsc` · `build` · `audit:ui/styles/modules` · `npm test` (78/78) · `docs:audit` verdes · PNGs full-bleed validados (cantos = fundo, maskable com safe-zone)
 - [x] **Ícone v2**: `tsc` · `build` (dist com sw.js/ico/svg/PNGs) · audits · `npm test` (78/78) · `docs:audit` · dev servindo sw.js/favicon/PNGs 200
+- [x] **Ajuste/Config**: `tsc` · `build` · audits · `npm test` (78/78) · `docs:audit` · JSONs i18n válidos (prefs.preview* removidas, 0 ocorrências)
 
 ## Pendências
 

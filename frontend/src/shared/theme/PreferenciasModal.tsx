@@ -20,32 +20,6 @@ const LANGS = [
   { code: "es", sigla: "ES", nomeKey: "prefs.langEs" },
 ]
 
-/** Mini-mock da UI que reflete a paleta/modo GLOBAIS (o ThemeProvider aplica na hora — PLAN-069). */
-function PreviewAoVivo() {
-  const { t } = useTranslation()
-  return (
-    <div className="rounded-xl border border-border bg-gradient-page p-3">
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted">{t("prefs.preview")}</p>
-      <div className="rounded-xl border border-border bg-card p-3">
-        <p className="font-display truncate text-[15px] font-semibold">{t("prefs.previewTitulo")}</p>
-        <div className="mt-2.5 flex items-end gap-2">
-          <div className="relative min-w-0 flex-1 overflow-hidden rounded-lg border border-border bg-surface p-2.5 pl-3">
-            <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-success" />
-            <p className="truncate text-[11px] text-text-muted">{t("prefs.previewKpi")}</p>
-            <p className="font-display truncate text-sm font-semibold tabular-nums">R$ 4.820,50</p>
-          </div>
-          <span
-            className="inline-flex min-h-9 shrink-0 items-center rounded-lg px-3 text-xs font-semibold text-primary-foreground"
-            style={{ backgroundImage: "linear-gradient(135deg, var(--brand-1), var(--brand-2))" }}
-          >
-            {t("prefs.previewBotao")}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /** Swatch circular com anel de seleção (port do Lovable — PLAN-069). */
 function ThemeSwatch({ nome, ativo, onClick, label }: { nome: string; ativo: boolean; onClick: () => void; label: string }) {
   return (
@@ -85,8 +59,6 @@ export function PreferenciasModal({ open, onClose }: { open: boolean; onClose: (
         </Button>
       }
     >
-      <PreviewAoVivo />
-
       <p className="mt-5 mb-2 flex items-center gap-1.5 text-sm font-medium text-text-secondary">
         <SunMedium className="size-4" aria-hidden />
         {t("prefs.modo")}

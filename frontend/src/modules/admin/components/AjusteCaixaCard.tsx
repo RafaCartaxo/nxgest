@@ -6,6 +6,7 @@ import { SectionHeader } from "../../../shared/components/SectionHeader/SectionH
 import { Field } from "../../../shared/components/Field/Field.js"
 import { FieldTextarea } from "../../../shared/components/Field/FieldTextarea.js"
 import { Button } from "../../../shared/components/Button.js"
+import { KpiCard } from "../../../shared/components/KpiCard/KpiCard.js"
 import { maskMonetario, unmaskMonetario, formatCurrency } from "../../../shared/utils/masks.js"
 
 interface AjusteCaixaCardProps {
@@ -15,7 +16,7 @@ interface AjusteCaixaCardProps {
   saving?: boolean
 }
 
-/** Ajuste da caixa base do operador — port do Lovable (PLAN-069), ligado à API real. */
+/** Ajuste da caixa base do operador — layout no padrão do FecharCaixaModal (KPIs + card), ligado à API real. */
 export function AjusteCaixaCard({ caixaBase, saldoAtual, onAjustar, saving = false }: AjusteCaixaCardProps) {
   const { t } = useTranslation()
   const [valor, setValor] = useState(maskMonetario(caixaBase.toFixed(2)))
@@ -47,17 +48,10 @@ export function AjusteCaixaCard({ caixaBase, saldoAtual, onAjustar, saving = fal
       <SectionHeader title={t("admin.ajustarCaixaOperador")} />
       <Card.Root variant="detail">
         <Card.Body>
-          <dl className="grid grid-cols-2 gap-3">
-            {[
-              { label: t("caixa.caixaBase"), valor: `R$ ${formatCurrency(salvo ? caixaBase : caixaBase)}` },
-              { label: t("caixa.saldoAtual"), valor: `R$ ${formatCurrency(saldoAtual)}` },
-            ].map((k) => (
-              <div key={k.label} className="rounded-xl border border-border bg-surface p-3">
-                <dt className="truncate text-xs text-text-muted">{k.label}</dt>
-                <dd className="font-display mt-0.5 text-base font-semibold tabular-nums">{k.valor}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="grid grid-cols-2 gap-3">
+            <KpiCard title={t("caixa.caixaBase")} value={`R$ ${formatCurrency(caixaBase)}`} variant="blue" />
+            <KpiCard title={t("caixa.saldoAtual")} value={`R$ ${formatCurrency(saldoAtual)}`} variant="gray" />
+          </div>
 
           <div className="mt-4 space-y-4">
             <Field

@@ -9,10 +9,13 @@ import "./index.css"
 
 const queryClient = new QueryClient()
 
-if ("serviceWorker" in navigator) {
+// SW registrado SÓ em produção: em dev (cert auto-assinado / IP local) o SW
+// cachearia assets e atrapalharia o teste — e o Chrome Android não instala PWA
+// fora de HTTPS válido. PWA é melhoria progressiva; falha não bloqueia o app.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {
-      // PWA é melhoria progressiva — falha de registro não bloqueia o app.
+      // silencioso — instalabilidade é progressiva
     })
   })
 }
