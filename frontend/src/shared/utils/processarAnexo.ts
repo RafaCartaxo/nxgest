@@ -2,6 +2,10 @@
  * processarAnexo — regras do PLAN-042 aplicadas no front (UX).
  * Imagem: comprime via canvas (<=1600px, JPEG 0.8) e exige <=1MB depois.
  * PDF: vai como está, limite 5MB. O servidor revalida (nunca confiar no front).
+ *
+ * A imagem retorna um Blob (não data URL): o `fetch(dataUrl)` no upload era
+ * bloqueado pela CSP (`connectSrc` sem `data:`) e o anexo nunca chegava ao
+ * servidor. Com Blob direto, o `File` é montado sem fetch.
  */
 
 export const MAX_IMAGEM_BYTES = 1024 * 1024 // 1MB
@@ -17,15 +21,19 @@ const MIMES_DECODIFICAVEIS = [...MIMES_IMAGEM, "image/heic", "image/heif", "appl
 export type ErroAnexo = "ANEXO_TIPO" | "ANEXO_LIMITE" | "FALHA"
 
 export type ResultadoAnexo =
-  | { ok: true; nome: string; mime: string; tamanho: number; thumb: string | null }
+  | { ok: true; nome: string; mime: string; tamanho: number; blob: Blob | null }
   | { ok: false; erro: ErroAnexo }
+
+function canvasParaBlob(canvas: HTMLCanvasElement, mime: string, qualidade: number): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob((b) => resolve(b), mime, qualidade))
+}
 
 export async function processarAnexo(file: File): Promise<ResultadoAnexo> {
   const tipo = file.type || "application/octet-stream"
 
   if (tipo === "application/pdf") {
     if (file.size > MAX_PDF_BYTES) return { ok: false, erro: "ANEXO_LIMITE" }
-    return { ok: true, nome: file.name, mime: tipo, tamanho: file.size, thumb: null }
+    return { ok: true, nome: file.name, mime: tipo, tamanho: file.size, blob: null }
   }
 
   // Imagens conhecidas OU HEIC/HEIF/desconhecidas (iPhone) → tenta converter p/ JPEG.
@@ -42,12 +50,12 @@ export async function processarAnexo(file: File): Promise<ResultadoAnexo> {
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
     bitmap.close?.()
 
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.8)
-    const tamanho = Math.round((dataUrl.length * 3) / 4)
-    if (tamanho > MAX_IMAGEM_BYTES) return { ok: false, erro: "ANEXO_LIMITE" }
+    const blob = await canvasParaBlob(canvas, "image/jpeg", 0.8)
+    if (!blob) return { ok: false, erro: "FALHA" }
+    if (blob.size > MAX_IMAGEM_BYTES) return { ok: false, erro: "ANEXO_LIMITE" }
 
     const nome = file.name.replace(/\.(png|webp|jpeg|jpg|heic|heif)$/i, "") + ".jpg"
-    return { ok: true, nome, mime: "image/jpeg", tamanho, thumb: dataUrl }
+    return { ok: true, nome, mime: "image/jpeg", tamanho: blob.size, blob }
   } catch {
     // Não decodificou (ex.: HEIC num browser sem suporte) → orienta o usuário.
     return { ok: false, erro: "ANEXO_TIPO" }

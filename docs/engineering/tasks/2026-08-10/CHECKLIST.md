@@ -28,6 +28,8 @@
 - [x] **Ícone**: `tsc` · `build` · `audit:ui/styles/modules` · `npm test` (78/78) · `docs:audit` verdes · PNGs full-bleed validados (cantos = fundo, maskable com safe-zone)
 - [x] **Ícone v2**: `tsc` · `build` (dist com sw.js/ico/svg/PNGs) · audits · `npm test` (78/78) · `docs:audit` · dev servindo sw.js/favicon/PNGs 200
 - [x] **Ajuste/Config**: `tsc` · `build` · audits · `npm test` (78/78) · `docs:audit` · JSONs i18n válidos (prefs.preview* removidas, 0 ocorrências)
+- [x] **Fix anexos (11/08)**: `tsc` · `build` · audits · `npm test` (78/78) · `docs:audit` · backend intocado (multer/magic bytes/limites) — smoke ANE-089..094 inalterado
+- [x] **Fix anexos (11/08) — imagem + PDF** — imagem: `processarAnexo` `toDataURL`→`toBlob` (retorna Blob; upload sem `fetch(dataUrl)` que era bloqueado pela CSP `connectSrc` sem `data:` — o POST nunca chegava) · PDF: desktop mantém `<iframe>` no modal; **mobile** (`pointer: coarse`) mostra **botão "Baixar PDF"** no footer (evita o bug documentado `f9a9000` — blob em nova guia trava scroll no Chrome); i18n `anexos.baixarPdf`/`anexos.previewMobile` (pt/en/es)
 
 ## Pendências
 

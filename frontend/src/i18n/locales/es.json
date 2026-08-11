@@ -714,7 +714,9 @@
     "erroServidor": "No se pudo subir el adjunto.",
     "anexado": "Adjunto enviado.",
     "removido": "Adjunto eliminado.",
-    "hint": "Imagen hasta 1MB (reducida a 1600px antes del envío) · PDF hasta 5MB. Los archivos se sirven solo por endpoint autenticado."
+    "hint": "Imagen hasta 1MB (reducida a 1600px antes del envío) · PDF hasta 5MB. Los archivos se sirven solo por endpoint autenticado.",
+    "baixarPdf": "Descargar PDF",
+    "previewMobile": "El navegador no muestra PDF aquí. Descárgalo para verlo."
   },
   "lead": {
     "navLeads": "Leads",

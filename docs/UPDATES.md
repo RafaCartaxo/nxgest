@@ -2,6 +2,15 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 11/08/2026 — Fix anexos: imagem (upload bloqueado pela CSP) + PDF no mobile
+
+- **Imagem não anexava** (computador + celular, todos navegadores): `processarAnexo` gerava um **data URL** (`canvas.toDataURL`) e o upload fazia `fetch(dataUrl)` — **bloqueado pela CSP** (`connectSrc` sem `data:`), então o POST nunca chegava ao servidor. **Fix:** imagem agora é convertida via **`canvas.toBlob`** e o `File` é montado direto do Blob (sem `fetch`). Limite de 1MB mantido via `blob.size`.
+- **PDF sem visualização no celular**: navegadores móveis não renderizam PDF em `<iframe>` (limitação do navegador). **Fix:** desktop mantém o modal com `<iframe>`; **mobile** (`pointer: coarse`) mostra **botão "Baixar PDF"** (download via `<a download>` real). **Não** foi reutilizada a abertura em nova guia com blob — precedente `f9a9000`: blob em aba nova **trava o scroll no Chrome**.
+- i18n: `anexos.baixarPdf` + `anexos.previewMobile` (pt/en/es).
+- Backend intocado (multer/magic bytes/limites) — smoke ANE-089..094 inalterado.
+
+Referência: `docs/engineering/tasks/2026-08-10/CHECKLIST.md`
+
 ## 11/08/2026 — Deploy em produção: lote ícone/logo v2 + docs sync + ajuste caixa
 
 - **VPS atualizado** para `79c132b` (`git pull && ./scripts/deploy.sh`): sobe docs sync + ícone v1 (N full-bleed) + maskable + favicon rgb/`.ico` + **ícone v2 (a LOGO sm)** + **service worker PWA** + ajuste de caixa base (layout do fechar caixa) + config sem preview.

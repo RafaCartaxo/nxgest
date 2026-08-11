@@ -714,7 +714,9 @@
     "erroServidor": "Could not upload the attachment.",
     "anexado": "Attachment uploaded.",
     "removido": "Attachment removed.",
-    "hint": "Image up to 1MB (reduced to 1600px before upload) · PDF up to 5MB. Files are served only through an authenticated endpoint."
+    "hint": "Image up to 1MB (reduced to 1600px before upload) · PDF up to 5MB. Files are served only through an authenticated endpoint.",
+    "baixarPdf": "Download PDF",
+    "previewMobile": "Your browser can't display PDFs here. Download to view."
   },
   "lead": {
     "navLeads": "Leads",

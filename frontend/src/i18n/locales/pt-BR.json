@@ -714,7 +714,9 @@
     "erroServidor": "Não foi possível enviar o anexo.",
     "anexado": "Anexo enviado.",
     "removido": "Anexo removido.",
-    "hint": "Imagem até 1MB (reduzida para 1600px antes do envio) · PDF até 5MB. Arquivos são servidos apenas por endpoint autenticado."
+    "hint": "Imagem até 1MB (reduzida para 1600px antes do envio) · PDF até 5MB. Arquivos são servidos apenas por endpoint autenticado.",
+    "baixarPdf": "Baixar PDF",
+    "previewMobile": "O navegador não exibe PDF aqui. Baixe para visualizar."
   },
   "lead": {
     "navLeads": "Leads",

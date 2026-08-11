@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FileText, ImageIcon, Paperclip, Trash2, ExternalLink, Check } from "lucide-react"
+import { FileText, ImageIcon, Paperclip, Trash2, ExternalLink, Check, Download } from "lucide-react"
 import { Button } from "../../../shared/components/Button.js"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
@@ -106,7 +106,8 @@ export function AnexosSection({ clienteId }: Props) {
     }
     setEnviando(true)
     try {
-      const novo = await enviarAnexo(clienteId, new File([await fileParaBlob(file, r)], r.nome, { type: r.mime }))
+      const arquivo = r.blob ? new File([r.blob], r.nome, { type: r.mime }) : file
+      const novo = await enviarAnexo(clienteId, arquivo)
       setLista((l) => [novo, ...l])
       feedback.show({ status: "success", message: t("anexos.anexado") })
     } catch {
@@ -115,14 +116,6 @@ export function AnexosSection({ clienteId }: Props) {
       setEnviando(false)
       if (input.current) input.current.value = ""
     }
-  }
-
-  async function fileParaBlob(file: File, r: { thumb: string | null }): Promise<Blob> {
-    if (r.thumb) {
-      const res = await fetch(r.thumb)
-      return res.blob()
-    }
-    return file
   }
 
   async function remover(anexoId: string) {
@@ -136,6 +129,21 @@ export function AnexosSection({ clienteId }: Props) {
   }
 
   const [visualizando, setVisualizando] = useState<{ url: string; mime: string; nome: string } | null>(null)
+
+  /** Navegadores móveis não renderizam PDF dentro de `<iframe>` — baixar é a via confiável. */
+  function ehMobile(): boolean {
+    return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches
+  }
+
+  function baixarPdf() {
+    if (!visualizando) return
+    const a = document.createElement("a")
+    a.href = visualizando.url
+    a.download = visualizando.nome
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
 
   async function abrir(anexo: AnexoDto) {
     try {
@@ -206,13 +214,39 @@ export function AnexosSection({ clienteId }: Props) {
           backdropClose
           maxWidth="max-w-2xl"
           title={visualizando.nome}
+          footer={
+            visualizando.mime === "application/pdf" && ehMobile() ? (
+              <>
+                <Button variant="ghost" onClick={fecharViewer}>
+                  {t("common.cancel")}
+                </Button>
+                <Button variant="primary" onClick={baixarPdf}>
+                  <Download className="size-4" aria-hidden />
+                  {t("anexos.baixarPdf")}
+                </Button>
+              </>
+            ) : undefined
+          }
         >
           {visualizando.mime === "application/pdf" ? (
-            <iframe
-              src={visualizando.url}
-              title={visualizando.nome}
-              className="h-[70vh] w-full rounded-xl border border-border"
-            />
+            ehMobile() ? (
+              <div className="flex flex-col items-center gap-3 py-8 text-center">
+                <span className="grid size-14 place-items-center rounded-full bg-muted text-text-muted">
+                  <FileText className="size-7" aria-hidden />
+                </span>
+                <p className="text-sm text-text-secondary">{t("anexos.previewMobile")}</p>
+                <Button variant="soft" onClick={baixarPdf} className="mt-1">
+                  <Download className="size-4" aria-hidden />
+                  {t("anexos.baixarPdf")}
+                </Button>
+              </div>
+            ) : (
+              <iframe
+                src={visualizando.url}
+                title={visualizando.nome}
+                className="h-[70vh] w-full rounded-xl border border-border"
+              />
+            )
           ) : (
             <img
               src={visualizando.url}
