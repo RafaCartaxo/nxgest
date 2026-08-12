@@ -2,9 +2,13 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.3
+**Versão:** 1.4
 
-**Última atualização:** 31/07/2026
+**Última atualização:** 12/08/2026
+
+---
+
+> **Modelo físico (PLAN-070):** implementado em **PostgreSQL 16**. Money = `NUMERIC(12,2)` (custom type drizzle `money`); datas date-only = `DATE`; timestamps (`createdAt`/`updatedAt`/`deletedAt`/tokens) = `TEXT` ISO; IDs = `text` UUID v4; **FKs** ativas nas relações conhecidas. Débitos conscientes: timestamps não tipados (`TIMESTAMPTZ` muda o formato de leitura) e colunas camelCase quotadas (herança do schema SQLite).
 
 ---
 

@@ -20,7 +20,7 @@ npm run test:coverage # report v8 (reporta, NÃO bloqueia no início — meta so
 | Unit shared/segurança | `src/shared/utils/*.test.ts` | `scope` (resolveUsuarioAlvo), `foto` (magic bytes/sem SVG), `jwt` (fail-closed), `clientIp` (CF-Connecting-IP) |
 | Unit front lógica | `frontend/src/shared/**/*.test.ts` | `geo/alvo`, `modules`, `capacidades`, `geo/estadoGps` |
 | Component/UI | `frontend/src/**/*.test.tsx` (`// @vitest-environment jsdom`) | `LoginPage` (toggle senha UC-041, submit) — destrava P022 |
-| Integração API | `scripts/smoke-api.mjs` | 250 cenários (DB isolado + seed) |
+| Integração API | `scripts/smoke-api.mjs` | 250 cenários (PostgreSQL isolado + seed) |
 
 ## Convenções
 
@@ -38,7 +38,7 @@ npm run test:coverage # report v8 (reporta, NÃO bloqueia no início — meta so
 
 **`.github/workflows/ci.yml`** (push/PR/manual) — gate de qualidade:
 - Job `test`: `npm ci` (workspaces) → `tsc --noEmit` → `npm run build` → `audit:ui/styles/modules` → `npm test` (78) → `test:coverage` (+ artifact) → `docs:audit`.
-- Job `smoke`: `scripts/create-schema.mjs` (schema isolado, sem boot) → `seed-demo` → **uma** instância com `JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000` → `smoke-api` (250 cenários).
+- Job `smoke`: `services: postgres` (GitHub Actions) → `scripts/create-schema.mjs` (schema isolado, sem boot) → `seed-demo` → **uma** instância com `DATABASE_URL` + `JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000` → `smoke-api` (250 cenários).
 - Job `deploy-staging` (push→main, `needs: [test, smoke]`): SSH → `scripts/deploy-staging.sh` → staging em `nxgestao.duckdns.org`.
 
 **`.github/workflows/cd.yml`** — promoção para produção:
