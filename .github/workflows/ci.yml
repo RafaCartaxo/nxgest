@@ -78,4 +78,4 @@ jobs:
           script: |
             set -euo pipefail
             cd /opt/nxgestao || { echo "ERRO: /opt/nxgestao não encontrado no VPS"; exit 1; }
-            ./scripts/deploy-staging.sh
+            bash scripts/deploy-staging.sh
