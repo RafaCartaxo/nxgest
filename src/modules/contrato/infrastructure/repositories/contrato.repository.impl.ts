@@ -177,7 +177,14 @@ export class ContratoRepository implements IContratoRepository {
           .groupBy(parcelas.contratoId)
       : []
 
-    const sumMap = new Map(sums.map((s) => [s.contratoId, { total: s.total, pagas: s.pagas, emAtraso: s.emAtraso, parcelasEmAtraso: s.parcelasEmAtraso, maisAntigaAtraso: s.maisAntigaAtraso }]))
+    // G1: SUM() via drizzle volta string com numeric(12,2) — normalizar para number.
+    const sumMap = new Map(sums.map((s) => [s.contratoId, {
+      total: Number(s.total),
+      pagas: Number(s.pagas),
+      emAtraso: Number(s.emAtraso),
+      parcelasEmAtraso: Number(s.parcelasEmAtraso),
+      maisAntigaAtraso: s.maisAntigaAtraso,
+    }]))
 
     return {
       data: rows.map((r) => {

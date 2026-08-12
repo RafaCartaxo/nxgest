@@ -199,11 +199,13 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
 // ---------- Reset total ----------
 const nowISO = new Date().toISOString()
+// Ordem filho→pai (respeita as FKs — PLAN-070 modelo).
 const RESET_TABLES = [
-  "pagamento_parcelas", "pagamentos", "parcelas", "contratos", "clientes",
-  "movimentacoesFinanceiras", "gastos", "fechamentos_semanais", "snapshots_atraso",
-  "historico_operacional", "caixa_config", "auditoria_caixa", "auditoria_estornos",
-  "auditoria_modulos", "anexos", "auth_tokens", "leads", "usuarios", "empresas",
+  "pagamento_parcelas", "auditoria_estornos", "pagamentos", "parcelas",
+  "historico_operacional", "anexos", "caixa_config", "auditoria_caixa",
+  "auditoria_modulos", "contratos", "clientes", "movimentacoesFinanceiras",
+  "gastos", "fechamentos_semanais", "snapshots_atraso", "auth_tokens",
+  "leads", "usuarios", "empresas",
 ]
 for (const table of RESET_TABLES) await q(`DELETE FROM "${table}"`)
 

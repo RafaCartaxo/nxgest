@@ -12,8 +12,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8081
-      # DB_PATH mantido para derivar o diretório de uploads; o banco usa DATABASE_URL.
-      - DB_PATH=/data/gestao.db
+      # UPLOADS_DIR: pasta de uploads (banco usa DATABASE_URL).
+      - UPLOADS_DIR=/data/uploads
       - DATABASE_URL=postgres://${PG_USER}:${PG_PASSWORD}@staging-pg:5432/${PG_DB}
       - JWT_SECRET=${JWT_SECRET}
       - ADMIN_DEFAULT_PASSWORD=${ADMIN_DEFAULT_PASSWORD}

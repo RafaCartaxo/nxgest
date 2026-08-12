@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^11.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
@@ -59,6 +58,7 @@
     "react-dom": "^18.3.1",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "better-sqlite3": "^11.0.0"
   }
 }
