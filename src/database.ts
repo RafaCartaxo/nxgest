@@ -53,6 +53,19 @@ export const money = customType<{ data: number; driverData: string }>({
   },
 })
 
+export const ts = customType<{ data: string; driverData: string }>({
+  dataType() {
+    return "timestamptz"
+  },
+  // Recebe string (texto) ou Date (binário) do driver; normaliza para ISO 'Z' (formato da app).
+  fromDriver(v) {
+    return new Date(v as string | Date).toISOString()
+  },
+  toDriver(v) {
+    return String(v)
+  },
+})
+
 export async function rawQuery<T>(text: string, params: unknown[] = []): Promise<{ rows: T[]; rowCount: number }> {
   let i = 0
   const sqlText = text.replace(/\?/g, () => `$${++i}`)
@@ -66,7 +79,7 @@ export const clientes = pgTable("clientes", {
   cpf: text("cpf"),
   comercio: text("comercio").notNull(),
   telefone: text("telefone").notNull(),
-  telefoneComercio: text("telefoneComercio"),
+  telefoneComercio: text("telefone_comercio"),
   logradouro: text("logradouro").notNull(),
   numero: text("numero"),
   complemento: text("complemento"),
@@ -75,18 +88,18 @@ export const clientes = pgTable("clientes", {
   estado: text("estado"),
   lat: doublePrecision("lat"),
   lng: doublePrecision("lng"),
-  comercioLogradouro: text("comercioLogradouro"),
-  comercioNumero: text("comercioNumero"),
-  comercioBairro: text("comercioBairro"),
-  comercioCidade: text("comercioCidade"),
-  comercioEstado: text("comercioEstado"),
-  comercioLat: doublePrecision("comercioLat"),
-  comercioLng: doublePrecision("comercioLng"),
+  comercioLogradouro: text("comercio_logradouro"),
+  comercioNumero: text("comercio_numero"),
+  comercioBairro: text("comercio_bairro"),
+  comercioCidade: text("comercio_cidade"),
+  comercioEstado: text("comercio_estado"),
+  comercioLat: doublePrecision("comercio_lat"),
+  comercioLng: doublePrecision("comercio_lng"),
   foto: text("foto"),
-  createdAt: text("createdAt").notNull(),
-  updatedAt: text("updatedAt").notNull(),
-  deletedAt: text("deletedAt"),
-  userId: text("userId"),
+  createdAt: ts("created_at").notNull(),
+  updatedAt: ts("updated_at").notNull(),
+  deletedAt: ts("deleted_at"),
+  userId: text("user_id"),
 }, (t) => [
   uniqueIndex("idx_clientes_cpf").on(t.cpf, t.userId).where(sql`${t.cpf} IS NOT NULL AND ${t.deletedAt} IS NULL`),
   index("idx_clientes_user").on(t.userId, t.deletedAt),
@@ -94,18 +107,18 @@ export const clientes = pgTable("clientes", {
 
 export const contratos = pgTable("contratos", {
   id: text("id").primaryKey(),
-  clienteId: text("clienteId").notNull(),
-  valorBase: money("valorBase").notNull(),
-  percentualJuros: money("percentualJuros").notNull(),
-  valorFinal: money("valorFinal").notNull(),
-  quantidadeParcelas: integer("quantidadeParcelas").notNull(),
-  dataInicio: date("dataInicio").notNull(),
-  dataFinal: text("dataFinal").notNull().default(""),
+  clienteId: text("cliente_id").notNull(),
+  valorBase: money("valor_base").notNull(),
+  percentualJuros: money("percentual_juros").notNull(),
+  valorFinal: money("valor_final").notNull(),
+  quantidadeParcelas: integer("quantidade_parcelas").notNull(),
+  dataInicio: date("data_inicio").notNull(),
+  dataFinal: text("data_final").notNull().default(""),
   estado: text("estado").notNull().default("Ativo"),
-  createdAt: text("createdAt").notNull(),
-  updatedAt: text("updatedAt").notNull(),
-  deletedAt: text("deletedAt"),
-  userId: text("userId"),
+  createdAt: ts("created_at").notNull(),
+  updatedAt: ts("updated_at").notNull(),
+  deletedAt: ts("deleted_at"),
+  userId: text("user_id"),
 }, (t) => [
   index("idx_contratos_cliente").on(t.clienteId),
   index("idx_contratos_user").on(t.userId, t.deletedAt),
@@ -113,32 +126,32 @@ export const contratos = pgTable("contratos", {
 
 export const parcelas = pgTable("parcelas", {
   id: text("id").primaryKey(),
-  contratoId: text("contratoId").notNull(),
+  contratoId: text("contrato_id").notNull(),
   numero: integer("numero").notNull(),
-  valorPrevisto: money("valorPrevisto").notNull(),
-  valorPago: money("valorPago").notNull().default(0),
-  saldoPendente: money("saldoPendente").notNull(),
+  valorPrevisto: money("valor_previsto").notNull(),
+  valorPago: money("valor_pago").notNull().default(0),
+  saldoPendente: money("saldo_pendente").notNull(),
   estado: text("estado").notNull().default("Pendente"),
-  dataVencimento: date("dataVencimento").notNull(),
-  dataQuitacao: date("dataQuitacao"),
-  createdAt: text("createdAt").notNull(),
-  updatedAt: text("updatedAt").notNull(),
-  deletedAt: text("deletedAt"),
+  dataVencimento: date("data_vencimento").notNull(),
+  dataQuitacao: date("data_quitacao"),
+  createdAt: ts("created_at").notNull(),
+  updatedAt: ts("updated_at").notNull(),
+  deletedAt: ts("deleted_at"),
 }, (t) => [
   index("idx_parcelas_contrato").on(t.contratoId),
   index("idx_parcelas_venc").on(t.contratoId, t.dataVencimento, t.saldoPendente),
 ])
 
-export const movimentacoesFinanceiras = pgTable("movimentacoesFinanceiras", {
+export const movimentacoesFinanceiras = pgTable("movimentacoes_financeiras", {
   id: text("id").primaryKey(),
   tipo: text("tipo").notNull(),
   valor: money("valor").notNull(),
   origem: text("origem").notNull(),
-  origemId: text("origemId").notNull(),
+  origemId: text("origem_id").notNull(),
   descricao: text("descricao"),
   data: date("data").notNull(),
-  createdAt: text("createdAt").notNull(),
-  userId: text("userId"),
+  createdAt: ts("created_at").notNull(),
+  userId: text("user_id"),
 }, (t) => [
   index("idx_movimentacoes_data").on(t.data),
   index("idx_movimentacoes_origem").on(t.origem, t.origemId),
@@ -146,20 +159,20 @@ export const movimentacoesFinanceiras = pgTable("movimentacoesFinanceiras", {
 ])
 
 export const caixaConfig = pgTable("caixa_config", {
-  userId: text("userId").primaryKey(),
-  caixaBase: money("caixaBase").notNull().default(0),
-  updatedAt: text("updatedAt").notNull(),
+  userId: text("user_id").primaryKey(),
+  caixaBase: money("caixa_base").notNull().default(0),
+  updatedAt: ts("updated_at").notNull(),
 })
 
 export const auditoriaCaixa = pgTable("auditoria_caixa", {
   id: text("id").primaryKey(),
-  operadorId: text("operadorId").notNull(),
-  adminId: text("adminId").notNull(),
-  valorAnterior: money("valorAnterior").notNull(),
-  valorNovo: money("valorNovo").notNull(),
+  operadorId: text("operador_id").notNull(),
+  adminId: text("admin_id").notNull(),
+  valorAnterior: money("valor_anterior").notNull(),
+  valorNovo: money("valor_novo").notNull(),
   motivo: text("motivo").notNull(),
   data: date("data").notNull(),
-  createdAt: text("createdAt").notNull(),
+  createdAt: ts("created_at").notNull(),
 }, (t) => [
   index("idx_auditoria_caixa_operador").on(t.operadorId),
   index("idx_auditoria_caixa_data").on(t.data),
@@ -167,14 +180,14 @@ export const auditoriaCaixa = pgTable("auditoria_caixa", {
 
 export const pagamentos = pgTable("pagamentos", {
   id: text("id").primaryKey(),
-  contratoId: text("contratoId").notNull(),
+  contratoId: text("contrato_id").notNull(),
   valor: money("valor").notNull(),
   data: date("data").notNull(),
-  createdAt: text("createdAt").notNull(),
-  userId: text("userId"),
-  estornadoEm: text("estornadoEm"),
-  estornadoPor: text("estornadoPor"),
-  estornoMotivo: text("estornoMotivo"),
+  createdAt: ts("created_at").notNull(),
+  userId: text("user_id"),
+  estornadoEm: text("estornado_em"),
+  estornadoPor: text("estornado_por"),
+  estornoMotivo: text("estorno_motivo"),
 }, (t) => [
   index("idx_pagamentos_contrato").on(t.contratoId),
   index("idx_pagamentos_user").on(t.userId, t.data),
@@ -182,13 +195,13 @@ export const pagamentos = pgTable("pagamentos", {
 
 export const auditoriaEstornos = pgTable("auditoria_estornos", {
   id: text("id").primaryKey(),
-  pagamentoId: text("pagamentoId").notNull(),
-  operadorId: text("operadorId").notNull(),
-  adminId: text("adminId").notNull(),
+  pagamentoId: text("pagamento_id").notNull(),
+  operadorId: text("operador_id").notNull(),
+  adminId: text("admin_id").notNull(),
   valor: money("valor").notNull(),
   motivo: text("motivo").notNull(),
   data: date("data").notNull(),
-  createdAt: text("createdAt").notNull(),
+  createdAt: ts("created_at").notNull(),
 }, (t) => [
   index("idx_auditoria_estornos_pagamento").on(t.pagamentoId),
   index("idx_auditoria_estornos_operador").on(t.operadorId),
@@ -196,8 +209,8 @@ export const auditoriaEstornos = pgTable("auditoria_estornos", {
 
 export const pagamentoParcelas = pgTable("pagamento_parcelas", {
   id: text("id").primaryKey(),
-  pagamentoId: text("pagamentoId").notNull(),
-  parcelaId: text("parcelaId").notNull(),
+  pagamentoId: text("pagamento_id").notNull(),
+  parcelaId: text("parcela_id").notNull(),
   valor: money("valor").notNull(),
 }, (t) => [
   index("idx_pagamento_parcelas_pagamento").on(t.pagamentoId),
@@ -206,12 +219,12 @@ export const pagamentoParcelas = pgTable("pagamento_parcelas", {
 
 export const historicoOperacional = pgTable("historico_operacional", {
   id: text("id").primaryKey(),
-  clienteId: text("clienteId").notNull(),
-  contratoId: text("contratoId").notNull(),
+  clienteId: text("cliente_id").notNull(),
+  contratoId: text("contrato_id").notNull(),
   tipo: text("tipo").notNull(),
-  dataPromessa: date("dataPromessa"),
-  createdAt: text("createdAt").notNull(),
-  userId: text("userId"),
+  dataPromessa: date("data_promessa"),
+  createdAt: ts("created_at").notNull(),
+  userId: text("user_id"),
 }, (t) => [
   index("idx_historico_operacional_dia").on(t.clienteId, t.contratoId, t.createdAt),
   index("idx_historico_user").on(t.userId, t.createdAt),
@@ -223,9 +236,9 @@ export const gastos = pgTable("gastos", {
   categoria: text("categoria").notNull(),
   observacao: text("observacao"),
   data: date("data").notNull(),
-  createdAt: text("createdAt").notNull(),
-  deletedAt: text("deletedAt"),
-  userId: text("userId"),
+  createdAt: ts("created_at").notNull(),
+  deletedAt: ts("deleted_at"),
+  userId: text("user_id"),
 }, (t) => [
   index("idx_gastos_data").on(t.data),
   index("idx_gastos_user").on(t.userId, t.data),
@@ -233,15 +246,15 @@ export const gastos = pgTable("gastos", {
 
 export const fechamentosSemanais = pgTable("fechamentos_semanais", {
   id: text("id").primaryKey(),
-  dataInicio: date("dataInicio").notNull(),
-  dataFim: date("dataFim").notNull(),
-  totalRecebido: money("totalRecebido").notNull(),
-  totalGasto: money("totalGasto").notNull(),
+  dataInicio: date("data_inicio").notNull(),
+  dataFim: date("data_fim").notNull(),
+  totalRecebido: money("total_recebido").notNull(),
+  totalGasto: money("total_gasto").notNull(),
   resultado: money("resultado").notNull(),
-  caixaBase: money("caixaBase").notNull().default(0),
-  saldoFechamento: money("saldoFechamento").notNull().default(0),
-  createdAt: text("createdAt").notNull(),
-  userId: text("userId"),
+  caixaBase: money("caixa_base").notNull().default(0),
+  saldoFechamento: money("saldo_fechamento").notNull().default(0),
+  createdAt: ts("created_at").notNull(),
+  userId: text("user_id"),
 }, (t) => [
   index("idx_fechamentos_semanais_data").on(t.dataInicio),
   index("idx_fechamentos_user").on(t.userId, t.dataInicio),
@@ -250,12 +263,12 @@ export const fechamentosSemanais = pgTable("fechamentos_semanais", {
 
 export const snapshotsAtraso = pgTable("snapshots_atraso", {
   id: text("id").primaryKey(),
-  userId: text("userId").notNull(),
+  userId: text("user_id").notNull(),
   data: date("data").notNull(),
-  clientesAtrasados: integer("clientesAtrasados").notNull(),
-  contratosAtrasados: integer("contratosAtrasados").notNull(),
-  valorAtrasado: money("valorAtrasado").notNull(),
-  createdAt: text("createdAt").notNull(),
+  clientesAtrasados: integer("clientes_atrasados").notNull(),
+  contratosAtrasados: integer("contratos_atrasados").notNull(),
+  valorAtrasado: money("valor_atrasado").notNull(),
+  createdAt: ts("created_at").notNull(),
 }, (t) => [
   unique("snapshots_atraso_user_data").on(t.userId, t.data),
   index("idx_snapshots_atraso_data").on(t.userId, t.data),
@@ -265,12 +278,12 @@ export const usuarios = pgTable("usuarios", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
   email: text("email").notNull().unique(),
-  senhaHash: text("senhaHash"),
+  senhaHash: text("senha_hash"),
   role: text("role").notNull().default("operator"),
-  createdAt: text("createdAt").notNull(),
-  deletedAt: text("deletedAt"),
-  empresaId: text("empresaId"),
-  chefeId: text("chefeId"),
+  createdAt: ts("created_at").notNull(),
+  deletedAt: ts("deleted_at"),
+  empresaId: text("empresa_id"),
+  chefeId: text("chefe_id"),
   foto: text("foto"),
 }, (t) => [
   index("idx_usuarios_empresa_role").on(t.empresaId, t.role),
@@ -278,66 +291,66 @@ export const usuarios = pgTable("usuarios", {
 
 export const authTokens = pgTable("auth_tokens", {
   id: text("id").primaryKey(),
-  subjectId: text("subjectId").notNull(),
+  subjectId: text("subject_id").notNull(),
   tipo: text("tipo").notNull(),
   hash: text("hash").notNull(),
-  expiraEm: text("expiraEm").notNull(),
-  usadoEm: text("usadoEm"),
-  createdAt: text("createdAt").notNull(),
+  expiraEm: ts("expira_em").notNull(),
+  usadoEm: ts("usado_em"),
+  createdAt: ts("created_at").notNull(),
 })
 
 export const empresas = pgTable("empresas", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
-  createdAt: text("createdAt").notNull(),
+  createdAt: ts("created_at").notNull(),
   modulos: text("modulos"),
   capacidades: text("capacidades"),
   documento: text("documento"),
-  nomeFantasia: text("nomeFantasia"),
+  nomeFantasia: text("nome_fantasia"),
   ativa: integer("ativa").notNull().default(1),
 })
 
 export const auditoriaModulos = pgTable("auditoria_modulos", {
   id: text("id").primaryKey(),
-  empresaId: text("empresaId").notNull(),
-  adminId: text("adminId").notNull(),
+  empresaId: text("empresa_id").notNull(),
+  adminId: text("admin_id").notNull(),
   tipo: text("tipo").notNull(),
   antes: text("antes"),
   depois: text("depois"),
   force: integer("force").notNull().default(0),
   motivo: text("motivo"),
-  createdAt: text("createdAt").notNull(),
+  createdAt: ts("created_at").notNull(),
 })
 
 export const anexos = pgTable("anexos", {
   id: text("id").primaryKey(),
-  clienteId: text("clienteId").notNull(),
+  clienteId: text("cliente_id").notNull(),
   tipo: text("tipo").notNull().default("outro"),
-  nomeOriginal: text("nomeOriginal").notNull(),
+  nomeOriginal: text("nome_original").notNull(),
   mime: text("mime").notNull(),
   tamanho: integer("tamanho").notNull(),
   caminho: text("caminho").notNull(),
-  criadoPor: text("criadoPor").notNull(),
-  createdAt: text("createdAt").notNull(),
+  criadoPor: text("criado_por").notNull(),
+  createdAt: ts("created_at").notNull(),
 }, (t) => [
   index("idx_anexos_cliente").on(t.clienteId),
 ])
 
 export const leads = pgTable("leads", {
   id: text("id").primaryKey(),
-  nomeResponsavel: text("nomeResponsavel").notNull(),
+  nomeResponsavel: text("nome_responsavel").notNull(),
   empresa: text("empresa").notNull(),
   email: text("email").notNull().unique(),
   telefone: text("telefone"),
   origem: text("origem").notNull().default("Site"),
   status: text("status").notNull().default("NOVO"),
-  convertidoEmpresaId: text("convertidoEmpresaId"),
-  convertidoEm: text("convertidoEm"),
-  convertidoPor: text("convertidoPor"),
-  descartadoEm: text("descartadoEm"),
-  descartadoPor: text("descartadoPor"),
-  descarteMotivo: text("descarteMotivo"),
-  createdAt: text("createdAt").notNull(),
+  convertidoEmpresaId: text("convertido_empresa_id"),
+  convertidoEm: ts("convertido_em"),
+  convertidoPor: text("convertido_por"),
+  descartadoEm: ts("descartado_em"),
+  descartadoPor: text("descartado_por"),
+  descarteMotivo: text("descarte_motivo"),
+  createdAt: ts("created_at").notNull(),
 }, (t) => [
   index("idx_leads_status").on(t.status),
   index("idx_leads_email").on(t.email),
@@ -355,135 +368,135 @@ export async function runMigrations(): Promise<void> {
   const ddl = `
     CREATE EXTENSION IF NOT EXISTS pg_trgm;
     CREATE TABLE IF NOT EXISTS "empresas" (
-      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "createdAt" TEXT NOT NULL, "modulos" TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]',
-      "capacidades" TEXT, "documento" TEXT, "nomeFantasia" TEXT, "ativa" INTEGER NOT NULL DEFAULT 1
+      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "created_at" TIMESTAMPTZ NOT NULL, "modulos" TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]',
+      "capacidades" TEXT, "documento" TEXT, "nome_fantasia" TEXT, "ativa" INTEGER NOT NULL DEFAULT 1
     );
 CREATE TABLE IF NOT EXISTS "usuarios" (
-      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "email" TEXT NOT NULL UNIQUE, "senhaHash" TEXT,
-      "role" TEXT NOT NULL DEFAULT 'operator', "createdAt" TEXT NOT NULL, "deletedAt" TEXT,
-      "empresaId" TEXT REFERENCES "empresas"("id"), "chefeId" TEXT, "foto" TEXT
+      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "email" TEXT NOT NULL UNIQUE, "senha_hash" TEXT,
+      "role" TEXT NOT NULL DEFAULT 'operator', "created_at" TIMESTAMPTZ NOT NULL, "deleted_at" TIMESTAMPTZ,
+      "empresa_id" TEXT REFERENCES "empresas"("id"), "chefe_id" TEXT, "foto" TEXT
     );
 CREATE TABLE IF NOT EXISTS "clientes" (
       "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "cpf" TEXT, "comercio" TEXT NOT NULL,
-      "telefone" TEXT NOT NULL, "telefoneComercio" TEXT, "logradouro" TEXT NOT NULL,
+      "telefone" TEXT NOT NULL, "telefone_comercio" TEXT, "logradouro" TEXT NOT NULL,
       "numero" TEXT, "complemento" TEXT, "bairro" TEXT, "cidade" TEXT, "estado" TEXT,
       "lat" DOUBLE PRECISION, "lng" DOUBLE PRECISION,
-      "comercioLogradouro" TEXT, "comercioNumero" TEXT, "comercioBairro" TEXT,
-      "comercioCidade" TEXT, "comercioEstado" TEXT, "comercioLat" DOUBLE PRECISION, "comercioLng" DOUBLE PRECISION,
-      "foto" TEXT, "createdAt" TEXT NOT NULL, "updatedAt" TEXT NOT NULL, "deletedAt" TEXT, "userId" TEXT
+      "comercio_logradouro" TEXT, "comercio_numero" TEXT, "comercio_bairro" TEXT,
+      "comercio_cidade" TEXT, "comercio_estado" TEXT, "comercio_lat" DOUBLE PRECISION, "comercio_lng" DOUBLE PRECISION,
+      "foto" TEXT, "created_at" TIMESTAMPTZ NOT NULL, "updated_at" TIMESTAMPTZ NOT NULL, "deleted_at" TIMESTAMPTZ, "user_id" TEXT
     );
 CREATE TABLE IF NOT EXISTS "leads" (
-      "id" TEXT PRIMARY KEY, "nomeResponsavel" TEXT NOT NULL, "empresa" TEXT NOT NULL,
+      "id" TEXT PRIMARY KEY, "nome_responsavel" TEXT NOT NULL, "empresa" TEXT NOT NULL,
       "email" TEXT NOT NULL UNIQUE, "telefone" TEXT, "origem" TEXT NOT NULL DEFAULT 'Site',
-      "status" TEXT NOT NULL DEFAULT 'NOVO', "convertidoEmpresaId" TEXT, "convertidoEm" TEXT,
-      "convertidoPor" TEXT, "descartadoEm" TEXT, "descartadoPor" TEXT, "descarteMotivo" TEXT,
-      "createdAt" TEXT NOT NULL
+      "status" TEXT NOT NULL DEFAULT 'NOVO', "convertido_empresa_id" TEXT, "convertido_em" TIMESTAMPTZ,
+      "convertido_por" TEXT, "descartado_em" TIMESTAMPTZ, "descartado_por" TEXT, "descarte_motivo" TEXT,
+      "created_at" TIMESTAMPTZ NOT NULL
     );
 CREATE TABLE IF NOT EXISTS "contratos" (
-      "id" TEXT PRIMARY KEY, "clienteId" TEXT NOT NULL REFERENCES "clientes"("id"), "valorBase" NUMERIC(12,2) NOT NULL,
-      "percentualJuros" NUMERIC(12,2) NOT NULL, "valorFinal" NUMERIC(12,2) NOT NULL,
-      "quantidadeParcelas" INTEGER NOT NULL, "dataInicio" DATE NOT NULL, "dataFinal" TEXT NOT NULL DEFAULT '',
-      "estado" TEXT NOT NULL DEFAULT 'Ativo', "createdAt" TEXT NOT NULL, "updatedAt" TEXT NOT NULL,
-      "deletedAt" TEXT, "userId" TEXT
+      "id" TEXT PRIMARY KEY, "cliente_id" TEXT NOT NULL REFERENCES "clientes"("id"), "valor_base" NUMERIC(12,2) NOT NULL,
+      "percentual_juros" NUMERIC(12,2) NOT NULL, "valor_final" NUMERIC(12,2) NOT NULL,
+      "quantidade_parcelas" INTEGER NOT NULL, "data_inicio" DATE NOT NULL, "data_final" TEXT NOT NULL DEFAULT '',
+      "estado" TEXT NOT NULL DEFAULT 'Ativo', "created_at" TIMESTAMPTZ NOT NULL, "updated_at" TIMESTAMPTZ NOT NULL,
+      "deleted_at" TIMESTAMPTZ, "user_id" TEXT
     );
 CREATE TABLE IF NOT EXISTS "parcelas" (
-      "id" TEXT PRIMARY KEY, "contratoId" TEXT NOT NULL REFERENCES "contratos"("id"), "numero" INTEGER NOT NULL,
-      "valorPrevisto" NUMERIC(12,2) NOT NULL, "valorPago" NUMERIC(12,2) NOT NULL DEFAULT 0,
-      "saldoPendente" NUMERIC(12,2) NOT NULL, "estado" TEXT NOT NULL DEFAULT 'Pendente',
-      "dataVencimento" DATE NOT NULL, "dataQuitacao" DATE, "createdAt" TEXT NOT NULL,
-      "updatedAt" TEXT NOT NULL, "deletedAt" TEXT
+      "id" TEXT PRIMARY KEY, "contrato_id" TEXT NOT NULL REFERENCES "contratos"("id"), "numero" INTEGER NOT NULL,
+      "valor_previsto" NUMERIC(12,2) NOT NULL, "valor_pago" NUMERIC(12,2) NOT NULL DEFAULT 0,
+      "saldo_pendente" NUMERIC(12,2) NOT NULL, "estado" TEXT NOT NULL DEFAULT 'Pendente',
+      "data_vencimento" DATE NOT NULL, "data_quitacao" DATE, "created_at" TIMESTAMPTZ NOT NULL,
+      "updated_at" TIMESTAMPTZ NOT NULL, "deleted_at" TIMESTAMPTZ
     );
 CREATE TABLE IF NOT EXISTS "pagamentos" (
-      "id" TEXT PRIMARY KEY, "contratoId" TEXT NOT NULL REFERENCES "contratos"("id"), "valor" NUMERIC(12,2) NOT NULL,
-      "data" DATE NOT NULL, "createdAt" TEXT NOT NULL, "userId" TEXT,
-      "estornadoEm" TEXT, "estornadoPor" TEXT, "estornoMotivo" TEXT
+      "id" TEXT PRIMARY KEY, "contrato_id" TEXT NOT NULL REFERENCES "contratos"("id"), "valor" NUMERIC(12,2) NOT NULL,
+      "data" DATE NOT NULL, "created_at" TIMESTAMPTZ NOT NULL, "user_id" TEXT,
+      "estornado_em" TEXT, "estornado_por" TEXT, "estorno_motivo" TEXT
     );
 CREATE TABLE IF NOT EXISTS "pagamento_parcelas" (
-      "id" TEXT PRIMARY KEY, "pagamentoId" TEXT NOT NULL REFERENCES "pagamentos"("id"), "parcelaId" TEXT NOT NULL REFERENCES "parcelas"("id"),
+      "id" TEXT PRIMARY KEY, "pagamento_id" TEXT NOT NULL REFERENCES "pagamentos"("id"), "parcela_id" TEXT NOT NULL REFERENCES "parcelas"("id"),
       "valor" NUMERIC(12,2) NOT NULL
     );
 CREATE TABLE IF NOT EXISTS "auditoria_estornos" (
-      "id" TEXT PRIMARY KEY, "pagamentoId" TEXT NOT NULL REFERENCES "pagamentos"("id"), "operadorId" TEXT NOT NULL REFERENCES "usuarios"("id"),
-      "adminId" TEXT NOT NULL REFERENCES "usuarios"("id"), "valor" NUMERIC(12,2) NOT NULL, "motivo" TEXT NOT NULL,
-      "data" DATE NOT NULL, "createdAt" TEXT NOT NULL
+      "id" TEXT PRIMARY KEY, "pagamento_id" TEXT NOT NULL REFERENCES "pagamentos"("id"), "operador_id" TEXT NOT NULL REFERENCES "usuarios"("id"),
+      "admin_id" TEXT NOT NULL REFERENCES "usuarios"("id"), "valor" NUMERIC(12,2) NOT NULL, "motivo" TEXT NOT NULL,
+      "data" DATE NOT NULL, "created_at" TIMESTAMPTZ NOT NULL
     );
 CREATE TABLE IF NOT EXISTS "historico_operacional" (
-      "id" TEXT PRIMARY KEY, "clienteId" TEXT NOT NULL REFERENCES "clientes"("id"), "contratoId" TEXT NOT NULL REFERENCES "contratos"("id"),
-      "tipo" TEXT NOT NULL, "dataPromessa" DATE, "createdAt" TEXT NOT NULL, "userId" TEXT
+      "id" TEXT PRIMARY KEY, "cliente_id" TEXT NOT NULL REFERENCES "clientes"("id"), "contrato_id" TEXT NOT NULL REFERENCES "contratos"("id"),
+      "tipo" TEXT NOT NULL, "data_promessa" DATE, "created_at" TIMESTAMPTZ NOT NULL, "user_id" TEXT
     );
 CREATE TABLE IF NOT EXISTS "anexos" (
-      "id" TEXT PRIMARY KEY, "clienteId" TEXT NOT NULL REFERENCES "clientes"("id"), "tipo" TEXT NOT NULL DEFAULT 'outro',
-      "nomeOriginal" TEXT NOT NULL, "mime" TEXT NOT NULL, "tamanho" INTEGER NOT NULL,
-      "caminho" TEXT NOT NULL, "criadoPor" TEXT NOT NULL, "createdAt" TEXT NOT NULL
+      "id" TEXT PRIMARY KEY, "cliente_id" TEXT NOT NULL REFERENCES "clientes"("id"), "tipo" TEXT NOT NULL DEFAULT 'outro',
+      "nome_original" TEXT NOT NULL, "mime" TEXT NOT NULL, "tamanho" INTEGER NOT NULL,
+      "caminho" TEXT NOT NULL, "criado_por" TEXT NOT NULL, "created_at" TIMESTAMPTZ NOT NULL
     );
 CREATE TABLE IF NOT EXISTS "caixa_config" (
-      "userId" TEXT PRIMARY KEY REFERENCES "usuarios"("id"), "caixaBase" NUMERIC(12,2) NOT NULL DEFAULT 0, "updatedAt" TEXT NOT NULL
+      "user_id" TEXT PRIMARY KEY REFERENCES "usuarios"("id"), "caixa_base" NUMERIC(12,2) NOT NULL DEFAULT 0, "updated_at" TIMESTAMPTZ NOT NULL
     );
 CREATE TABLE IF NOT EXISTS "auditoria_caixa" (
-      "id" TEXT PRIMARY KEY, "operadorId" TEXT NOT NULL REFERENCES "usuarios"("id"), "adminId" TEXT NOT NULL REFERENCES "usuarios"("id"),
-      "valorAnterior" NUMERIC(12,2) NOT NULL, "valorNovo" NUMERIC(12,2) NOT NULL,
-      "motivo" TEXT NOT NULL, "data" DATE NOT NULL, "createdAt" TEXT NOT NULL
+      "id" TEXT PRIMARY KEY, "operador_id" TEXT NOT NULL REFERENCES "usuarios"("id"), "admin_id" TEXT NOT NULL REFERENCES "usuarios"("id"),
+      "valor_anterior" NUMERIC(12,2) NOT NULL, "valor_novo" NUMERIC(12,2) NOT NULL,
+      "motivo" TEXT NOT NULL, "data" DATE NOT NULL, "created_at" TIMESTAMPTZ NOT NULL
     );
 CREATE TABLE IF NOT EXISTS "auditoria_modulos" (
-      "id" TEXT PRIMARY KEY, "empresaId" TEXT NOT NULL, "adminId" TEXT NOT NULL REFERENCES "usuarios"("id"), "tipo" TEXT NOT NULL,
-      "antes" TEXT, "depois" TEXT, "force" INTEGER NOT NULL DEFAULT 0, "motivo" TEXT, "createdAt" TEXT NOT NULL
+      "id" TEXT PRIMARY KEY, "empresa_id" TEXT NOT NULL, "admin_id" TEXT NOT NULL REFERENCES "usuarios"("id"), "tipo" TEXT NOT NULL,
+      "antes" TEXT, "depois" TEXT, "force" INTEGER NOT NULL DEFAULT 0, "motivo" TEXT, "created_at" TIMESTAMPTZ NOT NULL
     );
-CREATE TABLE IF NOT EXISTS "movimentacoesFinanceiras" (
+CREATE TABLE IF NOT EXISTS "movimentacoes_financeiras" (
       "id" TEXT PRIMARY KEY, "tipo" TEXT NOT NULL, "valor" NUMERIC(12,2) NOT NULL,
-      "origem" TEXT NOT NULL, "origemId" TEXT NOT NULL, "descricao" TEXT, "data" DATE NOT NULL,
-      "createdAt" TEXT NOT NULL, "userId" TEXT
+      "origem" TEXT NOT NULL, "origem_id" TEXT NOT NULL, "descricao" TEXT, "data" DATE NOT NULL,
+      "created_at" TIMESTAMPTZ NOT NULL, "user_id" TEXT
     );
 CREATE TABLE IF NOT EXISTS "gastos" (
       "id" TEXT PRIMARY KEY, "valor" NUMERIC(12,2) NOT NULL, "categoria" TEXT NOT NULL,
-      "observacao" TEXT, "data" DATE NOT NULL, "createdAt" TEXT NOT NULL, "deletedAt" TEXT, "userId" TEXT
+      "observacao" TEXT, "data" DATE NOT NULL, "created_at" TIMESTAMPTZ NOT NULL, "deleted_at" TIMESTAMPTZ, "user_id" TEXT
     );
 CREATE TABLE IF NOT EXISTS "fechamentos_semanais" (
-      "id" TEXT PRIMARY KEY, "dataInicio" DATE NOT NULL, "dataFim" DATE NOT NULL,
-      "totalRecebido" NUMERIC(12,2) NOT NULL, "totalGasto" NUMERIC(12,2) NOT NULL,
-      "resultado" NUMERIC(12,2) NOT NULL, "caixaBase" NUMERIC(12,2) NOT NULL DEFAULT 0,
-      "saldoFechamento" NUMERIC(12,2) NOT NULL DEFAULT 0, "createdAt" TEXT NOT NULL, "userId" TEXT
+      "id" TEXT PRIMARY KEY, "data_inicio" DATE NOT NULL, "data_fim" DATE NOT NULL,
+      "total_recebido" NUMERIC(12,2) NOT NULL, "total_gasto" NUMERIC(12,2) NOT NULL,
+      "resultado" NUMERIC(12,2) NOT NULL, "caixa_base" NUMERIC(12,2) NOT NULL DEFAULT 0,
+      "saldo_fechamento" NUMERIC(12,2) NOT NULL DEFAULT 0, "created_at" TIMESTAMPTZ NOT NULL, "user_id" TEXT
     );
 CREATE TABLE IF NOT EXISTS "snapshots_atraso" (
-      "id" TEXT PRIMARY KEY, "userId" TEXT NOT NULL, "data" DATE NOT NULL,
-      "clientesAtrasados" INTEGER NOT NULL, "contratosAtrasados" INTEGER NOT NULL,
-      "valorAtrasado" NUMERIC(12,2) NOT NULL, "createdAt" TEXT NOT NULL
+      "id" TEXT PRIMARY KEY, "user_id" TEXT NOT NULL, "data" DATE NOT NULL,
+      "clientes_atrasados" INTEGER NOT NULL, "contratos_atrasados" INTEGER NOT NULL,
+      "valor_atrasado" NUMERIC(12,2) NOT NULL, "created_at" TIMESTAMPTZ NOT NULL
     );
 CREATE TABLE IF NOT EXISTS "auth_tokens" (
-      "id" TEXT PRIMARY KEY, "subjectId" TEXT NOT NULL, "tipo" TEXT NOT NULL, "hash" TEXT NOT NULL,
-      "expiraEm" TEXT NOT NULL, "usadoEm" TEXT, "createdAt" TEXT NOT NULL
+      "id" TEXT PRIMARY KEY, "subject_id" TEXT NOT NULL, "tipo" TEXT NOT NULL, "hash" TEXT NOT NULL,
+      "expira_em" TIMESTAMPTZ NOT NULL, "usado_em" TIMESTAMPTZ, "created_at" TIMESTAMPTZ NOT NULL
     );
 -- Índices (espelham os do SQLite; justificados em PLAN-070 Fase F)
-    CREATE UNIQUE INDEX IF NOT EXISTS "idx_clientes_cpf" ON "clientes"("cpf", "userId") WHERE "cpf" IS NOT NULL AND "deletedAt" IS NULL;
-    CREATE INDEX IF NOT EXISTS "idx_clientes_user" ON "clientes"("userId", "deletedAt");
+    CREATE UNIQUE INDEX IF NOT EXISTS "idx_clientes_cpf" ON "clientes"("cpf", "user_id") WHERE "cpf" IS NOT NULL AND "deleted_at" IS NULL;
+    CREATE INDEX IF NOT EXISTS "idx_clientes_user" ON "clientes"("user_id", "deleted_at");
     -- Busca ILIKE com curinga inicial (Fase F — PLAN-070): GIN pg_trgm
     CREATE INDEX IF NOT EXISTS "idx_clientes_nome_trgm" ON "clientes" USING GIN ("nome" gin_trgm_ops);
-    CREATE INDEX IF NOT EXISTS "idx_movimentacoes_data" ON "movimentacoesFinanceiras"("data");
-    CREATE INDEX IF NOT EXISTS "idx_movimentacoes_origem" ON "movimentacoesFinanceiras"("origem", "origemId");
-    CREATE INDEX IF NOT EXISTS "idx_movimentacoes_user" ON "movimentacoesFinanceiras"("userId", "data");
-    CREATE INDEX IF NOT EXISTS "idx_parcelas_contrato" ON "parcelas"("contratoId");
-    CREATE INDEX IF NOT EXISTS "idx_parcelas_venc" ON "parcelas"("contratoId", "dataVencimento", "saldoPendente");
-    CREATE INDEX IF NOT EXISTS "idx_parcelas_venc_partial" ON "parcelas"("contratoId", "dataVencimento", "saldoPendente") WHERE "saldoPendente" > 0 AND "deletedAt" IS NULL;
-    CREATE INDEX IF NOT EXISTS "idx_contratos_cliente" ON "contratos"("clienteId");
-    CREATE INDEX IF NOT EXISTS "idx_contratos_user" ON "contratos"("userId", "deletedAt");
-    CREATE INDEX IF NOT EXISTS "idx_pagamentos_contrato" ON "pagamentos"("contratoId");
-    CREATE INDEX IF NOT EXISTS "idx_pagamentos_user" ON "pagamentos"("userId", "data");
-    CREATE INDEX IF NOT EXISTS "idx_pagamento_parcelas_pagamento" ON "pagamento_parcelas"("pagamentoId");
-    CREATE INDEX IF NOT EXISTS "idx_pagamento_parcelas_parcela" ON "pagamento_parcelas"("parcelaId");
-    CREATE INDEX IF NOT EXISTS "idx_auditoria_caixa_operador" ON "auditoria_caixa"("operadorId");
+    CREATE INDEX IF NOT EXISTS "idx_movimentacoes_data" ON "movimentacoes_financeiras"("data");
+    CREATE INDEX IF NOT EXISTS "idx_movimentacoes_origem" ON "movimentacoes_financeiras"("origem", "origem_id");
+    CREATE INDEX IF NOT EXISTS "idx_movimentacoes_user" ON "movimentacoes_financeiras"("user_id", "data");
+    CREATE INDEX IF NOT EXISTS "idx_parcelas_contrato" ON "parcelas"("contrato_id");
+    CREATE INDEX IF NOT EXISTS "idx_parcelas_venc" ON "parcelas"("contrato_id", "data_vencimento", "saldo_pendente");
+    CREATE INDEX IF NOT EXISTS "idx_parcelas_venc_partial" ON "parcelas"("contrato_id", "data_vencimento", "saldo_pendente") WHERE "saldo_pendente" > 0 AND "deleted_at" IS NULL;
+    CREATE INDEX IF NOT EXISTS "idx_contratos_cliente" ON "contratos"("cliente_id");
+    CREATE INDEX IF NOT EXISTS "idx_contratos_user" ON "contratos"("user_id", "deleted_at");
+    CREATE INDEX IF NOT EXISTS "idx_pagamentos_contrato" ON "pagamentos"("contrato_id");
+    CREATE INDEX IF NOT EXISTS "idx_pagamentos_user" ON "pagamentos"("user_id", "data");
+    CREATE INDEX IF NOT EXISTS "idx_pagamento_parcelas_pagamento" ON "pagamento_parcelas"("pagamento_id");
+    CREATE INDEX IF NOT EXISTS "idx_pagamento_parcelas_parcela" ON "pagamento_parcelas"("parcela_id");
+    CREATE INDEX IF NOT EXISTS "idx_auditoria_caixa_operador" ON "auditoria_caixa"("operador_id");
     CREATE INDEX IF NOT EXISTS "idx_auditoria_caixa_data" ON "auditoria_caixa"("data");
-    CREATE INDEX IF NOT EXISTS "idx_auditoria_estornos_pagamento" ON "auditoria_estornos"("pagamentoId");
-    CREATE INDEX IF NOT EXISTS "idx_auditoria_estornos_operador" ON "auditoria_estornos"("operadorId");
-    CREATE INDEX IF NOT EXISTS "idx_historico_operacional_dia" ON "historico_operacional"("clienteId", "contratoId", "createdAt");
-    CREATE INDEX IF NOT EXISTS "idx_historico_user" ON "historico_operacional"("userId", "createdAt");
+    CREATE INDEX IF NOT EXISTS "idx_auditoria_estornos_pagamento" ON "auditoria_estornos"("pagamento_id");
+    CREATE INDEX IF NOT EXISTS "idx_auditoria_estornos_operador" ON "auditoria_estornos"("operador_id");
+    CREATE INDEX IF NOT EXISTS "idx_historico_operacional_dia" ON "historico_operacional"("cliente_id", "contrato_id", "created_at");
+    CREATE INDEX IF NOT EXISTS "idx_historico_user" ON "historico_operacional"("user_id", "created_at");
     CREATE INDEX IF NOT EXISTS "idx_gastos_data" ON "gastos"("data");
-    CREATE INDEX IF NOT EXISTS "idx_gastos_user" ON "gastos"("userId", "data");
-    CREATE INDEX IF NOT EXISTS "idx_fechamentos_semanais_data" ON "fechamentos_semanais"("dataInicio");
-    CREATE INDEX IF NOT EXISTS "idx_fechamentos_user" ON "fechamentos_semanais"("userId", "dataInicio");
-    CREATE UNIQUE INDEX IF NOT EXISTS "idx_fechamentos_user_periodo" ON "fechamentos_semanais"("userId", "dataInicio", "dataFim");
-    CREATE UNIQUE INDEX IF NOT EXISTS "snapshots_atraso_user_data" ON "snapshots_atraso"("userId", "data");
-    CREATE INDEX IF NOT EXISTS "idx_snapshots_atraso_data" ON "snapshots_atraso"("userId", "data");
-    CREATE INDEX IF NOT EXISTS "idx_usuarios_empresa_role" ON "usuarios"("empresaId", "role");
-    CREATE INDEX IF NOT EXISTS "idx_anexos_cliente" ON "anexos"("clienteId");
+    CREATE INDEX IF NOT EXISTS "idx_gastos_user" ON "gastos"("user_id", "data");
+    CREATE INDEX IF NOT EXISTS "idx_fechamentos_semanais_data" ON "fechamentos_semanais"("data_inicio");
+    CREATE INDEX IF NOT EXISTS "idx_fechamentos_user" ON "fechamentos_semanais"("user_id", "data_inicio");
+    CREATE UNIQUE INDEX IF NOT EXISTS "idx_fechamentos_user_periodo" ON "fechamentos_semanais"("user_id", "data_inicio", "data_fim");
+    CREATE UNIQUE INDEX IF NOT EXISTS "snapshots_atraso_user_data" ON "snapshots_atraso"("user_id", "data");
+    CREATE INDEX IF NOT EXISTS "idx_snapshots_atraso_data" ON "snapshots_atraso"("user_id", "data");
+    CREATE INDEX IF NOT EXISTS "idx_usuarios_empresa_role" ON "usuarios"("empresa_id", "role");
+    CREATE INDEX IF NOT EXISTS "idx_anexos_cliente" ON "anexos"("cliente_id");
     CREATE INDEX IF NOT EXISTS "idx_leads_status" ON "leads"("status");
     CREATE INDEX IF NOT EXISTS "idx_leads_email" ON "leads"("email");
   `
@@ -498,15 +511,15 @@ export async function seedBasico(): Promise<void> {
     const adminId = randomUUID()
     const hash = bcrypt.hashSync(process.env.ADMIN_DEFAULT_PASSWORD ?? "admin123", 10)
     await pool.query(
-      "INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
+      "INSERT INTO usuarios (id, nome, email, \"senha_hash\", role, \"created_at\") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
       [adminId, "Admin", "admin@cobranca.com", hash, "admin", new Date().toISOString()],
     )
     const tables = [
-      "clientes", "contratos", "pagamentos", "movimentacoesFinanceiras",
+      "clientes", "contratos", "pagamentos", "movimentacoes_financeiras",
       "caixa_config", "historico_operacional", "gastos", "fechamentos_semanais",
     ]
     for (const table of tables) {
-      await pool.query(`UPDATE "${table}" SET "userId" = $1 WHERE "userId" IS NULL`, [adminId])
+      await pool.query(`UPDATE "${table}" SET "user_id" = $1 WHERE "user_id" IS NULL`, [adminId])
     }
   }
 
@@ -518,7 +531,7 @@ export async function seedBasico(): Promise<void> {
     const superId = randomUUID()
     const superHash = bcrypt.hashSync(superPassword, 10)
     await pool.query(
-      "INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
+      "INSERT INTO usuarios (id, nome, email, \"senha_hash\", role, \"created_at\") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
       [superId, "Super Admin", superEmail, superHash, "super_admin", new Date().toISOString()],
     )
   }
@@ -529,16 +542,16 @@ export async function seedBasico(): Promise<void> {
   if (devEmpresa.rowCount === 0 && Number(totalEmpresas.rows[0].total) === 0) {
     const devEmpresaId = randomUUID()
     await pool.query(
-      "INSERT INTO empresas (id, nome, \"createdAt\") VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+      "INSERT INTO empresas (id, nome, \"created_at\") VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
       [devEmpresaId, "Desenvolvimento", new Date().toISOString()],
     )
-    await pool.query("UPDATE usuarios SET \"empresaId\" = $1 WHERE email = $2 AND \"empresaId\" IS NULL", [devEmpresaId, "admin@cobranca.com"])
+    await pool.query("UPDATE usuarios SET \"empresa_id\" = $1 WHERE email = $2 AND \"empresa_id\" IS NULL", [devEmpresaId, "admin@cobranca.com"])
     const adminRow = await pool.query<{ id: string; empresaId: string | null }>(
-      "SELECT id, \"empresaId\" FROM usuarios WHERE email = $1", ["admin@cobranca.com"],
+      "SELECT id, \"empresa_id\" FROM usuarios WHERE email = $1", ["admin@cobranca.com"],
     )
     if (adminRow.rows[0]?.empresaId) {
       await pool.query(
-        "UPDATE usuarios SET \"empresaId\" = $1 WHERE \"empresaId\" IS NULL AND id != $2 AND role != 'super_admin'",
+        "UPDATE usuarios SET \"empresa_id\" = $1 WHERE \"empresa_id\" IS NULL AND id != $2 AND role != 'super_admin'",
         [adminRow.rows[0].empresaId, adminRow.rows[0].id],
       )
     }

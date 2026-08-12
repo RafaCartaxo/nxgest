@@ -26,27 +26,27 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
 }
 
 interface CobrancaRow {
-  clienteId: string
-  clienteNome: string
-  clienteTelefone: string
-  clienteLat: number | null
-  clienteLng: number | null
-  clienteLogradouro: string
-  clienteNumero: string | null
-  clienteBairro: string | null
-  clienteCidade: string | null
-  clienteEstado: string | null
-  contratoId: string
-  totalPendente: number
-  quantidadeParcelas: number
+  cliente_id: string
+  cliente_nome: string
+  cliente_telefone: string
+  cliente_lat: number | null
+  cliente_lng: number | null
+  cliente_logradouro: string
+  cliente_numero: string | null
+  cliente_bairro: string | null
+  cliente_cidade: string | null
+  cliente_estado: string | null
+  contrato_id: string
+  total_pendente: number
+  quantidade_parcelas: number
   situacao: "atrasado" | "venceHoje"
-  diasEmAtraso: number
-  visitadoEm: string | null
-  resultadoOperacional: string | null
-  proximaParcela: number
-  proximoNumeroParcela: number
-  totalParcelasContrato: number
-  saldoTotal: number
+  dias_em_atraso: number
+  visitado_em: string | null
+  resultado_operacional: string | null
+  proxima_parcela: number
+  proximo_numero_parcela: number
+  total_parcelas_contrato: number
+  saldo_total: number
   distancia?: number
 }
 
@@ -57,130 +57,130 @@ export class OperacoesRepository implements IOperacoesRepository {
 
     const { rows } = await rawQuery<CobrancaRow>(`
       SELECT
-        c.id AS "clienteId",
-        c.nome AS "clienteNome",
-        c.telefone AS "clienteTelefone",
-        COALESCE(c."comercioLat", c.lat) AS "clienteLat",
-        COALESCE(c."comercioLng", c.lng) AS "clienteLng",
-        COALESCE(c."comercioLogradouro", c.logradouro) AS "clienteLogradouro",
-        COALESCE(c."comercioNumero", c.numero) AS "clienteNumero",
-        COALESCE(c."comercioBairro", c.bairro) AS "clienteBairro",
-        COALESCE(c."comercioCidade", c.cidade) AS "clienteCidade",
-        COALESCE(c."comercioEstado", c.estado) AS "clienteEstado",
-        ct.id AS "contratoId",
-        ct."quantidadeParcelas" AS "totalParcelasContrato",
-        SUM(p."saldoPendente") AS "totalPendente",
-        (SELECT COALESCE(SUM(p3."saldoPendente"), 0)
+        c.id AS "cliente_id",
+        c.nome AS "cliente_nome",
+        c.telefone AS "cliente_telefone",
+        COALESCE(c."comercio_lat", c.lat) AS "cliente_lat",
+        COALESCE(c."comercio_lng", c.lng) AS "cliente_lng",
+        COALESCE(c."comercio_logradouro", c.logradouro) AS "cliente_logradouro",
+        COALESCE(c."comercio_numero", c.numero) AS "cliente_numero",
+        COALESCE(c."comercio_bairro", c.bairro) AS "cliente_bairro",
+        COALESCE(c."comercio_cidade", c.cidade) AS "cliente_cidade",
+        COALESCE(c."comercio_estado", c.estado) AS "cliente_estado",
+        ct.id AS "contrato_id",
+        ct."quantidade_parcelas" AS "total_parcelas_contrato",
+        SUM(p."saldo_pendente") AS "total_pendente",
+        (SELECT COALESCE(SUM(p3."saldo_pendente"), 0)
          FROM parcelas p3
-         WHERE p3."contratoId" = ct.id
-           AND p3."saldoPendente" > 0
-           AND p3."deletedAt" IS NULL) AS "saldoTotal",
-        COUNT(p.id) AS "quantidadeParcelas",
+         WHERE p3."contrato_id" = ct.id
+           AND p3."saldo_pendente" > 0
+           AND p3."deleted_at" IS NULL) AS "saldo_total",
+        COUNT(p.id) AS "quantidade_parcelas",
         CASE
-          WHEN MIN(p."dataVencimento") < ? THEN 'atrasado'
+          WHEN MIN(p."data_vencimento") < ? THEN 'atrasado'
           ELSE 'venceHoje'
         END AS situacao,
-        v."visitadoEm",
-        v."resultadoOperacional",
+        v."visitado_em",
+        v."resultado_operacional",
         COALESCE((
           SELECT p2.numero
           FROM parcelas p2
-          WHERE p2."contratoId" = ct.id
-            AND p2."saldoPendente" > 0
-            AND p2."deletedAt" IS NULL
-          ORDER BY p2."dataVencimento" ASC, p2.numero ASC
+          WHERE p2."contrato_id" = ct.id
+            AND p2."saldo_pendente" > 0
+            AND p2."deleted_at" IS NULL
+          ORDER BY p2."data_vencimento" ASC, p2.numero ASC
           LIMIT 1
-        ), 0) AS "proximoNumeroParcela",
+        ), 0) AS "proximo_numero_parcela",
         COALESCE((
-          SELECT p2."saldoPendente"
+          SELECT p2."saldo_pendente"
           FROM parcelas p2
-          WHERE p2."contratoId" = ct.id
-            AND p2."saldoPendente" > 0
-            AND p2."deletedAt" IS NULL
-          ORDER BY p2."dataVencimento" ASC, p2.numero ASC
+          WHERE p2."contrato_id" = ct.id
+            AND p2."saldo_pendente" > 0
+            AND p2."deleted_at" IS NULL
+          ORDER BY p2."data_vencimento" ASC, p2.numero ASC
           LIMIT 1
-        ), 0) AS "proximaParcela",
+        ), 0) AS "proxima_parcela",
         COALESCE(
-          ?::date - (MIN(p."dataVencimento") FILTER (WHERE p."dataVencimento" < ?))::date,
+          ?::date - (MIN(p."data_vencimento") FILTER (WHERE p."data_vencimento" < ?))::date,
           0
-        ) AS "diasEmAtraso"
+        ) AS "dias_em_atraso"
       FROM parcelas p
-      JOIN contratos ct ON ct.id = p."contratoId"
-      JOIN clientes c ON c.id = ct."clienteId"
+      JOIN contratos ct ON ct.id = p."contrato_id"
+      JOIN clientes c ON c.id = ct."cliente_id"
       LEFT JOIN (
-        SELECT h."clienteId", h."contratoId",
-          MAX(h."createdAt") AS "visitadoEm",
+        SELECT h."cliente_id", h."contrato_id",
+          MAX(h."created_at") AS "visitado_em",
           (SELECT h2."tipo" FROM historico_operacional h2
-           WHERE h2."clienteId" = h."clienteId"
-             AND h2."contratoId" = h."contratoId"
-             AND h2."createdAt" >= ?
-             AND h2."createdAt" < ?
-             AND h2."userId" = ?
-           ORDER BY h2."createdAt" DESC LIMIT 1) AS "resultadoOperacional"
+           WHERE h2."cliente_id" = h."cliente_id"
+             AND h2."contrato_id" = h."contrato_id"
+             AND h2."created_at" >= ?
+             AND h2."created_at" < ?
+             AND h2."user_id" = ?
+           ORDER BY h2."created_at" DESC LIMIT 1) AS "resultado_operacional"
         FROM historico_operacional h
-        WHERE h."createdAt" >= ?
-          AND h."createdAt" < ?
-          AND h."userId" = ?
-        GROUP BY h."clienteId", h."contratoId"
-      ) v ON v."clienteId" = c.id AND v."contratoId" = ct.id
-      WHERE p."saldoPendente" > 0
-        AND p."dataVencimento" <= ?
-        AND p."deletedAt" IS NULL
-        AND ct."deletedAt" IS NULL
-        AND c."deletedAt" IS NULL
-        AND ct."userId" = ?
-      GROUP BY c.id, ct.id, v."visitadoEm", v."resultadoOperacional"
+        WHERE h."created_at" >= ?
+          AND h."created_at" < ?
+          AND h."user_id" = ?
+        GROUP BY h."cliente_id", h."contrato_id"
+      ) v ON v."cliente_id" = c.id AND v."contrato_id" = ct.id
+      WHERE p."saldo_pendente" > 0
+        AND p."data_vencimento" <= ?
+        AND p."deleted_at" IS NULL
+        AND ct."deleted_at" IS NULL
+        AND c."deleted_at" IS NULL
+        AND ct."user_id" = ?
+      GROUP BY c.id, ct.id, v."visitado_em", v."resultado_operacional"
       ORDER BY
         situacao DESC,
-        MIN(p."dataVencimento") ASC,
-        ct."createdAt" ASC
+        MIN(p."data_vencimento") ASC,
+        ct."created_at" ASC
     `, [hoje, hoje, hoje, inicio, fim, userId, inicio, fim, userId, hoje, userId]) as { rows: CobrancaRow[] }
 
     const { rows: aReceberHojeRows } = await rawQuery<{ total: number }>(`
-      SELECT COALESCE(SUM(p."saldoPendente"), 0) AS total
+      SELECT COALESCE(SUM(p."saldo_pendente"), 0) AS total
       FROM parcelas p
-      JOIN contratos ct ON ct.id = p."contratoId"
-      WHERE p."dataVencimento" = ?
-        AND p."saldoPendente" > 0
-        AND p."deletedAt" IS NULL
-        AND ct."deletedAt" IS NULL
-        AND ct."userId" = ?
+      JOIN contratos ct ON ct.id = p."contrato_id"
+      WHERE p."data_vencimento" = ?
+        AND p."saldo_pendente" > 0
+        AND p."deleted_at" IS NULL
+        AND ct."deleted_at" IS NULL
+        AND ct."user_id" = ?
     `, [hoje, userId])
 
     const { rows: atrasadoRows } = await rawQuery<{ total: number }>(`
-      SELECT COALESCE(SUM(p."saldoPendente"), 0) AS total
+      SELECT COALESCE(SUM(p."saldo_pendente"), 0) AS total
       FROM parcelas p
-      JOIN contratos ct ON ct.id = p."contratoId"
-      WHERE p."dataVencimento" < ?
-        AND p."saldoPendente" > 0
-        AND p."deletedAt" IS NULL
-        AND ct."deletedAt" IS NULL
-        AND ct."userId" = ?
+      JOIN contratos ct ON ct.id = p."contrato_id"
+      WHERE p."data_vencimento" < ?
+        AND p."saldo_pendente" > 0
+        AND p."deleted_at" IS NULL
+        AND ct."deleted_at" IS NULL
+        AND ct."user_id" = ?
     `, [hoje, userId])
 
     const { rows: aVencerRows } = await rawQuery<{ total: number }>(`
-      SELECT COALESCE(SUM(p."saldoPendente"), 0) AS total
+      SELECT COALESCE(SUM(p."saldo_pendente"), 0) AS total
       FROM parcelas p
-      JOIN contratos ct ON ct.id = p."contratoId"
-      WHERE p."dataVencimento" > ? AND p."dataVencimento" <= (?::date + INTERVAL '7 days')
-        AND p."saldoPendente" > 0
-        AND p."deletedAt" IS NULL
-        AND ct."deletedAt" IS NULL
-        AND ct."userId" = ?
+      JOIN contratos ct ON ct.id = p."contrato_id"
+      WHERE p."data_vencimento" > ? AND p."data_vencimento" <= (?::date + INTERVAL '7 days')
+        AND p."saldo_pendente" > 0
+        AND p."deleted_at" IS NULL
+        AND ct."deleted_at" IS NULL
+        AND ct."user_id" = ?
     `, [hoje, hoje, userId])
 
     const { rows: recebidoHojeRows } = await rawQuery<{ total: number }>(`
       SELECT COALESCE(SUM(valor), 0) AS total
       FROM pagamentos
       WHERE data = ?
-        AND "userId" = ?
+        AND "user_id" = ?
     `, [hoje, userId])
 
     const hasGPS = typeof operadorLat === "number" && typeof operadorLng === "number"
 
     const cobrancas: (CobrancaRow & { distancia?: number })[] = rows.map((r) => {
-      const distancia = hasGPS && r.clienteLat != null && r.clienteLng != null
-        ? Math.round(haversineKm(operadorLat!, operadorLng!, r.clienteLat, r.clienteLng) * 10) / 10
+      const distancia = hasGPS && r.cliente_lat != null && r.cliente_lng != null
+        ? Math.round(haversineKm(operadorLat!, operadorLng!, r.cliente_lat, r.cliente_lng) * 10) / 10
         : undefined
       return { ...r, distancia }
     })
@@ -188,21 +188,21 @@ export class OperacoesRepository implements IOperacoesRepository {
     const clientHasAtrasado = new Map<string, boolean>()
     for (const c of cobrancas) {
       if (c.situacao === "atrasado") {
-        clientHasAtrasado.set(c.clienteId, true)
+        clientHasAtrasado.set(c.cliente_id, true)
       }
-      if (!clientHasAtrasado.has(c.clienteId)) {
-        clientHasAtrasado.set(c.clienteId, false)
+      if (!clientHasAtrasado.has(c.cliente_id)) {
+        clientHasAtrasado.set(c.cliente_id, false)
       }
     }
 
     cobrancas.sort((a, b) => {
-      const aHasAtrasado = clientHasAtrasado.get(a.clienteId) ?? false
-      const bHasAtrasado = clientHasAtrasado.get(b.clienteId) ?? false
+      const aHasAtrasado = clientHasAtrasado.get(a.cliente_id) ?? false
+      const bHasAtrasado = clientHasAtrasado.get(b.cliente_id) ?? false
       if (aHasAtrasado && !bHasAtrasado) return -1
       if (!aHasAtrasado && bHasAtrasado) return 1
 
-      if (a.resultadoOperacional !== "PENDENTE" && b.resultadoOperacional === "PENDENTE") return 1
-      if (a.resultadoOperacional === "PENDENTE" && b.resultadoOperacional !== "PENDENTE") return -1
+      if (a.resultado_operacional !== "PENDENTE" && b.resultado_operacional === "PENDENTE") return 1
+      if (a.resultado_operacional === "PENDENTE" && b.resultado_operacional !== "PENDENTE") return -1
 
       if (hasGPS) {
         const da = a.distancia ?? Infinity
@@ -210,7 +210,7 @@ export class OperacoesRepository implements IOperacoesRepository {
         if (da !== db) return da - db
       }
 
-      if (a.clienteId === b.clienteId) {
+      if (a.cliente_id === b.cliente_id) {
         if (a.situacao === "atrasado" && b.situacao !== "atrasado") return -1
         if (b.situacao === "atrasado" && a.situacao !== "atrasado") return 1
       }
@@ -219,30 +219,30 @@ export class OperacoesRepository implements IOperacoesRepository {
     })
 
     const items: CobrancaItem[] = cobrancas.map((r) => ({
-      clienteId: r.clienteId,
-      clienteNome: r.clienteNome,
-      clienteTelefone: r.clienteTelefone,
-      clienteLat: r.clienteLat,
-      clienteLng: r.clienteLng,
-      clienteLogradouro: r.clienteLogradouro,
-      clienteNumero: r.clienteNumero,
-      clienteBairro: r.clienteBairro,
-      clienteCidade: r.clienteCidade,
-      clienteEstado: r.clienteEstado,
-      contratoId: r.contratoId,
-      totalPendente: r.totalPendente,
-      quantidadeParcelas: r.quantidadeParcelas,
+      clienteId: r.cliente_id,
+      clienteNome: r.cliente_nome,
+      clienteTelefone: r.cliente_telefone,
+      clienteLat: r.cliente_lat,
+      clienteLng: r.cliente_lng,
+      clienteLogradouro: r.cliente_logradouro,
+      clienteNumero: r.cliente_numero,
+      clienteBairro: r.cliente_bairro,
+      clienteCidade: r.cliente_cidade,
+      clienteEstado: r.cliente_estado,
+      contratoId: r.contrato_id,
+      totalPendente: r.total_pendente,
+      quantidadeParcelas: r.quantidade_parcelas,
       situacao: r.situacao,
-      diasEmAtraso: r.diasEmAtraso,
-      resultadoOperacional: r.resultadoOperacional === null ? "PENDENTE"
-        : r.resultadoOperacional === "visitado" ? "VISITADO"
-        : r.resultadoOperacional === "nao_localizado" ? "NAO_ENCONTRADO"
-        : r.resultadoOperacional === "promessa" ? "PROMESSA"
+      diasEmAtraso: r.dias_em_atraso,
+      resultadoOperacional: r.resultado_operacional === null ? "PENDENTE"
+        : r.resultado_operacional === "visitado" ? "VISITADO"
+        : r.resultado_operacional === "nao_localizado" ? "NAO_ENCONTRADO"
+        : r.resultado_operacional === "promessa" ? "PROMESSA"
         : "PENDENTE",
-      proximaParcela: r.proximaParcela,
-      proximoNumeroParcela: r.proximoNumeroParcela,
-      totalParcelasContrato: r.totalParcelasContrato,
-      saldoTotal: r.saldoTotal,
+      proximaParcela: r.proxima_parcela,
+      proximoNumeroParcela: r.proximo_numero_parcela,
+      totalParcelasContrato: r.total_parcelas_contrato,
+      saldoTotal: r.saldo_total,
     }))
 
     const clientesMap = new Set<string>()
@@ -268,74 +268,90 @@ export class OperacoesRepository implements IOperacoesRepository {
     const inicio = dataInicio ?? getLocalDateString(new Date())
     const fim = dataFim ?? inicio
 
-    const { rows } = await rawQuery<PagamentoDoDiaItem>(`
+    const { rows } = await rawQuery<{
+      pagamento_id: string
+      valor: number
+      data: string
+      created_at: string
+      cliente_id: string
+      cliente_nome: string
+      contrato_id: string
+    }>(`
       SELECT
-        p.id AS "pagamentoId",
+        p.id AS "pagamento_id",
         p.valor,
         p.data,
-        p."createdAt",
-        cli.id AS "clienteId",
-        cli.nome AS "clienteNome",
-        ct.id AS "contratoId"
+        p."created_at",
+        cli.id AS "cliente_id",
+        cli.nome AS "cliente_nome",
+        ct.id AS "contrato_id"
       FROM pagamentos p
-      JOIN contratos ct ON ct.id = p."contratoId"
-      JOIN clientes cli ON cli.id = ct."clienteId"
+      JOIN contratos ct ON ct.id = p."contrato_id"
+      JOIN clientes cli ON cli.id = ct."cliente_id"
       WHERE p.data >= ? AND p.data <= ?
-        AND ct."deletedAt" IS NULL
-        AND cli."deletedAt" IS NULL
-        AND ct."userId" = ?
-      ORDER BY p."createdAt" DESC
+        AND ct."deleted_at" IS NULL
+        AND cli."deleted_at" IS NULL
+        AND ct."user_id" = ?
+      ORDER BY p."created_at" DESC
     `, [inicio, fim, userId])
 
-    return rows
+    return rows.map((r) => ({
+      pagamentoId: r.pagamento_id,
+      valor: r.valor,
+      data: r.data,
+      createdAt: r.created_at,
+      clienteId: r.cliente_id,
+      clienteNome: r.cliente_nome,
+      contratoId: r.contrato_id,
+    }))
   }
 
   async listarParcelasHoje(userId: string): Promise<ParcelaHojeCliente[]> {
     const hoje = getLocalDateString(new Date())
 
     const { rows } = await rawQuery<{
-      clienteId: string
-      clienteNome: string
-      contratoId: string
+      cliente_id: string
+      cliente_nome: string
+      contrato_id: string
       numero: number
-      valorPrevisto: number
-      saldoPendente: number
+      valor_previsto: number
+      saldo_pendente: number
     }>(`
       SELECT
-        c.id AS "clienteId",
-        c.nome AS "clienteNome",
-        ct.id AS "contratoId",
+        c.id AS "cliente_id",
+        c.nome AS "cliente_nome",
+        ct.id AS "contrato_id",
         p.numero,
-        p."valorPrevisto",
-        p."saldoPendente"
+        p."valor_previsto",
+        p."saldo_pendente"
       FROM parcelas p
-      JOIN contratos ct ON ct.id = p."contratoId"
-      JOIN clientes c ON c.id = ct."clienteId"
-      WHERE p."dataVencimento" = ?
-        AND p."saldoPendente" > 0
-        AND p."deletedAt" IS NULL
-        AND ct."deletedAt" IS NULL
-        AND c."deletedAt" IS NULL
-        AND ct."userId" = ?
+      JOIN contratos ct ON ct.id = p."contrato_id"
+      JOIN clientes c ON c.id = ct."cliente_id"
+      WHERE p."data_vencimento" = ?
+        AND p."saldo_pendente" > 0
+        AND p."deleted_at" IS NULL
+        AND ct."deleted_at" IS NULL
+        AND c."deleted_at" IS NULL
+        AND ct."user_id" = ?
       ORDER BY c.nome ASC, p.numero ASC
     `, [hoje, userId])
 
     const clientesMap = new Map<string, ParcelaHojeCliente>()
 
     for (const row of rows) {
-      const key = `${row.clienteId}-${row.contratoId}`
+      const key = `${row.cliente_id}-${row.contrato_id}`
       if (!clientesMap.has(key)) {
         clientesMap.set(key, {
-          clienteId: row.clienteId,
-          clienteNome: row.clienteNome,
-          contratoId: row.contratoId,
+          clienteId: row.cliente_id,
+          clienteNome: row.cliente_nome,
+          contratoId: row.contrato_id,
           parcelas: [],
         })
       }
       clientesMap.get(key)!.parcelas.push({
         numero: row.numero,
-        valorPrevisto: row.valorPrevisto,
-        saldoPendente: row.saldoPendente,
+        valorPrevisto: row.valor_previsto,
+        saldoPendente: row.saldo_pendente,
       })
     }
 
@@ -349,49 +365,49 @@ export class OperacoesRepository implements IOperacoesRepository {
     const fim = getLocalDateString(seteDias)
 
     const { rows } = await rawQuery<{
-      clienteId: string
-      clienteNome: string
-      contratoId: string
+      cliente_id: string
+      cliente_nome: string
+      contrato_id: string
       numero: number
-      valorPrevisto: number
-      saldoPendente: number
+      valor_previsto: number
+      saldo_pendente: number
     }>(`
       SELECT
-        c.id AS "clienteId",
-        c.nome AS "clienteNome",
-        ct.id AS "contratoId",
+        c.id AS "cliente_id",
+        c.nome AS "cliente_nome",
+        ct.id AS "contrato_id",
         p.numero,
-        p."valorPrevisto",
-        p."saldoPendente"
+        p."valor_previsto",
+        p."saldo_pendente"
       FROM parcelas p
-      JOIN contratos ct ON ct.id = p."contratoId"
-      JOIN clientes c ON c.id = ct."clienteId"
-      WHERE p."dataVencimento" > ?
-        AND p."dataVencimento" <= ?
-        AND p."saldoPendente" > 0
-        AND p."deletedAt" IS NULL
-        AND ct."deletedAt" IS NULL
-        AND c."deletedAt" IS NULL
-        AND ct."userId" = ?
-      ORDER BY c.nome ASC, p."dataVencimento" ASC, p.numero ASC
+      JOIN contratos ct ON ct.id = p."contrato_id"
+      JOIN clientes c ON c.id = ct."cliente_id"
+      WHERE p."data_vencimento" > ?
+        AND p."data_vencimento" <= ?
+        AND p."saldo_pendente" > 0
+        AND p."deleted_at" IS NULL
+        AND ct."deleted_at" IS NULL
+        AND c."deleted_at" IS NULL
+        AND ct."user_id" = ?
+      ORDER BY c.nome ASC, p."data_vencimento" ASC, p.numero ASC
     `, [hoje, fim, userId])
 
     const clientesMap = new Map<string, ParcelaHojeCliente>()
 
     for (const row of rows) {
-      const key = `${row.clienteId}-${row.contratoId}`
+      const key = `${row.cliente_id}-${row.contrato_id}`
       if (!clientesMap.has(key)) {
         clientesMap.set(key, {
-          clienteId: row.clienteId,
-          clienteNome: row.clienteNome,
-          contratoId: row.contratoId,
+          clienteId: row.cliente_id,
+          clienteNome: row.cliente_nome,
+          contratoId: row.contrato_id,
           parcelas: [],
         })
       }
       clientesMap.get(key)!.parcelas.push({
         numero: row.numero,
-        valorPrevisto: row.valorPrevisto,
-        saldoPendente: row.saldoPendente,
+        valorPrevisto: row.valor_previsto,
+        saldoPendente: row.saldo_pendente,
       })
     }
 
@@ -401,36 +417,36 @@ export class OperacoesRepository implements IOperacoesRepository {
   async registrarSnapshotAtraso(userId: string, data?: string): Promise<void> {
     const hoje = data ?? getLocalDateString(new Date())
 
-    const { rows: atrasadoRows } = await rawQuery<{ clientesAtrasados: number; contratosAtrasados: number; valorAtrasado: number }>(`
+    const { rows: atrasadoRows } = await rawQuery<{ clientes_atrasados: number; contratos_atrasados: number; valor_atrasado: number }>(`
       SELECT
-        COUNT(DISTINCT ct."clienteId") AS "clientesAtrasados",
-        COUNT(DISTINCT ct.id) AS "contratosAtrasados",
-        COALESCE(SUM(p."saldoPendente"), 0) AS "valorAtrasado"
+        COUNT(DISTINCT ct."cliente_id") AS "clientes_atrasados",
+        COUNT(DISTINCT ct.id) AS "contratos_atrasados",
+        COALESCE(SUM(p."saldo_pendente"), 0) AS "valor_atrasado"
       FROM parcelas p
-      JOIN contratos ct ON ct.id = p."contratoId"
-      WHERE p."dataVencimento" < ?
-        AND p."saldoPendente" > 0
-        AND p."deletedAt" IS NULL
-        AND ct."deletedAt" IS NULL
-        AND ct."userId" = ?
+      JOIN contratos ct ON ct.id = p."contrato_id"
+      WHERE p."data_vencimento" < ?
+        AND p."saldo_pendente" > 0
+        AND p."deleted_at" IS NULL
+        AND ct."deleted_at" IS NULL
+        AND ct."user_id" = ?
     `, [hoje, userId])
     const atrasadoRow = atrasadoRows[0]
 
     await rawQuery(`
-      INSERT INTO snapshots_atraso (id, "userId", data, "clientesAtrasados", "contratosAtrasados", "valorAtrasado", "createdAt")
+      INSERT INTO snapshots_atraso (id, "user_id", data, "clientes_atrasados", "contratos_atrasados", "valor_atrasado", "created_at")
       VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT ("userId", data) DO UPDATE SET
-        "clientesAtrasados" = excluded."clientesAtrasados",
-        "contratosAtrasados" = excluded."contratosAtrasados",
-        "valorAtrasado" = excluded."valorAtrasado",
-        "createdAt" = excluded."createdAt"
+      ON CONFLICT ("user_id", data) DO UPDATE SET
+        "clientes_atrasados" = excluded."clientes_atrasados",
+        "contratos_atrasados" = excluded."contratos_atrasados",
+        "valor_atrasado" = excluded."valor_atrasado",
+        "created_at" = excluded."created_at"
     `, [
       uuidv4(),
       userId,
       hoje,
-      atrasadoRow.clientesAtrasados,
-      atrasadoRow.contratosAtrasados,
-      atrasadoRow.valorAtrasado,
+      atrasadoRow.clientes_atrasados,
+      atrasadoRow.contratos_atrasados,
+      atrasadoRow.valor_atrasado,
       new Date().toISOString(),
     ])
   }
@@ -443,11 +459,11 @@ export class OperacoesRepository implements IOperacoesRepository {
     const { rows } = await rawQuery<SnapshotAtraso>(`
       SELECT
         data,
-        "clientesAtrasados",
-        "contratosAtrasados",
-        "valorAtrasado"
+        "clientes_atrasados",
+        "contratos_atrasados",
+        "valor_atrasado"
       FROM snapshots_atraso
-      WHERE "userId" = ?
+      WHERE "user_id" = ?
         AND data >= ?
       ORDER BY data DESC
       LIMIT ?
@@ -461,7 +477,7 @@ export class OperacoesRepository implements IOperacoesRepository {
     const createdAt = new Date().toISOString()
 
     await rawQuery(`
-      INSERT INTO historico_operacional (id, "clienteId", "contratoId", "tipo", "dataPromessa", "userId", "createdAt")
+      INSERT INTO historico_operacional (id, "cliente_id", "contrato_id", "tipo", "data_promessa", "user_id", "created_at")
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [id, input.clienteId, input.contratoId, input.tipo, input.dataPromessa ?? null, userId, createdAt])
 

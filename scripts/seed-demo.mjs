@@ -203,7 +203,7 @@ const nowISO = new Date().toISOString()
 const RESET_TABLES = [
   "pagamento_parcelas", "auditoria_estornos", "pagamentos", "parcelas",
   "historico_operacional", "anexos", "caixa_config", "auditoria_caixa",
-  "auditoria_modulos", "contratos", "clientes", "movimentacoesFinanceiras",
+  "auditoria_modulos", "contratos", "clientes", "movimentacoes_financeiras",
   "gastos", "fechamentos_semanais", "snapshots_atraso", "auth_tokens",
   "leads", "usuarios", "empresas",
 ]
@@ -212,23 +212,23 @@ for (const table of RESET_TABLES) await q(`DELETE FROM "${table}"`)
 // ---------- Usuários ----------
 const hash = bcrypt.hashSync(PASSWORD, 10)
 const superId = randomUUID()
-await q("INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\", \"empresaId\") VALUES ($1, $2, $3, $4, 'super_admin', $5, NULL)",
+await q("INSERT INTO usuarios (id, nome, email, \"senha_hash\", role, \"created_at\", \"empresa_id\") VALUES ($1, $2, $3, $4, 'super_admin', $5, NULL)",
   [superId, "NX Gest", "super@nxgest.com", hash, nowISO])
 
 const empresaIds = empresas.map(() => randomUUID())
 for (const [i, nome] of empresas.entries()) {
-  await q("INSERT INTO empresas (id, nome, \"createdAt\") VALUES ($1, $2, $3)", [empresaIds[i], nome, nowISO])
+  await q("INSERT INTO empresas (id, nome, \"created_at\") VALUES ($1, $2, $3)", [empresaIds[i], nome, nowISO])
 }
 
 for (const a of admins) {
-  await q("INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\", \"empresaId\") VALUES ($1, $2, $3, $4, 'admin', $5, $6)",
+  await q("INSERT INTO usuarios (id, nome, email, \"senha_hash\", role, \"created_at\", \"empresa_id\") VALUES ($1, $2, $3, $4, 'admin', $5, $6)",
     [randomUUID(), a.nome, a.email, hash, nowISO, empresaIds[a.empresa]])
 }
 const operadorIds = {}
 for (const o of operadores) {
   const id = randomUUID()
   operadorIds[o.email] = id
-  await q("INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\", \"empresaId\") VALUES ($1, $2, $3, $4, 'operator', $5, $6)",
+  await q("INSERT INTO usuarios (id, nome, email, \"senha_hash\", role, \"created_at\", \"empresa_id\") VALUES ($1, $2, $3, $4, 'operator', $5, $6)",
     [id, o.nome, o.email, hash, nowISO, empresaIds[o.empresa]])
 }
 
@@ -237,23 +237,23 @@ const totalEmprestado = {}
 for (const o of operadores) totalEmprestado[operadorIds[o.email]] = 0
 
 // ---------- Clientes, contratos, pagamentos, movimentações ----------
-const SQL_CLIENTE = `INSERT INTO clientes (id, nome, cpf, comercio, telefone, "telefoneComercio", logradouro, numero,
-    complemento, bairro, cidade, estado, lat, lng, "comercioLogradouro", "comercioNumero",
-    "comercioBairro", "comercioCidade", "comercioEstado", "comercioLat", "comercioLng",
-    "createdAt", "updatedAt", "userId")
+const SQL_CLIENTE = `INSERT INTO clientes (id, nome, cpf, comercio, telefone, "telefone_comercio", logradouro, numero,
+    complemento, bairro, cidade, estado, lat, lng, "comercio_logradouro", "comercio_numero",
+    "comercio_bairro", "comercio_cidade", "comercio_estado", "comercio_lat", "comercio_lng",
+    "created_at", "updated_at", "user_id")
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-const SQL_CONTRATO = `INSERT INTO contratos (id, "clienteId", "valorBase", "percentualJuros", "valorFinal", "quantidadeParcelas",
-    "dataInicio", "dataFinal", estado, "createdAt", "updatedAt", "userId")
+const SQL_CONTRATO = `INSERT INTO contratos (id, "cliente_id", "valor_base", "percentual_juros", "valor_final", "quantidade_parcelas",
+    "data_inicio", "data_final", estado, "created_at", "updated_at", "user_id")
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-const SQL_PARCELA = `INSERT INTO parcelas (id, "contratoId", numero, "valorPrevisto", "valorPago", "saldoPendente", estado,
-    "dataVencimento", "dataQuitacao", "createdAt", "updatedAt")
+const SQL_PARCELA = `INSERT INTO parcelas (id, "contrato_id", numero, "valor_previsto", "valor_pago", "saldo_pendente", estado,
+    "data_vencimento", "data_quitacao", "created_at", "updated_at")
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-const SQL_PAGAMENTO = `INSERT INTO pagamentos (id, "contratoId", valor, data, "createdAt", "userId") VALUES (?, ?, ?, ?, ?, ?)`
-const SQL_PAG_PARCELA = `INSERT INTO pagamento_parcelas (id, "pagamentoId", "parcelaId", valor) VALUES (?, ?, ?, ?)`
-const SQL_MOV = `INSERT INTO "movimentacoesFinanceiras" (id, tipo, valor, origem, "origemId", descricao, data, "createdAt", "userId")
+const SQL_PAGAMENTO = `INSERT INTO pagamentos (id, "contrato_id", valor, data, "created_at", "user_id") VALUES (?, ?, ?, ?, ?, ?)`
+const SQL_PAG_PARCELA = `INSERT INTO pagamento_parcelas (id, "pagamento_id", "parcela_id", valor) VALUES (?, ?, ?, ?)`
+const SQL_MOV = `INSERT INTO "movimentacoes_financeiras" (id, tipo, valor, origem, "origem_id", descricao, data, "created_at", "user_id")
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-const SQL_GASTO = `INSERT INTO gastos (id, valor, categoria, observacao, data, "createdAt", "userId") VALUES (?, ?, ?, ?, ?, ?, ?)`
-const SQL_HISTORICO = `INSERT INTO historico_operacional (id, "clienteId", "contratoId", tipo, "dataPromessa", "createdAt", "userId")
+const SQL_GASTO = `INSERT INTO gastos (id, valor, categoria, observacao, data, "created_at", "user_id") VALUES (?, ?, ?, ?, ?, ?, ?)`
+const SQL_HISTORICO = `INSERT INTO historico_operacional (id, "cliente_id", "contrato_id", tipo, "data_promessa", "created_at", "user_id")
   VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 const cpfsUsados = new Set()
@@ -386,7 +386,7 @@ for (const op of operadores) {
   const emprestado = totalEmprestado[opId] || 0
   // Base cobre o total emprestado com ~15% de margem (caixa realista e positivo)
   const caixaBase = Math.round((emprestado * 1.15 + rnd(0, 1000)) * 100) / 100
-  await q("INSERT INTO caixa_config (\"userId\", \"caixaBase\", \"updatedAt\") VALUES ($1, $2, $3)", [opId, caixaBase, nowISO])
+  await q("INSERT INTO caixa_config (\"user_id\", \"caixa_base\", \"updated_at\") VALUES ($1, $2, $3)", [opId, caixaBase, nowISO])
 }
 
 // ---------- Resumo ----------

@@ -37,9 +37,9 @@ async function count(sql: string, ...args: string[]): Promise<number> {
 /**
  * Impacto de desativar um conjunto de módulos numa empresa (guard BR-105).
  *
- * Contagens empresa-wide: todas as tabelas operacionais ligam por `"userId"`
+ * Contagens empresa-wide: todas as tabelas operacionais ligam por `"user_id"`
  * (operador) — o join passa por `usuarios.empresaId`. Reusa os predicados de
- * domínio (parcela pendente = `"saldoPendente" > 0 AND "deletedAt" IS NULL`).
+ * domínio (parcela pendente = `"saldo_pendente" > 0 AND "deleted_at" IS NULL`).
  *
  * - `clientes`/`rota`/`atendidos`/`gastos` → só confirmar (não bloqueiam);
  * - `contratos` (parcela em aberto), `cobrancas` (pendências), `caixa` (base
@@ -59,14 +59,14 @@ export class ImpactoDesativacaoQuery implements IImpactoDesativacaoQuery {
     const { inicio, fim } = rangeDoDiaLocal(hoje)
 
     if (desligados.includes("clientes")) {
-      const n = await count(`SELECT COUNT(*) AS c FROM clientes WHERE "deletedAt" IS NULL AND "userId" IN (${ph})`, ...args)
+      const n = await count(`SELECT COUNT(*) AS c FROM clientes WHERE "deleted_at" IS NULL AND "user_id" IN (${ph})`, ...args)
       impacto.push({ modulo: "clientes", contagem: n, bloqueia: false, detalhe: "clientes cadastrados" })
     }
 
     if (desligados.includes("contratos")) {
-      const ativos = await count(`SELECT COUNT(*) AS c FROM contratos WHERE "deletedAt" IS NULL AND estado = 'Ativo' AND "userId" IN (${ph})`, ...args)
+      const ativos = await count(`SELECT COUNT(*) AS c FROM contratos WHERE "deleted_at" IS NULL AND estado = 'Ativo' AND "user_id" IN (${ph})`, ...args)
       const pendentes = await count(
-        `SELECT COUNT(*) AS c FROM parcelas p JOIN contratos ct ON ct.id = p."contratoId" WHERE p."deletedAt" IS NULL AND p."saldoPendente" > 0 AND ct."deletedAt" IS NULL AND ct."userId" IN (${ph})`,
+        `SELECT COUNT(*) AS c FROM parcelas p JOIN contratos ct ON ct.id = p."contrato_id" WHERE p."deleted_at" IS NULL AND p."saldo_pendente" > 0 AND ct."deleted_at" IS NULL AND ct."user_id" IN (${ph})`,
         ...args,
       )
       const n = pendentes
@@ -76,7 +76,7 @@ export class ImpactoDesativacaoQuery implements IImpactoDesativacaoQuery {
 
     if (desligados.includes("cobrancas")) {
       const n = await count(
-        `SELECT COUNT(DISTINCT cl.id) AS c FROM clientes cl JOIN contratos ct ON ct."clienteId" = cl.id JOIN parcelas p ON p."contratoId" = ct.id WHERE cl."deletedAt" IS NULL AND ct."deletedAt" IS NULL AND p."deletedAt" IS NULL AND p."saldoPendente" > 0 AND ct."userId" IN (${ph})`,
+        `SELECT COUNT(DISTINCT cl.id) AS c FROM clientes cl JOIN contratos ct ON ct."cliente_id" = cl.id JOIN parcelas p ON p."contrato_id" = ct.id WHERE cl."deleted_at" IS NULL AND ct."deleted_at" IS NULL AND p."deleted_at" IS NULL AND p."saldo_pendente" > 0 AND ct."user_id" IN (${ph})`,
         ...args,
       )
       impacto.push({ modulo: "cobrancas", contagem: n, bloqueia: n > 0, detalhe: "cliente(s) com pendência de cobrança" })
@@ -84,20 +84,20 @@ export class ImpactoDesativacaoQuery implements IImpactoDesativacaoQuery {
     }
 
     if (desligados.includes("caixa")) {
-      const n = await count(`SELECT COUNT(*) AS c FROM caixa_config WHERE "caixaBase" != 0 AND "userId" IN (${ph})`, ...args)
+      const n = await count(`SELECT COUNT(*) AS c FROM caixa_config WHERE "caixa_base" != 0 AND "user_id" IN (${ph})`, ...args)
       const aberto = n > 0
       impacto.push({ modulo: "caixa", contagem: aberto ? 1 : 0, bloqueia: aberto, detalhe: aberto ? "caixa base em aberto (saldo a fechar)" : "sem caixa em aberto" })
       if (aberto) bloqueado = true
     }
 
     if (desligados.includes("gastos")) {
-      const n = await count(`SELECT COUNT(*) AS c FROM gastos WHERE "deletedAt" IS NULL AND data = ? AND "userId" IN (${ph})`, hoje, ...args)
+      const n = await count(`SELECT COUNT(*) AS c FROM gastos WHERE "deleted_at" IS NULL AND data = ? AND "user_id" IN (${ph})`, hoje, ...args)
       impacto.push({ modulo: "gastos", contagem: n, bloqueia: false, detalhe: "gastos de hoje" })
     }
 
     if (desligados.includes("rota")) {
       const n = await count(
-        `SELECT COUNT(*) AS c FROM historico_operacional h WHERE h."createdAt" >= ? AND h."createdAt" < ? AND h."userId" IN (${ph})`,
+        `SELECT COUNT(*) AS c FROM historico_operacional h WHERE h."created_at" >= ? AND h."created_at" < ? AND h."user_id" IN (${ph})`,
         inicio, fim, ...args,
       )
       impacto.push({ modulo: "rota", contagem: n, bloqueia: false, detalhe: "visita(s) registrada(s) hoje" })
@@ -105,7 +105,7 @@ export class ImpactoDesativacaoQuery implements IImpactoDesativacaoQuery {
 
     if (desligados.includes("atendidos")) {
       const n = await count(
-        `SELECT COUNT(*) AS c FROM historico_operacional h WHERE h.tipo = 'visitado' AND h."createdAt" >= ? AND h."createdAt" < ? AND h."userId" IN (${ph})`,
+        `SELECT COUNT(*) AS c FROM historico_operacional h WHERE h.tipo = 'visitado' AND h."created_at" >= ? AND h."created_at" < ? AND h."user_id" IN (${ph})`,
         inicio, fim, ...args,
       )
       impacto.push({ modulo: "atendidos", contagem: n, bloqueia: false, detalhe: "cliente(s) atendido(s) hoje" })

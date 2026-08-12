@@ -24,7 +24,7 @@ const SMOKE_POOL = new Pool({
 /** Leituras diretas no banco isolado (auditoria). Retorna -1 se indisponível. */
 async function auditoriaCount(tipo, empresaId) {
   try {
-    const { rows } = await SMOKE_POOL.query("SELECT COUNT(*)::int AS c FROM auditoria_modulos WHERE tipo = $1 AND \"empresaId\" = $2", [tipo, empresaId])
+    const { rows } = await SMOKE_POOL.query("SELECT COUNT(*)::int AS c FROM auditoria_modulos WHERE tipo = $1 AND \"empresa_id\" = $2", [tipo, empresaId])
     return rows[0]?.c ?? 0
   } catch {
     return -1
@@ -34,7 +34,7 @@ async function auditoriaCount(tipo, empresaId) {
 /** Conta tokens de `auth_tokens` (PLAN-065) por sujeito/tipo. -1 se indisponível. */
 async function authTokensCount(subjectId, tipo, naoUsadosOnly = false) {
   try {
-    const sql = `SELECT COUNT(*)::int AS c FROM auth_tokens WHERE \"subjectId\" = $1 AND tipo = $2${naoUsadosOnly ? " AND \"usadoEm\" IS NULL" : ""}`
+    const sql = `SELECT COUNT(*)::int AS c FROM auth_tokens WHERE \"subject_id\" = $1 AND tipo = $2${naoUsadosOnly ? " AND \"usado_em\" IS NULL" : ""}`
     const { rows } = await SMOKE_POOL.query(sql, [subjectId, tipo])
     return rows[0]?.c ?? 0
   } catch {
@@ -46,7 +46,7 @@ async function authTokensCount(subjectId, tipo, naoUsadosOnly = false) {
 async function inserirAuthToken(subjectId, tipo, rawToken, expiraEm, usadoEm = null) {
   const hash = createHash("sha256").update(rawToken).digest("hex")
   await SMOKE_POOL.query(
-    "INSERT INTO auth_tokens (id, \"subjectId\", tipo, hash, \"expiraEm\", \"usadoEm\", \"createdAt\") VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    "INSERT INTO auth_tokens (id, \"subject_id\", tipo, hash, \"expira_em\", \"usado_em\", \"created_at\") VALUES ($1, $2, $3, $4, $5, $6, $7)",
     [randomUUID(), subjectId, tipo, hash, expiraEm, usadoEm, new Date().toISOString()],
   )
 }
@@ -1407,8 +1407,8 @@ async function main() {
   })
 
   await t("AC-16", "convidado → senhaHash NULL no banco", async () => {
-    const { rows: ac16 } = await SMOKE_POOL.query("SELECT \"senhaHash\" FROM usuarios WHERE id = $1", [convId])
-    if (ac16[0]?.["senhaHash"] !== null) throw new Error(`senhaHash=${ac16[0]?.["senhaHash"]}`)
+    const { rows: ac16 } = await SMOKE_POOL.query("SELECT \"senha_hash\" FROM usuarios WHERE id = $1", [convId])
+    if (ac16[0]?.["senha_hash"] !== null) throw new Error(`senhaHash=${ac16[0]?.["senha_hash"]}`)
   })
 
   await t("AC-13", "login de convidado → 403 ACCOUNT_PENDING", async () => {
@@ -1418,7 +1418,7 @@ async function main() {
   })
 
   await t("SE-01", "token de convite armazenado como HASH (64 hex)", async () => {
-    const { rows: se01 } = await SMOKE_POOL.query("SELECT hash FROM auth_tokens WHERE \"subjectId\" = $1 AND tipo = 'convite' AND \"usadoEm\" IS NULL ORDER BY \"createdAt\" DESC LIMIT 1", [convId])
+    const { rows: se01 } = await SMOKE_POOL.query("SELECT hash FROM auth_tokens WHERE \"subject_id\" = $1 AND tipo = 'convite' AND \"usado_em\" IS NULL ORDER BY \"created_at\" DESC LIMIT 1", [convId])
     if (!se01[0]?.hash || !/^[0-9a-f]{64}$/.test(se01[0].hash)) throw new Error(`hash=${se01[0]?.hash}`)
   })
 
@@ -1964,7 +1964,7 @@ async function main() {
     leadId = r.data.lead.id
     const tok = await authTokensCount(leadId, "lead")
     if (tok < 1) throw new Error("token de confirmação não criado")
-    const { rows: ld01 } = await SMOKE_POOL.query("SELECT hash FROM auth_tokens WHERE \"subjectId\" = $1 AND tipo = 'lead' AND \"usadoEm\" IS NULL ORDER BY \"createdAt\" DESC LIMIT 1", [leadId])
+    const { rows: ld01 } = await SMOKE_POOL.query("SELECT hash FROM auth_tokens WHERE \"subject_id\" = $1 AND tipo = 'lead' AND \"usado_em\" IS NULL ORDER BY \"created_at\" DESC LIMIT 1", [leadId])
     if (!ld01[0]?.hash?.match(/^[0-9a-f]{64}$/)) throw new Error("token não armazenado como hash SHA-256")
   })
 

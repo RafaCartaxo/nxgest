@@ -37,20 +37,20 @@ export class EmpresaRepository implements IEmpresaRepository {
 
     const ph = empresaIds.map(() => "?").join(",")
     const [{ rows: usuariosRows }, { rows: clientesRows }, { rows: contratosRows }, { rows: adminRows }] = await Promise.all([
-      rawQuery<{ empresaId: string; total: number }>(
-        `SELECT u."empresaId", COUNT(*)::int AS total FROM usuarios u WHERE u."deletedAt" IS NULL AND u."empresaId" IN (${ph}) GROUP BY u."empresaId"`, empresaIds),
-      rawQuery<{ empresaId: string; total: number }>(
-        `SELECT u."empresaId", COUNT(*)::int AS total FROM clientes c JOIN usuarios u ON c."userId" = u.id WHERE c."deletedAt" IS NULL AND u."empresaId" IN (${ph}) GROUP BY u."empresaId"`, empresaIds),
-      rawQuery<{ empresaId: string; total: number }>(
-        `SELECT u."empresaId", COUNT(*)::int AS total FROM contratos ct JOIN usuarios u ON ct."userId" = u.id WHERE ct."deletedAt" IS NULL AND ct."estado" = 'Ativo' AND u."empresaId" IN (${ph}) GROUP BY u."empresaId"`, empresaIds),
-      rawQuery<{ empresaId: string; nome: string; email: string }>(
-        `SELECT DISTINCT ON (u."empresaId") u."empresaId", u.nome, u.email FROM usuarios u WHERE u."deletedAt" IS NULL AND u.role = 'admin' AND u."empresaId" IN (${ph}) ORDER BY u."empresaId", u."createdAt"`, empresaIds),
+      rawQuery<{ empresa_id: string; total: number }>(
+        `SELECT u."empresa_id", COUNT(*)::int AS total FROM usuarios u WHERE u."deleted_at" IS NULL AND u."empresa_id" IN (${ph}) GROUP BY u."empresa_id"`, empresaIds),
+      rawQuery<{ empresa_id: string; total: number }>(
+        `SELECT u."empresa_id", COUNT(*)::int AS total FROM clientes c JOIN usuarios u ON c."user_id" = u.id WHERE c."deleted_at" IS NULL AND u."empresa_id" IN (${ph}) GROUP BY u."empresa_id"`, empresaIds),
+      rawQuery<{ empresa_id: string; total: number }>(
+        `SELECT u."empresa_id", COUNT(*)::int AS total FROM contratos ct JOIN usuarios u ON ct."user_id" = u.id WHERE ct."deleted_at" IS NULL AND ct."estado" = 'Ativo' AND u."empresa_id" IN (${ph}) GROUP BY u."empresa_id"`, empresaIds),
+      rawQuery<{ empresa_id: string; nome: string; email: string }>(
+        `SELECT DISTINCT ON (u."empresa_id") u."empresa_id", u.nome, u.email FROM usuarios u WHERE u."deleted_at" IS NULL AND u.role = 'admin' AND u."empresa_id" IN (${ph}) ORDER BY u."empresa_id", u."created_at"`, empresaIds),
     ])
-    for (const r of usuariosRows) map.get(r.empresaId)!.totalUsuarios = r.total
-    for (const r of clientesRows) map.get(r.empresaId)!.totalClientes = r.total
-    for (const r of contratosRows) map.get(r.empresaId)!.contratosAtivos = r.total
+    for (const r of usuariosRows) map.get(r.empresa_id)!.totalUsuarios = r.total
+    for (const r of clientesRows) map.get(r.empresa_id)!.totalClientes = r.total
+    for (const r of contratosRows) map.get(r.empresa_id)!.contratosAtivos = r.total
     for (const r of adminRows) {
-      const s = map.get(r.empresaId)
+      const s = map.get(r.empresa_id)
       if (s) { s.adminNome = r.nome; s.adminEmail = r.email }
     }
     return map
