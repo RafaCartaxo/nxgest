@@ -4,7 +4,7 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 
 ## O projeto
 
-**NX Gest** (`nxgest`) — sistema de gestão de cobranças em campo (credores, contratos, parcelas, pagamentos, caixa). Backend Node.js + Express + TypeScript + SQLite (better-sqlite3 + Drizzle); frontend React + Vite + TailwindCSS.
+**NX Gest** (`nxgest`) — sistema de gestão de cobranças em campo (credores, contratos, parcelas, pagamentos, caixa). Backend Node.js + Express + TypeScript + **PostgreSQL** (pg + Drizzle `pg-core`); frontend React + Vite + TailwindCSS. (Migração SQLite→PG: PLAN-070; `better-sqlite3` permanece só no script de migração.)
 
 **Repo GitHub:** `RafaCartaxo/nxgest`
 

@@ -6,11 +6,36 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=8080
+      # DB_PATH mantido para derivar o diretório de uploads; o banco usa DATABASE_URL.
       - DB_PATH=/data/gestao.db
+      - DATABASE_URL=postgres://${PG_USER:-nxgest}:${PG_PASSWORD:-nxgest-dev}@postgres:5432/${PG_DB:-nxgest}
       - JWT_SECRET=dev-secret-do-not-use-in-production
       - ADMIN_DEFAULT_PASSWORD=admin123
     volumes:
       - nxgestao_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: nxgest-pg-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${PG_DB:-nxgest}
+      - POSTGRES_USER=${PG_USER:-nxgest}
+      - POSTGRES_PASSWORD=${PG_PASSWORD:-nxgest-dev}
+    ports:
+      # 5433 no host = mesmo default do app local (`npm run dev` sem DATABASE_URL).
+      - "5433:5432"
+    volumes:
+      - nxgestao_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-nxgest} -d ${PG_DB:-nxgest}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
   nxgestao_data:
+  nxgestao_pgdata:
