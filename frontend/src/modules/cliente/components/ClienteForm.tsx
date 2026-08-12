@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useForm } from "react-hook-form"
+import { useForm, type FieldErrors, type UseFormRegister } from "react-hook-form"
+import type { TFunction } from "i18next"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Check, UserRound, Store } from "lucide-react"
 import { AvatarField } from "../../../shared/components/Avatar/Avatar.js"
@@ -36,6 +37,62 @@ const defaultValues: ClienteFormData = {
   comercioLat: undefined, comercioLng: undefined,
   lat: undefined, lng: undefined, foto: undefined,
 }
+
+function blocoComercio(prefix: "comercio" | ""): Record<"logradouro" | "numero" | "bairro" | "cidade" | "uf", keyof ClienteFormData> {
+  return {
+    logradouro: prefix ? "comercioLogradouro" : "logradouro",
+    numero: prefix ? "comercioNumero" : "numero",
+    bairro: prefix ? "comercioBairro" : "bairro",
+    cidade: prefix ? "comercioCidade" : "cidade",
+    uf: prefix ? "comercioEstado" : "estado",
+  }
+}
+
+interface EnderecoFieldsProps {
+  prefix: "comercio" | ""
+  comComplemento: boolean
+  register: UseFormRegister<ClienteFormData>
+  errors: FieldErrors<ClienteFormData>
+  t: TFunction
+}
+
+/**
+ * Campos de endereço de um bloco (comércio ou principal). Componente no nível
+ * de módulo + memo para não remontar os inputs a cada render do form — remontar
+ * perdia o foco do campo editado e fechava o teclado no celular (fix 12/08).
+ */
+function EnderecoFields({ prefix, comComplemento, register, errors, t }: EnderecoFieldsProps) {
+  const f = blocoComercio(prefix)
+  return (
+    <div className="grid gap-4 p-4 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <Field
+          label={t("cliente.logradouro")}
+          required={!prefix}
+          error={!prefix ? errors.logradouro?.message : undefined}
+          {...register(f.logradouro)}
+        />
+      </div>
+      <Field label={t("cliente.numero")} inputMode="numeric" {...register(f.numero)} />
+      {comComplemento && <Field label={t("cliente.complemento")} placeholder={t("cliente.complementoPlaceholder")} {...register("complemento")} />}
+      <Field label={t("cliente.bairro")} {...register(f.bairro)} />
+      <Field
+        label={t("cliente.cidade")}
+        error={!prefix ? errors.cidade?.message : undefined}
+        {...register(f.cidade)}
+      />
+      <FieldSelect
+        label={t("cliente.uf")}
+        placeholder={t("cliente.ufPlaceholder")}
+        options={UFS.map((u) => ({ value: u, label: u }))}
+        error={!prefix ? errors.estado?.message : undefined}
+        {...register(f.uf)}
+      />
+    </div>
+  )
+}
+
+const EnderecoFieldsMemo = memo(EnderecoFields)
 
 type BlocoGps = {
   coords: { lat: number; lng: number } | null
@@ -269,47 +326,6 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
     })
   }
 
-  function blocoComercio(prefix: "comercio" | ""): Record<"logradouro" | "numero" | "bairro" | "cidade" | "uf", keyof ClienteFormData> {
-    return {
-      logradouro: prefix ? "comercioLogradouro" : "logradouro",
-      numero: prefix ? "comercioNumero" : "numero",
-      bairro: prefix ? "comercioBairro" : "bairro",
-      cidade: prefix ? "comercioCidade" : "cidade",
-      uf: prefix ? "comercioEstado" : "estado",
-    }
-  }
-
-  function EnderecoFields({ prefix, comComplemento }: { prefix: "comercio" | ""; comComplemento: boolean }) {
-    const f = blocoComercio(prefix)
-    return (
-      <div className="grid gap-4 p-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <Field
-            label={t("cliente.logradouro")}
-            required={!prefix}
-            error={!prefix ? errors.logradouro?.message : undefined}
-            {...form.register(f.logradouro)}
-          />
-        </div>
-        <Field label={t("cliente.numero")} inputMode="numeric" {...form.register(f.numero)} />
-        {comComplemento && <Field label={t("cliente.complemento")} placeholder={t("cliente.complementoPlaceholder")} {...form.register("complemento")} />}
-        <Field label={t("cliente.bairro")} {...form.register(f.bairro)} />
-        <Field
-          label={t("cliente.cidade")}
-          error={!prefix ? errors.cidade?.message : undefined}
-          {...form.register(f.cidade)}
-        />
-        <FieldSelect
-          label={t("cliente.uf")}
-          placeholder={t("cliente.ufPlaceholder")}
-          options={UFS.map((u) => ({ value: u, label: u }))}
-          error={!prefix ? errors.estado?.message : undefined}
-          {...form.register(f.uf)}
-        />
-      </div>
-    )
-  }
-
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" noValidate>
       <Card.Root variant="detail">
@@ -392,7 +408,13 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
             aviso={gpsComercio.aviso}
             onCapturar={capturarComercio}
           />
-          <EnderecoFields prefix="comercio" comComplemento={false} />
+          <EnderecoFieldsMemo
+            prefix="comercio"
+            comComplemento={false}
+            register={form.register}
+            errors={errors}
+            t={t}
+          />
         </div>
       </Card.Root>
 
@@ -410,7 +432,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
             aviso={gpsPrincipal.aviso}
             onCapturar={capturarPrincipal}
           />
-          <EnderecoFields prefix="" comComplemento />
+          <EnderecoFieldsMemo prefix="" comComplemento register={form.register} errors={errors} t={t} />
         </div>
       </Card.Root>
 

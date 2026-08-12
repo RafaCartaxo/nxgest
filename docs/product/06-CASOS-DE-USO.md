@@ -1543,12 +1543,13 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 - [ ] Captura GPS no comércio preenche endereço + marca "Localização capturada"?
 - [ ] Captura GPS no endereço principal idem?
 - [ ] Editar texto → indicador "Não capturada" + botão Recapturar; navegação usa o texto novo?
+- [ ] **Editar texto com localização salva → coords descartadas + teclado do celular permanece aberto** (foco mantido no campo editado)?
 - [ ] Limpar endereço → coords zeradas (sem alvo)?
 - [ ] Permissão negada → erro visível, nada gravado?
 - [ ] Reverse geocode sem rede → coords mantidas + aviso "preencha manualmente"?
 - [ ] "Navegar" some quando sem endereço?
 
-**Regras:** decisões PLAN-055 · testes unitários N1–N12 (`frontend/src/shared/geo`) · API-CT-100..105 (`07`)
+**Regras:** decisões PLAN-055 · testes unitários N1–N12 (`frontend/src/shared/geo`) · regressão teclado/foco `ClienteForm.test.tsx` (fix 12/08) · API-CT-100..105 (`07`)
 
 ---
 
