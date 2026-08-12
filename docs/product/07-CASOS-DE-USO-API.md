@@ -11,6 +11,8 @@
 **Contrato completo (request/response JSON):** `engineering/02-API.md`
 
 > **Validação executada (03/08/2026):** 104 cenários executados via `scripts/smoke-api.mjs` — todos PASS contra instância isolada, incluindo as variações V1–V8 (pagamento que atravessa parcelas, quitar→Finalizado, estorno reverte, 2 contratos, ajuste absoluto, cross-tenant, super admin, token inválido), o **PLAN-030** (`GET /api/admin/equipe`, coerência Σ operadores = totais), o **PLAN-031** (módulos/whitelabel — MOD-091..096) e o **PLAN-032** (hierarquia/sócio — SC-001..006, subárvore). Corrigidos no PLAN-029: `dataPromessa` obrigatória para promessa e senha mín. 6 no backend admin.
+>
+> **Smoke atual (11/08/2026):** **250/250 PASS** no CI (job `smoke-api`, DB isolado) — inclui `SC-006b` (sócio ajusta caixa da subárvore → 201) e `SC-006c` (sócio fora da subárvore → 404). Contagem viva em `docs/engineering/TESTES.md` · `docs/STATUS.md`.
 
 ---
 

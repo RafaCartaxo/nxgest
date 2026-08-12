@@ -17,6 +17,7 @@
 - [x] **Secrets no repo** — `VPS_HOST` · `VPS_USER` · `VPS_SSH_KEY` (chave `id_ed25519` sem passphrase)
 - [x] **Infra VPS (migração 1x)** — rede `nxgestao_net` compartilhada criada; containers prod (`app`, `caddy`) recriados na rede nova; staging no ar
 - [x] **Docs** — `06-PRODUCAO.md §1.1` (pipeline) · `TESTES.md` (CI/CD) · `AGENTS.md` (produção/homologação/pipeline) · `UPDATES.md` · `STATUS.md` · `plans/README.md` · `PLAN-070` (status atualizado; smoke 250)
+- [x] **Contagem de smoke sincronizada (248→250)** — `PLAN-067-testes.md` (critérios de aceite) e `07-CASOS-DE-USO-API.md` (nota "Smoke atual 250/250" no cabeçalho, mantendo o registro histórico de 104 de 03/08)
 
 ## Validação (rodar antes de finalizar)
 

@@ -24,7 +24,7 @@ Tornar **testes parte integrada do projeto**: infra `vitest` + `jsdom` + RTL + c
 | Use-cases backend | 2 / 50 | prioridade: financeiro + conta + leads + admin |
 | Shared/segurança (scope/jwt/foto/middleware) | 0 | fechar ciclo com PLAN-066 |
 | UI (RTL/jsdom) | 0 | P022 + telas críticas |
-| Integração API | smoke 248/248 ✅ | manter + CI |
+| Integração API | smoke 250/250 ✅ | manter + CI |
 | Coverage | ❌ | v8 + threshold gradual |
 | CI | ❌ | GitHub Actions |
 
@@ -86,7 +86,7 @@ Padrão: `render` com providers (Auth/Theme/I18n) + mock de `apiRequest`/serviç
 
 ## Critérios de aceite
 
-- `npm test` verde (unit + UI) · `test:coverage` ≥ meta · **CI verde no push** · smoke 248/248 mantido · `audit:ui/styles/modules` e `docs:audit` ✅ · nenhuma regressão.
+- `npm test` verde (unit + UI) · `test:coverage` ≥ meta · **CI verde no push** · smoke 250/250 mantido · `audit:ui/styles/modules` e `docs:audit` ✅ · nenhuma regressão.
 
 ## Riscos / notas
 
