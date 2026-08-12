@@ -34,3 +34,7 @@ A subpasta [design/](design/) contém os documentos de identidade visual e exper
 ## Ordem de leitura recomendada
 
 00-ARCHITECTURE → 04-BACKEND → 01-DATABASE → 02-API → 03-FRONTEND → design/01-UX → design/02-DESIGN-SYSTEM → 05-MAPEAMENTO-TELAS
+
+## Material de QA e estudo
+
+O pacote [../qa/](../qa/README.md) consolida visão geral, arquitetura, engenharia, testes, pipeline (CI/CD), operação, segurança, glossário e checklists — com links para estes documentos-fonte.

@@ -19,6 +19,7 @@
 
 ## Entregas recentes
 
+- **Pacote QA + fonte de estudo (11/08)** — `docs/qa/` com 10 documentos: visão geral, arquitetura, engenharia, testes, pipeline (CI/CD), operação, segurança, glossário e checklists + trilha de estudo recomendada. Linkado no `INDEX.md`/`docs/README.md`/`engineering/README.md`.
 - **Pipeline CI/CD completo (11/08, green)** — CI corrigido (16 runs vermelhas → verde): frontend virou **npm workspace** (node_modules unificada, fix da dupla cópia de React) · `scripts/create-schema.mjs` (smoke sem duplo-boot, fim do `EADDRINUSE`) · `JWT_SECRET`/rate limits no runner. **Staging** de homologação no duckdns (compose/DB/Caddyfile próprios + seed fake) com **deploy automático** no merge à main. **CD** para produção com gate de promoção (**prod só passa se staging passou**) — automático via `workflow_run` + manual (`workflow_dispatch` com `ref` p/ rollback), environment `production`, health pós-deploy. **Secrets:** `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY`. **Deps:** dependabot (npm+actions) · react-router 7.18.2 (fix GHSA-337j/CVE-2025-68470; runtime prod 0 vulns).
 - **Fix anexos (11/08)** — imagem (`toBlob` elimina `fetch(dataUrl)` bloqueado pela CSP) · PDF mobile (botão "Baixar PDF"; desktop mantém iframe).
 - **Pendentes do dia + performance (11/08)** — contadores dos chips (Todos/Vence hoje/Atrasado) corrigidos · **8 índices por `userId`** (P028) eliminam table scan do isolamento multi-tenant. **Follow-up:** reescrita da query de cobranças (ROADMAP 5.10 / BACKLOG P028).
@@ -56,4 +57,5 @@
 
 - **Testes:** 78 verdes (18 arquivos) · smoke API **250/250** · `docs:audit` 0 divergências (62 rotas = 62 telas)
 - **Pipeline:** CI verde no push/PR · staging automático no merge à main · CD prod com gate de promoção (staging saudável)
+- **QA:** pacote `docs/qa/` (visão geral, arquitetura, engenharia, testes, pipeline, operação, segurança, glossário, checklists + trilha de estudo)
 - **Docs:** planos (incl. PLAN-070) · 6 ADRs · 5 templates · skills SKILL-001..009

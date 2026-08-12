@@ -55,6 +55,19 @@ Consulte o [índice completo de planos](plans/README.md).
 
 - [STATUS.md](STATUS.md) — Visão de relance: planos em aberto, pendências de produção, últimos deploys
 
+## QA — Qualidade e fonte de estudo
+
+- [QA README](qa/README.md) — material de QA + trilha de estudo
+- [01-VISAO-GERAL.md](qa/01-VISAO-GERAL.md) — o sistema, stack e ambientes
+- [02-ARQUITETURA.md](qa/02-ARQUITETURA.md) — camadas, módulos, fluxo, ADRs
+- [03-ENGENHARIA.md](qa/03-ENGENHARIA.md) — backend, frontend e banco
+- [04-TESTES.md](qa/04-TESTES.md) — estratégia de testes e como rodar
+- [05-PIPELINE.md](qa/05-PIPELINE.md) — CI/CD: PR → staging → produção
+- [06-OPERACAO.md](qa/06-OPERACAO.md) — deploy, backup, rollback, monitoramento
+- [07-SEGURANCA.md](qa/07-SEGURANCA.md) — postura de segurança
+- [08-GLOSSARIO.md](qa/08-GLOSSARIO.md) — termos do domínio e técnicos
+- [09-CHECKLISTS.md](qa/09-CHECKLISTS.md) — checklists operacionais de QA
+
 ## Skills
 
 - [SKILL-001 — Documentation Reviewer](skills/SKILL-001-documentation-reviewer.md)

@@ -12,6 +12,7 @@ Bem-vindo à documentação oficial do sistema de gestão de cobranças em campo
 | [Design](engineering/README.md) | UX, design system, tokens, componentes e padrões (dentro de engineering/) |
 | [Decisions](decisions/README.md) | Registro de decisões arquiteturais (ADRs) |
 | [Plans](plans/README.md) | Planos de implementação de funcionalidades |
+| [QA](qa/README.md) | Material de QA + fonte de estudo (arquitetura, engenharia, testes, pipeline, operação) |
 | [Skills](skills/README.md) | Processos oficiais de desenvolvimento |
 | [Templates](templates/README.md) | Templates para documentação |
 | [Tasks](engineering/tasks/README.md) | Checklists de execução por data |
