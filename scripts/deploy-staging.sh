@@ -37,6 +37,20 @@ USER_RATE_LIMIT_MAX=100000
 EOF
   chmod 600 "$ENV_FILE"
 fi
+
+# 2b) Chaves PostgreSQL ausentes em .env.staging antigo (PLAN-070) — append idempotente,
+#     para staging existente que foi criado na era SQLite (sem PG_*).
+for key in PG_DB PG_USER PG_PASSWORD; do
+  if ! grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
+    case "$key" in
+      PG_DB) val=nxgest ;;
+      PG_USER) val=nxgest ;;
+      PG_PASSWORD) val=staging-pg-secret ;;
+    esac
+    echo "${key}=${val}" >> "$ENV_FILE"
+    echo "==> ${key} adicionado ao .env.staging"
+  fi
+done
 set -a; source "$ENV_FILE"; set +a
 
 # 3) Traz o código (o runner já puxou, mas garante consistência local).
