@@ -33,8 +33,11 @@
 
 ## Pendências
 
-- [ ] **Branch protection em `main`** — exigir CI (`test`+`smoke`) verdes + PR (último gate de qualidade)
-- [ ] Validação manual no staging (seed `teste123!`) — QA pré-produção
+- [x] **Branch protection em `main`** — exigir CI (`test`+`smoke`) verdes + PR (último gate de qualidade) — **feito (12/08)**
+- [x] Validação manual no staging (seed `teste123!`) — QA pré-produção — **feito (12/08)**
+
+## Tarefas futuras (fora deste checklist — registradas no STATUS/BACKLOG)
+
 - [ ] Revisar vulns dev-only restantes (`vite`/`vitest` — major bump, fora de escopo)
 - [ ] `PLAN-070` (postgres) — pré-requisito CI/docker atendido; seguir para Fase A
 

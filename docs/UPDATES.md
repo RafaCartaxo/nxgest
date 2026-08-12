@@ -2,6 +2,15 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 12/08/2026 — Validações manuais concluídas em produção + fix do teclado na edição de endereço
+
+- **Fix teclado (commit `7d6060e`)** — editar o endereço de um cliente com **localização salva** descartava as coords (regra PLAN-055 correta), mas **fechava o teclado no celular** (remontagem dos inputs ao invalidar o GPS). Correção: `EnderecoFields`/`blocoComercio` movidos para o **nível de módulo** + `memo` (referência estável → React não remonta os inputs → foco/teclado preservados). Nenhuma regra de negócio alterada.
+- **Regressão automatizada** — novo `ClienteForm.test.tsx` (2 testes): editar endereço com localização → coords descartadas + foco mantido. **Prova:** sem o fix, o teste falha em `toHaveFocus()`.
+- **CT no UC-080** (`06-CASOS-DE-USO.md`) — conferência "teclado do celular permanece aberto" registrada.
+- **Validações manuais em produção (12/08)** — **todas concluídas**: GPS/localização (CT-GEO-01/02) · edição com teclado (UC-080) · PWA ícone/nome/theme (CT-PWA-01) · anexos imagem + PDF (CT-ANX-02) · rota + contadores (CT-ROT-02).
+- **Docs alinhados** — `STATUS.md` (pendências de QA zeradas; 80 testes) · `qa/09-CHECKLISTS.md` (seção D atualizada) · `06-PRODUCAO.md` (nota APP_URL duckdns corrigida) · `tasks/2026-08-12/CHECKLIST.md`.
+- **Pendências futuras (não executadas)** — Cloudflare SSL Full (strict) · e-mail no staging (mantido `console`) · PLAN-070/069/067/066 · vulns dev-only (`vite`/`vitest`).
+
 ## 11/08/2026 — Pipeline CI/CD completo + staging de homologação (CI verde pela 1ª vez)
 
 - **CI verde (16 runs vermelhas → verde)**: causas raiz corrigidas — (1) deps do frontend nunca instaladas (`frontend/` virou **npm workspace**, node_modules unificada com React hoisted — eliminou a dupla cópia que quebrava os testes de UI); (2) smoke com `EADDRINUSE` (duplo-boot) → novo `scripts/create-schema.mjs` (schema sem boot); (3) `JWT_SECRET`/rate limits ausentes no runner → definidos no job (250/250 cenários).

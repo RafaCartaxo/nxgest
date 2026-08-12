@@ -315,7 +315,7 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
 
 ### Notas
 
-- **`APP_URL`** ainda aponta para o duckdns — links de convite/reset funcionam. Migração da URL + e-mail em produção: **PLAN-068** (duckdns mantido até confirmação total).
+- **`APP_URL`** — produção aponta para `https://nxgest.com.br`; staging usa `https://nxgestao.duckdns.org` (`.env.staging`). Links de convite/reset refletem o ambiente de cada stack.
 - Já existem **A record** `nxgest.com.br → 172.245.152.223` (VPS, Proxied) e `www` CNAME → raiz. Na migração (PLAN-068): SSL mode **Full (strict)** no Cloudflare + decidir proxy vs DNS-only.
 - Modo dev sem `RESEND_API_KEY` loga o link no console (não quebra desenvolvimento).
 - **Caixa corporativa (ponto de atenção — futuro):** o Cloudflare tem **MX nulo na raiz** (`nxgest.com.br MX → .`) = "não recebe e-mail" (proposital). Quando quiser `rafael@nxgest.com.br` (inbox/webmail): contratar provedor de caixa (Zoho Mail free / Google Workspace / M365) e **substituir o MX nulo** pelo MX real + SPF/DKIM dele. **Não conflita com o Resend** (que usa `send.nxgest.com.br`).

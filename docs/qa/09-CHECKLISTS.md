@@ -10,7 +10,7 @@
 
 - [ ] `npx tsc --noEmit` limpo (raiz + frontend)
 - [ ] `npm run build` verde
-- [ ] `npm test` verde (78 testes)
+- [ ] `npm test` verde (80 testes)
 - [ ] Audits: `audit:ui` · `audit:styles` · `audit:modules` · `docs:audit`
 - [ ] Smoke (se tocou backend/API): 250/250 em instância isolada
 - [ ] CI verde no push/PR
@@ -48,12 +48,13 @@
 
 ---
 
-## D. Validação manual pendente (conhecidos — STATUS.md)
+## D. Validação manual (última execução: 12/08/2026, produção)
 
-- [ ] CT-ANX-02 — upload de anexo imagem e abrir no modal
-- [ ] CT-ROT-02 — rota concluída/parcial: contadores e empty state
-- [ ] CT-PWA-01 — reinstalar o app instalado e conferir ícone/nome/theme
-- [ ] CT-GEO-01/02 — capturar localização → campos preenchem + navegar disponível
+- [x] CT-ANX-02 — upload de anexo imagem e abrir no modal
+- [x] CT-ROT-02 — rota concluída/parcial: contadores e empty state
+- [x] CT-PWA-01 — reinstalar o app instalado e conferir ícone/nome/theme
+- [x] CT-GEO-01/02 — capturar localização → campos preenchem + navegar disponível
+- [x] UC-080 edição — endereço com localização descarta coords + teclado permanece aberto (fix `7d6060e`)
 - [ ] Cloudflare SSL Full (strict)
 
 ---

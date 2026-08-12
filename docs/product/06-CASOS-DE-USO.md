@@ -71,7 +71,7 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 **Conferências:**
 - [ ] Só clientes PENDENTE entram na rota (atendidos hoje ficam de fora)?
 - [ ] A ordenação respeita a regra (atrasado → distância)?
-- [ ] O progresso (RouteProgress) mostra contadores corretos?
+- [x] O progresso (RouteProgress) mostra contadores corretos? *(validado em produção 12/08)*
 
 **Regras:** BR-048 a BR-051
 
@@ -1540,10 +1540,10 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 - "Navegar" **não aparece** quando não há alvo utilizável.
 
 **Conferências:**
-- [ ] Captura GPS no comércio preenche endereço + marca "Localização capturada"?
-- [ ] Captura GPS no endereço principal idem?
-- [ ] Editar texto → indicador "Não capturada" + botão Recapturar; navegação usa o texto novo?
-- [ ] **Editar texto com localização salva → coords descartadas + teclado do celular permanece aberto** (foco mantido no campo editado)?
+- [x] Captura GPS no comércio preenche endereço + marca "Localização capturada"? *(validado em produção 12/08)*
+- [x] Captura GPS no endereço principal idem? *(validado em produção 12/08)*
+- [x] Editar texto → indicador "Não capturada" + botão Recapturar; navegação usa o texto novo? *(validado em produção 12/08)*
+- [x] **Editar texto com localização salva → coords descartadas + teclado do celular permanece aberto** (foco mantido no campo editado)? *(validado em produção 12/08)*
 - [ ] Limpar endereço → coords zeradas (sem alvo)?
 - [ ] Permissão negada → erro visível, nada gravado?
 - [ ] Reverse geocode sem rede → coords mantidas + aviso "preencha manualmente"?
