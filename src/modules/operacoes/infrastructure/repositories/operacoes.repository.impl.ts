@@ -10,7 +10,7 @@ import type {
   RegistrarVisitaOutput,
   SnapshotAtraso,
 } from "../../application/ports/operacoes.repository.js"
-import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
+import { getLocalDateString, rangeDoDiaLocal } from "../../../../shared/utils/parseDateLocal.js"
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371
@@ -53,9 +53,7 @@ interface CobrancaRow {
 export class OperacoesRepository implements IOperacoesRepository {
   async listarCobrancasDoDia(userId: string, operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult> {
     const hoje = getLocalDateString(new Date())
-    const amanha = getLocalDateString(new Date(Date.now() + 86_400_000))
-    const inicio = `${hoje}T00:00:00.000Z`
-    const fim = `${amanha}T00:00:00.000Z`
+    const { inicio, fim } = rangeDoDiaLocal(hoje)
 
     const { rows } = await rawQuery<CobrancaRow>(`
       SELECT

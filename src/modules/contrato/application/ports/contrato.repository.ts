@@ -5,6 +5,7 @@ import type {
   CaixaConfig,
   MovimentacaoFinanceira,
 } from "../../domain/contrato.entity.js"
+import type { IPagamentoRepository } from "../../../pagamento/application/ports/pagamento.repository.js"
 
 export interface FindAllParams {
   clienteId?: string
@@ -42,6 +43,12 @@ export interface IContratoRepository {
   updateCaixaBase(userId: string, valor: number): Promise<void>
   saveMovimentacaoFinanceira(userId: string, mov: MovimentacaoFinanceira): Promise<void>
 
-  transaction<T>(userId: string, fn: (repo: IContratoRepository) => Promise<T>): Promise<T>
+  /**
+   * Executa `fn` dentro de uma transação real (PostgreSQL — PLAN-070).
+   * O callback recebe os dois repositórios **ligados à transação** (contrato + pagamento):
+   * qualquer escrita fora deles (repo de pool) NÃO participa da transação — atomicidade
+   * exige usar os repos passados aqui (pagamento/estorno mutam o agregado contrato+pagamento).
+   */
+  transaction<T>(userId: string, fn: (repo: IContratoRepository, pagamentoRepo: IPagamentoRepository) => Promise<T>): Promise<T>
   getSaldoAtual(userId: string): Promise<number>
 }

@@ -26,10 +26,10 @@ export class PagamentoController {
     pagamentoRepo: IPagamentoRepository,
     contratoRepo: IContratoRepository
   ) {
-    this.createPagamento = new CreatePagamentoUseCase(pagamentoRepo, contratoRepo)
+    this.createPagamento = new CreatePagamentoUseCase(contratoRepo)
     this.previewPagamento = new PreviewPagamentoUseCase(contratoRepo)
     this.listPagamentos = new ListPagamentosUseCase(pagamentoRepo)
-    this.estornarPagamento = new EstornarPagamentoUseCase(pagamentoRepo, contratoRepo)
+    this.estornarPagamento = new EstornarPagamentoUseCase(contratoRepo)
     this.adminRepository = new AdminRepository()
   }
 

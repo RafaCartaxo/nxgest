@@ -3,7 +3,7 @@ import { db, rawQuery, usuarios } from "../../../../database.js"
 import { MODULE_DEPENDENCIES, type ModuleId } from "../../domain/modules.js"
 import type { ImpactoDesativacao, ImpactoModuloItem } from "../../domain/impacto.js"
 import type { IImpactoDesativacaoQuery } from "../../application/ports/impacto-desativacao.port.js"
-import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
+import { getLocalDateString, rangeDoDiaLocal } from "../../../../shared/utils/parseDateLocal.js"
 
 /** Fecha o grafo para REMOÇÃO: módulos que dependem (transitivo) de um desligado. */
 function cascataDesativacao(modulosAtuais: ModuleId[], novosModulos: ModuleId[]): ModuleId[] {
@@ -56,9 +56,7 @@ export class ImpactoDesativacaoQuery implements IImpactoDesativacaoQuery {
     const userIds = userRows.map((r) => r.id)
     const { ph, args } = qIn(userIds)
     const hoje = getLocalDateString(new Date())
-    const amanha = getLocalDateString(new Date(Date.now() + 86_400_000))
-    const inicio = `${hoje}T00:00:00.000Z`
-    const fim = `${amanha}T00:00:00.000Z`
+    const { inicio, fim } = rangeDoDiaLocal(hoje)
 
     if (desligados.includes("clientes")) {
       const n = await count(`SELECT COUNT(*) AS c FROM clientes WHERE "deletedAt" IS NULL AND "userId" IN (${ph})`, ...args)

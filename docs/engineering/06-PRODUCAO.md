@@ -142,8 +142,8 @@ docker cp $CONTAINER:/tmp/backup.dump $OUT
 docker exec $CONTAINER rm -f /tmp/backup.dump
 pg_restore -l $OUT > /dev/null || { echo "ERRO: dump inválido"; exit 1; }
 # 2) Anexos (/data/uploads) — PLAN-042
-docker exec nxgest-app-1 sh -c "cd /data && tar czf $UPLOADS_TAR uploads 2>/dev/null || tar czf $UPLOADS_TAR --files-from /dev/null" || true
-docker cp nxgest-app-1:$UPLOADS_TAR $OUT_UPLOADS || true
+docker exec nxgestao-app-1 sh -c "cd /data && tar czf $UPLOADS_TAR uploads 2>/dev/null || tar czf $UPLOADS_TAR --files-from /dev/null" || true
+docker cp nxgestao-app-1:$UPLOADS_TAR $OUT_UPLOADS || true
 # 3) Retenção 14 dias
 find $BACKUP_DIR -name "pg-*.dump" -mtime +14 -delete
 find $BACKUP_DIR -name "uploads-*.tar.gz" -mtime +14 -delete
@@ -181,7 +181,7 @@ Script (para referência/recriação):
 set -euo pipefail
 STAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_DIR=/opt/backups
-CONTAINER=nxgest-app-1
+CONTAINER=nxgestao-app-1
 DB_PATH=/data/gestao.db
 TMP_DB=/data/backup-$STAMP.db
 OUT=$BACKUP_DIR/gestao-$STAMP.db
@@ -245,11 +245,11 @@ cd /opt/nxgestao
 docker compose -f docker-compose.prod.yml stop app
 
 # 2. Copiar o backup para dentro do volume
-docker cp ./gestao-<DATA>.db nxgest-app-1:/data/gestao.db
+docker cp ./gestao-<DATA>.db nxgestao-app-1:/data/gestao.db
 
 # 3. Restaurar anexos (PLAN-042), se houver uploads-<DATA>.tar.gz
-docker cp ./uploads-<DATA>.tar.gz nxgest-app-1:/data/uploads-<DATA>.tar.gz
-docker exec nxgest-app-1 sh -c "cd /data && rm -rf uploads && tar xzf uploads-<DATA>.tar.gz && rm -f uploads-<DATA>.tar.gz"
+docker cp ./uploads-<DATA>.tar.gz nxgestao-app-1:/data/uploads-<DATA>.tar.gz
+docker exec nxgestao-app-1 sh -c "cd /data && rm -rf uploads && tar xzf uploads-<DATA>.tar.gz && rm -f uploads-<DATA>.tar.gz"
 
 # 4. Subir de novo
 docker compose -f docker-compose.prod.yml start app

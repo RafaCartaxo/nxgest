@@ -3,6 +3,8 @@ import type { PgDatabase } from "drizzle-orm/pg-core"
 import { db, rawQuery, contratos, parcelas, movimentacoesFinanceiras, caixaConfig, pagamentos, clientes } from "../../../../database.js"
 import type { Contrato, Parcela, ContratoComParcelas, MovimentacaoFinanceira, CaixaConfig } from "../../domain/contrato.entity.js"
 import type { IContratoRepository, FindAllParams, FindAllResult } from "../../application/ports/contrato.repository.js"
+import type { IPagamentoRepository } from "../../../pagamento/application/ports/pagamento.repository.js"
+import { PagamentoRepository } from "../../../pagamento/infrastructure/repositories/pagamento.repository.impl.js"
 import { getLocalDateString, parseDateLocal } from "../../../../shared/utils/parseDateLocal.js"
 
 type ContratoRow = typeof contratos.$inferSelect
@@ -318,11 +320,12 @@ export class ContratoRepository implements IContratoRepository {
 
   async transaction<T>(
     _userId: string,
-    fn: (repo: IContratoRepository) => Promise<T>
+    fn: (repo: IContratoRepository, pagamentoRepo: IPagamentoRepository) => Promise<T>
   ): Promise<T> {
     return db.transaction(async (tx) => {
       const repo = new ContratoRepository(tx as unknown as PgDatabase<any, any, any>)
-      return fn(repo)
+      const pagamentoRepo = new PagamentoRepository(tx as unknown as PgDatabase<any, any, any>)
+      return fn(repo, pagamentoRepo)
     })
   }
 }
