@@ -56,24 +56,34 @@ export class CaixaRepository implements ICaixaRepository {
     const limit = params.limit ?? 20
     const offset = (page - 1) * limit
 
-    const { rows: data } = await rawQuery<AuditoriaCaixa & { adminNome: string | null }>(`
+    const { rows: data } = await rawQuery<{ id: string; operador_id: string; admin_id: string; valor_anterior: number; valor_novo: number; motivo: string; data: string; created_at: string; admin_nome: string | null }>(`
       SELECT
-        a.id, a."operadorId", a."adminId", a."valorAnterior", a."valorNovo", a.motivo, a.data, a."createdAt",
-        u.nome AS "adminNome"
+        a.id, a."operador_id", a."admin_id", a."valor_anterior", a."valor_novo", a.motivo, a.data, a."created_at",
+        u.nome AS "admin_nome"
       FROM auditoria_caixa a
-      LEFT JOIN usuarios u ON u.id = a."adminId"
-      WHERE a."operadorId" = ?
-      ORDER BY a."createdAt" DESC
+      LEFT JOIN usuarios u ON u.id = a."admin_id"
+      WHERE a."operador_id" = ?
+      ORDER BY a."created_at" DESC
       LIMIT ? OFFSET ?
     `, [operadorId, limit, offset])
 
     const { rows: countRows } = await rawQuery<{ total: number }>(`
-      SELECT COUNT(*) AS total FROM auditoria_caixa a WHERE a."operadorId" = ?
+      SELECT COUNT(*) AS total FROM auditoria_caixa a WHERE a."operador_id" = ?
     `, [operadorId])
 
     const total = Number(countRows[0]?.total ?? 0)
     return {
-      data,
+      data: data.map((r) => ({
+        id: r.id,
+        operadorId: r.operador_id,
+        adminId: r.admin_id,
+        valorAnterior: r.valor_anterior,
+        valorNovo: r.valor_novo,
+        motivo: r.motivo,
+        data: r.data,
+        createdAt: r.created_at,
+        adminNome: r.admin_nome,
+      })),
       pagination: {
         page,
         limit,
@@ -105,7 +115,7 @@ export class CaixaRepository implements ICaixaRepository {
     const conditions: string[] = ["1=1"]
     const bindings: string[] = []
 
-    conditions.push('m."userId" = ?')
+    conditions.push('m."user_id" = ?')
     bindings.push(userId)
 
     if (params.dataInicio) {
@@ -123,45 +133,45 @@ export class CaixaRepository implements ICaixaRepository {
 
     const where = conditions.join(" AND ")
 
-    const { rows: data } = await rawQuery<MovimentacaoFinanceira & { clienteNome: string | null; categoria: string | null }>(`
+    const { rows: data } = await rawQuery<{ id: string; tipo: string; valor: number; origem: string; origem_id: string; descricao: string | null; data: string; created_at: string; cliente_nome: string | null; categoria: string | null }>(`
       SELECT
-        m.id, m.tipo, m.valor, m.origem, m."origemId", m.descricao, m.data, m."createdAt",
+        m.id, m.tipo, m.valor, m.origem, m."origem_id", m.descricao, m.data, m."created_at",
         CASE
           WHEN m.origem = 'Cancelamento' THEN
             COALESCE(
               (SELECT cl.nome FROM clientes cl
-               JOIN contratos ct ON ct."clienteId" = cl.id
-               JOIN pagamentos pg ON pg."contratoId" = ct.id
-               WHERE pg.id = m."origemId"),
+               JOIN contratos ct ON ct."cliente_id" = cl.id
+               JOIN pagamentos pg ON pg."contrato_id" = ct.id
+               WHERE pg.id = m."origem_id"),
               (SELECT cl.nome FROM clientes cl
-               JOIN contratos ct ON ct."clienteId" = cl.id
-               WHERE ct.id = m."origemId")
+               JOIN contratos ct ON ct."cliente_id" = cl.id
+               WHERE ct.id = m."origem_id")
             )
           WHEN m.origem IN ('Contrato', 'Ajuste') THEN
             (SELECT cl.nome FROM clientes cl
-             JOIN contratos ct ON ct."clienteId" = cl.id
-             WHERE ct.id = m."origemId")
+             JOIN contratos ct ON ct."cliente_id" = cl.id
+             WHERE ct.id = m."origem_id")
           WHEN m.origem = 'Pagamento' THEN
             (SELECT cl.nome FROM clientes cl
-             JOIN contratos ct ON ct."clienteId" = cl.id
-             JOIN pagamentos pg ON pg."contratoId" = ct.id
-             WHERE pg.id = m."origemId")
+             JOIN contratos ct ON ct."cliente_id" = cl.id
+             JOIN pagamentos pg ON pg."contrato_id" = ct.id
+             WHERE pg.id = m."origem_id")
           WHEN m.origem = 'Gasto' THEN NULL
           ELSE NULL
-        END AS "clienteNome",
+        END AS "cliente_nome",
         CASE
           WHEN m.origem = 'Gasto' THEN
-            (SELECT g."categoria" FROM gastos g WHERE g.id = m."origemId" AND g."deletedAt" IS NULL)
+            (SELECT g."categoria" FROM gastos g WHERE g.id = m."origem_id" AND g."deleted_at" IS NULL)
           ELSE NULL
         END AS "categoria"
-      FROM "movimentacoesFinanceiras" m
+      FROM "movimentacoes_financeiras" m
       WHERE ${where}
-      ORDER BY m."createdAt" DESC
+      ORDER BY m."created_at" DESC
       LIMIT ? OFFSET ?
     `, [...bindings, limit, offset])
 
     const { rows: countRows } = await rawQuery<{ total: number }>(`
-      SELECT COUNT(*) AS total FROM "movimentacoesFinanceiras" m WHERE ${where}
+      SELECT COUNT(*) AS total FROM "movimentacoes_financeiras" m WHERE ${where}
     `, bindings)
 
     const total = Number(countRows[0]?.total ?? 0)
@@ -172,12 +182,12 @@ export class CaixaRepository implements ICaixaRepository {
         tipo: row.tipo as MovimentacaoFinanceira["tipo"],
         valor: row.valor,
         origem: row.origem as MovimentacaoFinanceira["origem"],
-        origemId: row.origemId || undefined,
+        origemId: row.origem_id || undefined,
         descricao: row.descricao ?? undefined,
-        clienteNome: row.clienteNome ?? undefined,
+        clienteNome: row.cliente_nome ?? undefined,
         categoria: row.categoria ?? undefined,
         data: row.data,
-        createdAt: row.createdAt,
+        createdAt: row.created_at,
       })),
       pagination: {
         page,
@@ -227,11 +237,11 @@ export class CaixaRepository implements ICaixaRepository {
     }
 
     const { rows: entradas } = await rawQuery<{ total: number }>(
-      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoesFinanceiras" WHERE tipo = 'entrada' AND "userId" = ?${filtro}`,
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoes_financeiras" WHERE tipo = 'entrada' AND "user_id" = ?${filtro}`,
       params,
     )
     const { rows: saidas } = await rawQuery<{ total: number }>(
-      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoesFinanceiras" WHERE tipo = 'saida' AND "userId" = ?${filtro}`,
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoes_financeiras" WHERE tipo = 'saida' AND "user_id" = ?${filtro}`,
       params,
     )
 
@@ -244,11 +254,11 @@ export class CaixaRepository implements ICaixaRepository {
 
   async getLucro(userId: string): Promise<number> {
     const { rows: entradas } = await rawQuery<{ total: number }>(
-      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoesFinanceiras" WHERE tipo = 'entrada' AND "userId" = ?`,
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoes_financeiras" WHERE tipo = 'entrada' AND "user_id" = ?`,
       [userId],
     )
     const { rows: saidas } = await rawQuery<{ total: number }>(
-      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoesFinanceiras" WHERE tipo = 'saida' AND "userId" = ?`,
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoes_financeiras" WHERE tipo = 'saida' AND "user_id" = ?`,
       [userId],
     )
     return (Number(entradas[0]?.total) || 0) - (Number(saidas[0]?.total) || 0)
@@ -257,10 +267,10 @@ export class CaixaRepository implements ICaixaRepository {
   async getAReceberHoje(userId: string): Promise<number> {
     const hoje = getLocalDateString(new Date())
     const { rows } = await rawQuery<{ total: number }>(
-      `SELECT COALESCE(SUM(p."saldoPendente"), 0) AS total
+      `SELECT COALESCE(SUM(p."saldo_pendente"), 0) AS total
          FROM parcelas p
-         JOIN contratos ct ON ct.id = p."contratoId"
-         WHERE p."dataVencimento" = ? AND p."saldoPendente" > 0 AND p."deletedAt" IS NULL AND ct."deletedAt" IS NULL AND ct."userId" = ?`,
+         JOIN contratos ct ON ct.id = p."contrato_id"
+         WHERE p."data_vencimento" = ? AND p."saldo_pendente" > 0 AND p."deleted_at" IS NULL AND ct."deleted_at" IS NULL AND ct."user_id" = ?`,
       [hoje, userId],
     )
     return Number(rows[0]?.total ?? 0)
@@ -271,7 +281,7 @@ export class CaixaRepository implements ICaixaRepository {
     const { rows } = await rawQuery<{ total: number }>(
       `SELECT COALESCE(SUM(valor), 0) AS total
          FROM pagamentos
-         WHERE data = ? AND "userId" = ?`,
+         WHERE data = ? AND "user_id" = ?`,
       [hoje, userId],
     )
     return Number(rows[0]?.total ?? 0)
@@ -279,9 +289,9 @@ export class CaixaRepository implements ICaixaRepository {
 
   async getVendasSemana(userId: string, dataInicio: string, dataFim: string): Promise<number> {
     const { rows } = await rawQuery<{ total: number }>(
-      `SELECT COALESCE(SUM("valorBase"), 0) AS total
+      `SELECT COALESCE(SUM("valor_base"), 0) AS total
          FROM contratos
-         WHERE "dataInicio" >= ? AND "dataInicio" <= ? AND "deletedAt" IS NULL AND "userId" = ?`,
+         WHERE "data_inicio" >= ? AND "data_inicio" <= ? AND "deleted_at" IS NULL AND "user_id" = ?`,
       [dataInicio, dataFim, userId],
     )
     return Number(rows[0]?.total ?? 0)

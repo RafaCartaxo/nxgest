@@ -276,11 +276,11 @@ export class ContratoRepository implements IContratoRepository {
     const caixa = await this.getCaixaConfig(userId)
     const base = caixa?.caixaBase ?? 0
     const { rows: entradas } = await rawQuery<{ total: number }>(
-      "SELECT COALESCE(SUM(valor), 0) AS total FROM \"movimentacoesFinanceiras\" WHERE tipo = 'entrada' AND \"userId\" = ?",
+      "SELECT COALESCE(SUM(valor), 0) AS total FROM \"movimentacoes_financeiras\" WHERE tipo = 'entrada' AND \"user_id\" = ?",
       [userId],
     )
     const { rows: saidas } = await rawQuery<{ total: number }>(
-      "SELECT COALESCE(SUM(valor), 0) AS total FROM \"movimentacoesFinanceiras\" WHERE tipo = 'saida' AND \"userId\" = ?",
+      "SELECT COALESCE(SUM(valor), 0) AS total FROM \"movimentacoes_financeiras\" WHERE tipo = 'saida' AND \"user_id\" = ?",
       [userId],
     )
     return base + (Number(entradas[0]?.total) || 0) - (Number(saidas[0]?.total) || 0)

@@ -23,6 +23,9 @@ import { join } from "node:path"
 import { runMigrations, pool } from "../src/database.js"
 
 // ---------------------------------------------------------------- helpers
+/** camelCase -> snake_case (SQLite camelCase -> PG snake, PLAN-070). */
+const snake = (n) => n.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2").toLowerCase()
+
 const TS_RE = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/
 const TIMESTAMP_COLS = new Set(["createdAt", "updatedAt"])
 
@@ -50,39 +53,28 @@ const TABLES = [
 
 /** Colunas por tabela (SQLite) + somas monetárias esperadas. */
 function columnsOf(sqlite, table) {
-  return sqlite.pragma(`table_info(${table})`).map((c) => c.name)
+  return sqlite.pragma(`table_info(${table})`).map((c) => snake(c.name))
 }
 
-const SUMS = {
-  parcelas: ["saldoPendente", "valorPrevisto"],
-  pagamentos: ["valor"],
-  movimentacoesFinanceiras: ["valor"],
-  caixa_config: ["caixaBase"],
-  gastos: ["valor"],
-  fechamentos_semanais: ["totalRecebido", "totalGasto", "resultado", "caixaBase", "saldoFechamento"],
-  auditoria_caixa: ["valorAnterior", "valorNovo"],
-  auditoria_estornos: ["valor"],
-  pagamento_parcelas: ["valor"],
-  snapshots_atraso: ["valorAtrasado"],
-  contratos: ["valorBase", "valorFinal", "percentualJuros"],
-}
+const SUMS = {"parcelas": ["saldo_pendente", "valor_previsto"], "pagamentos": ["valor"], "movimentacoesFinanceiras": ["valor"], "caixa_config": ["caixa_base"], "gastos": ["valor"], "fechamentos_semanais": ["total_recebido", "total_gasto", "resultado", "caixa_base", "saldo_fechamento"], "auditoria_caixa": ["valor_anterior", "valor_novo"], "auditoria_estornos": ["valor"], "pagamento_parcelas": ["valor"], "snapshots_atraso": ["valor_atrasado"], "contratos": ["valor_base", "valor_final", "percentual_juros"]}
+
 
 // Órfãos: FK → pai. (movimentacoes.origemId é polimórfico; auth_tokens.subjectId é polimórfico.)
 const ORPHAOS = [
-  ["contratos", "clienteId", "clientes"],
-  ["parcelas", "contratoId", "contratos"],
-  ["pagamentos", "contratoId", "contratos"],
-  ["pagamento_parcelas", "pagamentoId", "pagamentos"],
-  ["pagamento_parcelas", "parcelaId", "parcelas"],
-  ["historico_operacional", "clienteId", "clientes"],
-  ["historico_operacional", "contratoId", "contratos"],
-  ["anexos", "clienteId", "clientes"],
-  ["auditoria_caixa", "operadorId", "usuarios"],
-  ["auditoria_caixa", "adminId", "usuarios"],
-  ["auditoria_estornos", "pagamentoId", "pagamentos"],
-  ["auditoria_estornos", "operadorId", "usuarios"],
-  ["auditoria_estornos", "adminId", "usuarios"],
-  ["auditoria_modulos", "empresaId", "empresas"],
+  ["contratos", "cliente_id", "clientes"],
+  ["parcelas", "contrato_id", "contratos"],
+  ["pagamentos", "contrato_id", "contratos"],
+  ["pagamento_parcelas", "pagamento_id", "pagamentos"],
+  ["pagamento_parcelas", "parcela_id", "parcelas"],
+  ["historico_operacional", "cliente_id", "clientes"],
+  ["historico_operacional", "contrato_id", "contratos"],
+  ["anexos", "cliente_id", "clientes"],
+  ["auditoria_caixa", "operador_id", "usuarios"],
+  ["auditoria_caixa", "admin_id", "usuarios"],
+  ["auditoria_estornos", "pagamento_id", "pagamentos"],
+  ["auditoria_estornos", "operador_id", "usuarios"],
+  ["auditoria_estornos", "admin_id", "usuarios"],
+  ["auditoria_modulos", "empresa_id", "empresas"],
 ]
 
 // ---------------------------------------------------------------- migração
@@ -167,7 +159,7 @@ for (const [table, cols] of Object.entries(SUMS)) {
 
 // Amostras (últimos 5 por PK)
 function pkOf(table) {
-  return table === "caixa_config" ? "userId" : "id"
+  return table === "caixa_config" ? "user_id" : "id"
 }
 function deepEq(a, b, path = "") {
   if (typeof a === "number" && typeof b === "number") {
@@ -196,7 +188,7 @@ for (const table of TABLES) {
 // G6: nenhum timestamp no formato com espaço deve ter sobrado no destino
 {
   const { rows } = await pool.query(
-    `SELECT COUNT(*)::int AS c FROM empresas WHERE "createdAt" LIKE '% %'`,
+    `SELECT COUNT(*)::int AS c FROM empresas WHERE "created_at" LIKE '% %'`,
   )
   if (Number(rows[0].c) > 0) falhas.push(`G6: empresas."createdAt" com formato espaço (${rows[0].c})`)
 }

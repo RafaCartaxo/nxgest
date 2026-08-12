@@ -37,13 +37,13 @@ export class AdminRepository implements IAdminRepository {
     if (userIds.length === 0) return map
     const ph = userIds.map(() => "?").join(",")
     const [{ rows: clienteRows }, { rows: contratoRows }] = await Promise.all([
-      rawQuery<{ userId: string; total: number }>(
-        `SELECT c."userId", COUNT(*)::int AS total FROM clientes c WHERE c."deletedAt" IS NULL AND c."userId" IN (${ph}) GROUP BY c."userId"`, userIds),
-      rawQuery<{ userId: string; total: number }>(
-        `SELECT ct."userId", COUNT(*)::int AS total FROM contratos ct WHERE ct."deletedAt" IS NULL AND ct."estado" = 'Ativo' AND ct."userId" IN (${ph}) GROUP BY ct."userId"`, userIds),
+      rawQuery<{ user_id: string; total: number }>(
+        `SELECT c."user_id", COUNT(*)::int AS total FROM clientes c WHERE c."deleted_at" IS NULL AND c."user_id" IN (${ph}) GROUP BY c."user_id"`, userIds),
+      rawQuery<{ user_id: string; total: number }>(
+        `SELECT ct."user_id", COUNT(*)::int AS total FROM contratos ct WHERE ct."deleted_at" IS NULL AND ct."estado" = 'Ativo' AND ct."user_id" IN (${ph}) GROUP BY ct."user_id"`, userIds),
     ])
-    for (const r of clienteRows) map.get(r.userId)!.totalClientes = r.total
-    for (const r of contratoRows) map.get(r.userId)!.contratosAtivos = r.total
+    for (const r of clienteRows) map.get(r.user_id)!.totalClientes = r.total
+    for (const r of contratoRows) map.get(r.user_id)!.contratosAtivos = r.total
     return map
   }
 
