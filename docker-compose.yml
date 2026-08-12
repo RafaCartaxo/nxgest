@@ -6,8 +6,8 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=8080
-      # DB_PATH mantido para derivar o diretório de uploads; o banco usa DATABASE_URL.
-      - DB_PATH=/data/gestao.db
+      # UPLOADS_DIR: pasta de uploads (banco usa DATABASE_URL).
+      - UPLOADS_DIR=/data/uploads
       - DATABASE_URL=postgres://${PG_USER:-nxgest}:${PG_PASSWORD:-nxgest-dev}@postgres:5432/${PG_DB:-nxgest}
       - JWT_SECRET=dev-secret-do-not-use-in-production
       - ADMIN_DEFAULT_PASSWORD=admin123

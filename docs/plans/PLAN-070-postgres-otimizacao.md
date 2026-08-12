@@ -1,8 +1,8 @@
 # PLAN-070 — Migração para PostgreSQL + Otimização da Camada de Dados
 
-**Status:** ✅ **Em produção — cutover concluído (12/08)** · PostgreSQL em produção (`db:connected`), staging em PG, CI/CD verdes · ⏳ débitos pós-estabilização
+**Status:** ✅ **Em produção — cutover concluído (12/08)** · **Modelo finalizado** (money numeric, datas DATE, FKs, índice parcial) em branch `feat/db-hardening` · ⏳ aplicar o modelo em staging/prod + estabilização
 
-**Versão:** 1.6
+**Versão:** 1.7
 
 **Início:** 11/08/2026
 

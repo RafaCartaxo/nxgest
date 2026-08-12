@@ -2,14 +2,13 @@ import path from "node:path"
 import fs from "node:fs"
 
 /**
- * Diretório base dos uploads (PLAN-042).
+ * Diretório base dos uploads (PLAN-042/070).
  *
- * - Docker/compose: `DB_PATH=/data/gestao.db` → `/data/uploads` (volume `nxgest_data`).
- * - Dev local: `DB_PATH=gestao.db` → `./uploads` (ao lado do banco).
- * - Sempre sobrescrevível por `UPLOADS_DIR`.
+ * - Docker/compose: `UPLOADS_DIR=/data/uploads` (volume persistente).
+ * - Dev local: default `./uploads`.
+ * Sempre sobrescrevível por `UPLOADS_DIR`.
  */
-export const UPLOADS_DIR = process.env.UPLOADS_DIR
-  ?? path.join(path.dirname(process.env.DB_PATH ?? "gestao.db"), "uploads")
+export const UPLOADS_DIR = process.env.UPLOADS_DIR ?? "uploads"
 
 export function garantirUploadsDir(): void {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true })

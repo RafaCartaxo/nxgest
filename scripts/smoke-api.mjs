@@ -4,7 +4,7 @@
  *
  * Uso: node scripts/smoke-api.mjs [--baseUrl http://localhost:3002]
  *
- * Requer instância isolada (ex.: PORT=3002 DB_PATH=/tmp/nxgest-smoke.db npx tsx src/main.ts)
+ * Requer instância isolada (ex.: DATABASE_URL=postgres://... PORT=3002 npx tsx src/main.ts)
  * com o seed aplicado (senha padrão teste123!).
  *
  * Não testa rate limit (429) — bloquearia o IP da própria execução.

@@ -104,8 +104,8 @@ if (Number(probe.rows[0].c) > 0 && !FORCE) {
   process.exit(1)
 }
 if (FORCE) {
-  for (const t of TABLES) await pool.query(`TRUNCATE TABLE "${t}"`)
-  console.log("==> TRUNCATE nas tabelas de destino")
+  for (const t of TABLES) await pool.query(`TRUNCATE TABLE "${t}" CASCADE`)
+  console.log("==> TRUNCATE (CASCADE) nas tabelas de destino")
 }
 
 const sqlite = new Database(SRC, { readonly: true })

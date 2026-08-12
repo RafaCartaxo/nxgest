@@ -162,7 +162,7 @@ export class OperacoesRepository implements IOperacoesRepository {
       SELECT COALESCE(SUM(p."saldoPendente"), 0) AS total
       FROM parcelas p
       JOIN contratos ct ON ct.id = p."contratoId"
-      WHERE p."dataVencimento" > ? AND p."dataVencimento" <= (?::date + INTERVAL '7 days')::text
+      WHERE p."dataVencimento" > ? AND p."dataVencimento" <= (?::date + INTERVAL '7 days')
         AND p."saldoPendente" > 0
         AND p."deletedAt" IS NULL
         AND ct."deletedAt" IS NULL
