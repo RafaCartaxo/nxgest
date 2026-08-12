@@ -6,13 +6,25 @@
  *  - dinheiro  double precision → NUMERIC(12,2)
  *  - datas     date-only TEXT    → DATE   (timestamps createdAt/updatedAt... permanecem TEXT)
  *  - FKs       adiciona constraints (idempotente) nas relações conhecidas
- *  - índice parcial das parcelas + extension pg_trgm (via runMigrations)
+ *  - extension pg_trgm + índice parcial das parcelas
  *
- * Idempotente (verifica information_schema). Uso:
- *   DATABASE_URL=postgres://... npx tsx scripts/migrate-modelo.mjs
- * Exit 0 = ok · Exit 1 = falha (ex.: data fora de 'YYYY-MM-DD' antes do cast).
+ * Conexão direta via `pg` (sem TS/tsx) para rodar com `node` no container de runtime:
+ *   docker exec nxgestao-app-1 node scripts/migrate-modelo.mjs
+ * (a imagem copia `scripts/` e tem `pg`; DATABASE_URL do container aponta para o postgres interno)
+ *
+ * Idempotente (verifica information_schema). Exit 0 = ok · Exit 1 = falha.
  */
-import { runMigrations, pool } from "../src/database.js"
+import pg from "pg"
+
+const { Pool, types } = pg
+types.setTypeParser(1700, (v) => (v === null ? null : parseFloat(v)))
+types.setTypeParser(20, (v) => (v === null ? null : parseInt(v, 10)))
+types.setTypeParser(1082, (v) => (v === null ? null : v))
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL ?? "postgres://nxgest:nxgest-dev@localhost:5433/nxgest",
+  max: 5,
+})
 
 const DATE_COLS = {
   movimentacoesFinanceiras: ["data"],
@@ -82,7 +94,11 @@ async function hasFk(table, col) {
   return rows.length > 0
 }
 
-await runMigrations()
+// Extension + índice parcial (espelham o runMigrations para banco existente)
+await pool.query("CREATE EXTENSION IF NOT EXISTS pg_trgm")
+await pool.query(
+  'CREATE INDEX IF NOT EXISTS "idx_parcelas_venc_partial" ON "parcelas"("contratoId", "dataVencimento", "saldoPendente") WHERE "saldoPendente" > 0 AND "deletedAt" IS NULL',
+)
 
 // ---- G4: pre-check de datas (não castar valor inválido) ----
 const falhas = []
