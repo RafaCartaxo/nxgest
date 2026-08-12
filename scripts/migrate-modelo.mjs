@@ -30,7 +30,7 @@ const pool = new Pool({
 const snake = (n) => n.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2").toLowerCase()
 
 const DATE_COLS = {
-  movimentacoesFinanceiras: ["data"],
+  movimentacoes_financeiras: ["data"],
   parcelas: ["data_vencimento", "data_quitacao"],
   contratos: ["data_inicio"],
   gastos: ["data"],
@@ -45,7 +45,7 @@ const DATE_COLS = {
 const MONEY_COLS = {
   contratos: ["valor_base", "percentual_juros", "valor_final"],
   parcelas: ["valor_previsto", "valor_pago", "saldo_pendente"],
-  movimentacoesFinanceiras: ["valor"],
+  movimentacoes_financeiras: ["valor"],
   caixa_config: ["caixa_base"],
   auditoria_caixa: ["valor_anterior", "valor_novo"],
   pagamentos: ["valor"],
