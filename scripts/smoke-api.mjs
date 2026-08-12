@@ -9,43 +9,46 @@
  *
  * Não testa rate limit (429) — bloquearia o IP da própria execução.
  */
-import Database from "better-sqlite3"
+import pg from "pg"
 import { createHash, randomUUID } from "node:crypto"
 
-const SMOKE_DB_PATH = process.env.SMOKE_DB_PATH || "/tmp/nxgest-smoke.db"
+const { Pool, types } = pg
+types.setTypeParser(20, (v) => (v === null ? null : parseInt(v, 10)))
+types.setTypeParser(1700, (v) => (v === null ? null : parseFloat(v)))
+
+const SMOKE_POOL = new Pool({
+  connectionString: process.env.DATABASE_URL ?? "postgres://nxgest:nxgest-dev@localhost:5433/nxgest",
+  max: 2,
+})
 
 /** Leituras diretas no banco isolado (auditoria). Retorna -1 se indisponível. */
-function auditoriaCount(tipo, empresaId) {
+async function auditoriaCount(tipo, empresaId) {
   try {
-    const d = new Database(SMOKE_DB_PATH, { readonly: true })
-    const row = d.prepare("SELECT COUNT(*) AS c FROM auditoria_modulos WHERE tipo = ? AND empresaId = ?").get(tipo, empresaId)
-    d.close()
-    return row?.c ?? 0
+    const { rows } = await SMOKE_POOL.query("SELECT COUNT(*)::int AS c FROM auditoria_modulos WHERE tipo = $1 AND \"empresaId\" = $2", [tipo, empresaId])
+    return rows[0]?.c ?? 0
   } catch {
     return -1
   }
 }
 
 /** Conta tokens de `auth_tokens` (PLAN-065) por sujeito/tipo. -1 se indisponível. */
-function authTokensCount(subjectId, tipo, naoUsadosOnly = false) {
+async function authTokensCount(subjectId, tipo, naoUsadosOnly = false) {
   try {
-    const d = new Database(SMOKE_DB_PATH, { readonly: true })
-    const sql = `SELECT COUNT(*) AS c FROM auth_tokens WHERE subjectId = ? AND tipo = ?${naoUsadosOnly ? " AND usadoEm IS NULL" : ""}`
-    const row = d.prepare(sql).get(subjectId, tipo)
-    d.close()
-    return row?.c ?? 0
+    const sql = `SELECT COUNT(*)::int AS c FROM auth_tokens WHERE \"subjectId\" = $1 AND tipo = $2${naoUsadosOnly ? " AND \"usadoEm\" IS NULL" : ""}`
+    const { rows } = await SMOKE_POOL.query(sql, [subjectId, tipo])
+    return rows[0]?.c ?? 0
   } catch {
     return -1
   }
 }
 
 /** Insere um token conhecido (raw) p/ testar ativar/reset sem ler o console. */
-function inserirAuthToken(subjectId, tipo, rawToken, expiraEm, usadoEm = null) {
-  const d = new Database(SMOKE_DB_PATH)
+async function inserirAuthToken(subjectId, tipo, rawToken, expiraEm, usadoEm = null) {
   const hash = createHash("sha256").update(rawToken).digest("hex")
-  d.prepare("INSERT INTO auth_tokens (id, subjectId, tipo, hash, expiraEm, usadoEm, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)")
-    .run(randomUUID(), subjectId, tipo, hash, expiraEm, usadoEm, new Date().toISOString())
-  d.close()
+  await SMOKE_POOL.query(
+    "INSERT INTO auth_tokens (id, \"subjectId\", tipo, hash, \"expiraEm\", \"usadoEm\", \"createdAt\") VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    [randomUUID(), subjectId, tipo, hash, expiraEm, usadoEm, new Date().toISOString()],
+  )
 }
 
 /** Hash SHA-256 de um token (para comparar o que está no banco — SE-06). */
@@ -1184,12 +1187,12 @@ async function main() {
   })
 
   await t("MOD-G-3", "force → 200 ecoando impacto + auditoria gravada", async () => {
-    const antes = auditoriaCount("modulos", guardEmpresaId)
+    const antes = await auditoriaCount("modulos", guardEmpresaId)
     const r = await req("PATCH", `/api/admin/empresas/${guardEmpresaId}/modulos`, { token: superToken, body: { modulos: semClientesCascata, force: true, motivo: "smoke guard force" } })
     expect(r, 200, "force sobrepõe")
     if (r.data?.impacto?.bloqueado !== true) throw new Error(`impacto não ecoado: ${JSON.stringify(r.data?.impacto?.bloqueado)}`)
     if (r.data?.modulos?.includes("clientes")) throw new Error("clientes ainda ativo após force")
-    if (auditoriaCount("modulos", guardEmpresaId) !== antes + 1) throw new Error("auditoria de modulos não gravada")
+    if (await auditoriaCount("modulos", guardEmpresaId) !== antes + 1) throw new Error("auditoria de modulos não gravada")
   })
 
   await t("MOD-G-5", "Reativar após force → dados preservados + /me e endpoints voltam a 200", async () => {
@@ -1295,7 +1298,7 @@ async function main() {
     const me = await req("GET", "/api/auth/me", { token: superToken })
     expect(me, 200, "super /me intacto")
     await req("PATCH", `/api/admin/empresas/${suspEmpresaId}`, { token: superToken, body: { ativa: true } })
-    if (auditoriaCount("empresa", suspEmpresaId) < 2) throw new Error("auditoria de suspensão não gravada")
+    if (await auditoriaCount("empresa", suspEmpresaId) < 2) throw new Error("auditoria de suspensão não gravada")
   })
 
   // ---------- PERSISTÊNCIA DESATIVAÇÃO/ATIVAÇÃO (full cycle — garantir que a mudança é FEITA e RESPEITADA) ----------
@@ -1400,14 +1403,12 @@ async function main() {
     if (r.data.status !== "convidado") throw new Error(`status=${r.data.status}`)
     convId = r.data.id
     convEmail = email
-    if (authTokensCount(convId, "convite") < 1) throw new Error("token de convite não criado")
+    if (await authTokensCount(convId, "convite") < 1) throw new Error("token de convite não criado")
   })
 
   await t("AC-16", "convidado → senhaHash NULL no banco", async () => {
-    const d = new Database(SMOKE_DB_PATH, { readonly: true })
-    const row = d.prepare("SELECT senhaHash FROM usuarios WHERE id = ?").get(convId)
-    d.close()
-    if (row?.senhaHash !== null) throw new Error(`senhaHash=${row?.senhaHash}`)
+    const { rows: ac16 } = await SMOKE_POOL.query("SELECT \"senhaHash\" FROM usuarios WHERE id = $1", [convId])
+    if (ac16[0]?.["senhaHash"] !== null) throw new Error(`senhaHash=${ac16[0]?.["senhaHash"]}`)
   })
 
   await t("AC-13", "login de convidado → 403 ACCOUNT_PENDING", async () => {
@@ -1417,16 +1418,14 @@ async function main() {
   })
 
   await t("SE-01", "token de convite armazenado como HASH (64 hex)", async () => {
-    const d = new Database(SMOKE_DB_PATH, { readonly: true })
-    const row = d.prepare("SELECT hash FROM auth_tokens WHERE subjectId = ? AND tipo = 'convite' AND usadoEm IS NULL ORDER BY createdAt DESC LIMIT 1").get(convId)
-    d.close()
-    if (!row?.hash || !/^[0-9a-f]{64}$/.test(row.hash)) throw new Error(`hash=${row?.hash}`)
+    const { rows: se01 } = await SMOKE_POOL.query("SELECT hash FROM auth_tokens WHERE \"subjectId\" = $1 AND tipo = 'convite' AND \"usadoEm\" IS NULL ORDER BY \"createdAt\" DESC LIMIT 1", [convId])
+    if (!se01[0]?.hash || !/^[0-9a-f]{64}$/.test(se01[0].hash)) throw new Error(`hash=${se01[0]?.hash}`)
   })
 
   await t("SE-04", "reenviar-convite invalida o token anterior", async () => {
     const r = await req("PATCH", `/api/admin/operadores/${convId}/reenviar-convite`, { token: adminToken })
     expect(r, 200, "reenviar convite")
-    if (authTokensCount(convId, "convite", true) !== 1) throw new Error("deveria haver exatamente 1 token não usado")
+    if (await authTokensCount(convId, "convite", true) !== 1) throw new Error("deveria haver exatamente 1 token não usado")
   })
 
   await t("AC-17", "reenviar-convite em conta ativa → 409", async () => {
@@ -1443,7 +1442,7 @@ async function main() {
 
   await t("AC-05", "ativar com token válido → ok + login funciona", async () => {
     const raw = "rawtoken-ativar-123456"
-    inserirAuthToken(convId, "convite", raw, new Date(Date.now() + 3600e3).toISOString())
+    await inserirAuthToken(convId, "convite", raw, new Date(Date.now() + 3600e3).toISOString())
     const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "novaSenha123" } })
     expect(r, 200, "ativar")
     const login = await req("POST", "/api/auth/login", { body: { email: convEmail, senha: "novaSenha123" } })
@@ -1460,7 +1459,7 @@ async function main() {
 
   await t("AC-19", "ativar com token de tipo errado → 400", async () => {
     const raw = "rawtoken-reset-000000"
-    inserirAuthToken(convId, "reset", raw, new Date(Date.now() + 3600e3).toISOString())
+    await inserirAuthToken(convId, "reset", raw, new Date(Date.now() + 3600e3).toISOString())
     const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "outra123" } })
     expect(r, 400, "tipo errado")
   })
@@ -1469,7 +1468,7 @@ async function main() {
     const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Conv Exp", email: `convexp.${Date.now()}@uorak.com`, role: "operator" } })
     expect(criado, 201, "criar convidado expirado")
     const raw = "rawtoken-expirado-000"
-    inserirAuthToken(criado.data.id, "convite", raw, new Date(Date.now() - 1000).toISOString())
+    await inserirAuthToken(criado.data.id, "convite", raw, new Date(Date.now() - 1000).toISOString())
     const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "outra123" } })
     expect(r, 400, "expirado")
     if (r.data.code !== "TOKEN_EXPIRED") throw new Error(`code=${r.data.code}`)
@@ -1499,7 +1498,7 @@ async function main() {
     expect(criado, 201, "criar convidado")
     const r = await req("POST", "/api/auth/forgot", { body: { email: criado.data.email } })
     expect(r, 200, "forgot convidado")
-    if (authTokensCount(criado.data.id, "reset") !== 0) throw new Error("convidado não deve gerar reset")
+    if (await authTokensCount(criado.data.id, "reset") !== 0) throw new Error("convidado não deve gerar reset")
   })
 
   let resetUserId
@@ -1508,7 +1507,7 @@ async function main() {
     expect(criado, 201, "criar ativo p/ reset")
     resetUserId = criado.data.id
     const raw = "rawtoken-reset-123456"
-    inserirAuthToken(resetUserId, "reset", raw, new Date(Date.now() + 1800e3).toISOString())
+    await inserirAuthToken(resetUserId, "reset", raw, new Date(Date.now() + 1800e3).toISOString())
     const r = await req("POST", "/api/auth/reset", { body: { token: raw, senha: "senhaNova123" } })
     expect(r, 200, "reset")
     const login = await req("POST", "/api/auth/login", { body: { email: criado.data.email, senha: "senhaNova123" } })
@@ -1526,7 +1525,7 @@ async function main() {
     const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Reset Exp", email: `resetexp.${Date.now()}@uorak.com`, role: "operator", senha: "senha123" } })
     expect(criado, 201, "criar p/ reset expirado")
     const raw = "rawtoken-reset-expired"
-    inserirAuthToken(criado.data.id, "reset", raw, new Date(Date.now() - 1000).toISOString())
+    await inserirAuthToken(criado.data.id, "reset", raw, new Date(Date.now() - 1000).toISOString())
     const r = await req("POST", "/api/auth/reset", { body: { token: raw, senha: "outra123" } })
     expect(r, 400, "reset expirado")
     if (r.data.code !== "TOKEN_EXPIRED") throw new Error(`code=${r.data.code}`)
@@ -1542,7 +1541,7 @@ async function main() {
     const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "SM1", email, role: "operator" } })
     expect(criado, 201, "criar convidado SM1")
     const raw = "rawtoken-sm1"
-    inserirAuthToken(criado.data.id, "convite", raw, new Date(Date.now() + 3600e3).toISOString())
+    await inserirAuthToken(criado.data.id, "convite", raw, new Date(Date.now() + 3600e3).toISOString())
     await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "sm1Senha123" } })
     const login = await req("POST", "/api/auth/login", { body: { email, senha: "sm1Senha123" } })
     expect(login, 200, "login SM1")
@@ -1557,7 +1556,7 @@ async function main() {
     const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "SM2", email, role: "operator", senha: "sm2Antiga123" } })
     expect(criado, 201, "criar p/ SM2")
     const raw = "rawtoken-sm2"
-    inserirAuthToken(criado.data.id, "reset", raw, new Date(Date.now() + 1800e3).toISOString())
+    await inserirAuthToken(criado.data.id, "reset", raw, new Date(Date.now() + 1800e3).toISOString())
     await req("POST", "/api/auth/reset", { body: { token: raw, senha: "sm2Nova123" } })
     const login = await req("POST", "/api/auth/login", { body: { email, senha: "sm2Nova123" } })
     expect(login, 200, "login SM2 nova")
@@ -1948,17 +1947,13 @@ async function main() {
 
   // ---------- LEADS COMERCIAIS (PLAN-064) ----------
   let leadId, leadEmail
-  const countLeads = () => {
-    const d = new Database(SMOKE_DB_PATH, { readonly: true })
-    const row = d.prepare("SELECT COUNT(*) AS c FROM leads").get()
-    d.close()
-    return row?.c ?? 0
+  const countLeads = async () => {
+    const { rows } = await SMOKE_POOL.query("SELECT COUNT(*)::int AS c FROM leads")
+    return rows[0]?.c ?? 0
   }
-  const countEmpresas = () => {
-    const d = new Database(SMOKE_DB_PATH, { readonly: true })
-    const row = d.prepare("SELECT COUNT(*) AS c FROM empresas").get()
-    d.close()
-    return row?.c ?? 0
+  const countEmpresas = async () => {
+    const { rows } = await SMOKE_POOL.query("SELECT COUNT(*)::int AS c FROM empresas")
+    return rows[0]?.c ?? 0
   }
 
   await t("LD-01", "criar lead público → 201 NOVO + token de confirmação", async () => {
@@ -1967,29 +1962,25 @@ async function main() {
     expect(r, 201, "criar lead")
     if (r.data.lead.status !== "NOVO") throw new Error(`status=${r.data.lead.status}`)
     leadId = r.data.lead.id
-    const tok = authTokensCount(leadId, "lead")
+    const tok = await authTokensCount(leadId, "lead")
     if (tok < 1) throw new Error("token de confirmação não criado")
-    const d = new Database(SMOKE_DB_PATH)
-    const row = d.prepare("SELECT hash FROM auth_tokens WHERE subjectId = ? AND tipo = 'lead' AND usadoEm IS NULL ORDER BY createdAt DESC LIMIT 1").get(leadId)
-    d.close()
-    if (!row?.hash?.match(/^[0-9a-f]{64}$/)) throw new Error("token não armazenado como hash SHA-256")
+    const { rows: ld01 } = await SMOKE_POOL.query("SELECT hash FROM auth_tokens WHERE \"subjectId\" = $1 AND tipo = 'lead' AND \"usadoEm\" IS NULL ORDER BY \"createdAt\" DESC LIMIT 1", [leadId])
+    if (!ld01[0]?.hash?.match(/^[0-9a-f]{64}$/)) throw new Error("token não armazenado como hash SHA-256")
   })
 
   await t("LD-05", "criar lead NÃO cria empresa/usuário (isolamento)", async () => {
-    const antes = countEmpresas()
-    const d = new Database(SMOKE_DB_PATH)
-    const user = d.prepare("SELECT id FROM usuarios WHERE email = ?").get(leadEmail)
-    d.close()
-    if (user) throw new Error("lead virou usuário")
-    if (countEmpresas() !== antes) throw new Error("lead criou empresa")
+    const antes = await countEmpresas()
+    const { rows: ld05 } = await SMOKE_POOL.query("SELECT id FROM usuarios WHERE email = $1", [leadEmail])
+    if (ld05.length > 0) throw new Error("lead virou usuário")
+    if ((await countEmpresas()) !== antes) throw new Error("lead criou empresa")
   })
 
   await t("LD-02", "e-mail duplicado → 200 jaExistia (não duplica)", async () => {
-    const antes = countLeads()
+    const antes = await countLeads()
     const r = await req("POST", "/api/leads", { body: { nomeResponsavel: "Outra", empresa: "Outra Ltda", email: leadEmail } })
     expect(r, 200, "lead duplicado")
     if (!r.data.jaExistia) throw new Error("jaExistia não sinalizado")
-    if (countLeads() !== antes) throw new Error("lead duplicado criado")
+    if ((await countLeads()) !== antes) throw new Error("lead duplicado criado")
   })
 
   await t("LD-15", "e-mail que já é usuário → 409 LEAD_EMAIL_JA_USUARIO", async () => {
@@ -2007,7 +1998,7 @@ async function main() {
 
   await t("LD-06", "confirmar token → EMAIL_CONFIRMADO (single-use)", async () => {
     const raw = "lead-raw-confirm"
-    inserirAuthToken(leadId, "lead", raw, new Date(Date.now() + 3600e3).toISOString())
+    await inserirAuthToken(leadId, "lead", raw, new Date(Date.now() + 3600e3).toISOString())
     const r = await req("POST", "/api/leads/confirmar", { body: { token: raw } })
     expect(r, 200, "confirmar lead")
     if (r.data.lead.status !== "EMAIL_CONFIRMADO") throw new Error(`status=${r.data.lead.status}`)
@@ -2021,7 +2012,7 @@ async function main() {
 
   await t("LD-07", "token de confirmação expirado → 400 TOKEN_EXPIRED", async () => {
     const raw = "lead-raw-expired"
-    inserirAuthToken(leadId, "lead", raw, new Date(Date.now() - 1000).toISOString())
+    await inserirAuthToken(leadId, "lead", raw, new Date(Date.now() - 1000).toISOString())
     const r = await req("POST", "/api/leads/confirmar", { body: { token: raw } })
     expect(r, 400, "token expirado")
     if (r.data.code !== "TOKEN_EXPIRED") throw new Error(`code=${r.data.code}`)
@@ -2048,14 +2039,14 @@ async function main() {
   })
 
   await t("LD-11", "converter → empresa + admin (convite) + CONVERTIDO + auditoria", async () => {
-    const antesEmpresas = countEmpresas()
+    const antesEmpresas = await countEmpresas()
     const r = await req("POST", `/api/admin/leads/${leadId}/converter`, { token: superToken })
     expect(r, 200, "converter")
     if (r.data.lead.status !== "CONVERTIDO") throw new Error(`status=${r.data.lead.status}`)
     if (!r.data.lead.convertidoEmpresaId) throw new Error("empresaId ausente")
     if (!r.data.lead.convertidoPor) throw new Error("auditoria convertidoPor ausente")
     if (!r.data.lead.convertidoEm) throw new Error("auditoria convertidoEm ausente")
-    if (countEmpresas() !== antesEmpresas + 1) throw new Error("empresa não criada")
+    if ((await countEmpresas()) !== antesEmpresas + 1) throw new Error("empresa não criada")
     // admin convidado (sem senha) → login 403 ACCOUNT_PENDING
     const login = await req("POST", "/api/auth/login", { body: { email: leadEmail, senha: SENHA } })
     expect(login, 403, "admin convidado")

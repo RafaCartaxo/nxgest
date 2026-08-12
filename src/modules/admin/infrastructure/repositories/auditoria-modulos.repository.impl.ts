@@ -15,6 +15,6 @@ export class AuditoriaModulosRepository implements IAuditoriaModulosWriter {
       force: input.force ? 1 : 0,
       motivo: input.motivo ?? null,
       createdAt: new Date().toISOString(),
-    }).run()
+    })
   }
 }

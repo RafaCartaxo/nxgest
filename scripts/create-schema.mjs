@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 /**
- * Cria o schema do banco isolado sem subir o servidor (CI/smoke).
+ * Cria o schema do banco isolado sem subir o servidor (CI/smoke) — versão PostgreSQL (PLAN-070).
  *
- * Equivalente ao boot do `src/main.ts` (que roda `createTables()`), mas sem
+ * Equivalente ao boot do `src/main.ts` (que roda `runMigrations()` + `seedBasico()`), mas sem
  * abrir porta — evita o double-boot que causava `EADDRINUSE` no CI.
  *
- * Uso: DB_PATH=/tmp/nxgest-smoke.db npx tsx scripts/create-schema.mjs
+ * Uso: DATABASE_URL=postgres://... npx tsx scripts/create-schema.mjs
  * Exit 0 = schema criado/atualizado. Exit 1 = falha.
  */
-process.env.DB_PATH = process.env.DB_PATH ?? "/tmp/nxgest-smoke.db"
-
-const { createTables } = await import("../src/database.js")
-await createTables()
-console.log(`Schema criado/atualizado em ${process.env.DB_PATH}`)
+const { runMigrations, seedBasico } = await import("../src/database.js")
+await runMigrations()
+await seedBasico()
+console.log(`Schema criado/atualizado em ${process.env.DATABASE_URL ?? "(DATABASE_URL default)"}`)

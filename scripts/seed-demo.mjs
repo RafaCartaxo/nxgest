@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Seed de demonstração — dataset fake realista para o NX Gest.
+// Seed de demonstração — dataset fake realista para o NX Gest (versão PostgreSQL, PLAN-070).
 //
 // RESET TOTAL: apaga todos os dados operacionais, usuários e empresas, e recria:
 //   - Super admin "NX Gest" (super@nxgest.com)
@@ -12,16 +12,21 @@
 // Senha padrão de todos os usuários: teste123!
 // Emails no padrão <segundo-nome>.nx@uorak.com
 //
-// Uso: npm run seed:demo   (backend PARADO — o banco é reescrito)
-import Database from "better-sqlite3"
+// Uso: DATABASE_URL=postgres://... npx tsx scripts/seed-demo.mjs
+// (o schema deve existir — rodar scripts/create-schema.mjs antes)
 import bcrypt from "bcryptjs"
 import { randomUUID } from "node:crypto"
-import { copyFileSync } from "node:fs"
+import { pool } from "../src/database.js"
 
-const DB_PATH = process.env.DB_PATH ?? "gestao.db"
 const PASSWORD = "teste123!"
 const TODAY = new Date()
 TODAY.setHours(12, 0, 0, 0)
+
+const q = async (sql, params = []) => {
+  let i = 0
+  const s = sql.replace(/\?/g, () => `$${++i}`)
+  await pool.query(s, params)
+}
 
 function dateStr(d) {
   const y = d.getFullYear()
@@ -182,51 +187,37 @@ const categoriasGasto = [
 const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
-// ---------- Conecta e faz backup ----------
-const ts = new Date().toISOString().replace(/[:.]/g, "-")
-copyFileSync(DB_PATH, `${DB_PATH}.backup-${ts}`)
-const sqlite = new Database(DB_PATH)
-sqlite.pragma("foreign_keys = ON")
-sqlite.pragma("journal_mode = WAL")
-const nowISO = new Date().toISOString()
-
 // ---------- Reset total ----------
-sqlite.exec(`
-  DELETE FROM pagamento_parcelas;
-  DELETE FROM pagamentos;
-  DELETE FROM parcelas;
-  DELETE FROM contratos;
-  DELETE FROM clientes;
-  DELETE FROM movimentacoesFinanceiras;
-  DELETE FROM gastos;
-  DELETE FROM fechamentos_semanais;
-  DELETE FROM snapshots_atraso;
-  DELETE FROM historico_operacional;
-  DELETE FROM caixa_config;
-  DELETE FROM auditoria_caixa;
-  DELETE FROM usuarios;
-  DELETE FROM empresas;
-`)
+const nowISO = new Date().toISOString()
+const RESET_TABLES = [
+  "pagamento_parcelas", "pagamentos", "parcelas", "contratos", "clientes",
+  "movimentacoesFinanceiras", "gastos", "fechamentos_semanais", "snapshots_atraso",
+  "historico_operacional", "caixa_config", "auditoria_caixa", "auditoria_estornos",
+  "auditoria_modulos", "anexos", "auth_tokens", "leads", "usuarios", "empresas",
+]
+for (const table of RESET_TABLES) await q(`DELETE FROM "${table}"`)
 
 // ---------- Usuários ----------
 const hash = bcrypt.hashSync(PASSWORD, 10)
 const superId = randomUUID()
-sqlite.prepare("INSERT INTO usuarios (id, nome, email, senhaHash, role, createdAt, empresaId) VALUES (?, ?, ?, ?, 'super_admin', ?, NULL)")
-  .run(superId, "NX Gest", "super@nxgest.com", hash, nowISO)
+await q("INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\", \"empresaId\") VALUES ($1, $2, $3, $4, 'super_admin', $5, NULL)",
+  [superId, "NX Gest", "super@nxgest.com", hash, nowISO])
 
 const empresaIds = empresas.map(() => randomUUID())
-const stmtEmpresa = sqlite.prepare("INSERT INTO empresas (id, nome, createdAt) VALUES (?, ?, ?)")
-for (const [i, nome] of empresas.entries()) stmtEmpresa.run(empresaIds[i], nome, nowISO)
+for (const [i, nome] of empresas.entries()) {
+  await q("INSERT INTO empresas (id, nome, \"createdAt\") VALUES ($1, $2, $3)", [empresaIds[i], nome, nowISO])
+}
 
-const stmtUser = sqlite.prepare("INSERT INTO usuarios (id, nome, email, senhaHash, role, createdAt, empresaId) VALUES (?, ?, ?, ?, ?, ?, ?)")
 for (const a of admins) {
-  stmtUser.run(randomUUID(), a.nome, a.email, hash, "admin", nowISO, empresaIds[a.empresa])
+  await q("INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\", \"empresaId\") VALUES ($1, $2, $3, $4, 'admin', $5, $6)",
+    [randomUUID(), a.nome, a.email, hash, nowISO, empresaIds[a.empresa]])
 }
 const operadorIds = {}
 for (const o of operadores) {
   const id = randomUUID()
   operadorIds[o.email] = id
-  stmtUser.run(id, o.nome, o.email, hash, "operator", nowISO, empresaIds[o.empresa])
+  await q("INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\", \"empresaId\") VALUES ($1, $2, $3, $4, 'operator', $5, $6)",
+    [id, o.nome, o.email, hash, nowISO, empresaIds[o.empresa]])
 }
 
 // Total emprestado por operador (para definir caixa base ao final — cobertura + margem)
@@ -234,40 +225,24 @@ const totalEmprestado = {}
 for (const o of operadores) totalEmprestado[operadorIds[o.email]] = 0
 
 // ---------- Clientes, contratos, pagamentos, movimentações ----------
-const stmtCliente = sqlite.prepare(`
-  INSERT INTO clientes (id, nome, cpf, comercio, telefone, telefoneComercio, logradouro, numero,
-    complemento, bairro, cidade, estado, lat, lng, comercioLogradouro, comercioNumero,
-    comercioBairro, comercioCidade, comercioEstado, comercioLat, comercioLng,
-    createdAt, updatedAt, userId)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-`)
-const stmtContrato = sqlite.prepare(`
-  INSERT INTO contratos (id, clienteId, valorBase, percentualJuros, valorFinal, quantidadeParcelas,
-    dataInicio, dataFinal, estado, createdAt, updatedAt, userId)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-`)
-const stmtParcela = sqlite.prepare(`
-  INSERT INTO parcelas (id, contratoId, numero, valorPrevisto, valorPago, saldoPendente, estado,
-    dataVencimento, dataQuitacao, createdAt, updatedAt)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-`)
-const stmtPagamento = sqlite.prepare(`
-  INSERT INTO pagamentos (id, contratoId, valor, data, createdAt, userId) VALUES (?, ?, ?, ?, ?, ?)
-`)
-const stmtPagParcela = sqlite.prepare(`
-  INSERT INTO pagamento_parcelas (id, pagamentoId, parcelaId, valor) VALUES (?, ?, ?, ?)
-`)
-const stmtMov = sqlite.prepare(`
-  INSERT INTO movimentacoesFinanceiras (id, tipo, valor, origem, origemId, descricao, data, createdAt, userId)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-`)
-const stmtGasto = sqlite.prepare(`
-  INSERT INTO gastos (id, valor, categoria, observacao, data, createdAt, userId) VALUES (?, ?, ?, ?, ?, ?, ?)
-`)
-const stmtHistorico = sqlite.prepare(`
-  INSERT INTO historico_operacional (id, clienteId, contratoId, tipo, dataPromessa, createdAt, userId)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
-`)
+const SQL_CLIENTE = `INSERT INTO clientes (id, nome, cpf, comercio, telefone, "telefoneComercio", logradouro, numero,
+    complemento, bairro, cidade, estado, lat, lng, "comercioLogradouro", "comercioNumero",
+    "comercioBairro", "comercioCidade", "comercioEstado", "comercioLat", "comercioLng",
+    "createdAt", "updatedAt", "userId")
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+const SQL_CONTRATO = `INSERT INTO contratos (id, "clienteId", "valorBase", "percentualJuros", "valorFinal", "quantidadeParcelas",
+    "dataInicio", "dataFinal", estado, "createdAt", "updatedAt", "userId")
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+const SQL_PARCELA = `INSERT INTO parcelas (id, "contratoId", numero, "valorPrevisto", "valorPago", "saldoPendente", estado,
+    "dataVencimento", "dataQuitacao", "createdAt", "updatedAt")
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+const SQL_PAGAMENTO = `INSERT INTO pagamentos (id, "contratoId", valor, data, "createdAt", "userId") VALUES (?, ?, ?, ?, ?, ?)`
+const SQL_PAG_PARCELA = `INSERT INTO pagamento_parcelas (id, "pagamentoId", "parcelaId", valor) VALUES (?, ?, ?, ?)`
+const SQL_MOV = `INSERT INTO "movimentacoesFinanceiras" (id, tipo, valor, origem, "origemId", descricao, data, "createdAt", "userId")
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+const SQL_GASTO = `INSERT INTO gastos (id, valor, categoria, observacao, data, "createdAt", "userId") VALUES (?, ?, ?, ?, ?, ?, ?)`
+const SQL_HISTORICO = `INSERT INTO historico_operacional (id, "clienteId", "contratoId", tipo, "dataPromessa", "createdAt", "userId")
+  VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 const cpfsUsados = new Set()
 let totalClientes = 0
@@ -295,12 +270,12 @@ for (const op of operadores) {
     const lng = Number((Math.random() * 0.14 + -34.88).toFixed(6))
 
     const clienteId = randomUUID()
-    stmtCliente.run(
+    await q(SQL_CLIENTE, [
       clienteId, nome, cpf, pick(comercios), telefone, telefone, logradouro, numero,
       "", bairro, cidade, "PB", null, null,
       logradouro, numero, bairro, cidade, "PB", lat, lng,
-      nowISO, nowISO, opId
-    )
+      nowISO, nowISO, opId,
+    ])
     totalClientes++
 
     // 1 contrato por cliente: juros 20%, 15-25 parcelas
@@ -319,19 +294,19 @@ for (const op of operadores) {
     const dataInicioStr = dateStr(dataInicio)
 
     const contratoId = randomUUID()
-    stmtContrato.run(
+    await q(SQL_CONTRATO, [
       contratoId, clienteId, valorBase, 20, valorFinal, qtd,
       dataInicioStr, calcularDataFinal(dataInicio, qtd), "Ativo",
-      nowISO, nowISO, opId
-    )
+      nowISO, nowISO, opId,
+    ])
     totalContratos++
 
     // Movimentação de criação do contrato (saída do valor base)
-    stmtMov.run(
+    await q(SQL_MOV, [
       randomUUID(), "saida", valorBase, "Contrato", contratoId,
       `Criação de contrato - ${qtd}x R$ ${(valorFinal / qtd).toFixed(2)}`,
-      dataInicioStr, nowISO, opId
-    )
+      dataInicioStr, nowISO, opId,
+    ])
     totalMov++
 
     // Parcelas
@@ -340,24 +315,24 @@ for (const op of operadores) {
     for (let i = 0; i < parcelas.length; i++) {
       const p = parcelas[i]
       const paga = i < parcelasPagas
-      stmtParcela.run(
+      await q(SQL_PARCELA, [
         p.id, p.contratoId, p.numero, p.valorPrevisto,
         paga ? p.valorPrevisto : 0,
         paga ? 0 : p.valorPrevisto,
         paga ? "Paga" : "Pendente",
         p.dataVencimento,
         paga ? p.dataVencimento : null,
-        nowISO, nowISO
-      )
+        nowISO, nowISO,
+      ])
       if (paga) {
         const pagId = randomUUID()
-        stmtPagamento.run(pagId, contratoId, p.valorPrevisto, p.dataVencimento, nowISO, opId)
-        stmtPagParcela.run(randomUUID(), pagId, p.id, p.valorPrevisto)
-        stmtMov.run(
+        await q(SQL_PAGAMENTO, [pagId, contratoId, p.valorPrevisto, p.dataVencimento, nowISO, opId])
+        await q(SQL_PAG_PARCELA, [randomUUID(), pagId, p.id, p.valorPrevisto])
+        await q(SQL_MOV, [
           randomUUID(), "entrada", p.valorPrevisto, "Pagamento", pagId,
           `Pagamento parcela ${p.numero}/${qtd}`,
-          p.dataVencimento, nowISO, opId
-        )
+          p.dataVencimento, nowISO, opId,
+        ])
         totalPagamentos++
         totalMov++
       }
@@ -365,14 +340,13 @@ for (const op of operadores) {
 
     // Se todas as parcelas foram pagas, contrato finalizado
     if (parcelasPagas >= qtd) {
-      sqlite.prepare("UPDATE contratos SET estado = 'Finalizado' WHERE id = ?").run(contratoId)
+      await q("UPDATE contratos SET estado = 'Finalizado' WHERE id = $1", [contratoId])
     }
-
     // Histórico operacional (visitas/promessas) para alguns contratos
     if (Math.random() < 0.4) {
       const tipo = Math.random() < 0.5 ? "visitado" : Math.random() < 0.6 ? "nao_localizado" : "promessa"
       const dataPromessa = tipo === "promessa" ? dateStr(addDays(TODAY, rnd(1, 5))) : null
-      stmtHistorico.run(randomUUID(), clienteId, contratoId, tipo, dataPromessa, nowISO, opId)
+      await q(SQL_HISTORICO, [randomUUID(), clienteId, contratoId, tipo, dataPromessa, nowISO, opId])
     }
   }
 
@@ -381,37 +355,35 @@ for (const op of operadores) {
   for (let g = 0; g < numGastos; g++) {
     const valor = rnd(15, 80) + Math.round(Math.random() * 90) / 100
     const diasAtras = rnd(0, 6)
-    stmtGasto.run(
+    await q(SQL_GASTO, [
       randomUUID(), valor, pick(categoriasGasto), null,
-      dateStr(addDays(TODAY, -diasAtras)), nowISO, opId
-    )
-    stmtMov.run(
+      dateStr(addDays(TODAY, -diasAtras)), nowISO, opId,
+    ])
+    await q(SQL_MOV, [
       randomUUID(), "saida", valor, "Gasto", randomUUID(),
-      pick(categoriasGasto), dateStr(addDays(TODAY, -diasAtras)), nowISO, opId
-    )
+      pick(categoriasGasto), dateStr(addDays(TODAY, -diasAtras)), nowISO, opId,
+    ])
     totalGastos++
     totalMov++
   }
 }
 
 // ---------- Caixa base por operador (cobertura dos empréstimos + margem) ----------
-const stmtCaixa = sqlite.prepare("INSERT INTO caixa_config (userId, caixaBase, updatedAt) VALUES (?, ?, ?)")
 for (const op of operadores) {
   const opId = operadorIds[op.email]
   const emprestado = totalEmprestado[opId] || 0
   // Base cobre o total emprestado com ~15% de margem (caixa realista e positivo)
   const caixaBase = Math.round((emprestado * 1.15 + rnd(0, 1000)) * 100) / 100
-  stmtCaixa.run(opId, caixaBase, nowISO)
+  await q("INSERT INTO caixa_config (\"userId\", \"caixaBase\", \"updatedAt\") VALUES ($1, $2, $3)", [opId, caixaBase, nowISO])
 }
 
 // ---------- Resumo ----------
-const totalUsers = sqlite.prepare("SELECT COUNT(*) AS n FROM usuarios").get().n
-const totalEmp = sqlite.prepare("SELECT COUNT(*) AS n FROM empresas").get().n
+const totalUsers = (await pool.query("SELECT COUNT(*) AS n FROM usuarios")).rows[0].n
+const totalEmp = (await pool.query("SELECT COUNT(*) AS n FROM empresas")).rows[0].n
 console.log("=== Seed de demonstração concluído ===")
-console.log(`Backup: ${DB_PATH}.backup-${ts}`)
 console.log(`Empresas: ${totalEmp} | Usuários: ${totalUsers} (1 super + ${admins.length} admins + ${operadores.length} operadores)`)
 console.log(`Clientes: ${totalClientes} | Contratos: ${totalContratos} | Pagamentos: ${totalPagamentos} | Gastos: ${totalGastos} | Movimentações: ${totalMov}`)
 console.log(`Senha padrão: ${PASSWORD}`)
 console.log(`Super admin: NX Gest (super@nxgest.com)`)
 console.log(`Admin de sistema: admin@cobranca.com`)
-sqlite.close()
+await pool.end()

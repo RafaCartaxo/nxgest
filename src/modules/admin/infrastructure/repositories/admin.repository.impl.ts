@@ -113,22 +113,22 @@ export class AdminRepository implements IAdminRepository {
     const demoteToSocio = data.role === "socio" && existing.role === "admin"
     const reassign = data.reatribuirParaChefeId ?? null
 
-    db.transaction((tx) => {
+    await db.transaction(async (tx) => {
       if (demoteToOperator) {
-        const sub = tx.select({ total: count() }).from(usuarios).where(and(eq(usuarios.chefeId, id), isNull(usuarios.deletedAt))).get()
+        const sub = (await tx.select({ total: count() }).from(usuarios).where(and(eq(usuarios.chefeId, id), isNull(usuarios.deletedAt))).limit(1))[0]
         if ((sub?.total ?? 0) > 0) {
           if (reassign) {
-            tx.update(usuarios).set({ chefeId: reassign }).where(and(eq(usuarios.chefeId, id), isNull(usuarios.deletedAt))).run()
+            await tx.update(usuarios).set({ chefeId: reassign }).where(and(eq(usuarios.chefeId, id), isNull(usuarios.deletedAt)))
           } else {
             throw new NaoPodeRebaixarComSubordinadosError("Rebaixe/reatribua os operadores antes de rebaixar para operador.", sub?.total ?? 0)
           }
         }
       }
       if (demoteToSocio) {
-        const sub = tx.select({ total: count() }).from(usuarios).where(and(eq(usuarios.chefeId, id), eq(usuarios.role, "socio"), isNull(usuarios.deletedAt))).get()
+        const sub = (await tx.select({ total: count() }).from(usuarios).where(and(eq(usuarios.chefeId, id), eq(usuarios.role, "socio"), isNull(usuarios.deletedAt))).limit(1))[0]
         if ((sub?.total ?? 0) > 0) {
           if (reassign) {
-            tx.update(usuarios).set({ chefeId: reassign }).where(and(eq(usuarios.chefeId, id), eq(usuarios.role, "socio"), isNull(usuarios.deletedAt))).run()
+            await tx.update(usuarios).set({ chefeId: reassign }).where(and(eq(usuarios.chefeId, id), eq(usuarios.role, "socio"), isNull(usuarios.deletedAt)))
           } else {
             throw new NaoPodeRebaixarComSubordinadosError("Rebaixe/reatribua os sócios antes de rebaixar para sócio.", sub?.total ?? 0)
           }
@@ -143,7 +143,7 @@ export class AdminRepository implements IAdminRepository {
       if (data.chefeId !== undefined) updateData.chefeId = data.chefeId
       if (data.foto !== undefined) updateData.foto = data.foto
 
-      tx.update(usuarios).set(updateData).where(eq(usuarios.id, id)).run()
+      await tx.update(usuarios).set(updateData).where(eq(usuarios.id, id))
     })
 
     return this.findById(id, empresaId, scopeUserIds)

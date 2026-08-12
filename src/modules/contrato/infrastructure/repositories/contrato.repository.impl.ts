@@ -1,6 +1,6 @@
 import { eq, and, isNull, sql, count, inArray } from "drizzle-orm"
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3"
-import { db, sqlite, contratos, parcelas, movimentacoesFinanceiras, caixaConfig, pagamentos, clientes } from "../../../../database.js"
+import type { PgDatabase } from "drizzle-orm/pg-core"
+import { db, rawQuery, contratos, parcelas, movimentacoesFinanceiras, caixaConfig, pagamentos, clientes } from "../../../../database.js"
 import type { Contrato, Parcela, ContratoComParcelas, MovimentacaoFinanceira, CaixaConfig } from "../../domain/contrato.entity.js"
 import type { IContratoRepository, FindAllParams, FindAllResult } from "../../application/ports/contrato.repository.js"
 import { getLocalDateString, parseDateLocal } from "../../../../shared/utils/parseDateLocal.js"
@@ -44,9 +44,9 @@ function rowToParcela(row: ParcelaRow): Parcela {
 }
 
 export class ContratoRepository implements IContratoRepository {
-  private drizzle: BetterSQLite3Database
+  private drizzle: PgDatabase<any, any, any>
 
-  constructor(drizzle?: BetterSQLite3Database) {
+  constructor(drizzle?: PgDatabase<any, any, any>) {
     this.drizzle = drizzle ?? db
   }
 
@@ -164,7 +164,7 @@ export class ContratoRepository implements IContratoRepository {
       ? await this.drizzle
           .select({
             contratoId: parcelas.contratoId,
-            total: sql<number>`COALESCE(SUM(parcelas.saldoPendente), 0)`,
+            total: sql<number>`COALESCE(SUM(${parcelas.saldoPendente}), 0)`,
             pagas: sql<number>`COALESCE(SUM(CASE WHEN ${parcelas.estado} = 'Paga' THEN 1 ELSE 0 END), 0)`,
             emAtraso: sql<number>`COALESCE(SUM(CASE WHEN ${parcelas.dataVencimento} < ${hoje} AND ${parcelas.saldoPendente} > 0 THEN ${parcelas.saldoPendente} ELSE 0 END), 0)`,
             parcelasEmAtraso: sql<number>`COALESCE(SUM(CASE WHEN ${parcelas.dataVencimento} < ${hoje} AND ${parcelas.saldoPendente} > 0 THEN 1 ELSE 0 END), 0)`,
@@ -266,13 +266,15 @@ export class ContratoRepository implements IContratoRepository {
   async getSaldoAtual(userId: string): Promise<number> {
     const caixa = await this.getCaixaConfig(userId)
     const base = caixa?.caixaBase ?? 0
-    const entradas = sqlite
-      .prepare("SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'entrada' AND userId = ?")
-      .get(userId) as { total: number }
-    const saidas = sqlite
-      .prepare("SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'saida' AND userId = ?")
-      .get(userId) as { total: number }
-    return base + (Number(entradas.total) || 0) - (Number(saidas.total) || 0)
+    const { rows: entradas } = await rawQuery<{ total: number }>(
+      "SELECT COALESCE(SUM(valor), 0) AS total FROM \"movimentacoesFinanceiras\" WHERE tipo = 'entrada' AND \"userId\" = ?",
+      [userId],
+    )
+    const { rows: saidas } = await rawQuery<{ total: number }>(
+      "SELECT COALESCE(SUM(valor), 0) AS total FROM \"movimentacoesFinanceiras\" WHERE tipo = 'saida' AND \"userId\" = ?",
+      [userId],
+    )
+    return base + (Number(entradas[0]?.total) || 0) - (Number(saidas[0]?.total) || 0)
   }
 
   async getCaixaConfig(userId: string): Promise<CaixaConfig | null> {
@@ -315,17 +317,12 @@ export class ContratoRepository implements IContratoRepository {
   }
 
   async transaction<T>(
-    userId: string,
+    _userId: string,
     fn: (repo: IContratoRepository) => Promise<T>
   ): Promise<T> {
-    sqlite.exec("BEGIN IMMEDIATE")
-    try {
-      const result = await fn(this)
-      sqlite.exec("COMMIT")
-      return result
-    } catch (error) {
-      sqlite.exec("ROLLBACK")
-      throw error
-    }
+    return db.transaction(async (tx) => {
+      const repo = new ContratoRepository(tx as unknown as PgDatabase<any, any, any>)
+      return fn(repo)
+    })
   }
 }

@@ -19,7 +19,6 @@
     "audit:styles": "node scripts/audit-styles.mjs",
     "audit:ui": "node scripts/audit-ui.mjs",
     "audit:modules": "node scripts/audit-modules.mjs",
-    "migracao:test": "tsx scripts/test-migracao.mjs",
     "docs:collection": "node scripts/build-collection.mjs",
     "smoke:api": "node scripts/smoke-api.mjs",
     "mail:test": "tsx scripts/mail-test.ts"
@@ -35,6 +34,7 @@
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
+    "pg": "^8.23.0",
     "uuid": "^11.1.1",
     "zod": "^3.23.0"
   },
@@ -48,6 +48,7 @@
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.2.0",
+    "@types/pg": "^8.21.0",
     "@types/uuid": "^10.0.0",
     "@vitest/coverage-v8": "^1.6.1",
     "concurrently": "^9.2.4",

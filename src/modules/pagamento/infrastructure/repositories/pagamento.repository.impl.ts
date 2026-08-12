@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm"
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3"
+import type { PgDatabase } from "drizzle-orm/pg-core"
 import { db, pagamentos, pagamentoParcelas, auditoriaEstornos } from "../../../../database.js"
 import type { Pagamento, PagamentoParcela, PagamentoComDetalhes } from "../../domain/pagamento.entity.js"
 import type { IPagamentoRepository, AuditoriaEstorno } from "../../application/ports/pagamento.repository.js"
@@ -8,9 +8,9 @@ type PagamentoRow = typeof pagamentos.$inferSelect
 type PagamentoParcelaRow = typeof pagamentoParcelas.$inferSelect
 
 export class PagamentoRepository implements IPagamentoRepository {
-  private drizzle: BetterSQLite3Database
+  private drizzle: PgDatabase<any, any, any>
 
-  constructor(drizzle?: BetterSQLite3Database) {
+  constructor(drizzle?: PgDatabase<any, any, any>) {
     this.drizzle = drizzle ?? db
   }
 

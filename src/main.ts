@@ -4,7 +4,7 @@ import cors from "cors"
 import helmet from "helmet"
 import path from "path"
 import { fileURLToPath } from "url"
-import { createTables } from "./database.js"
+import { runMigrations, seedBasico } from "./database.js"
 import { healthRoutes } from "./modules/health/presentation/routes/health.routes.js"
 import { authRoutes } from "./modules/auth/presentation/routes/auth.routes.js"
 import { authMiddleware } from "./shared/middleware/auth.middleware.js"
@@ -22,7 +22,8 @@ import { leadPublicRoutes } from "./modules/leads/presentation/routes/lead.route
 import { leadAdminRoutes } from "./modules/leads/presentation/routes/lead.admin.routes.js"
 import { garantirUploadsDir } from "./shared/utils/uploads.js"
 
-await createTables()
+await runMigrations()
+await seedBasico()
 garantirUploadsDir()
 
 const app = express()

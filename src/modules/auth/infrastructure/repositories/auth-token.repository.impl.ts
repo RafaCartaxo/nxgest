@@ -14,7 +14,7 @@ export class AuthTokenRepository implements IAuthTokenRepository {
       expiraEm: input.expiraEm,
       usadoEm: null,
       createdAt: new Date().toISOString(),
-    }).run()
+    })
   }
 
   async findByHashAndTipo(hash: string, tipo: AuthTokenTipo): Promise<AuthToken | null> {
@@ -25,14 +25,14 @@ export class AuthTokenRepository implements IAuthTokenRepository {
   }
 
   async marcarUsado(id: string, agora: string): Promise<void> {
-    await db.update(authTokens).set({ usadoEm: agora }).where(eq(authTokens.id, id)).run()
+    await db.update(authTokens).set({ usadoEm: agora }).where(eq(authTokens.id, id))
   }
 
   async invalidarPorTipo(subjectId: string, tipo: AuthTokenTipo): Promise<void> {
-    await db.update(authTokens).set({ usadoEm: new Date().toISOString() }).where(and(eq(authTokens.subjectId, subjectId), eq(authTokens.tipo, tipo), isNull(authTokens.usadoEm))).run()
+    await db.update(authTokens).set({ usadoEm: new Date().toISOString() }).where(and(eq(authTokens.subjectId, subjectId), eq(authTokens.tipo, tipo), isNull(authTokens.usadoEm)))
   }
 
   async removerPorTipo(subjectId: string, tipo: AuthTokenTipo): Promise<void> {
-    await db.delete(authTokens).where(and(eq(authTokens.subjectId, subjectId), eq(authTokens.tipo, tipo))).run()
+    await db.delete(authTokens).where(and(eq(authTokens.subjectId, subjectId), eq(authTokens.tipo, tipo)))
   }
 }

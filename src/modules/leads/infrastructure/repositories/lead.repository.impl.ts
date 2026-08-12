@@ -39,7 +39,7 @@ export class LeadRepository implements ILeadRepository {
       descartadoPor: null,
       descarteMotivo: null,
       createdAt: new Date().toISOString(),
-    }).run()
+    })
     const [row] = await db.select().from(leads).where(eq(leads.id, id)).limit(1)
     return toLead(row)
   }
@@ -64,12 +64,12 @@ export class LeadRepository implements ILeadRepository {
   }
 
   async updateStatus(id: string, status: Lead["status"]): Promise<Lead | null> {
-    await db.update(leads).set({ status }).where(eq(leads.id, id)).run()
+    await db.update(leads).set({ status }).where(eq(leads.id, id))
     return this.findById(id)
   }
 
   async marcarConfirmado(id: string): Promise<Lead | null> {
-    await db.update(leads).set({ status: "EMAIL_CONFIRMADO" }).where(eq(leads.id, id)).run()
+    await db.update(leads).set({ status: "EMAIL_CONFIRMADO" }).where(eq(leads.id, id))
     return this.findById(id)
   }
 
@@ -79,7 +79,7 @@ export class LeadRepository implements ILeadRepository {
       convertidoEmpresaId: data.empresaId,
       convertidoEm: new Date().toISOString(),
       convertidoPor: data.por,
-    }).where(eq(leads.id, id)).run()
+    }).where(eq(leads.id, id))
     return this.findById(id)
   }
 
@@ -93,11 +93,11 @@ export class LeadRepository implements ILeadRepository {
       descartadoEm: new Date().toISOString(),
       descartadoPor: data.por,
       descarteMotivo: data.motivo,
-    }).where(eq(leads.id, id)).run()
+    }).where(eq(leads.id, id))
     return this.findById(id)
   }
 
   async deleteById(id: string): Promise<void> {
-    await db.delete(leads).where(eq(leads.id, id)).run()
+    await db.delete(leads).where(eq(leads.id, id))
   }
 }
