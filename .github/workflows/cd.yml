@@ -1,0 +1,91 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch/tag/commit para deployar em produção (default: main)"
+        required: false
+        default: "main"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-prod
+  cancel-in-progress: false
+
+jobs:
+  # Gate de promoção: produção só recebe código que passou CI + staging.
+  # - Automático: dispara quando o workflow CI (que roda test+smoke+deploy-staging)
+  #   termina com sucesso no push à main.
+  # - Manual: workflow_dispatch com input ref.
+  validate:
+    name: valida CI + staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Garante que o CI do push passou
+        if: github.event_name == 'workflow_run'
+        run: |
+          test "${{ github.event.workflow_run.conclusion }}" = "success" || {
+            echo "ERRO: CI do push falhou — produção bloqueada." >&2
+            exit 1
+          }
+          echo "==> CI verde no commit ${{ github.event.workflow_run.head_sha }}"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}
+
+      - name: CI gates no ref (tsc + testes unit/UI) — apenas no manual
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npm test
+
+      - name: Staging saudável (gate de promoção)
+        run: |
+          curl -fsS https://nxgestao.duckdns.org/api/health
+
+  deploy-prod:
+    name: deploy-prod (nxgest.com.br)
+    needs: validate
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}
+      - name: Deploy no VPS (SSH)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/nxgestao || { echo "ERRO: /opt/nxgestao não encontrado no VPS"; exit 1; }
+            REF="${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}"
+            git fetch origin
+            git checkout main
+            git reset --hard "$REF"
+            bash scripts/deploy.sh
+      - name: Health check pós-deploy
+        run: |
+          sleep 10
+          for i in 1 2 3 4 5; do
+            if curl -fsS https://nxgest.com.br/api/health >/dev/null 2>&1; then
+              echo "==> Produção OK: https://nxgest.com.br"
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "ERRO: health check de produção falhou após o deploy" >&2
+          exit 1
