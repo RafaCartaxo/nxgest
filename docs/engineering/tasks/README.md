@@ -51,3 +51,4 @@ tasks/
 | [08/08/2026](2026-08-08/CHECKLIST.md) | Lote de fixes (anexos/CSP · GPS · rota · PWA · e-mail · IPv6) + deploy prod | Concluído |
 | [08/08/2026](2026-08-08/HANDOFF.md) | Handoff consolidado — estado e pendências | Concluído |
 | [10/08/2026](2026-08-10/CHECKLIST.md) | Sincronização de documentação + organização (paths infra, índices, planos, ROADMAP, STATUS.md) | Concluído |
+| [11/08/2026](2026-08-11/CHECKLIST.md) | Pipeline CI/CD completo + staging de homologação (CI verde pela 1ª vez · CD prod com gate) | Concluído |

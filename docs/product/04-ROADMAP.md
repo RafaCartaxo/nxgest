@@ -617,7 +617,7 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 - **Prioridade:** Média — melhor experiência mobile
 
 ### 5.5 Testes automatizados
-- **API/backend:** `scripts/smoke-api.mjs` (**248 cenários** da `07` — validado 08/08) ✅.
+- **API/backend:** `scripts/smoke-api.mjs` (**250 cenários** da `07` — validado 11/08) ✅.
 - **UI/frontend:** em execução — `PLAN-067-testes.md` (vitest + jsdom + RTL + coverage + CI). **Base atual: 78 testes verdes** (18 arquivos: use-cases auth/leads + shared/segurança + lógica front + LoginPage UI); CI valida `tsc · build · audits · npm test · docs:audit` + job smoke isolado.
 - **Prioridade:** Média — cobertura de UI ainda cresce via PLAN-067 (F1/F2/F3)
 
@@ -658,7 +658,7 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 ---
 
 ### 5.8 Testes automatizados
-- **API:** `scripts/smoke-api.mjs` ✅ (**248 cenários**, validado 08/08)
+- **API:** `scripts/smoke-api.mjs` ✅ (**250 cenários**, validado 11/08)
 - **UI (T1):** em execução — `PLAN-067-testes.md` (vitest + jsdom + RTL + coverage + CI; **78 testes verdes** + CI no push)
 - **Prioridade:** Média — cobertura de UI cresce via PLAN-067
 

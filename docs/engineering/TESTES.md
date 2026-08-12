@@ -20,7 +20,7 @@ npm run test:coverage # report v8 (reporta, NÃO bloqueia no início — meta so
 | Unit shared/segurança | `src/shared/utils/*.test.ts` | `scope` (resolveUsuarioAlvo), `foto` (magic bytes/sem SVG), `jwt` (fail-closed), `clientIp` (CF-Connecting-IP) |
 | Unit front lógica | `frontend/src/shared/**/*.test.ts` | `geo/alvo`, `modules`, `capacidades`, `geo/estadoGps` |
 | Component/UI | `frontend/src/**/*.test.tsx` (`// @vitest-environment jsdom`) | `LoginPage` (toggle senha UC-041, submit) — destrava P022 |
-| Integração API | `scripts/smoke-api.mjs` | 248 cenários (DB isolado + seed) |
+| Integração API | `scripts/smoke-api.mjs` | 250 cenários (DB isolado + seed) |
 
 ## Convenções
 

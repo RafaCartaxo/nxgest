@@ -82,7 +82,7 @@ As credenciais **não ficam no repositório**. Localização dos valores:
 | Serviço | Conta | Como acessar | Detalhes |
 |---------|-------|--------------|----------|
 | Painel VPS (`vpshostingservice.co`) | `rafael.cartaxo@hotmail.com` | Login no site do provedor | Senha não registrada no repo — ver `~/.config/nxgestao/ACESSOS.md` |
-| DuckDNS (`nxgestao.duckdns.org`) | `rafael.cartaxo@hotmail.com` | Login via Google (OAuth) | Domínio provisório; migrar para `.com.br` |
+| DuckDNS (`nxgestao.duckdns.org`) | `rafael.cartaxo@hotmail.com` | Login via Google (OAuth) | Domínio de **homologação (staging)** desde 11/08 |
 | GitHub | `RafaCartaxo` | `gh` CLI (keyring) | Repo `RafaCartaxo/nxgest` |
 | VPS SSH | `root` | Chave ed25519 local | Senha desabilitada (`PasswordAuthentication no`) |
 
@@ -327,7 +327,7 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
 
 1. **Sem snapshot do provedor** → backup cron + off-site são obrigatórios (seção 5).
 2. **Provedor com reputação mista** (Trustpilot ~2,9/5; relatos de troca de IP e nulling) → plano de migração de host para o próximo mês; domínio DuckDNS independente do provedor facilita a troca.
-3. **Domínio `.duckdns.org` transitório** → `nxgest.com.br` **oficial ativo** (08/08, PLAN-068); duckdns **ainda servido** (Caddyfile) até confirmação total, depois aposentar. E-mail (Resend) ativo no `nxgest.com.br`.
+3. **Domínio `.duckdns.org` = homologação** → desde 11/08 o `nxgestao.duckdns.org` é o **staging** (QA), roteado pelo Caddy para `staging-app:8081`; `nxgest.com.br` é produção exclusiva. E-mail (Resend) ativo no `nxgest.com.br`.
 4. **Latência ~120-180ms** (VPS nos EUA, clientes no Brasil) — aceitável para MVP; melhorar na migração para datacenter BR.
 
 ---

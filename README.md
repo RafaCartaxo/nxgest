@@ -27,9 +27,8 @@ scripts/                      — Scripts utilitários
 git clone https://github.com/RafaCartaxo/nxgest.git
 cd nxgest
 
-# Instala dependências do backend e do frontend
+# Instala tudo (backend + frontend) — npm workspaces unifica a node_modules
 npm install
-cd frontend && npm install && cd ..
 ```
 
 O banco de dados SQLite (`gestao.db`) é criado automaticamente na primeira execução — não requer configuração.

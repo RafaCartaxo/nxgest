@@ -71,6 +71,7 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-067-testes.md](PLAN-067-testes.md) | Implementação de testes: infra vitest/jsdom/RTL + coverage + CI; unit use-cases + shared/segurança + lógica front + UI crítica (P022) | 🔵 Em execução (F0+F1+F3-P022+CI+coverage, 08/08) |
 | [PLAN-068-migracao-url-email-producao.md](PLAN-068-migracao-url-email-producao.md) | Migração de URL para `nxgest.com.br` + e-mail em produção (Resend · Caddy www→apex · env/compose · SSL Full strict · duckdns transitório) | ✅ Em produção (08/08) |
 | [PLAN-069-polimento-ui-app.md](PLAN-069-polimento-ui-app.md) | Port-back do polimento de UI (protótipo Lovable `42f1adcb` — Config/Fechar caixa/Ajuste caixa/Admin) | 🔵 Em execução — parte 1 ✅ (08/08) · parte 2 (Admin) pendente |
+| [PLAN-070-postgres-otimizacao.md](PLAN-070-postgres-otimizacao.md) | **Migração SQLite → PostgreSQL** + otimização da camada de dados (N+1, subqueries correlacionadas, índices, transações, backup pg_dump) | ⏳ Planejado (pronto p/ execução — fix de CI/docker na main `95d3a53`/`df6bb18`) |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |
 
 ## Backlog e briefings auxiliares

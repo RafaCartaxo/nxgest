@@ -29,7 +29,7 @@
 - [ ] `npm run build` verde
 - [ ] `npm run audit:ui` · `npm run audit:styles` · `npm run audit:modules` verdes (se UI mudou)
 - [ ] `npm test` verde (`n` testes)
-- [ ] `npm run smoke:api` (instância isolada) — `N/248`
+- [ ] `npm run smoke:api` (instância isolada) — `N/250`
 - [ ] `npm run docs:audit` sem divergência (SKILL-009)
 - [ ] Preview mobile + desktop (se UI mudou)
 
