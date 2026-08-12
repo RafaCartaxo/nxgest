@@ -20,6 +20,7 @@
     "audit:ui": "node scripts/audit-ui.mjs",
     "audit:modules": "node scripts/audit-modules.mjs",
     "docs:collection": "node scripts/build-collection.mjs",
+    "migrate:pg": "tsx scripts/migrate-sqlite-to-pg.mjs",
     "smoke:api": "node scripts/smoke-api.mjs",
     "mail:test": "tsx scripts/mail-test.ts"
   },

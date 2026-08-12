@@ -1,8 +1,8 @@
 # PLAN-070 — Migração para PostgreSQL + Otimização da Camada de Dados
 
-**Status:** 🔵 Em execução — **Fase A ✅ (baseline + gate)** · **Fase B ✅ (schema pg-core + port + 250/250 smoke no PG)** em 12/08 · ⏳ Fases C–I
+**Status:** 🔵 Em execução — **Fase A ✅** · **Fase B ✅** (12/08) · **Fase C ✅** (migração validada no dump real de prod) · ⏳ Fases D–I
 
-**Versão:** 1.2
+**Versão:** 1.3
 
 **Início:** 11/08/2026
 
@@ -141,6 +141,8 @@ Diagnóstico real do repo:
 ---
 
 ## Fase C — Migração dos dados
+
+> **✅ Executada (12/08)** — `scripts/migrate-sqlite-to-pg.mjs` criado e **validado no dump real de produção** (`gestao-20260812-120001.db`, 500 registros/19 tabelas): contagens, somas monetárias, amostras (últimos 5 por PK, com normalização G6 na comparação) e órfãos=0 — tudo verde. App bootou sobre os dados migrados (`health ok`). Uso: `SRC_DB=... DATABASE_URL=... npx tsx scripts/migrate-sqlite-to-pg.mjs [--yes]` (TRUNCATE com `--yes`; aborta se o destino já tiver dados).
 
 ### C1. Script
 
