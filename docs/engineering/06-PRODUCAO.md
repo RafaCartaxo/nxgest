@@ -274,7 +274,7 @@ git reset --hard <commit-bom>   # cuidado: descarta mudanças locais no repo
 
 ## 9. E-mail — Resend + domínio (`nxgest.com.br`)
 
-> Suporte ao **PLAN-065** (fluxo de conta: convite/ativação + esqueci a senha). Envio via **Resend** de `no-reply@nxgest.com.br`.
+> Suporte ao **PLAN-065** (fluxo de conta: convite/ativação + esqueci a senha) e **PLAN-071** (11/08 — deliverability: sair do spam). Envio via **Resend** com display name **"NX Gest"** (`MAIL_FROM_NAME` + `MAIL_FROM_ADDRESS`).
 
 ### Estado (07/08)
 
@@ -284,6 +284,21 @@ git reset --hard <commit-bom>   # cuidado: descarta mudanças locais no repo
 - [x] **Records no Cloudflare**: DKIM `resend._domainkey` · MX `send` (prioridade 10) · SPF `send` (`include:amazonses.com`) · **SPF da raiz corrigido** (`v=spf1 include:amazonses.com ~all`) · **DMARC `p=none`**
 - [x] **Verificação no Resend ✅ verde** (07/08)
 - [x] **E-mail em produção ATIVO (08/08, PLAN-068)**: `.env` do VPS com `MAIL_PROVIDER=resend` · `RESEND_API_KEY` · `MAIL_FROM=no-reply@nxgest.com.br` · `APP_URL=https://nxgest.com.br`; `docker-compose.prod.yml` passando `APP_URL`/`MAIL_*`; `forgot`/convite **enviam de verdade** (validado: forgot de e-mail existente → 200 + e-mail real). **Fail-closed**: sem chave/domínio não verificado → **503 EMAIL_UNAVAILABLE**.
+
+### Política de envio por ambiente e deliverability (PLAN-071 — 11/08)
+
+| Ambiente | `MAIL_PROVIDER` | Comportamento |
+|---|---|---|
+| dev (`NODE_ENV=development`) | qualquer | **`ConsoleMailer` — nunca envia** (regra dura, ignora a chave) |
+| staging | `resend` + chave Resend própria | envia real |
+| produção | `resend` + chave | envia real |
+| default (sem `MAIL_PROVIDER`) | — | `production` → resend se houver chave, senão fail-closed · demais → console |
+
+- **Display name:** `MAIL_FROM_NAME=NX Gest` + `MAIL_FROM_ADDRESS=no-reply@nxgest.com.br` → From `"NX Gest" <no-reply@...>` (reduz sinal de automação/spam). **Manual pendente:** adicionar `MAIL_FROM_NAME="NX Gest"` no `.env` do VPS (o `MAIL_FROM` legado vira fallback de endereço).
+- **Reply-To:** suportado no payload (`reply_to`); ainda sem endereço monitorado (aguarda caixa corporativa).
+- **DMARC:** hoje `p=none` → **adicionar `rua=mailto:<dmarcian>`** → monitorar 2–4 semanas (SPF/DKIM verdes, sem bounces) → **`p=quarantine`**. DNS manual no Cloudflare (PLAN-071 Fase 3).
+- **Aquecimento:** domínio com poucos dias de envio (ativo desde 08/08) → manter volume baixo/consistente; acompanhar Resend dashboard (deliverability/bounces/complaints) e `mail-tester.com` (meta ≥9/10).
+- **Assunto do lead** mudou de "Confirme seu e-mail — NX Gest" → **"Confirme seu interesse no NX Gest"** (menos padrão phishing).
 
 ### Por que Cloudflare (e não o painel do registro.br)
 
@@ -317,9 +332,9 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
 
 - **`APP_URL`** — produção aponta para `https://nxgest.com.br`; staging usa `https://nxgestao.duckdns.org` (`.env.staging`). Links de convite/reset refletem o ambiente de cada stack.
 - Já existem **A record** `nxgest.com.br → 172.245.152.223` (VPS, Proxied) e `www` CNAME → raiz. Na migração (PLAN-068): SSL mode **Full (strict)** no Cloudflare + decidir proxy vs DNS-only.
-- Modo dev sem `RESEND_API_KEY` loga o link no console (não quebra desenvolvimento).
+- Modo dev **nunca envia e-mail real** (regra dura, PLAN-071) — mesmo com `RESEND_API_KEY` configurada, usa `ConsoleMailer` e loga o link no console.
 - **Caixa corporativa (ponto de atenção — futuro):** o Cloudflare tem **MX nulo na raiz** (`nxgest.com.br MX → .`) = "não recebe e-mail" (proposital). Quando quiser `rafael@nxgest.com.br` (inbox/webmail): contratar provedor de caixa (Zoho Mail free / Google Workspace / M365) e **substituir o MX nulo** pelo MX real + SPF/DKIM dele. **Não conflita com o Resend** (que usa `send.nxgest.com.br`).
-- **Fail-closed de e-mail:** em **produção sem `RESEND_API_KEY`** (ou com domínio não verificado) os endpoints de e-mail devolvem **503 `EMAIL_UNAVAILABLE`** (`forgot`/`reconfirmar`/convite/lead) — **nunca mentem o 200 "verde"**. Em dev sem chave, o link é logado no console (não quebra). Validar antes do go-live com: `npm run mail:test -- <email>` (usa `RESEND_API_KEY`/`MAIL_FROM` do ambiente).
+- **Fail-closed de e-mail:** em **produção sem `RESEND_API_KEY`** (ou com domínio não verificado) os endpoints de e-mail devolvem **503 `EMAIL_UNAVAILABLE`** (`forgot`/`reconfirmar`/convite/lead) — **nunca mentem o 200 "verde"**. Em dev, o link é logado no console (não quebra). Validar antes do go-live com: `npm run mail:test -- <email>` (usa `RESEND_API_KEY`/`MAIL_FROM_*` do ambiente).
 
 ---
 

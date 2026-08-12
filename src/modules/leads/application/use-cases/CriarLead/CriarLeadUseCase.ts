@@ -47,7 +47,7 @@ export class CriarLeadUseCase {
     const link = `${appUrl()}/quero-conhecer/confirmar?token=${token}`
 
     try {
-      await this.deps.mailer.send({ to: email, ...leadTemplate({ link, lang: input.lang ?? "pt-BR" }) })
+      await this.deps.mailer.send({ to: email, ...leadTemplate({ nome: input.nomeResponsavel.trim(), link, lang: input.lang ?? "pt-BR" }) })
     } catch (err) {
       // Rollback: sem e-mail de confirmação, o lead ficaria preso (dedup) sem como avançar.
       await this.deps.tokenRepo.removerPorTipo(lead.id, "lead")

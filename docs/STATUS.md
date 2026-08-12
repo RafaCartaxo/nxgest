@@ -32,6 +32,7 @@
 | Plano | Status | Próximo passo |
 |---|---|---|
 | PLAN-070 (postgres) | ⏳ Planejado (pronto p/ execução — pré-requisito CI/docker na main) | Fase A — baseline (dump de prod + medições) |
+| PLAN-071 (e-mail) | 🔵 Fase 1+2 ✅ (11/08) | E-mail saindo do spam (display name "NX Gest" · DMARC rua→quarantine · assuntos) + política dev/staging/prod (`MAIL_PROVIDER`) · ⏳ DNS (Fase 3) e monitoramento (Fase 4) manuais |
 | PLAN-069 (polimento UI) | 🔵 Parte 1 ✅ (08/08) | **Parte 2 — Admin** (filtro por papel `SegmentedControl` · "Recebido hoje" em destaque · "Meus dados" → Perfil) |
 | PLAN-067 (testes) | 🔵 F0+F1 parcial+F3-P022+CI (08/08) | F1 restante (financeiro/admin/operações) · F2 (AuthContext/ThemeProvider/api-client) · F3 telas críticas |
 | PLAN-066 (segurança) | 🔵 P0 ✅ · P1 parcial · P2 ⏳ | P1: timeouts Caddy (T-08) + **executar firewalld/fail2ban no VPS** · P2: JWT curto/revogação, Cloudflare WAF, 2FA, senha mín. 8 |
@@ -57,4 +58,4 @@
 - **Testes:** 80 verdes (19 arquivos) · smoke API **250/250** · `docs:audit` 0 divergências (62 rotas = 62 telas)
 - **Pipeline:** CI verde no push/PR · staging automático no merge à main · CD prod com gate de promoção (staging saudável)
 - **QA:** pacote `docs/qa/` (visão geral, arquitetura, engenharia, testes, pipeline, operação, segurança, glossário, checklists + trilha de estudo) · validações manuais de produção **concluídas (12/08)**
-- **Docs:** planos (incl. PLAN-070) · 6 ADRs · 5 templates · skills SKILL-001..009
+- **Docs:** planos (incl. PLAN-070, PLAN-071) · 6 ADRs · 5 templates · skills SKILL-001..009

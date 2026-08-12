@@ -21,9 +21,9 @@ const textos = {
     es: { assunto: "Recuperar contraseña — NX Gest", titulo: "Recuperar contraseña", corpo: "Recibimos una solicitud para redefinir tu contraseña. Usa el enlace de abajo (válido por 30 minutos).", botao: "Redefinir contraseña" },
   },
   lead: {
-    "pt-BR": { assunto: "Confirme seu e-mail — NX Gest", titulo: "Confirme seu e-mail", corpo: "Para avançar com o interesse, confirme seu e-mail.", botao: "Confirmar e-mail" },
-    en: { assunto: "Confirm your email — NX Gest", titulo: "Confirm your email", corpo: "To move forward with your interest, confirm your email.", botao: "Confirm email" },
-    es: { assunto: "Confirma tu correo — NX Gest", titulo: "Confirma tu correo", corpo: "Para avanzar con el interés, confirma tu correo.", botao: "Confirmar correo" },
+    "pt-BR": { assunto: "Confirme seu interesse no NX Gest", titulo: "Confirme seu interesse", corpo: "Para avançar com o seu interesse, confirme seu e-mail.", botao: "Confirmar interesse" },
+    en: { assunto: "Confirm your interest in NX Gest", titulo: "Confirm your interest", corpo: "To move forward with your interest, confirm your email.", botao: "Confirm interest" },
+    es: { assunto: "Confirma tu interés en NX Gest", titulo: "Confirma tu interés", corpo: "Para avanzar con el interés, confirma tu correo.", botao: "Confirmar interés" },
   },
 }
 
@@ -47,7 +47,12 @@ export function resetTemplate({ link, lang }: { link: string; lang: EmailLang })
   return montar(t.assunto, t.titulo, t.corpo, t.botao, link)
 }
 
-export function leadTemplate({ link, lang }: { link: string; lang: EmailLang }) {
+export function leadTemplate({ nome, link, lang }: { nome?: string; link: string; lang: EmailLang }) {
   const t = textos.lead[lang]
-  return montar(t.assunto, t.titulo, t.corpo, t.botao, link)
+  const saudacao = nome
+    ? lang === "pt-BR" ? `Olá, ${nome}! `
+    : lang === "en" ? `Hi, ${nome}! `
+    : `Hola, ${nome}! `
+    : ""
+  return montar(t.assunto, t.titulo, `${saudacao}${t.corpo}`, t.botao, link)
 }

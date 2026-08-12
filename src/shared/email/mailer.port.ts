@@ -7,6 +7,8 @@ export interface EmailMessage {
   subject: string
   html: string
   text: string
+  /** Endereço monitorado para respostas (opcional). */
+  replyTo?: string
 }
 
 export interface IMailer {

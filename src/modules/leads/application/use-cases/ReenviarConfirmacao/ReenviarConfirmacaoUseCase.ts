@@ -17,6 +17,6 @@ export class ReenviarConfirmacaoUseCase {
     await this.tokenRepo.invalidarPorTipo(lead.id, "lead")
     await this.tokenRepo.create({ subjectId: lead.id, tipo: "lead", hash: hashToken(token), expiraEm: expirarEm("lead") })
     const link = `${appUrl()}/quero-conhecer/confirmar?token=${token}`
-    await this.mailer.send({ to: lead.email, ...leadTemplate({ link, lang: input.lang ?? "pt-BR" }) })
+    await this.mailer.send({ to: lead.email, ...leadTemplate({ nome: lead.nomeResponsavel, link, lang: input.lang ?? "pt-BR" }) })
   }
 }
