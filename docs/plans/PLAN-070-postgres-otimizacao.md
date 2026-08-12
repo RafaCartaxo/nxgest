@@ -1,6 +1,6 @@
 # PLAN-070 — Migração para PostgreSQL + Otimização da Camada de Dados
 
-**Status:** ✅ **Concluído (12/08)** — PostgreSQL em produção · **Modelo final** aplicado e deployado em prod+staging (money `numeric(12,2)`, datas `DATE`, **16 FKs**, índice parcial, `UPLOADS_DIR`, `better-sqlite3` devDep). CI/CD verdes. **Débitos restantes:** timestamps `TEXT` (débito consciente), camelCase quotado, node ≥20 local.
+**Status:** ✅ **Concluído (12/08)** — PostgreSQL em produção · **Modelo final** aplicado e deployado em prod+staging (money `numeric(12,2)`, datas `DATE`, **16 FKs**, índice parcial, `UPLOADS_DIR`, `better-sqlite3` devDep). CI/CD verdes. **Débitos 1-3 resolvidos (12/08):** timestamps `TIMESTAMPTZ` · **snake_case** em todas as colunas/tabelas · node 20 (`.nvmrc`). Aplicado em prod+staging via migrate-modelo v2. Resta apenas: **latência de rede** (host BR, plano separado) e **MCP** (plano futuro).
 
 **Versão:** 1.7
 
