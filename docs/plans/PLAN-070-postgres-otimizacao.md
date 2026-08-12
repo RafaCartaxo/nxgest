@@ -1,8 +1,8 @@
 # PLAN-070 — Migração para PostgreSQL + Otimização da Camada de Dados
 
-**Status:** 🔵 Em execução — **Fases A–H ✅** (12/08; código completo e validado: tsc · vitest 88/88 · smoke 250/250 · build · docs:audit) · ⏳ **Fase I — cutover (VPS)**
+**Status:** ✅ **Em produção — cutover concluído (12/08)** · PostgreSQL em produção (`db:connected`), staging em PG, CI/CD verdes · ⏳ débitos pós-estabilização
 
-**Versão:** 1.5
+**Versão:** 1.6
 
 **Início:** 11/08/2026
 
