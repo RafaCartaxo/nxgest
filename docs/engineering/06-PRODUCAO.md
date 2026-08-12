@@ -22,7 +22,7 @@
 | Docker | 26.1.3 + Compose v2.27.0 |
 | Repo no VPS | `/opt/nxgestao` (clone do GitHub `RafaCartaxo/nxgest`) |
 | Arquivo `.env` | `/opt/nxgestao/.env` (prod, chmod 600) · `/opt/nxgestao/.env.staging` (staging, chmod 600) |
-| Banco | SQLite — prod em volume `nxgestao_nxgestao_data` · staging em `nxgestao_nxgestao_staging_data` |
+| Banco | **PostgreSQL 16** (PLAN-070): prod em `nxgestao_pgdata` (container `nxgest-postgres`) · staging em `nxgestao_staging_pgdata` · SQLite `gestao.db` mantido como legado/rollback durante a transição |
 | Proxy + HTTPS | Caddy (container `nxgestao-caddy-1`), roteia 2 blocos: `nxgest.com.br → app:8080` · `nxgestao.duckdns.org → staging-app:8081` |
 | Rede compartilhada | `nxgestao_net` (external) — permite o Caddy alcançar os dois stacks |
 
@@ -101,7 +101,7 @@ git pull                      # puxa o novo código (senha/token via chave SSH d
 
 O `scripts/deploy.sh`:
 1. Exige `.env` presente (senão aborta)
-2. **Backup pré-deploy** — chama `/opt/scripts/backup-nxgest.sh` (snapshot do banco antes do build; se o script estiver ausente, avisa e segue)
+2. **Backup pré-deploy** — chama `/opt/scripts/backup-nxgest.sh` (snapshot do banco antes do build; se o script estiver ausente, avisa e segue). **Pós-PLAN-070 (PostgreSQL):** o script do VPS deve fazer `pg_dump -Fc` (ver seção 5.0) — o `wal_checkpoint + cp` do SQLite não se aplica mais.
 3. **Gates de UI** — roda `audit:ui`, `audit:styles` e `audit:modules` via `docker run node:20-slim` (o host não tem node no PATH); **aborta o deploy se qualquer gate falhar**
 4. `docker compose -f docker-compose.prod.yml build app`
 5. `docker compose -f docker-compose.prod.yml up -d`
@@ -120,7 +120,41 @@ curl -s https://nxgestao.duckdns.org/api/health
 
 ## 5. Backup
 
-### 5.0 — Alerta WAL (causa raiz, corrigido em 02/08/2026)
+> **Pós-PLAN-070 (PostgreSQL):** o backup passa a ser **`pg_dump`** (container `nxgest-postgres`). As seções 5.0–5.3 abaixo em **SQLite/WAL são legado pré-cutover**; a 5.0b é a versão vigente. Durante a transição, manter o backup SQLite (`gestao.db`) como rollback até a estabilização.
+
+### 5.0b — PostgreSQL: `pg_dump` (vigente pós-cutover)
+
+**Script de referência** (`/opt/scripts/backup-nxgest.sh`, no VPS):
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+STAMP=$(date +%Y%m%d-%H%M%S)
+BACKUP_DIR=/opt/backups
+CONTAINER=nxgest-postgres
+OUT=$BACKUP_DIR/pg-${STAMP}.dump
+UPLOADS_TAR=/data/uploads-${STAMP}.tar.gz
+OUT_UPLOADS=$BACKUP_DIR/uploads-${STAMP}.tar.gz
+mkdir -p $BACKUP_DIR
+# 1) pg_dump custom-format (validação embutida: pg_restore -l)
+docker exec $CONTAINER pg_dump -U "$PG_USER" -d "$PG_DB" -Fc -f /tmp/backup.dump
+docker cp $CONTAINER:/tmp/backup.dump $OUT
+docker exec $CONTAINER rm -f /tmp/backup.dump
+pg_restore -l $OUT > /dev/null || { echo "ERRO: dump inválido"; exit 1; }
+# 2) Anexos (/data/uploads) — PLAN-042
+docker exec nxgestao-app-1 sh -c "cd /data && tar czf $UPLOADS_TAR uploads 2>/dev/null || tar czf $UPLOADS_TAR --files-from /dev/null" || true
+docker cp nxgestao-app-1:$UPLOADS_TAR $OUT_UPLOADS || true
+# 3) Retenção 14 dias
+find $BACKUP_DIR -name "pg-*.dump" -mtime +14 -delete
+find $BACKUP_DIR -name "uploads-*.tar.gz" -mtime +14 -delete
+ls -lh $BACKUP_DIR | tail -4
+```
+
+- **Restauração:** `docker exec nxgest-postgres pg_restore -U "$PG_USER" -d "$PG_DB" --clean --if-exists < dump` (com o container de app parado), depois validar `SELECT COUNT(*) FROM usuarios` > 0 e o health.
+- **Validação do backup:** `pg_restore -l pg-<DATA>.dump` lista os objetos (dump vazio/corrompido falha aqui).
+- **Pré-deploy:** o `deploy.sh` chama este script — cada deploy gera `pg-<DATA>.dump` antes do build.
+
+### 5.0 — Alerta WAL (causa raiz, corrigido em 02/08/2026) — LEGADO SQLite
 
 O banco roda em **WAL mode**: os dados vivos ficam no arquivo `.db-wal` (~1MB) e o `gestao.db` principal pode ter só alguns KB. O script antigo copiava apenas `gestao.db` cru → backups **vazios/incompletos** (arquivos de 4KB sem schema — validado: "no such table: usuarios"). **Correção:** o script faz `wal_checkpoint(TRUNCATE)` (materializa o WAL no arquivo principal) antes do `cp`, e **valida** o backup (`SELECT COUNT(*) FROM usuarios` > 0) antes de mantê-lo.
 
@@ -147,7 +181,7 @@ Script (para referência/recriação):
 set -euo pipefail
 STAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_DIR=/opt/backups
-CONTAINER=nxgest-app-1
+CONTAINER=nxgestao-app-1
 DB_PATH=/data/gestao.db
 TMP_DB=/data/backup-$STAMP.db
 OUT=$BACKUP_DIR/gestao-$STAMP.db
@@ -211,11 +245,11 @@ cd /opt/nxgestao
 docker compose -f docker-compose.prod.yml stop app
 
 # 2. Copiar o backup para dentro do volume
-docker cp ./gestao-<DATA>.db nxgest-app-1:/data/gestao.db
+docker cp ./gestao-<DATA>.db nxgestao-app-1:/data/gestao.db
 
 # 3. Restaurar anexos (PLAN-042), se houver uploads-<DATA>.tar.gz
-docker cp ./uploads-<DATA>.tar.gz nxgest-app-1:/data/uploads-<DATA>.tar.gz
-docker exec nxgest-app-1 sh -c "cd /data && rm -rf uploads && tar xzf uploads-<DATA>.tar.gz && rm -f uploads-<DATA>.tar.gz"
+docker cp ./uploads-<DATA>.tar.gz nxgestao-app-1:/data/uploads-<DATA>.tar.gz
+docker exec nxgestao-app-1 sh -c "cd /data && rm -rf uploads && tar xzf uploads-<DATA>.tar.gz && rm -f uploads-<DATA>.tar.gz"
 
 # 4. Subir de novo
 docker compose -f docker-compose.prod.yml start app

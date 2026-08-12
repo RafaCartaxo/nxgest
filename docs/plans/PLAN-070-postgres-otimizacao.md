@@ -1,8 +1,8 @@
 # PLAN-070 — Migração para PostgreSQL + Otimização da Camada de Dados
 
-**Status:** ⏳ Planejado (fix de CI/docker concluído na `main` — `95d3a53`, `df6bb18`)
+**Status:** 🔵 Em execução — **Fases A–H ✅** (12/08; código completo e validado: tsc · vitest 88/88 · smoke 250/250 · build · docs:audit) · ⏳ **Fase I — cutover (VPS)**
 
-**Versão:** 1.1
+**Versão:** 1.5
 
 **Início:** 11/08/2026
 
@@ -54,15 +54,40 @@ Diagnóstico real do repo:
 
 ## Fase A — Baseline (preparação, sem tocar produção)
 
-- [ ] Criar branch `feat/plan070-postgres` a partir da `main` (fix de CI/docker já mergeado).
-- [ ] Obter um **dump válido de produção** (backup off-site `gestao-*.db` + `uploads-*.tar.gz` de `/opt/backups/`) para análise local.
-- [ ] Medir baseline: tempo real dos endpoints críticos (rota do dia, lista clientes, admin/equipe) e `EXPLAIN QUERY PLAN` das queries críticas no dump local.
-- [ ] Registrar o baseline neste documento (seção "Medição" na Fase F).
-- [ ] **Gate de go/no-go:** separar no baseline **tempo de DB** (no servidor) × **tempo de rede** (latência VPS~BR, ~120–180ms). Se as queries já forem rápidas e o gargalo for só rede, reconfirmar o ROI do PostgreSQL antes da Fase B (princípio: não otimizar por suposição).
+- [x] Criar branch `feat/plan070-postgres` a partir da `main` (fix de CI/docker já mergeado).
+- [x] Obter um **dump válido de produção** (`/opt/backups/gestao-20260812-120001.db` → análise local; 500 registros / 19 tabelas).
+- [x] Medir baseline: `EXPLAIN QUERY PLAN` + tempo real das queries críticas no dump local + latência de rede em produção.
+- [x] Registrar o baseline neste documento (abaixo).
+- [x] **Gate de go/no-go** — concluído (ver resultado abaixo).
+
+### Resultado do baseline (11/08)
+
+| Métrica | Valor | Amostra |
+|---|---|---|
+| Tempo de **DB** (cobranças do dia, query mais cara) | **0,42 ms** | dump real de produção |
+| Tempo de **DB** (lista clientes com `LIKE`) | **0,12 ms** | dump real |
+| Tempo de **DB** (financeiro do cliente) | **0,02 ms** | dump real |
+| Tempo de **DB** (contratos count+list+sums) | **~0,1 ms** | dump real |
+| **Latência de rede** (VPS~Brasil, `api/health`) | **~400–500 ms** (picos 1,1 s) | 10 amostras curl |
+
+**Conclusão do gate:** a query mais cara do sistema roda em **0,42 ms** no dump real (500 registros); a latência de rede **~400–500 ms** é **~1000× maior** que o tempo de banco. **O banco NÃO é o gargalo da lentidão percebida — é a rede (VPS nos EUA → Brasil).** Migrar para PostgreSQL no mesmo VPS **não melhora a performance percebida** no volume atual.
+
+**Recomendação (decisão do Rafael pendente):**
+- **A — Migração como projeto de escala/hardening** (não-performance): seguir PLAN-070 pelo valor futuro (transações, concorrência, crescimento do SaaS, features), aceitando que **não** reduz a lentidão atual.
+- **B — Pivotar pra latência/rede primeiro** (benefício real agora): datacenter BR, menos round trips (consolidar endpoints), caching/keep-alive/CDN — e estacionar o PLAN-070.
+- **C — Ambos**, com B primeiro (wins rápidos) e A depois (escala).
 
 ---
 
 ## Fase B — Schema PostgreSQL
+
+> **✅ Executada (12/08)** — `src/database.ts` reescrito em `pg-core` (19 tabelas) + `pool`/`rawQuery` + `runMigrations()` (DDL idempotente com identifiers quotados) + `seedBasico()`. Port completos dos repos (operacoes, caixa, cliente-financeiro, contrato, impacto) e G13/G21. **Validação:** `tsc` limpo · vitest 88/88 · **smoke 250/250 contra PG local** · build · docs:audit. Scripts: `create-schema.mjs`/`seed-demo.mjs` em PG, `test-migracao.mjs` removido, `fix-caixa.mjs` arquivado.
+
+**Amendments (decisões ajustadas na execução):**
+- **D5 emendado — money = `doublePrecision`, não `numeric`**: o driver `pg` devolve `numeric` como **string** (o typeParser não vale nas leituras do drizzle — validado empiricamente), o que quebrava `valor.toFixed`/comparações. `doublePrecision` (float8) é convertido a number nativamente e **espelha exatamente o `REAL` do SQLite** (comportamento atual preservado, sem retrabalho de mappers). G4 resolvido.
+- **Identifiers camelCase quotados no SQL cru**: o PG dobra para minúsculas identificadores sem aspas; o drizzle emite `"camelCase"` correto, então todo SQL cru (rawQuery/seed/seedBasico) usa `"colunaCamelCase"`.
+- **`empresas.modulos` ganhou DEFAULT** no DDL (espelha o SQLite) — sem isso `/me` retornava `modulos=null` (MOD-096).
+- `rawQuery` converte `?`→`$1..$N` (G22); `count()`/`numeric` normalizados no driver.
 
 ### B1. Driver e dialeto
 
@@ -116,6 +141,8 @@ Diagnóstico real do repo:
 ---
 
 ## Fase C — Migração dos dados
+
+> **✅ Executada (12/08)** — `scripts/migrate-sqlite-to-pg.mjs` criado e **validado no dump real de produção** (`gestao-20260812-120001.db`, 500 registros/19 tabelas): contagens, somas monetárias, amostras (últimos 5 por PK, com normalização G6 na comparação) e órfãos=0 — tudo verde. App bootou sobre os dados migrados (`health ok`). Uso: `SRC_DB=... DATABASE_URL=... npx tsx scripts/migrate-sqlite-to-pg.mjs [--yes]` (TRUNCATE com `--yes`; aborta se o destino já tiver dados).
 
 ### C1. Script
 

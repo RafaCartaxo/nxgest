@@ -1,5 +1,4 @@
 import { v4 as uuid } from "uuid"
-import type { IPagamentoRepository } from "../../ports/pagamento.repository.js"
 import type { IContratoRepository } from "../../../../contrato/application/ports/contrato.repository.js"
 import type { EstornarPagamentoInput } from "./EstornarPagamentoInput.js"
 import { PagamentoNotFoundError, PagamentoJaEstornadoError } from "../../../domain/errors/estorno.error.js"
@@ -7,18 +6,15 @@ import { ContratoNotFoundError } from "../../../../contrato/domain/errors/contra
 import { getLocalDateString } from "../../../../../shared/utils/parseDateLocal.js"
 
 export class EstornarPagamentoUseCase {
-  constructor(
-    private pagamentoRepo: IPagamentoRepository,
-    private contratoRepo: IContratoRepository
-  ) {}
+  constructor(private contratoRepo: IContratoRepository) {}
 
   async execute(adminId: string, operadorId: string, pagamentoId: string, input: EstornarPagamentoInput) {
     const now = new Date()
     const data = getLocalDateString(now)
     const createdAt = now.toISOString()
 
-    await this.contratoRepo.transaction(operadorId, async (repo) => {
-      const pagamento = await this.pagamentoRepo.findByIdWithParcelas(pagamentoId, operadorId)
+    await this.contratoRepo.transaction(operadorId, async (repo, pagamentoRepo) => {
+      const pagamento = await pagamentoRepo.findByIdWithParcelas(pagamentoId, operadorId)
       if (!pagamento) {
         throw new PagamentoNotFoundError(pagamentoId)
       }
@@ -58,7 +54,7 @@ export class EstornarPagamentoUseCase {
         await repo.update(operadorId, contrato.id, { estado: "Ativo", updatedAt: createdAt })
       }
 
-      await this.pagamentoRepo.marcarEstornado(pagamentoId, adminId, input.motivo)
+      await pagamentoRepo.marcarEstornado(pagamentoId, adminId, input.motivo)
 
       const movId = uuid()
       await repo.saveMovimentacaoFinanceira(operadorId, {
@@ -72,7 +68,7 @@ export class EstornarPagamentoUseCase {
         createdAt,
       })
 
-      await this.pagamentoRepo.saveAuditoriaEstorno({
+      await pagamentoRepo.saveAuditoriaEstorno({
         id: uuid(),
         pagamentoId,
         operadorId,

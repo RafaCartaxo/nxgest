@@ -24,6 +24,9 @@ JWT_SECRET=staging-jwt-secret
 ADMIN_DEFAULT_PASSWORD=staging-admin
 SUPER_ADMIN_EMAIL=super@nxgest.com
 SUPER_ADMIN_DEFAULT_PASSWORD=staging-super
+PG_DB=nxgest
+PG_USER=nxgest
+PG_PASSWORD=staging-pg-secret
 MAIL_PROVIDER=resend
 RESEND_API_KEY=
 MAIL_FROM_NAME=NX Gest
@@ -34,6 +37,20 @@ USER_RATE_LIMIT_MAX=100000
 EOF
   chmod 600 "$ENV_FILE"
 fi
+
+# 2b) Chaves PostgreSQL ausentes em .env.staging antigo (PLAN-070) — append idempotente,
+#     para staging existente que foi criado na era SQLite (sem PG_*).
+for key in PG_DB PG_USER PG_PASSWORD; do
+  if ! grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
+    case "$key" in
+      PG_DB) val=nxgest ;;
+      PG_USER) val=nxgest ;;
+      PG_PASSWORD) val=staging-pg-secret ;;
+    esac
+    echo "${key}=${val}" >> "$ENV_FILE"
+    echo "==> ${key} adicionado ao .env.staging"
+  fi
+done
 set -a; source "$ENV_FILE"; set +a
 
 # 3) Traz o código (o runner já puxou, mas garante consistência local).
@@ -60,11 +77,11 @@ done
 
 # 5) Seed fake SÓ na primeira vez (banco sem clientes — o boot não cria
 #    clientes, então esse critério distingue "vazio" de "já seedado").
-if docker exec staging-app node -e 'const s=require("better-sqlite3")("/data/gestao.db",{readonly:true}).prepare("SELECT COUNT(*) c FROM clientes").get().c; process.exit(s>0?0:1)' >/dev/null 2>&1; then
+if docker exec staging-pg psql -U "$PG_USER" -d "$PG_DB" -tAc "SELECT COUNT(*) FROM clientes" 2>/dev/null | grep -qE '^[1-9]'; then
   echo "==> Staging já tem dados — seed ignorado"
 else
   echo "==> DB de staging vazio — aplicando seed de demonstração"
-  docker exec staging-app node scripts/seed-demo.mjs
+  docker exec -e DATABASE_URL="postgres://$PG_USER:$PG_PASSWORD@staging-pg:5432/$PG_DB" staging-app node scripts/seed-demo.mjs
 fi
 
 # 6) Recarrega o Caddy de produção com o Caddyfile atualizado

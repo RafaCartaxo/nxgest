@@ -1,5 +1,5 @@
 import { eq, and, gte, lte, sql, count, sum, desc, isNull } from "drizzle-orm"
-import { db, sqlite, movimentacoesFinanceiras, caixaConfig, fechamentosSemanais, auditoriaCaixa, contratos, pagamentos, usuarios } from "../../../../database.js"
+import { db, rawQuery, movimentacoesFinanceiras, caixaConfig, fechamentosSemanais, auditoriaCaixa, contratos, pagamentos, usuarios } from "../../../../database.js"
 import type { CaixaConfig, MovimentacaoFinanceira, FechamentoSemanal } from "../../domain/caixa.entity.js"
 import type { ICaixaRepository, ListMovimentacoesParams, ListMovimentacoesResult, AuditoriaCaixa, ListarAuditoriaCaixaResult } from "../../application/ports/caixa.repository.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
@@ -56,22 +56,22 @@ export class CaixaRepository implements ICaixaRepository {
     const limit = params.limit ?? 20
     const offset = (page - 1) * limit
 
-    const data = sqlite.prepare(`
+    const { rows: data } = await rawQuery<AuditoriaCaixa & { adminNome: string | null }>(`
       SELECT
-        a.id, a.operadorId, a.adminId, a.valorAnterior, a.valorNovo, a.motivo, a.data, a.createdAt,
-        u.nome AS adminNome
+        a.id, a."operadorId", a."adminId", a."valorAnterior", a."valorNovo", a.motivo, a.data, a."createdAt",
+        u.nome AS "adminNome"
       FROM auditoria_caixa a
-      LEFT JOIN usuarios u ON u.id = a.adminId
-      WHERE a.operadorId = ?
-      ORDER BY a.createdAt DESC
+      LEFT JOIN usuarios u ON u.id = a."adminId"
+      WHERE a."operadorId" = ?
+      ORDER BY a."createdAt" DESC
       LIMIT ? OFFSET ?
-    `).all(operadorId, limit, offset) as (AuditoriaCaixa & { adminNome: string | null })[]
+    `, [operadorId, limit, offset])
 
-    const countRow = sqlite.prepare(`
-      SELECT COUNT(*) AS total FROM auditoria_caixa a WHERE a.operadorId = ?
-    `).get(operadorId) as { total: number }
+    const { rows: countRows } = await rawQuery<{ total: number }>(`
+      SELECT COUNT(*) AS total FROM auditoria_caixa a WHERE a."operadorId" = ?
+    `, [operadorId])
 
-    const total = countRow.total
+    const total = Number(countRows[0]?.total ?? 0)
     return {
       data,
       pagination: {
@@ -105,11 +105,11 @@ export class CaixaRepository implements ICaixaRepository {
     const conditions: string[] = ["1=1"]
     const bindings: string[] = []
 
-    conditions.push("m.userId = ?")
+    conditions.push('m."userId" = ?')
     bindings.push(userId)
 
     if (params.dataInicio) {
-      conditions.push("m.data >= ?")
+      conditions.push("m.'data' >= ?")
       bindings.push(params.dataInicio)
     }
     if (params.dataFim) {
@@ -123,48 +123,48 @@ export class CaixaRepository implements ICaixaRepository {
 
     const where = conditions.join(" AND ")
 
-    const data = sqlite.prepare(`
+    const { rows: data } = await rawQuery<MovimentacaoFinanceira & { clienteNome: string | null; categoria: string | null }>(`
       SELECT
-        m.id, m.tipo, m.valor, m.origem, m.origemId, m.descricao, m.data, m.createdAt,
+        m.id, m.tipo, m.valor, m.origem, m."origemId", m.descricao, m.data, m."createdAt",
         CASE
           WHEN m.origem = 'Cancelamento' THEN
             COALESCE(
               (SELECT cl.nome FROM clientes cl
-               JOIN contratos ct ON ct.clienteId = cl.id
-               JOIN pagamentos pg ON pg.contratoId = ct.id
-               WHERE pg.id = m.origemId),
+               JOIN contratos ct ON ct."clienteId" = cl.id
+               JOIN pagamentos pg ON pg."contratoId" = ct.id
+               WHERE pg.id = m."origemId"),
               (SELECT cl.nome FROM clientes cl
-               JOIN contratos ct ON ct.clienteId = cl.id
-               WHERE ct.id = m.origemId)
+               JOIN contratos ct ON ct."clienteId" = cl.id
+               WHERE ct.id = m."origemId")
             )
           WHEN m.origem IN ('Contrato', 'Ajuste') THEN
             (SELECT cl.nome FROM clientes cl
-             JOIN contratos ct ON ct.clienteId = cl.id
-             WHERE ct.id = m.origemId)
+             JOIN contratos ct ON ct."clienteId" = cl.id
+             WHERE ct.id = m."origemId")
           WHEN m.origem = 'Pagamento' THEN
             (SELECT cl.nome FROM clientes cl
-             JOIN contratos ct ON ct.clienteId = cl.id
-             JOIN pagamentos pg ON pg.contratoId = ct.id
-             WHERE pg.id = m.origemId)
+             JOIN contratos ct ON ct."clienteId" = cl.id
+             JOIN pagamentos pg ON pg."contratoId" = ct.id
+             WHERE pg.id = m."origemId")
           WHEN m.origem = 'Gasto' THEN NULL
           ELSE NULL
-        END AS clienteNome,
+        END AS "clienteNome",
         CASE
           WHEN m.origem = 'Gasto' THEN
-            (SELECT g.categoria FROM gastos g WHERE g.id = m.origemId AND g.deletedAt IS NULL)
+            (SELECT g."categoria" FROM gastos g WHERE g.id = m."origemId" AND g."deletedAt" IS NULL)
           ELSE NULL
-        END AS categoria
-      FROM movimentacoesFinanceiras m
+        END AS "categoria"
+      FROM "movimentacoesFinanceiras" m
       WHERE ${where}
-      ORDER BY m.createdAt DESC
+      ORDER BY m."createdAt" DESC
       LIMIT ? OFFSET ?
-    `).all(...bindings, limit, offset) as (MovimentacaoFinanceira & { clienteNome: string | null; categoria: string | null })[]
+    `, [...bindings, limit, offset])
 
-    const countRow = sqlite.prepare(`
-      SELECT COUNT(*) AS total FROM movimentacoesFinanceiras m WHERE ${where}
-    `).get(...bindings) as { total: number }
+    const { rows: countRows } = await rawQuery<{ total: number }>(`
+      SELECT COUNT(*) AS total FROM "movimentacoesFinanceiras" m WHERE ${where}
+    `, bindings)
 
-    const total = countRow.total
+    const total = Number(countRows[0]?.total ?? 0)
 
     return {
       data: data.map((row) => ({
@@ -219,69 +219,72 @@ export class CaixaRepository implements ICaixaRepository {
   }
 
   async getSaldoAtual(userId: string, dataInicio?: string): Promise<number> {
-    let entradasQuery = `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'entrada' AND userId = ?`
-    let saidasQuery = `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'saida' AND userId = ?`
-
+    const params: string[] = [userId]
+    let filtro = ""
     if (dataInicio) {
-      const filtro = ` AND data >= '${dataInicio}'`
-      entradasQuery += filtro
-      saidasQuery += filtro
+      filtro = " AND data >= ?"
+      params.push(dataInicio)
     }
 
-    const entradas = sqlite.prepare(entradasQuery).get(userId) as { total: number }
-    const saidas = sqlite.prepare(saidasQuery).get(userId) as { total: number }
+    const { rows: entradas } = await rawQuery<{ total: number }>(
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoesFinanceiras" WHERE tipo = 'entrada' AND "userId" = ?${filtro}`,
+      params,
+    )
+    const { rows: saidas } = await rawQuery<{ total: number }>(
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoesFinanceiras" WHERE tipo = 'saida' AND "userId" = ?${filtro}`,
+      params,
+    )
 
     const caixa = await this.getCaixaConfig(userId)
     const base = caixa?.caixaBase ?? 0
-    const totalEntradas = Number(entradas.total) || 0
-    const totalSaidas = Number(saidas.total) || 0
+    const totalEntradas = Number(entradas[0]?.total) || 0
+    const totalSaidas = Number(saidas[0]?.total) || 0
     return base + totalEntradas - totalSaidas
   }
 
   async getLucro(userId: string): Promise<number> {
-    const entradas = sqlite.prepare(
-      `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'entrada' AND userId = ?`
-    ).get(userId) as { total: number }
-    const saidas = sqlite.prepare(
-      `SELECT COALESCE(SUM(valor), 0) AS total FROM movimentacoesFinanceiras WHERE tipo = 'saida' AND userId = ?`
-    ).get(userId) as { total: number }
-    return (Number(entradas.total) || 0) - (Number(saidas.total) || 0)
+    const { rows: entradas } = await rawQuery<{ total: number }>(
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoesFinanceiras" WHERE tipo = 'entrada' AND "userId" = ?`,
+      [userId],
+    )
+    const { rows: saidas } = await rawQuery<{ total: number }>(
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM "movimentacoesFinanceiras" WHERE tipo = 'saida' AND "userId" = ?`,
+      [userId],
+    )
+    return (Number(entradas[0]?.total) || 0) - (Number(saidas[0]?.total) || 0)
   }
 
   async getAReceberHoje(userId: string): Promise<number> {
     const hoje = getLocalDateString(new Date())
-    const result = sqlite
-      .prepare(
-        `SELECT COALESCE(SUM(p.saldoPendente), 0) AS total
+    const { rows } = await rawQuery<{ total: number }>(
+      `SELECT COALESCE(SUM(p."saldoPendente"), 0) AS total
          FROM parcelas p
-         JOIN contratos ct ON ct.id = p.contratoId
-         WHERE p.dataVencimento = ? AND p.saldoPendente > 0 AND p.deletedAt IS NULL AND ct.deletedAt IS NULL AND ct.userId = ?`
-      )
-      .get(hoje, userId) as { total: number }
-    return result.total
+         JOIN contratos ct ON ct.id = p."contratoId"
+         WHERE p."dataVencimento" = ? AND p."saldoPendente" > 0 AND p."deletedAt" IS NULL AND ct."deletedAt" IS NULL AND ct."userId" = ?`,
+      [hoje, userId],
+    )
+    return Number(rows[0]?.total ?? 0)
   }
 
   async getRecebidoHoje(userId: string): Promise<number> {
     const hoje = getLocalDateString(new Date())
-    const result = sqlite
-      .prepare(
-        `SELECT COALESCE(SUM(valor), 0) AS total
+    const { rows } = await rawQuery<{ total: number }>(
+      `SELECT COALESCE(SUM(valor), 0) AS total
          FROM pagamentos
-         WHERE data = ? AND userId = ?`
-      )
-      .get(hoje, userId) as { total: number }
-    return result.total
+         WHERE data = ? AND "userId" = ?`,
+      [hoje, userId],
+    )
+    return Number(rows[0]?.total ?? 0)
   }
 
   async getVendasSemana(userId: string, dataInicio: string, dataFim: string): Promise<number> {
-    const result = sqlite
-      .prepare(
-        `SELECT COALESCE(SUM(valorBase), 0) AS total
+    const { rows } = await rawQuery<{ total: number }>(
+      `SELECT COALESCE(SUM("valorBase"), 0) AS total
          FROM contratos
-         WHERE dataInicio >= ? AND dataInicio <= ? AND deletedAt IS NULL AND userId = ?`
-      )
-      .get(dataInicio, dataFim, userId) as { total: number }
-    return result.total
+         WHERE "dataInicio" >= ? AND "dataInicio" <= ? AND "deletedAt" IS NULL AND "userId" = ?`,
+      [dataInicio, dataFim, userId],
+    )
+    return Number(rows[0]?.total ?? 0)
   }
 
   async getUltimaLiquidacao(userId: string): Promise<FechamentoSemanal | null> {
@@ -305,19 +308,23 @@ export class CaixaRepository implements ICaixaRepository {
     }
   }
 
-  async saveFechamentoSemanal(userId: string, f: FechamentoSemanal): Promise<void> {
-    await db.insert(fechamentosSemanais).values({
-      id: f.id,
-      dataInicio: f.dataInicio,
-      dataFim: f.dataFim,
-      totalRecebido: f.totalRecebido,
-      totalGasto: f.totalGasto,
-      resultado: f.resultado,
-      caixaBase: f.caixaBase,
-      saldoFechamento: f.saldoFechamento,
-      userId,
-      createdAt: f.createdAt,
-    })
+  async saveFechamentoSemanal(userId: string, f: FechamentoSemanal): Promise<boolean> {
+    const result = await db
+      .insert(fechamentosSemanais)
+      .values({
+        id: f.id,
+        dataInicio: f.dataInicio,
+        dataFim: f.dataFim,
+        totalRecebido: f.totalRecebido,
+        totalGasto: f.totalGasto,
+        resultado: f.resultado,
+        caixaBase: f.caixaBase,
+        saldoFechamento: f.saldoFechamento,
+        userId,
+        createdAt: f.createdAt,
+      })
+      .onConflictDoNothing()
+    return (result.rowCount ?? 0) > 0
   }
 
   async findFechamentoPorPeriodo(userId: string, dataInicio: string, dataFim: string): Promise<FechamentoSemanal | null> {

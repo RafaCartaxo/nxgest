@@ -1,5 +1,5 @@
 import { eq, and, count, isNull } from "drizzle-orm"
-import { db, empresas, usuarios, clientes, contratos } from "../../../../database.js"
+import { db, rawQuery, empresas, usuarios, clientes, contratos } from "../../../../database.js"
 import type { IEmpresaRepository } from "../../application/ports/empresa.repository.js"
 import type { EmpresaComStats } from "../../domain/empresa.entity.js"
 import { parseModulos, serializeModulos, DEFAULT_MODULOS } from "../../domain/modules.js"
@@ -23,43 +23,50 @@ const toComStats = (row: { id: string; nome: string; createdAt: string; modulos?
 export class EmpresaRepository implements IEmpresaRepository {
   constructor(private readonly authRepository: IAuthRepository) {}
 
+  /** Stats de um conjunto de empresas em 4 queries (E2 — anti N+1). */
+  private async statsDeEmpresas(empresaIds: string[]): Promise<Map<string, {
+    totalUsuarios: number
+    totalClientes: number
+    contratosAtivos: number
+    adminNome: string | null
+    adminEmail: string | null
+  }>> {
+    const map = new Map<string, { totalUsuarios: number; totalClientes: number; contratosAtivos: number; adminNome: string | null; adminEmail: string | null }>()
+    for (const id of empresaIds) map.set(id, { totalUsuarios: 0, totalClientes: 0, contratosAtivos: 0, adminNome: null, adminEmail: null })
+    if (empresaIds.length === 0) return map
+
+    const ph = empresaIds.map(() => "?").join(",")
+    const [{ rows: usuariosRows }, { rows: clientesRows }, { rows: contratosRows }, { rows: adminRows }] = await Promise.all([
+      rawQuery<{ empresaId: string; total: number }>(
+        `SELECT u."empresaId", COUNT(*)::int AS total FROM usuarios u WHERE u."deletedAt" IS NULL AND u."empresaId" IN (${ph}) GROUP BY u."empresaId"`, empresaIds),
+      rawQuery<{ empresaId: string; total: number }>(
+        `SELECT u."empresaId", COUNT(*)::int AS total FROM clientes c JOIN usuarios u ON c."userId" = u.id WHERE c."deletedAt" IS NULL AND u."empresaId" IN (${ph}) GROUP BY u."empresaId"`, empresaIds),
+      rawQuery<{ empresaId: string; total: number }>(
+        `SELECT u."empresaId", COUNT(*)::int AS total FROM contratos ct JOIN usuarios u ON ct."userId" = u.id WHERE ct."deletedAt" IS NULL AND ct."estado" = 'Ativo' AND u."empresaId" IN (${ph}) GROUP BY u."empresaId"`, empresaIds),
+      rawQuery<{ empresaId: string; nome: string; email: string }>(
+        `SELECT DISTINCT ON (u."empresaId") u."empresaId", u.nome, u.email FROM usuarios u WHERE u."deletedAt" IS NULL AND u.role = 'admin' AND u."empresaId" IN (${ph}) ORDER BY u."empresaId", u."createdAt"`, empresaIds),
+    ])
+    for (const r of usuariosRows) map.get(r.empresaId)!.totalUsuarios = r.total
+    for (const r of clientesRows) map.get(r.empresaId)!.totalClientes = r.total
+    for (const r of contratosRows) map.get(r.empresaId)!.contratosAtivos = r.total
+    for (const r of adminRows) {
+      const s = map.get(r.empresaId)
+      if (s) { s.adminNome = r.nome; s.adminEmail = r.email }
+    }
+    return map
+  }
+
   async findAll(): Promise<EmpresaComStats[]> {
     const rows = await db.select().from(empresas).orderBy(empresas.createdAt)
-    return Promise.all(
-      rows.map(async (row) => {
-        const [totalOps, totalClientesResult, contratosResult, adminResult] = await Promise.all([
-          db.select({ total: count() }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), isNull(usuarios.deletedAt))),
-          db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, row.id))),
-          db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), eq(usuarios.empresaId, row.id))),
-          db.select({ nome: usuarios.nome, email: usuarios.email }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), eq(usuarios.role, "admin"), isNull(usuarios.deletedAt))).orderBy(usuarios.createdAt).limit(1),
-        ])
-        return toComStats(row, {
-          totalUsuarios: totalOps[0].total,
-          totalClientes: totalClientesResult[0].total,
-          contratosAtivos: contratosResult[0].total,
-          adminNome: adminResult[0]?.nome ?? null,
-          adminEmail: adminResult[0]?.email ?? null,
-        })
-      })
-    )
+    const stats = await this.statsDeEmpresas(rows.map((r) => r.id))
+    return rows.map((row) => toComStats(row, stats.get(row.id)!))
   }
 
   async findById(id: string): Promise<EmpresaComStats | null> {
     const [row] = await db.select().from(empresas).where(eq(empresas.id, id)).limit(1)
     if (!row) return null
-    const [totalOps, totalClientesResult, contratosResult, adminResult] = await Promise.all([
-      db.select({ total: count() }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), isNull(usuarios.deletedAt))),
-      db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), eq(usuarios.empresaId, row.id))),
-      db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), eq(usuarios.empresaId, row.id))),
-      db.select({ nome: usuarios.nome, email: usuarios.email }).from(usuarios).where(and(eq(usuarios.empresaId, row.id), eq(usuarios.role, "admin"), isNull(usuarios.deletedAt))).orderBy(usuarios.createdAt).limit(1),
-    ])
-    return toComStats(row, {
-      totalUsuarios: totalOps[0].total,
-      totalClientes: totalClientesResult[0].total,
-      contratosAtivos: contratosResult[0].total,
-      adminNome: adminResult[0]?.nome ?? null,
-      adminEmail: adminResult[0]?.email ?? null,
-    })
+    const stats = await this.statsDeEmpresas([row.id])
+    return toComStats(row, stats.get(row.id)!)
   }
 
   async create(input: { nome: string; documento?: string | null; nomeFantasia?: string | null; ativa?: boolean; adminNome: string; adminEmail: string; adminSenhaHash: string | null }) {
@@ -68,20 +75,20 @@ export class EmpresaRepository implements IEmpresaRepository {
       throw new EmailDuplicadoError()
     }
 
-    return db.transaction((tx) => {
+    return db.transaction(async (tx) => {
       const empresaId = uuid()
       const adminId = uuid()
 
-      tx.insert(empresas).values({
+      await tx.insert(empresas).values({
         id: empresaId,
         nome: input.nome,
         documento: input.documento ?? null,
         nomeFantasia: input.nomeFantasia ?? null,
         ativa: input.ativa === false ? 0 : 1,
         createdAt: new Date().toISOString(),
-      }).run()
+      })
 
-      tx.insert(usuarios).values({
+      await tx.insert(usuarios).values({
         id: adminId,
         nome: input.adminNome,
         email: input.adminEmail,
@@ -89,7 +96,7 @@ export class EmpresaRepository implements IEmpresaRepository {
         role: "admin",
         empresaId: empresaId,
         createdAt: new Date().toISOString(),
-      }).run()
+      })
 
       return {
         empresa: { id: empresaId, nome: input.nome, documento: input.documento ?? null, nomeFantasia: input.nomeFantasia ?? null, ativa: input.ativa === false ? false : true, createdAt: new Date().toISOString(), totalUsuarios: 1, totalClientes: 0, contratosAtivos: 0, modulos: [...DEFAULT_MODULOS], capacidades: null },

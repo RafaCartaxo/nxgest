@@ -1,5 +1,4 @@
 import { v4 as uuid } from "uuid"
-import type { IPagamentoRepository } from "../../ports/pagamento.repository.js"
 import type { IContratoRepository } from "../../../../contrato/application/ports/contrato.repository.js"
 import type { CreatePagamentoInput } from "./CreatePagamentoInput.js"
 import { ContratoNotFoundError } from "../../../../contrato/domain/errors/contrato-not-found.error.js"
@@ -8,10 +7,7 @@ import { getLocalDateString } from "../../../../../shared/utils/parseDateLocal.j
 import { distribuirPagamento } from "../../../domain/services/distribuir-pagamento.js"
 
 export class CreatePagamentoUseCase {
-  constructor(
-    private pagamentoRepo: IPagamentoRepository,
-    private contratoRepo: IContratoRepository
-  ) {}
+  constructor(private contratoRepo: IContratoRepository) {}
 
   async execute(userId: string, input: CreatePagamentoInput) {
     const now = new Date()
@@ -20,7 +16,7 @@ export class CreatePagamentoUseCase {
 
     const pagamentoId = uuid()
 
-    await this.contratoRepo.transaction(userId, async (repo) => {
+    await this.contratoRepo.transaction(userId, async (repo, pagamentoRepo) => {
       const contrato = await repo.findByIdWithParcelas(userId, input.contratoId)
       if (!contrato) {
         throw new ContratoNotFoundError(input.contratoId)
@@ -32,7 +28,7 @@ export class CreatePagamentoUseCase {
         throw new SaldoInsuficienteError(preview.saldoDevedor, input.valor)
       }
 
-      await this.pagamentoRepo.save({
+      await pagamentoRepo.save({
         id: pagamentoId,
         contratoId: input.contratoId,
         valor: input.valor,
@@ -55,7 +51,7 @@ export class CreatePagamentoUseCase {
           updatedAt: createdAt,
         })
 
-        await this.pagamentoRepo.savePagamentoParcela({
+        await pagamentoRepo.savePagamentoParcela({
           id: uuid(),
           pagamentoId,
           parcelaId: parcela.id,

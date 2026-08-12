@@ -57,7 +57,8 @@ export interface ICaixaRepository {
   getVendasSemana(userId: string, dataInicio: string, dataFim: string): Promise<number>
   getUltimaLiquidacao(userId: string): Promise<FechamentoSemanal | null>
   getLucro(userId: string): Promise<number>
-  saveFechamentoSemanal(userId: string, f: FechamentoSemanal): Promise<void>
+  /** Persiste o fechamento; retorna `false` se já existir (UNIQUE userId+período — G14). */
+  saveFechamentoSemanal(userId: string, f: FechamentoSemanal): Promise<boolean>
   findFechamentoPorPeriodo(userId: string, dataInicio: string, dataFim: string): Promise<FechamentoSemanal | null>
   saveAuditoriaCaixa(a: AuditoriaCaixa): Promise<void>
   listAuditoriaCaixa(operadorId: string, params: { page?: number; limit?: number }): Promise<ListarAuditoriaCaixaResult>

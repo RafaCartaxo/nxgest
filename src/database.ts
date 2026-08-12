@@ -1,19 +1,47 @@
-import Database from "better-sqlite3"
-import type { Database as DatabaseType } from "better-sqlite3"
-import { drizzle } from "drizzle-orm/better-sqlite3"
-import { sqliteTable, text, real, integer } from "drizzle-orm/sqlite-core"
-import { getLocalDateString } from "./shared/utils/parseDateLocal.js"
-import { randomUUID } from "node:crypto"
+import { sql } from "drizzle-orm"
+import { drizzle } from "drizzle-orm/node-postgres"
+import {
+  pgTable,
+  text,
+  numeric,
+  doublePrecision,
+  integer,
+  index,
+  uniqueIndex,
+  unique,
+} from "drizzle-orm/pg-core"
+import { Pool, types } from "pg"
 import bcrypt from "bcryptjs"
+import { randomUUID } from "node:crypto"
+import { getLocalDateString } from "./shared/utils/parseDateLocal.js"
 
-const sqlite: DatabaseType = new Database(process.env.DB_PATH ?? "gestao.db")
-export { sqlite }
-sqlite.pragma("journal_mode = WAL")
-sqlite.pragma("foreign_keys = ON")
+/**
+ * Parsers de tipo do driver `pg` (PLAN-070):
+ * - `numeric` (1700) → number: o driver devolve string; convertemos para number na
+ *   fronteira JS, mantendo paridade com o comportamento atual do SQLite REAL.
+ *   O armazenamento no PG continua DOUBLE PRECISION (precisão no banco).
+ * - `int8`/bigint (20) → number: `COUNT(*)`/agregações voltam como string no pg;
+ *   normalizamos para number (o frontend espera números).
+ */
+types.setTypeParser(1700, (v) => (v === null ? null : parseFloat(v)))
+types.setTypeParser(20, (v) => (v === null ? null : parseInt(v, 10)))
 
-export const db = drizzle(sqlite)
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL ?? "postgres://nxgest:nxgest-dev@localhost:5433/nxgest",
+  max: Number(process.env.PG_POOL_MAX ?? 10),
+})
 
-export const clientes = sqliteTable("clientes", {
+export const db = drizzle(pool)
+
+/** Helper para SQL cru com bindings `?` posicionais (converte para `$1..$N` do pg). */
+export async function rawQuery<T>(text: string, params: unknown[] = []): Promise<{ rows: T[]; rowCount: number }> {
+  let i = 0
+  const sqlText = text.replace(/\?/g, () => `$${++i}`)
+  const result = await pool.query(sqlText, params)
+  return { rows: result.rows as T[], rowCount: result.rowCount ?? 0 }
+}
+
+export const clientes = pgTable("clientes", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
   cpf: text("cpf"),
@@ -26,113 +54,138 @@ export const clientes = sqliteTable("clientes", {
   bairro: text("bairro"),
   cidade: text("cidade"),
   estado: text("estado"),
-  lat: real("lat"),
-  lng: real("lng"),
+  lat: doublePrecision("lat"),
+  lng: doublePrecision("lng"),
   comercioLogradouro: text("comercioLogradouro"),
   comercioNumero: text("comercioNumero"),
   comercioBairro: text("comercioBairro"),
   comercioCidade: text("comercioCidade"),
   comercioEstado: text("comercioEstado"),
-  comercioLat: real("comercioLat"),
-  comercioLng: real("comercioLng"),
+  comercioLat: doublePrecision("comercioLat"),
+  comercioLng: doublePrecision("comercioLng"),
   foto: text("foto"),
   createdAt: text("createdAt").notNull(),
   updatedAt: text("updatedAt").notNull(),
   deletedAt: text("deletedAt"),
   userId: text("userId"),
-})
+}, (t) => [
+  uniqueIndex("idx_clientes_cpf").on(t.cpf, t.userId).where(sql`${t.cpf} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+  index("idx_clientes_user").on(t.userId, t.deletedAt),
+])
 
-export const contratos = sqliteTable("contratos", {
+export const contratos = pgTable("contratos", {
   id: text("id").primaryKey(),
   clienteId: text("clienteId").notNull(),
-  valorBase: real("valorBase").notNull(),
-  percentualJuros: real("percentualJuros").notNull(),
-  valorFinal: real("valorFinal").notNull(),
+  valorBase: doublePrecision("valorBase").notNull(),
+  percentualJuros: doublePrecision("percentualJuros").notNull(),
+  valorFinal: doublePrecision("valorFinal").notNull(),
   quantidadeParcelas: integer("quantidadeParcelas").notNull(),
   dataInicio: text("dataInicio").notNull(),
-  dataFinal: text("dataFinal").notNull(),
+  dataFinal: text("dataFinal").notNull().default(""),
   estado: text("estado").notNull().default("Ativo"),
   createdAt: text("createdAt").notNull(),
   updatedAt: text("updatedAt").notNull(),
   deletedAt: text("deletedAt"),
   userId: text("userId"),
-})
+}, (t) => [
+  index("idx_contratos_cliente").on(t.clienteId),
+  index("idx_contratos_user").on(t.userId, t.deletedAt),
+])
 
-export const parcelas = sqliteTable("parcelas", {
+export const parcelas = pgTable("parcelas", {
   id: text("id").primaryKey(),
   contratoId: text("contratoId").notNull(),
   numero: integer("numero").notNull(),
-  valorPrevisto: real("valorPrevisto").notNull(),
-  valorPago: real("valorPago").notNull().default(0),
-  saldoPendente: real("saldoPendente").notNull(),
+  valorPrevisto: doublePrecision("valorPrevisto").notNull(),
+  valorPago: doublePrecision("valorPago").notNull().default(0),
+  saldoPendente: doublePrecision("saldoPendente").notNull(),
   estado: text("estado").notNull().default("Pendente"),
   dataVencimento: text("dataVencimento").notNull(),
   dataQuitacao: text("dataQuitacao"),
   createdAt: text("createdAt").notNull(),
   updatedAt: text("updatedAt").notNull(),
   deletedAt: text("deletedAt"),
-})
+}, (t) => [
+  index("idx_parcelas_contrato").on(t.contratoId),
+  index("idx_parcelas_venc").on(t.contratoId, t.dataVencimento, t.saldoPendente),
+])
 
-export const movimentacoesFinanceiras = sqliteTable("movimentacoesFinanceiras", {
+export const movimentacoesFinanceiras = pgTable("movimentacoesFinanceiras", {
   id: text("id").primaryKey(),
   tipo: text("tipo").notNull(),
-  valor: real("valor").notNull(),
+  valor: doublePrecision("valor").notNull(),
   origem: text("origem").notNull(),
   origemId: text("origemId").notNull(),
   descricao: text("descricao"),
   data: text("data").notNull(),
   createdAt: text("createdAt").notNull(),
   userId: text("userId"),
-})
+}, (t) => [
+  index("idx_movimentacoes_data").on(t.data),
+  index("idx_movimentacoes_origem").on(t.origem, t.origemId),
+  index("idx_movimentacoes_user").on(t.userId, t.data),
+])
 
-export const caixaConfig = sqliteTable("caixa_config", {
+export const caixaConfig = pgTable("caixa_config", {
   userId: text("userId").primaryKey(),
-  caixaBase: real("caixaBase").notNull().default(0),
+  caixaBase: doublePrecision("caixaBase").notNull().default(0),
   updatedAt: text("updatedAt").notNull(),
 })
 
-export const auditoriaCaixa = sqliteTable("auditoria_caixa", {
+export const auditoriaCaixa = pgTable("auditoria_caixa", {
   id: text("id").primaryKey(),
   operadorId: text("operadorId").notNull(),
   adminId: text("adminId").notNull(),
-  valorAnterior: real("valorAnterior").notNull(),
-  valorNovo: real("valorNovo").notNull(),
+  valorAnterior: doublePrecision("valorAnterior").notNull(),
+  valorNovo: doublePrecision("valorNovo").notNull(),
   motivo: text("motivo").notNull(),
   data: text("data").notNull(),
   createdAt: text("createdAt").notNull(),
-})
+}, (t) => [
+  index("idx_auditoria_caixa_operador").on(t.operadorId),
+  index("idx_auditoria_caixa_data").on(t.data),
+])
 
-export const pagamentos = sqliteTable("pagamentos", {
+export const pagamentos = pgTable("pagamentos", {
   id: text("id").primaryKey(),
   contratoId: text("contratoId").notNull(),
-  valor: real("valor").notNull(),
+  valor: doublePrecision("valor").notNull(),
   data: text("data").notNull(),
   createdAt: text("createdAt").notNull(),
   userId: text("userId"),
   estornadoEm: text("estornadoEm"),
   estornadoPor: text("estornadoPor"),
   estornoMotivo: text("estornoMotivo"),
-})
+}, (t) => [
+  index("idx_pagamentos_contrato").on(t.contratoId),
+  index("idx_pagamentos_user").on(t.userId, t.data),
+])
 
-export const auditoriaEstornos = sqliteTable("auditoria_estornos", {
+export const auditoriaEstornos = pgTable("auditoria_estornos", {
   id: text("id").primaryKey(),
   pagamentoId: text("pagamentoId").notNull(),
   operadorId: text("operadorId").notNull(),
   adminId: text("adminId").notNull(),
-  valor: real("valor").notNull(),
+  valor: doublePrecision("valor").notNull(),
   motivo: text("motivo").notNull(),
   data: text("data").notNull(),
   createdAt: text("createdAt").notNull(),
-})
+}, (t) => [
+  index("idx_auditoria_estornos_pagamento").on(t.pagamentoId),
+  index("idx_auditoria_estornos_operador").on(t.operadorId),
+])
 
-export const pagamentoParcelas = sqliteTable("pagamento_parcelas", {
+export const pagamentoParcelas = pgTable("pagamento_parcelas", {
   id: text("id").primaryKey(),
   pagamentoId: text("pagamentoId").notNull(),
   parcelaId: text("parcelaId").notNull(),
-  valor: real("valor").notNull(),
-})
+  valor: doublePrecision("valor").notNull(),
+}, (t) => [
+  index("idx_pagamento_parcelas_pagamento").on(t.pagamentoId),
+  index("idx_pagamento_parcelas_parcela").on(t.parcelaId),
+])
 
-export const historicoOperacional = sqliteTable("historico_operacional", {
+export const historicoOperacional = pgTable("historico_operacional", {
   id: text("id").primaryKey(),
   clienteId: text("clienteId").notNull(),
   contratoId: text("contratoId").notNull(),
@@ -140,47 +193,59 @@ export const historicoOperacional = sqliteTable("historico_operacional", {
   dataPromessa: text("dataPromessa"),
   createdAt: text("createdAt").notNull(),
   userId: text("userId"),
-})
+}, (t) => [
+  index("idx_historico_operacional_dia").on(t.clienteId, t.contratoId, t.createdAt),
+  index("idx_historico_user").on(t.userId, t.createdAt),
+])
 
-export const gastos = sqliteTable("gastos", {
+export const gastos = pgTable("gastos", {
   id: text("id").primaryKey(),
-  valor: real("valor").notNull(),
+  valor: doublePrecision("valor").notNull(),
   categoria: text("categoria").notNull(),
   observacao: text("observacao"),
   data: text("data").notNull(),
   createdAt: text("createdAt").notNull(),
   deletedAt: text("deletedAt"),
   userId: text("userId"),
-})
+}, (t) => [
+  index("idx_gastos_data").on(t.data),
+  index("idx_gastos_user").on(t.userId, t.data),
+])
 
-export const fechamentosSemanais = sqliteTable("fechamentos_semanais", {
+export const fechamentosSemanais = pgTable("fechamentos_semanais", {
   id: text("id").primaryKey(),
   dataInicio: text("dataInicio").notNull(),
   dataFim: text("dataFim").notNull(),
-  totalRecebido: real("totalRecebido").notNull(),
-  totalGasto: real("totalGasto").notNull(),
-  resultado: real("resultado").notNull(),
-  caixaBase: real("caixaBase").notNull().default(0),
-  saldoFechamento: real("saldoFechamento").notNull().default(0),
+  totalRecebido: doublePrecision("totalRecebido").notNull(),
+  totalGasto: doublePrecision("totalGasto").notNull(),
+  resultado: doublePrecision("resultado").notNull(),
+  caixaBase: doublePrecision("caixaBase").notNull().default(0),
+  saldoFechamento: doublePrecision("saldoFechamento").notNull().default(0),
   createdAt: text("createdAt").notNull(),
   userId: text("userId"),
-})
+}, (t) => [
+  index("idx_fechamentos_semanais_data").on(t.dataInicio),
+  index("idx_fechamentos_user").on(t.userId, t.dataInicio),
+  unique("idx_fechamentos_user_periodo").on(t.userId, t.dataInicio, t.dataFim),
+])
 
-export const snapshotsAtraso = sqliteTable("snapshots_atraso", {
+export const snapshotsAtraso = pgTable("snapshots_atraso", {
   id: text("id").primaryKey(),
   userId: text("userId").notNull(),
   data: text("data").notNull(),
   clientesAtrasados: integer("clientesAtrasados").notNull(),
   contratosAtrasados: integer("contratosAtrasados").notNull(),
-  valorAtrasado: real("valorAtrasado").notNull(),
+  valorAtrasado: doublePrecision("valorAtrasado").notNull(),
   createdAt: text("createdAt").notNull(),
-})
+}, (t) => [
+  unique("snapshots_atraso_user_data").on(t.userId, t.data),
+  index("idx_snapshots_atraso_data").on(t.userId, t.data),
+])
 
-export const usuarios = sqliteTable("usuarios", {
+export const usuarios = pgTable("usuarios", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
   email: text("email").notNull().unique(),
-  /** Nullable (PLAN-065): convidado ainda não definiu senha. */
   senhaHash: text("senhaHash"),
   role: text("role").notNull().default("operator"),
   createdAt: text("createdAt").notNull(),
@@ -188,12 +253,12 @@ export const usuarios = sqliteTable("usuarios", {
   empresaId: text("empresaId"),
   chefeId: text("chefeId"),
   foto: text("foto"),
-})
+}, (t) => [
+  index("idx_usuarios_empresa_role").on(t.empresaId, t.role),
+])
 
-/** Tokens de conta (PLAN-065): convite | reset | lead. Hash SHA-256, single-use, expiração por tipo. */
-export const authTokens = sqliteTable("auth_tokens", {
+export const authTokens = pgTable("auth_tokens", {
   id: text("id").primaryKey(),
-  /** Id do sujeito (usuário; p/ lead no PLAN-064). */
   subjectId: text("subjectId").notNull(),
   tipo: text("tipo").notNull(),
   hash: text("hash").notNull(),
@@ -202,19 +267,18 @@ export const authTokens = sqliteTable("auth_tokens", {
   createdAt: text("createdAt").notNull(),
 })
 
-export const empresas = sqliteTable("empresas", {
+export const empresas = pgTable("empresas", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
   createdAt: text("createdAt").notNull(),
   modulos: text("modulos"),
-  /** Recursos finos (capacidades) da empresa. `null` = todas ativas; `[]` = nenhuma. */
   capacidades: text("capacidades"),
   documento: text("documento"),
   nomeFantasia: text("nomeFantasia"),
   ativa: integer("ativa").notNull().default(1),
 })
 
-export const auditoriaModulos = sqliteTable("auditoria_modulos", {
+export const auditoriaModulos = pgTable("auditoria_modulos", {
   id: text("id").primaryKey(),
   empresaId: text("empresaId").notNull(),
   adminId: text("adminId").notNull(),
@@ -226,7 +290,7 @@ export const auditoriaModulos = sqliteTable("auditoria_modulos", {
   createdAt: text("createdAt").notNull(),
 })
 
-export const anexos = sqliteTable("anexos", {
+export const anexos = pgTable("anexos", {
   id: text("id").primaryKey(),
   clienteId: text("clienteId").notNull(),
   tipo: text("tipo").notNull().default("outro"),
@@ -236,14 +300,14 @@ export const anexos = sqliteTable("anexos", {
   caminho: text("caminho").notNull(),
   criadoPor: text("criadoPor").notNull(),
   createdAt: text("createdAt").notNull(),
-})
+}, (t) => [
+  index("idx_anexos_cliente").on(t.clienteId),
+])
 
-/** Leads comerciais (PLAN-064): interesse → confirmação de e-mail → onboarding → empresa. Isolado do domínio operacional. */
-export const leads = sqliteTable("leads", {
+export const leads = pgTable("leads", {
   id: text("id").primaryKey(),
   nomeResponsavel: text("nomeResponsavel").notNull(),
   empresa: text("empresa").notNull(),
-  /** Unique para dedup; no descarte é anonimizado (LGPD). */
   email: text("email").notNull().unique(),
   telefone: text("telefone"),
   origem: text("origem").notNull().default("Site"),
@@ -255,534 +319,207 @@ export const leads = sqliteTable("leads", {
   descartadoPor: text("descartadoPor"),
   descarteMotivo: text("descarteMotivo"),
   createdAt: text("createdAt").notNull(),
-})
+}, (t) => [
+  index("idx_leads_status").on(t.status),
+  index("idx_leads_email").on(t.email),
+])
 
-export async function createTables() {
-  sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS clientes (
-      id TEXT PRIMARY KEY,
-      nome TEXT NOT NULL,
-      cpf TEXT,
-      comercio TEXT NOT NULL,
-      telefone TEXT NOT NULL,
-      telefoneComercio TEXT,
-      logradouro TEXT NOT NULL,
-      numero TEXT,
-      complemento TEXT,
-      bairro TEXT,
-      cidade TEXT,
-      estado TEXT,
-      lat REAL,
-      lng REAL,
-      comercioLogradouro TEXT,
-      comercioNumero TEXT,
-      comercioBairro TEXT,
-      comercioCidade TEXT,
-      comercioEstado TEXT,
-      comercioLat REAL,
-      comercioLng REAL,
-      foto TEXT,
-      createdAt TEXT NOT NULL,
-      updatedAt TEXT NOT NULL,
-      deletedAt TEXT,
-      userId TEXT
+/**
+ * Migrations idempotentes (PLAN-070) — `CREATE TABLE IF NOT EXISTS` + índices.
+ * Reproduzível de banco vazio; roda no boot e em `scripts/create-schema.mjs`.
+ * NOTA: datas ficam TEXT (D2); monetário DOUBLE PRECISION (D5); IDs text (D6).
+ */
+export async function runMigrations(): Promise<void> {
+  // NOTA: identificadores em aspas duplas — o PG dobra para minúsculas o que vem sem
+  // aspas, e o drizzle/pg-core consulta exatamente os nomes camelCase definidos aqui.
+  const ddl = `
+    CREATE EXTENSION IF NOT EXISTS pg_trgm;
+    CREATE TABLE IF NOT EXISTS "clientes" (
+      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "cpf" TEXT, "comercio" TEXT NOT NULL,
+      "telefone" TEXT NOT NULL, "telefoneComercio" TEXT, "logradouro" TEXT NOT NULL,
+      "numero" TEXT, "complemento" TEXT, "bairro" TEXT, "cidade" TEXT, "estado" TEXT,
+      "lat" DOUBLE PRECISION, "lng" DOUBLE PRECISION,
+      "comercioLogradouro" TEXT, "comercioNumero" TEXT, "comercioBairro" TEXT,
+      "comercioCidade" TEXT, "comercioEstado" TEXT, "comercioLat" DOUBLE PRECISION, "comercioLng" DOUBLE PRECISION,
+      "foto" TEXT, "createdAt" TEXT NOT NULL, "updatedAt" TEXT NOT NULL, "deletedAt" TEXT, "userId" TEXT
     );
-
-    CREATE TABLE IF NOT EXISTS contratos (
-      id TEXT PRIMARY KEY,
-      clienteId TEXT NOT NULL,
-      valorBase REAL NOT NULL,
-      percentualJuros REAL NOT NULL,
-      valorFinal REAL NOT NULL,
-      quantidadeParcelas INTEGER NOT NULL,
-      dataInicio TEXT NOT NULL,
-      dataFinal TEXT NOT NULL,
-      estado TEXT NOT NULL DEFAULT 'Ativo',
-      createdAt TEXT NOT NULL,
-      updatedAt TEXT NOT NULL,
-      deletedAt TEXT,
-      userId TEXT,
-      FOREIGN KEY (clienteId) REFERENCES clientes(id)
+    CREATE TABLE IF NOT EXISTS "contratos" (
+      "id" TEXT PRIMARY KEY, "clienteId" TEXT NOT NULL, "valorBase" DOUBLE PRECISION NOT NULL,
+      "percentualJuros" DOUBLE PRECISION NOT NULL, "valorFinal" DOUBLE PRECISION NOT NULL,
+      "quantidadeParcelas" INTEGER NOT NULL, "dataInicio" TEXT NOT NULL, "dataFinal" TEXT NOT NULL DEFAULT '',
+      "estado" TEXT NOT NULL DEFAULT 'Ativo', "createdAt" TEXT NOT NULL, "updatedAt" TEXT NOT NULL,
+      "deletedAt" TEXT, "userId" TEXT
     );
-
-    CREATE TABLE IF NOT EXISTS parcelas (
-      id TEXT PRIMARY KEY,
-      contratoId TEXT NOT NULL,
-      numero INTEGER NOT NULL,
-      valorPrevisto REAL NOT NULL,
-      valorPago REAL NOT NULL DEFAULT 0,
-      saldoPendente REAL NOT NULL,
-      estado TEXT NOT NULL DEFAULT 'Pendente',
-      dataVencimento TEXT NOT NULL,
-      dataQuitacao TEXT,
-      createdAt TEXT NOT NULL,
-      updatedAt TEXT NOT NULL,
-      deletedAt TEXT,
-      FOREIGN KEY (contratoId) REFERENCES contratos(id)
+    CREATE TABLE IF NOT EXISTS "parcelas" (
+      "id" TEXT PRIMARY KEY, "contratoId" TEXT NOT NULL, "numero" INTEGER NOT NULL,
+      "valorPrevisto" DOUBLE PRECISION NOT NULL, "valorPago" DOUBLE PRECISION NOT NULL DEFAULT 0,
+      "saldoPendente" DOUBLE PRECISION NOT NULL, "estado" TEXT NOT NULL DEFAULT 'Pendente',
+      "dataVencimento" TEXT NOT NULL, "dataQuitacao" TEXT, "createdAt" TEXT NOT NULL,
+      "updatedAt" TEXT NOT NULL, "deletedAt" TEXT
     );
-
-    CREATE TABLE IF NOT EXISTS movimentacoesFinanceiras (
-      id TEXT PRIMARY KEY,
-      tipo TEXT NOT NULL,
-      valor REAL NOT NULL,
-      origem TEXT NOT NULL,
-      origemId TEXT NOT NULL,
-      descricao TEXT,
-      data TEXT NOT NULL,
-      createdAt TEXT NOT NULL,
-      userId TEXT
+    CREATE TABLE IF NOT EXISTS "movimentacoesFinanceiras" (
+      "id" TEXT PRIMARY KEY, "tipo" TEXT NOT NULL, "valor" DOUBLE PRECISION NOT NULL,
+      "origem" TEXT NOT NULL, "origemId" TEXT NOT NULL, "descricao" TEXT, "data" TEXT NOT NULL,
+      "createdAt" TEXT NOT NULL, "userId" TEXT
     );
-
-    CREATE TABLE IF NOT EXISTS caixa_config (
-      userId TEXT PRIMARY KEY,
-      caixaBase REAL NOT NULL DEFAULT 0,
-      updatedAt TEXT NOT NULL
+    CREATE TABLE IF NOT EXISTS "caixa_config" (
+      "userId" TEXT PRIMARY KEY, "caixaBase" DOUBLE PRECISION NOT NULL DEFAULT 0, "updatedAt" TEXT NOT NULL
     );
-
-    CREATE TABLE IF NOT EXISTS auditoria_caixa (
-      id TEXT PRIMARY KEY,
-      operadorId TEXT NOT NULL,
-      adminId TEXT NOT NULL,
-      valorAnterior REAL NOT NULL,
-      valorNovo REAL NOT NULL,
-      motivo TEXT NOT NULL,
-      data TEXT NOT NULL,
-      createdAt TEXT NOT NULL
+    CREATE TABLE IF NOT EXISTS "auditoria_caixa" (
+      "id" TEXT PRIMARY KEY, "operadorId" TEXT NOT NULL, "adminId" TEXT NOT NULL,
+      "valorAnterior" DOUBLE PRECISION NOT NULL, "valorNovo" DOUBLE PRECISION NOT NULL,
+      "motivo" TEXT NOT NULL, "data" TEXT NOT NULL, "createdAt" TEXT NOT NULL
     );
-
-    CREATE INDEX IF NOT EXISTS idx_auditoria_caixa_operador ON auditoria_caixa(operadorId);
-    CREATE INDEX IF NOT EXISTS idx_auditoria_caixa_data ON auditoria_caixa(data);
-
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_cpf ON clientes(cpf, userId) WHERE cpf IS NOT NULL AND deletedAt IS NULL;
-    CREATE INDEX IF NOT EXISTS idx_movimentacoes_data ON movimentacoesFinanceiras(data);
-    CREATE INDEX IF NOT EXISTS idx_movimentacoes_origem ON movimentacoesFinanceiras(origem, origemId);
-    CREATE INDEX IF NOT EXISTS idx_parcelas_contrato ON parcelas(contratoId);
-    CREATE INDEX IF NOT EXISTS idx_contratos_cliente ON contratos(clienteId);
-
-    CREATE TABLE IF NOT EXISTS pagamentos (
-      id TEXT PRIMARY KEY,
-      contratoId TEXT NOT NULL,
-      valor REAL NOT NULL,
-      data TEXT NOT NULL,
-      createdAt TEXT NOT NULL,
-      userId TEXT,
-      FOREIGN KEY (contratoId) REFERENCES contratos(id)
+    CREATE TABLE IF NOT EXISTS "pagamentos" (
+      "id" TEXT PRIMARY KEY, "contratoId" TEXT NOT NULL, "valor" DOUBLE PRECISION NOT NULL,
+      "data" TEXT NOT NULL, "createdAt" TEXT NOT NULL, "userId" TEXT,
+      "estornadoEm" TEXT, "estornadoPor" TEXT, "estornoMotivo" TEXT
     );
-
-    CREATE TABLE IF NOT EXISTS pagamento_parcelas (
-      id TEXT PRIMARY KEY,
-      pagamentoId TEXT NOT NULL,
-      parcelaId TEXT NOT NULL,
-      valor REAL NOT NULL,
-      FOREIGN KEY (pagamentoId) REFERENCES pagamentos(id),
-      FOREIGN KEY (parcelaId) REFERENCES parcelas(id)
+    CREATE TABLE IF NOT EXISTS "auditoria_estornos" (
+      "id" TEXT PRIMARY KEY, "pagamentoId" TEXT NOT NULL, "operadorId" TEXT NOT NULL,
+      "adminId" TEXT NOT NULL, "valor" DOUBLE PRECISION NOT NULL, "motivo" TEXT NOT NULL,
+      "data" TEXT NOT NULL, "createdAt" TEXT NOT NULL
     );
-
-    CREATE INDEX IF NOT EXISTS idx_pagamentos_contrato ON pagamentos(contratoId);
-    CREATE INDEX IF NOT EXISTS idx_pagamento_parcelas_pagamento ON pagamento_parcelas(pagamentoId);
-    CREATE INDEX IF NOT EXISTS idx_pagamento_parcelas_parcela ON pagamento_parcelas(parcelaId);
-
-    CREATE TABLE IF NOT EXISTS auditoria_estornos (
-      id TEXT PRIMARY KEY,
-      pagamentoId TEXT NOT NULL,
-      operadorId TEXT NOT NULL,
-      adminId TEXT NOT NULL,
-      valor REAL NOT NULL,
-      motivo TEXT NOT NULL,
-      data TEXT NOT NULL,
-      createdAt TEXT NOT NULL
+    CREATE TABLE IF NOT EXISTS "pagamento_parcelas" (
+      "id" TEXT PRIMARY KEY, "pagamentoId" TEXT NOT NULL, "parcelaId" TEXT NOT NULL,
+      "valor" DOUBLE PRECISION NOT NULL
     );
-
-    CREATE INDEX IF NOT EXISTS idx_auditoria_estornos_pagamento ON auditoria_estornos(pagamentoId);
-    CREATE INDEX IF NOT EXISTS idx_auditoria_estornos_operador ON auditoria_estornos(operadorId);
-
-    CREATE TABLE IF NOT EXISTS historico_operacional (
-      id TEXT PRIMARY KEY,
-      clienteId TEXT NOT NULL,
-      contratoId TEXT NOT NULL,
-      tipo TEXT NOT NULL CHECK(tipo IN ('visitado', 'nao_localizado', 'promessa')),
-      dataPromessa TEXT,
-      createdAt TEXT NOT NULL,
-      userId TEXT
+    CREATE TABLE IF NOT EXISTS "historico_operacional" (
+      "id" TEXT PRIMARY KEY, "clienteId" TEXT NOT NULL, "contratoId" TEXT NOT NULL,
+      "tipo" TEXT NOT NULL, "dataPromessa" TEXT, "createdAt" TEXT NOT NULL, "userId" TEXT
     );
-
-    CREATE INDEX IF NOT EXISTS idx_historico_operacional_dia
-      ON historico_operacional(clienteId, contratoId, createdAt);
-
-    CREATE TABLE IF NOT EXISTS gastos (
-      id TEXT PRIMARY KEY,
-      valor REAL NOT NULL,
-      categoria TEXT NOT NULL,
-      observacao TEXT,
-      data TEXT NOT NULL,
-      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-      deletedAt TEXT,
-      userId TEXT
+    CREATE TABLE IF NOT EXISTS "gastos" (
+      "id" TEXT PRIMARY KEY, "valor" DOUBLE PRECISION NOT NULL, "categoria" TEXT NOT NULL,
+      "observacao" TEXT, "data" TEXT NOT NULL, "createdAt" TEXT NOT NULL, "deletedAt" TEXT, "userId" TEXT
     );
-
-    CREATE INDEX IF NOT EXISTS idx_gastos_data ON gastos(data);
-
-    CREATE TABLE IF NOT EXISTS fechamentos_semanais (
-      id TEXT PRIMARY KEY,
-      dataInicio TEXT NOT NULL,
-      dataFim TEXT NOT NULL,
-      totalRecebido REAL NOT NULL,
-      totalGasto REAL NOT NULL,
-      resultado REAL NOT NULL,
-      caixaBase REAL NOT NULL DEFAULT 0,
-      saldoFechamento REAL NOT NULL DEFAULT 0,
-      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-      userId TEXT
+    CREATE TABLE IF NOT EXISTS "fechamentos_semanais" (
+      "id" TEXT PRIMARY KEY, "dataInicio" TEXT NOT NULL, "dataFim" TEXT NOT NULL,
+      "totalRecebido" DOUBLE PRECISION NOT NULL, "totalGasto" DOUBLE PRECISION NOT NULL,
+      "resultado" DOUBLE PRECISION NOT NULL, "caixaBase" DOUBLE PRECISION NOT NULL DEFAULT 0,
+      "saldoFechamento" DOUBLE PRECISION NOT NULL DEFAULT 0, "createdAt" TEXT NOT NULL, "userId" TEXT
     );
-
-    CREATE INDEX IF NOT EXISTS idx_fechamentos_semanais_data ON fechamentos_semanais(dataInicio);
-
-    CREATE TABLE IF NOT EXISTS snapshots_atraso (
-      id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      data TEXT NOT NULL,
-      clientesAtrasados INTEGER NOT NULL,
-      contratosAtrasados INTEGER NOT NULL,
-      valorAtrasado REAL NOT NULL,
-      createdAt TEXT NOT NULL,
-      UNIQUE (userId, data)
+    CREATE TABLE IF NOT EXISTS "snapshots_atraso" (
+      "id" TEXT PRIMARY KEY, "userId" TEXT NOT NULL, "data" TEXT NOT NULL,
+      "clientesAtrasados" INTEGER NOT NULL, "contratosAtrasados" INTEGER NOT NULL,
+      "valorAtrasado" DOUBLE PRECISION NOT NULL, "createdAt" TEXT NOT NULL
     );
-
-    CREATE INDEX IF NOT EXISTS idx_snapshots_atraso_data ON snapshots_atraso(userId, data DESC);
-
-    CREATE TABLE IF NOT EXISTS usuarios (
-      id TEXT PRIMARY KEY,
-      nome TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      senhaHash TEXT,
-      role TEXT NOT NULL DEFAULT 'operator',
-      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-      deletedAt TEXT,
-      empresaId TEXT,
-      chefeId TEXT,
-      foto TEXT
+    CREATE TABLE IF NOT EXISTS "usuarios" (
+      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "email" TEXT NOT NULL UNIQUE, "senhaHash" TEXT,
+      "role" TEXT NOT NULL DEFAULT 'operator', "createdAt" TEXT NOT NULL, "deletedAt" TEXT,
+      "empresaId" TEXT, "chefeId" TEXT, "foto" TEXT
     );
-
-    CREATE TABLE IF NOT EXISTS auth_tokens (
-      id TEXT PRIMARY KEY,
-      subjectId TEXT NOT NULL,
-      tipo TEXT NOT NULL,
-      hash TEXT NOT NULL,
-      expiraEm TEXT NOT NULL,
-      usadoEm TEXT,
-      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+    CREATE TABLE IF NOT EXISTS "auth_tokens" (
+      "id" TEXT PRIMARY KEY, "subjectId" TEXT NOT NULL, "tipo" TEXT NOT NULL, "hash" TEXT NOT NULL,
+      "expiraEm" TEXT NOT NULL, "usadoEm" TEXT, "createdAt" TEXT NOT NULL
     );
-
-    CREATE TABLE IF NOT EXISTS empresas (
-      id TEXT PRIMARY KEY,
-      nome TEXT NOT NULL,
-      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-      modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]',
-      capacidades TEXT,
-      documento TEXT,
-      nomeFantasia TEXT,
-      ativa INTEGER NOT NULL DEFAULT 1
+    CREATE TABLE IF NOT EXISTS "empresas" (
+      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "createdAt" TEXT NOT NULL, "modulos" TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]',
+      "capacidades" TEXT, "documento" TEXT, "nomeFantasia" TEXT, "ativa" INTEGER NOT NULL DEFAULT 1
     );
-
-    CREATE TABLE IF NOT EXISTS auditoria_modulos (
-      id TEXT PRIMARY KEY,
-      empresaId TEXT NOT NULL,
-      adminId TEXT NOT NULL,
-      tipo TEXT NOT NULL,
-      antes TEXT,
-      depois TEXT,
-      force INTEGER NOT NULL DEFAULT 0,
-      motivo TEXT,
-      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+    CREATE TABLE IF NOT EXISTS "auditoria_modulos" (
+      "id" TEXT PRIMARY KEY, "empresaId" TEXT NOT NULL, "adminId" TEXT NOT NULL, "tipo" TEXT NOT NULL,
+      "antes" TEXT, "depois" TEXT, "force" INTEGER NOT NULL DEFAULT 0, "motivo" TEXT, "createdAt" TEXT NOT NULL
     );
-
-    CREATE TABLE IF NOT EXISTS anexos (
-      id TEXT PRIMARY KEY,
-      clienteId TEXT NOT NULL,
-      tipo TEXT NOT NULL DEFAULT 'outro',
-      nomeOriginal TEXT NOT NULL,
-      mime TEXT NOT NULL,
-      tamanho INTEGER NOT NULL,
-      caminho TEXT NOT NULL,
-      criadoPor TEXT NOT NULL,
-      createdAt TEXT NOT NULL,
-      FOREIGN KEY (clienteId) REFERENCES clientes(id)
+    CREATE TABLE IF NOT EXISTS "anexos" (
+      "id" TEXT PRIMARY KEY, "clienteId" TEXT NOT NULL, "tipo" TEXT NOT NULL DEFAULT 'outro',
+      "nomeOriginal" TEXT NOT NULL, "mime" TEXT NOT NULL, "tamanho" INTEGER NOT NULL,
+      "caminho" TEXT NOT NULL, "criadoPor" TEXT NOT NULL, "createdAt" TEXT NOT NULL
     );
-
-    CREATE TABLE IF NOT EXISTS leads (
-      id TEXT PRIMARY KEY,
-      nomeResponsavel TEXT NOT NULL,
-      empresa TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      telefone TEXT,
-      origem TEXT NOT NULL DEFAULT 'Site',
-      status TEXT NOT NULL DEFAULT 'NOVO',
-      convertidoEmpresaId TEXT,
-      convertidoEm TEXT,
-      convertidoPor TEXT,
-      descartadoEm TEXT,
-      descartadoPor TEXT,
-      descarteMotivo TEXT,
-      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+    CREATE TABLE IF NOT EXISTS "leads" (
+      "id" TEXT PRIMARY KEY, "nomeResponsavel" TEXT NOT NULL, "empresa" TEXT NOT NULL,
+      "email" TEXT NOT NULL UNIQUE, "telefone" TEXT, "origem" TEXT NOT NULL DEFAULT 'Site',
+      "status" TEXT NOT NULL DEFAULT 'NOVO', "convertidoEmpresaId" TEXT, "convertidoEm" TEXT,
+      "convertidoPor" TEXT, "descartadoEm" TEXT, "descartadoPor" TEXT, "descarteMotivo" TEXT,
+      "createdAt" TEXT NOT NULL
     );
+    -- Índices (espelham os do SQLite; justificados em PLAN-070 Fase F)
+    CREATE UNIQUE INDEX IF NOT EXISTS "idx_clientes_cpf" ON "clientes"("cpf", "userId") WHERE "cpf" IS NOT NULL AND "deletedAt" IS NULL;
+    CREATE INDEX IF NOT EXISTS "idx_clientes_user" ON "clientes"("userId", "deletedAt");
+    -- Busca ILIKE com curinga inicial (Fase F — PLAN-070): GIN pg_trgm
+    CREATE INDEX IF NOT EXISTS "idx_clientes_nome_trgm" ON "clientes" USING GIN ("nome" gin_trgm_ops);
+    CREATE INDEX IF NOT EXISTS "idx_movimentacoes_data" ON "movimentacoesFinanceiras"("data");
+    CREATE INDEX IF NOT EXISTS "idx_movimentacoes_origem" ON "movimentacoesFinanceiras"("origem", "origemId");
+    CREATE INDEX IF NOT EXISTS "idx_movimentacoes_user" ON "movimentacoesFinanceiras"("userId", "data");
+    CREATE INDEX IF NOT EXISTS "idx_parcelas_contrato" ON "parcelas"("contratoId");
+    CREATE INDEX IF NOT EXISTS "idx_parcelas_venc" ON "parcelas"("contratoId", "dataVencimento", "saldoPendente");
+    CREATE INDEX IF NOT EXISTS "idx_contratos_cliente" ON "contratos"("clienteId");
+    CREATE INDEX IF NOT EXISTS "idx_contratos_user" ON "contratos"("userId", "deletedAt");
+    CREATE INDEX IF NOT EXISTS "idx_pagamentos_contrato" ON "pagamentos"("contratoId");
+    CREATE INDEX IF NOT EXISTS "idx_pagamentos_user" ON "pagamentos"("userId", "data");
+    CREATE INDEX IF NOT EXISTS "idx_pagamento_parcelas_pagamento" ON "pagamento_parcelas"("pagamentoId");
+    CREATE INDEX IF NOT EXISTS "idx_pagamento_parcelas_parcela" ON "pagamento_parcelas"("parcelaId");
+    CREATE INDEX IF NOT EXISTS "idx_auditoria_caixa_operador" ON "auditoria_caixa"("operadorId");
+    CREATE INDEX IF NOT EXISTS "idx_auditoria_caixa_data" ON "auditoria_caixa"("data");
+    CREATE INDEX IF NOT EXISTS "idx_auditoria_estornos_pagamento" ON "auditoria_estornos"("pagamentoId");
+    CREATE INDEX IF NOT EXISTS "idx_auditoria_estornos_operador" ON "auditoria_estornos"("operadorId");
+    CREATE INDEX IF NOT EXISTS "idx_historico_operacional_dia" ON "historico_operacional"("clienteId", "contratoId", "createdAt");
+    CREATE INDEX IF NOT EXISTS "idx_historico_user" ON "historico_operacional"("userId", "createdAt");
+    CREATE INDEX IF NOT EXISTS "idx_gastos_data" ON "gastos"("data");
+    CREATE INDEX IF NOT EXISTS "idx_gastos_user" ON "gastos"("userId", "data");
+    CREATE INDEX IF NOT EXISTS "idx_fechamentos_semanais_data" ON "fechamentos_semanais"("dataInicio");
+    CREATE INDEX IF NOT EXISTS "idx_fechamentos_user" ON "fechamentos_semanais"("userId", "dataInicio");
+    CREATE UNIQUE INDEX IF NOT EXISTS "idx_fechamentos_user_periodo" ON "fechamentos_semanais"("userId", "dataInicio", "dataFim");
+    CREATE UNIQUE INDEX IF NOT EXISTS "snapshots_atraso_user_data" ON "snapshots_atraso"("userId", "data");
+    CREATE INDEX IF NOT EXISTS "idx_snapshots_atraso_data" ON "snapshots_atraso"("userId", "data");
+    CREATE INDEX IF NOT EXISTS "idx_usuarios_empresa_role" ON "usuarios"("empresaId", "role");
+    CREATE INDEX IF NOT EXISTS "idx_anexos_cliente" ON "anexos"("clienteId");
+    CREATE INDEX IF NOT EXISTS "idx_leads_status" ON "leads"("status");
+    CREATE INDEX IF NOT EXISTS "idx_leads_email" ON "leads"("email");
+  `
+  await pool.query(ddl)
+}
 
-    CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
-    CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
-
-    -- Índices por userId (isolamento multi-tenant): toda consulta filtra
-    -- userId = ? — sem índice, cada listagem vira table scan conforme os dados
-    -- crescem (demora sistêmica em clientes/contratos/cobranças/caixa/gastos).
-    CREATE INDEX IF NOT EXISTS idx_clientes_user ON clientes(userId, deletedAt);
-    CREATE INDEX IF NOT EXISTS idx_contratos_user ON contratos(userId, deletedAt);
-    CREATE INDEX IF NOT EXISTS idx_parcelas_venc ON parcelas(contratoId, dataVencimento, saldoPendente);
-    CREATE INDEX IF NOT EXISTS idx_pagamentos_user ON pagamentos(userId, data);
-    CREATE INDEX IF NOT EXISTS idx_historico_user ON historico_operacional(userId, createdAt);
-    CREATE INDEX IF NOT EXISTS idx_gastos_user ON gastos(userId, data);
-    CREATE INDEX IF NOT EXISTS idx_movimentacoes_user ON movimentacoesFinanceiras(userId, data);
-    CREATE INDEX IF NOT EXISTS idx_fechamentos_user ON fechamentos_semanais(userId, dataInicio);
-
-  `)
-
-  // Migração incremental (PLAN-031): coluna `modulos` em empresas já existentes.
-  const empresaCols = sqlite.pragma("table_info(empresas)") as unknown as { name: string }[]
-  if (!empresaCols.some((c) => c.name === "modulos")) {
-    sqlite.exec(`ALTER TABLE empresas ADD COLUMN modulos TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]'`)
-  }
-
-  // Migração incremental (capacidades): coluna em empresas existentes — NULL = todas ativas.
-  if (!empresaCols.some((c) => c.name === "capacidades")) {
-    sqlite.exec("ALTER TABLE empresas ADD COLUMN capacidades TEXT")
-  }
-
-  // Migração incremental (WS5): campos opcionais de identidade/situação da empresa.
-  if (!empresaCols.some((c) => c.name === "documento")) {
-    sqlite.exec("ALTER TABLE empresas ADD COLUMN documento TEXT")
-  }
-  if (!empresaCols.some((c) => c.name === "nomeFantasia")) {
-    sqlite.exec("ALTER TABLE empresas ADD COLUMN nomeFantasia TEXT")
-  }
-  if (!empresaCols.some((c) => c.name === "ativa")) {
-    sqlite.exec("ALTER TABLE empresas ADD COLUMN ativa INTEGER NOT NULL DEFAULT 1")
-  }
-
-  // Migração incremental (PLAN-032): coluna `chefeId` (hierarquia de papéis) em usuários existentes.
-  const usuarioCols = sqlite.pragma("table_info(usuarios)") as unknown as { name: string }[]
-  if (!usuarioCols.some((c) => c.name === "chefeId")) {
-    sqlite.exec("ALTER TABLE usuarios ADD COLUMN chefeId TEXT")
-  }
-
-  // Migracao: adicionar coluna empresaId em bancos existentes (ignorar se ja existe)
-  try { sqlite.exec("ALTER TABLE usuarios ADD COLUMN empresaId TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE usuarios ADD COLUMN foto TEXT") } catch { /* ja existe */ }
-
-  // Migracao: remover CHECK constraint de role para permitir super_admin
-  try {
-    sqlite.exec("DROP TABLE IF EXISTS usuarios_new")
-    sqlite.exec("BEGIN IMMEDIATE")
-    sqlite.exec(`
-      CREATE TABLE usuarios_new (
-        id TEXT PRIMARY KEY,
-        nome TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        senhaHash TEXT,
-        role TEXT NOT NULL DEFAULT 'operator',
-        createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-        deletedAt TEXT,
-        empresaId TEXT,
-        chefeId TEXT,
-        foto TEXT
-      )
-    `)
-    sqlite.exec("INSERT INTO usuarios_new (id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId, chefeId, foto) SELECT id, nome, email, senhaHash, role, createdAt, deletedAt, empresaId, chefeId, foto FROM usuarios")
-    sqlite.exec("DROP TABLE usuarios")
-    sqlite.exec("ALTER TABLE usuarios_new RENAME TO usuarios")
-    sqlite.exec("COMMIT")
-  } catch {
-    try { sqlite.exec("ROLLBACK") } catch {}
-  }
-
-  // Migracao: adicionar coluna dataFinal em bancos existentes (ignorar se ja existe)
-  try {
-    sqlite.exec("ALTER TABLE contratos ADD COLUMN dataFinal TEXT NOT NULL DEFAULT ''")
-    const semDataFinal = sqlite.prepare(
-      "SELECT id, dataInicio, quantidadeParcelas FROM contratos WHERE dataFinal = ''"
-    ).all() as { id: string; dataInicio: string; quantidadeParcelas: number }[]
-    for (const row of semDataFinal) {
-      const data = new Date(row.dataInicio)
-      data.setDate(data.getDate() + row.quantidadeParcelas)
-      if (data.getDay() === 0) {
-        data.setDate(data.getDate() + 1)
-      }
-      const dataFinal = getLocalDateString(data)
-      sqlite.prepare("UPDATE contratos SET dataFinal = ? WHERE id = ?").run(dataFinal, row.id)
-    }
-  } catch {
-    // coluna ja existe (banco novo ou migracao ja aplicada)
-  }
-
-  // Migracao: normalizar datas ISO 8601 completas para date-only nas movimentacoes
-  sqlite.exec(`
-    UPDATE movimentacoesFinanceiras
-    SET data = substr(data, 1, 10)
-    WHERE length(data) > 10
-  `)
-
-  // Migracao: remover movimentacoes fantasma do ajuste manual do Caixa Base
-  // O ajuste de Caixa Base nao deve gravar movimentacao (a base ja e contada via
-  // caixaBase). Sem esta limpeza, saldo/lucro ficam dobrados em dados ja criados.
-  // Nao toca no "Ajuste de valor base do contrato" (legitimo, outra descricao).
-  sqlite.exec(`
-    DELETE FROM movimentacoesFinanceiras
-    WHERE origem = 'Ajuste' AND descricao = 'Ajuste manual do Caixa Base'
-  `)
-
-  // Migracao: adicionar coluna saldoFechamento em fechamentos_semanais existentes
-  try {
-    sqlite.exec("ALTER TABLE fechamentos_semanais ADD COLUMN saldoFechamento REAL NOT NULL DEFAULT 0")
-  } catch {
-    // coluna ja existe
-  }
-
-  // Migracao: adicionar coluna caixaBase em fechamentos_semanais existentes
-  try {
-    sqlite.exec("ALTER TABLE fechamentos_semanais ADD COLUMN caixaBase REAL NOT NULL DEFAULT 0")
-  } catch {
-    // coluna ja existe
-  }
-
-  // Migracao: adicionar coluna telefoneComercio em clientes existentes
-  try {
-    sqlite.exec("ALTER TABLE clientes ADD COLUMN telefoneComercio TEXT")
-  } catch {
-    // coluna ja existe
-  }
-
-  // Migracao: adicionar colunas de endereco do comercio em clientes existentes
-  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioLogradouro TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioNumero TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioBairro TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioCidade TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioEstado TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioLat REAL") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN comercioLng REAL") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN foto TEXT") } catch { /* ja existe */ }
-
-  // Migracao: colunas de estorno de pagamento (PLAN-028)
-  try { sqlite.exec("ALTER TABLE pagamentos ADD COLUMN estornadoEm TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE pagamentos ADD COLUMN estornadoPor TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE pagamentos ADD COLUMN estornoMotivo TEXT") } catch { /* ja existe */ }
-
-  // Migracao: adicionar coluna userId nas tabelas operacionais (ignorar se ja existe)
-  try { sqlite.exec("ALTER TABLE clientes ADD COLUMN userId TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE contratos ADD COLUMN userId TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE pagamentos ADD COLUMN userId TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE movimentacoesFinanceiras ADD COLUMN userId TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE caixa_config ADD COLUMN userId TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE historico_operacional ADD COLUMN userId TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE gastos ADD COLUMN userId TEXT") } catch { /* ja existe */ }
-  try { sqlite.exec("ALTER TABLE fechamentos_semanais ADD COLUMN userId TEXT") } catch { /* ja existe */ }
-
-  // Migracao: recriar indice unico de CPF como composto (cpf, userId)
-  // Antes: global — impedia mesmo CPF entre operadores diferentes
-  // Depois: por operador — permite mesmo CPF em operadores diferentes
-  try {
-    sqlite.exec("DROP INDEX IF EXISTS idx_clientes_cpf")
-    sqlite.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_cpf ON clientes(cpf, userId) WHERE cpf IS NOT NULL AND deletedAt IS NULL")
-  } catch { /* indice ja atualizado */ }
-
-  // Migracao: caixa_config passa a ter 1 linha por usuario (PK = userId)
-  // Antes: PK id='default' (1 linha global) + userId — operador sem config => 404 no ajuste.
-  // Depois: 1 linha por userId, criada sob demanda via getOrCreateCaixaConfig.
-  // Rebuild (SQLite nao altera PK). Linha orfa (userId NULL) => vira do primeiro
-  // admin/super_admin ativo; sem admin => descartada (getOrCreate recria).
-  try {
-    sqlite.exec("DROP TABLE IF EXISTS caixa_config_new")
-    sqlite.exec("BEGIN IMMEDIATE")
-    sqlite.exec(`
-      CREATE TABLE caixa_config_new (
-        userId TEXT PRIMARY KEY,
-        caixaBase REAL NOT NULL DEFAULT 0,
-        updatedAt TEXT NOT NULL
-      )
-    `)
-    sqlite.exec(`
-      INSERT INTO caixa_config_new (userId, caixaBase, updatedAt)
-      SELECT
-        COALESCE(
-          cc.userId,
-          (SELECT u.id FROM usuarios u WHERE u.role IN ('admin','super_admin') AND u.deletedAt IS NULL LIMIT 1)
-        ),
-        cc.caixaBase,
-        cc.updatedAt
-      FROM caixa_config cc
-      WHERE COALESCE(
-        cc.userId,
-        (SELECT u.id FROM usuarios u WHERE u.role IN ('admin','super_admin') AND u.deletedAt IS NULL LIMIT 1)
-      ) IS NOT NULL
-    `)
-    sqlite.exec("DROP TABLE caixa_config")
-    sqlite.exec("ALTER TABLE caixa_config_new RENAME TO caixa_config")
-    sqlite.exec("COMMIT")
-  } catch {
-    try { sqlite.exec("ROLLBACK") } catch {}
-  }
-
-  // Seed: admin default (se ainda nao existir)
-  const adminExists = sqlite.prepare("SELECT id FROM usuarios WHERE email = ?").get("admin@cobranca.com")
-  if (!adminExists) {
+/** Seed básico de boot (idempotente — PLAN-070): admin, super_admin, empresa Desenvolvimento. */
+export async function seedBasico(): Promise<void> {
+  // Admin default
+  const admin = await pool.query("SELECT id FROM usuarios WHERE email = $1", ["admin@cobranca.com"])
+  if (admin.rowCount === 0) {
     const adminId = randomUUID()
     const hash = bcrypt.hashSync(process.env.ADMIN_DEFAULT_PASSWORD ?? "admin123", 10)
-    sqlite.prepare(
-      "INSERT OR IGNORE INTO usuarios (id, nome, email, senhaHash, role) VALUES (?, ?, ?, ?, ?)"
-    ).run(adminId, "Admin", "admin@cobranca.com", hash, "admin")
-
-    // Backfill: associar dados existentes ao admin
+    await pool.query(
+      "INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
+      [adminId, "Admin", "admin@cobranca.com", hash, "admin", new Date().toISOString()],
+    )
     const tables = [
       "clientes", "contratos", "pagamentos", "movimentacoesFinanceiras",
-      "caixa_config", "historico_operacional", "gastos", "fechamentos_semanais"
+      "caixa_config", "historico_operacional", "gastos", "fechamentos_semanais",
     ]
     for (const table of tables) {
-      sqlite.prepare(`UPDATE ${table} SET userId = ? WHERE userId IS NULL`).run(adminId)
+      await pool.query(`UPDATE "${table}" SET "userId" = $1 WHERE "userId" IS NULL`, [adminId])
     }
   }
 
-  // Seed: super_admin (se ainda nao existir)
+  // Super admin
   const superEmail = process.env.SUPER_ADMIN_EMAIL ?? "super@nxgest.com"
   const superPassword = process.env.SUPER_ADMIN_DEFAULT_PASSWORD ?? "super123"
-  const superExists = sqlite.prepare("SELECT id FROM usuarios WHERE email = ?").get(superEmail)
-  if (!superExists) {
+  const superRow = await pool.query("SELECT id FROM usuarios WHERE email = $1", [superEmail])
+  if (superRow.rowCount === 0) {
     const superId = randomUUID()
     const superHash = bcrypt.hashSync(superPassword, 10)
-    sqlite.prepare(
-      "INSERT OR IGNORE INTO usuarios (id, nome, email, senhaHash, role, createdAt) VALUES (?, ?, ?, ?, ?, datetime('now'))"
-    ).run(superId, "Super Admin", superEmail, superHash, "super_admin")
+    await pool.query(
+      "INSERT INTO usuarios (id, nome, email, \"senhaHash\", role, \"createdAt\") VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING",
+      [superId, "Super Admin", superEmail, superHash, "super_admin", new Date().toISOString()],
+    )
   }
 
-  // Seed: empresa "Desenvolvimento" + backfill do admin existente
-  // Só cria quando o banco não tem nenhuma empresa ainda (dev/reset). Se já há
-  // empresas (ex.: seed-demo), não cria a "Desenvolvimento" fantasma a cada boot.
-  const devEmpresaRow = sqlite.prepare("SELECT id FROM empresas WHERE nome = ?").get("Desenvolvimento") as { id: string } | undefined
-  const totalEmpresas = (sqlite.prepare("SELECT COUNT(*) AS total FROM empresas").get() as { total: number }).total
-  if (!devEmpresaRow && totalEmpresas === 0) {
+  // Empresa "Desenvolvimento" + vínculo do admin + operadores órfãos
+  const devEmpresa = await pool.query("SELECT id FROM empresas WHERE nome = $1", ["Desenvolvimento"])
+  const totalEmpresas = await pool.query("SELECT COUNT(*) AS total FROM empresas")
+  if (devEmpresa.rowCount === 0 && Number(totalEmpresas.rows[0].total) === 0) {
     const devEmpresaId = randomUUID()
-    sqlite.prepare(
-      "INSERT OR IGNORE INTO empresas (id, nome, createdAt) VALUES (?, ?, datetime('now'))"
-    ).run(devEmpresaId, "Desenvolvimento")
-
-    // Vincular admin@cobranca.com à empresa Desenvolvimento
-    sqlite.prepare(
-      "UPDATE usuarios SET empresaId = ? WHERE email = ? AND empresaId IS NULL"
-    ).run(devEmpresaId, "admin@cobranca.com")
-
-    // Vincular operadores órfãos ao mesmo admin/empresa
-    const adminRow = sqlite.prepare(
-      "SELECT id, empresaId FROM usuarios WHERE email = ?"
-    ).get("admin@cobranca.com") as { id: string; empresaId: string } | undefined
-
-    if (adminRow) {
-      sqlite.prepare(
-        "UPDATE usuarios SET empresaId = ? WHERE empresaId IS NULL AND id != ? AND role != 'super_admin'"
-      ).run(adminRow.empresaId, adminRow.id)
+    await pool.query(
+      "INSERT INTO empresas (id, nome, \"createdAt\") VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+      [devEmpresaId, "Desenvolvimento", new Date().toISOString()],
+    )
+    await pool.query("UPDATE usuarios SET \"empresaId\" = $1 WHERE email = $2 AND \"empresaId\" IS NULL", [devEmpresaId, "admin@cobranca.com"])
+    const adminRow = await pool.query<{ id: string; empresaId: string | null }>(
+      "SELECT id, \"empresaId\" FROM usuarios WHERE email = $1", ["admin@cobranca.com"],
+    )
+    if (adminRow.rows[0]?.empresaId) {
+      await pool.query(
+        "UPDATE usuarios SET \"empresaId\" = $1 WHERE \"empresaId\" IS NULL AND id != $2 AND role != 'super_admin'",
+        [adminRow.rows[0].empresaId, adminRow.rows[0].id],
+      )
     }
   }
 }
