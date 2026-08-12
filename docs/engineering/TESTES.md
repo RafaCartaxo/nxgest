@@ -34,6 +34,18 @@ npm run test:coverage # report v8 (reporta, NÃO bloqueia no início — meta so
 
 `npm run test:coverage` (v8, text+html). Meta inicial 0% **reportando**; subir gradual conforme a rotina amadurece. `AGENTS.md` lista `npm test` como obrigatório.
 
-## CI
+## CI/CD (desde 11/08)
 
-`.github/workflows/ci.yml` (GitHub Actions): job `test` (tsc · build · audits · npm test · docs:audit) + job `smoke` (instância isolada: boot → seed-demo → smoke-api).
+**`.github/workflows/ci.yml`** (push/PR/manual) — gate de qualidade:
+- Job `test`: `npm ci` (workspaces) → `tsc --noEmit` → `npm run build` → `audit:ui/styles/modules` → `npm test` (78) → `test:coverage` (+ artifact) → `docs:audit`.
+- Job `smoke`: `scripts/create-schema.mjs` (schema isolado, sem boot) → `seed-demo` → **uma** instância com `JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000` → `smoke-api` (250 cenários).
+- Job `deploy-staging` (push→main, `needs: [test, smoke]`): SSH → `scripts/deploy-staging.sh` → staging em `nxgestao.duckdns.org`.
+
+**`.github/workflows/cd.yml`** — promoção para produção:
+- Dispara por `workflow_run` (CI concluído em main) ou manual (`workflow_dispatch`, input `ref`).
+- `validate`: CI verde + health do staging (gate: prod só passa se staging passou).
+- `deploy-prod`: environment `production` → SSH → `scripts/deploy.sh` → health pós-deploy.
+
+**Infra de build:** o repo usa **npm workspaces** (`frontend/`) — uma única `node_modules` com React hoisted (evita dupla cópia de React nos testes de UI). Lockfile único na raiz.
+
+**Cobertura:** `npm run test:coverage` roda no CI e publica artifact (`coverage/`, 14 dias). Meta 0% reportando; subir gradual.

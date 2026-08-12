@@ -14,17 +14,39 @@
 
 | Item | Valor |
 |------|-------|
-| URL | **oficial:** `https://nxgest.com.br` (PLAN-068 aplicado 08/08) · transitório: `https://nxgestao.duckdns.org` (ainda servido; aposentar após confirmação) |
+| URL | **oficial:** `https://nxgest.com.br` (PLAN-068 aplicado 08/08) |
+| Homologação | **staging:** `https://nxgestao.duckdns.org` (desde 11/08 — ex-transitório de prod, agora QA) |
 | IP do VPS | `172.245.152.223` |
 | Provedor | VPS Hosting Service (`vpshostingservice.co`) |
 | SO | AlmaLinux 8.10 |
 | Docker | 26.1.3 + Compose v2.27.0 |
 | Repo no VPS | `/opt/nxgestao` (clone do GitHub `RafaCartaxo/nxgest`) |
-| Arquivo `.env` | `/opt/nxgestao/.env` (chmod 600, não versionado) |
-| Banco | SQLite em volume `nxgestao_nxgestao_data`, montado em `/data/gestao.db` |
-| Proxy + HTTPS | Caddy (container `nxgest-caddy-1`), Let's Encrypt automático |
+| Arquivo `.env` | `/opt/nxgestao/.env` (prod, chmod 600) · `/opt/nxgestao/.env.staging` (staging, chmod 600) |
+| Banco | SQLite — prod em volume `nxgestao_nxgestao_data` · staging em `nxgestao_nxgestao_staging_data` |
+| Proxy + HTTPS | Caddy (container `nxgestao-caddy-1`), roteia 2 blocos: `nxgest.com.br → app:8080` · `nxgestao.duckdns.org → staging-app:8081` |
+| Rede compartilhada | `nxgestao_net` (external) — permite o Caddy alcançar os dois stacks |
 
 > **Alerta de infra:** o provedor **não oferece snapshots/backups**. A única proteção de dados é o backup cron (seção 5). Cópia off-site é responsabilidade manual.
+
+---
+
+## 1.1 — Pipeline CI/CD (desde 11/08)
+
+| Etapa | Onde | Gatilho |
+|-------|------|---------|
+| **CI** (`.github/workflows/ci.yml`) | GitHub Actions | push/PR/manual |
+| — job `test` | tsc · build · audit:ui/styles/modules · vitest (78) · coverage · docs:audit | — |
+| — job `smoke` | schema isolado → seed → smoke-api (250 cenários, DB/rate limits isolados) | — |
+| — job `deploy-staging` | SSH → VPS → `scripts/deploy-staging.sh` → **staging no ar** | merge/push à `main`, após test+smoke |
+| **CD** (`.github/workflows/cd.yml`) | GitHub Actions | `workflow_run` (CI concluído em main) + manual (`workflow_dispatch` com input `ref`) |
+| — job `validate` | CI verde do push + health do staging (gate de promoção) | — |
+| — job `deploy-prod` | environment `production` → SSH → `scripts/deploy.sh` → health pós-deploy | após `validate` |
+
+**Regra de promoção:** produção **só recebe código que passou CI e staging**. No automático, o CD é acionado pelo `workflow_run` do CI (que inclui o deploy-staging). No manual, `Actions → CD → Run workflow` com opção de escolher `ref` (branch/tag/commit) para deploy sob demanda ou rollback.
+
+**Secrets usados:** `VPS_HOST` · `VPS_USER` · `VPS_SSH_KEY` (privada `id_ed25519` sem passphrase, do host dev).
+
+**Staging:** DB isolado + seed fake (200 clientes/29 usuários, senha `teste123!`). Seed aplicado **apenas na 1ª vez** (banco sem clientes). Produção nunca é tocada pelo deploy-staging.
 
 ---
 

@@ -2,6 +2,15 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 11/08/2026 — Pipeline CI/CD completo + staging de homologação (CI verde pela 1ª vez)
+
+- **CI verde (16 runs vermelhas → verde)**: causas raiz corrigidas — (1) deps do frontend nunca instaladas (`frontend/` virou **npm workspace**, node_modules unificada com React hoisted — eliminou a dupla cópia que quebrava os testes de UI); (2) smoke com `EADDRINUSE` (duplo-boot) → novo `scripts/create-schema.mjs` (schema sem boot); (3) `JWT_SECRET`/rate limits ausentes no runner → definidos no job (250/250 cenários).
+- **Staging de homologação**: `nxgestao.duckdns.org` (ex-transitório de prod) vira QA — `docker-compose.staging.yml` (serviço `staging-app:8081`, volume/DB próprios, rede compartilhada `nxgestao_net`) + `Caddyfile` em 2 blocos + `scripts/deploy-staging.sh` (wait boot → seed 1ª vez → caddy reload → health). Deploy **automático** no merge à main (job no CI, SSH).
+- **CD para produção**: `.github/workflows/cd.yml` — dispara por `workflow_run` (CI concluído em main) ou manual (`workflow_dispatch` + input `ref` p/ rollback). Gate de promoção: **prod só passa se staging saudável**. `deploy-prod` usa environment `production` + `scripts/deploy.sh` + health pós-deploy.
+- **Hardening**: `permissions: contents: read` · `concurrency` cancel-in-progress · `timeout-minutes` · coverage no CI (artifact) · dependabot (npm + actions) · `react-router` 7.18.2 (fix GHSA-337j/CVE-2025-68470 — runtime prod 0 vulns).
+- **Secrets no repo**: `VPS_HOST` · `VPS_USER` · `VPS_SSH_KEY`.
+- Docs: `06-PRODUCAO` (§1.1 pipeline) · `TESTES.md` (CI/CD) · `AGENTS.md`.
+
 ## 11/08/2026 — Ajuste de Caixa Total em modal + form compartilhado + liberação do sócio
 
 - **`AjusteCaixaForm`** (novo, caixa): formulário reutilizável com **react-hook-form + zod** (padrão do `GastoForm`) — KPIs (Base do Caixa/Saldo Atual), valor com máscara, motivo obrigatório (máx 200, espelha o backend), `useFeedback` + mapeamento de 422.
