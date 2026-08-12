@@ -54,10 +54,6 @@ jobs:
           curl -fsS https://nxgestao.duckdns.org/api/health
 
   deploy-prod:
-    # PLAN-070: DESABILITADO durante o cutover PostgreSQL — reativar (remover `if: false`)
-    # somente após a produção validada em PG. Sem isso, o merge na main deployaria prod
-    # com o código PG-only antes dos dados serem migrados.
-    if: false
     name: deploy-prod (nxgest.com.br)
     needs: validate
     environment: production
