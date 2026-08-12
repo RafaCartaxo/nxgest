@@ -24,6 +24,9 @@ JWT_SECRET=staging-jwt-secret
 ADMIN_DEFAULT_PASSWORD=staging-admin
 SUPER_ADMIN_EMAIL=super@nxgest.com
 SUPER_ADMIN_DEFAULT_PASSWORD=staging-super
+PG_DB=nxgest
+PG_USER=nxgest
+PG_PASSWORD=staging-pg-secret
 MAIL_PROVIDER=resend
 RESEND_API_KEY=
 MAIL_FROM_NAME=NX Gest
@@ -60,11 +63,11 @@ done
 
 # 5) Seed fake SÓ na primeira vez (banco sem clientes — o boot não cria
 #    clientes, então esse critério distingue "vazio" de "já seedado").
-if docker exec staging-app node -e 'const s=require("better-sqlite3")("/data/gestao.db",{readonly:true}).prepare("SELECT COUNT(*) c FROM clientes").get().c; process.exit(s>0?0:1)' >/dev/null 2>&1; then
+if docker exec staging-pg psql -U "$PG_USER" -d "$PG_DB" -tAc "SELECT COUNT(*) FROM clientes" 2>/dev/null | grep -qE '^[1-9]'; then
   echo "==> Staging já tem dados — seed ignorado"
 else
   echo "==> DB de staging vazio — aplicando seed de demonstração"
-  docker exec staging-app node scripts/seed-demo.mjs
+  docker exec -e DATABASE_URL="postgres://$PG_USER:$PG_PASSWORD@staging-pg:5432/$PG_DB" staging-app node scripts/seed-demo.mjs
 fi
 
 # 6) Recarrega o Caddy de produção com o Caddyfile atualizado

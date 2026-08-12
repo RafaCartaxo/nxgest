@@ -40,9 +40,23 @@ jobs:
       - run: npm run docs:audit
 
   smoke:
-    name: smoke-api (DB isolado)
+    name: smoke-api (PostgreSQL isolado)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: nxgest
+          POSTGRES_USER: nxgest
+          POSTGRES_PASSWORD: nxgest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nxgest -d nxgest"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,10 +66,11 @@ jobs:
       - run: npm ci
       - run: |
           set -euo pipefail
+          export DATABASE_URL=postgres://nxgest:nxgest@localhost:5432/nxgest
           # 1) schema isolado; 2) seed; 3) sobe UMA instância (rate limit ampliado) e roda o smoke
-          DB_PATH=/tmp/nxgest-smoke.db npx tsx scripts/create-schema.mjs
-          DB_PATH=/tmp/nxgest-smoke.db node scripts/seed-demo.mjs
-          DB_PATH=/tmp/nxgest-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
+          npx tsx scripts/create-schema.mjs
+          node scripts/seed-demo.mjs
+          PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
           SERVER_PID=$!
           trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
           sleep 6
