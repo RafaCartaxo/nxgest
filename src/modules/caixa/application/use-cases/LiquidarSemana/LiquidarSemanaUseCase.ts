@@ -49,7 +49,8 @@ export class LiquidarSemanaUseCase {
       createdAt: now,
     }
 
-    await this.repository.saveFechamentoSemanal(userId, fechamento)
+    const inserido = await this.repository.saveFechamentoSemanal(userId, fechamento)
+    if (!inserido) throw new SemanaJaLiquidadaError()
     return fechamento
   }
 }

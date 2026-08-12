@@ -308,19 +308,23 @@ export class CaixaRepository implements ICaixaRepository {
     }
   }
 
-  async saveFechamentoSemanal(userId: string, f: FechamentoSemanal): Promise<void> {
-    await db.insert(fechamentosSemanais).values({
-      id: f.id,
-      dataInicio: f.dataInicio,
-      dataFim: f.dataFim,
-      totalRecebido: f.totalRecebido,
-      totalGasto: f.totalGasto,
-      resultado: f.resultado,
-      caixaBase: f.caixaBase,
-      saldoFechamento: f.saldoFechamento,
-      userId,
-      createdAt: f.createdAt,
-    })
+  async saveFechamentoSemanal(userId: string, f: FechamentoSemanal): Promise<boolean> {
+    const result = await db
+      .insert(fechamentosSemanais)
+      .values({
+        id: f.id,
+        dataInicio: f.dataInicio,
+        dataFim: f.dataFim,
+        totalRecebido: f.totalRecebido,
+        totalGasto: f.totalGasto,
+        resultado: f.resultado,
+        caixaBase: f.caixaBase,
+        saldoFechamento: f.saldoFechamento,
+        userId,
+        createdAt: f.createdAt,
+      })
+      .onConflictDoNothing()
+    return (result.rowCount ?? 0) > 0
   }
 
   async findFechamentoPorPeriodo(userId: string, dataInicio: string, dataFim: string): Promise<FechamentoSemanal | null> {

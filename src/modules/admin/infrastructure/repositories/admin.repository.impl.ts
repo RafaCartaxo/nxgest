@@ -1,5 +1,5 @@
 import { eq, and, count, isNull, ne, sum, inArray } from "drizzle-orm"
-import { db, usuarios, clientes, contratos, pagamentos, movimentacoesFinanceiras } from "../../../../database.js"
+import { db, rawQuery, usuarios, clientes, contratos, pagamentos, movimentacoesFinanceiras } from "../../../../database.js"
 import type { IAdminRepository, OperadorRow, AdminDashboardStats, EquipeItem } from "../../application/ports/admin.repository.js"
 import { v4 as uuid } from "uuid"
 import { NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, OperadorNaoEncontradoError, NaoPodeRebaixarComSubordinadosError } from "../../domain/errors/admin.error.js"
@@ -30,6 +30,23 @@ function toOperadorRow(
 }
 
 export class AdminRepository implements IAdminRepository {
+  /** Contagens de clientes/contratos ativos por usuário em 2 queries (E2 — anti N+1). */
+  private async countsPorUsuario(userIds: string[]): Promise<Map<string, { totalClientes: number; contratosAtivos: number }>> {
+    const map = new Map<string, { totalClientes: number; contratosAtivos: number }>()
+    for (const id of userIds) map.set(id, { totalClientes: 0, contratosAtivos: 0 })
+    if (userIds.length === 0) return map
+    const ph = userIds.map(() => "?").join(",")
+    const [{ rows: clienteRows }, { rows: contratoRows }] = await Promise.all([
+      rawQuery<{ userId: string; total: number }>(
+        `SELECT c."userId", COUNT(*)::int AS total FROM clientes c WHERE c."deletedAt" IS NULL AND c."userId" IN (${ph}) GROUP BY c."userId"`, userIds),
+      rawQuery<{ userId: string; total: number }>(
+        `SELECT ct."userId", COUNT(*)::int AS total FROM contratos ct WHERE ct."deletedAt" IS NULL AND ct."estado" = 'Ativo' AND ct."userId" IN (${ph}) GROUP BY ct."userId"`, userIds),
+    ])
+    for (const r of clienteRows) map.get(r.userId)!.totalClientes = r.total
+    for (const r of contratoRows) map.get(r.userId)!.contratosAtivos = r.total
+    return map
+  }
+
   async findAllOperadores(empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow[]> {
     const conditions = [...SCOPE_NOT_SUPER]
     if (empresaId) {
@@ -40,15 +57,11 @@ export class AdminRepository implements IAdminRepository {
     }
     const rows = await db.select().from(usuarios).where(and(...conditions)).orderBy(usuarios.createdAt)
 
-    const result: OperadorRow[] = []
-    for (const row of rows) {
-    const [clientesCount, contratosCount] = await Promise.all([
-      db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
-      db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
-    ])
-      result.push(toOperadorRow(row, clientesCount[0].total, contratosCount[0].total))
-    }
-    return result
+    const counts = await this.countsPorUsuario(rows.map((r) => r.id))
+    return rows.map((row) => {
+      const c = counts.get(row.id)!
+      return toOperadorRow(row, c.totalClientes, c.contratosAtivos)
+    })
   }
 
   async findById(id: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
@@ -245,24 +258,20 @@ export class AdminRepository implements IAdminRepository {
       for (const r of recebido) if (r.userId) recebidoMap.set(r.userId, Number(r.total) || 0)
     }
 
-    const result: EquipeItem[] = []
-    for (const row of rows) {
-      const [clientesCount, contratosCount] = await Promise.all([
-        db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
-        db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
-      ])
-      result.push({
+    const counts = await this.countsPorUsuario(userIds)
+    return rows.map((row) => {
+      const c = counts.get(row.id)!
+      return {
         id: row.id,
         nome: row.nome,
         email: row.email,
         role: row.role as EquipeItem["role"],
-        totalClientes: clientesCount[0].total,
-        contratosAtivos: contratosCount[0].total,
+        totalClientes: c.totalClientes,
+        contratosAtivos: c.contratosAtivos,
         recebidoHoje: recebidoMap.get(row.id) ?? 0,
         foto: row.foto ?? null,
-      })
-    }
-    return result
+      }
+    })
   }
 
   async subarvoreIds(chefeId: string): Promise<string[]> {

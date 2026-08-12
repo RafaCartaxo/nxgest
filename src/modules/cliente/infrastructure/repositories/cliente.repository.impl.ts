@@ -105,7 +105,7 @@ export class ClienteRepository implements IClienteRepository {
     const conditions = [sql`${clientes.deletedAt} IS NULL`, eq(clientes.userId, userId)]
 
     if (params.nome) {
-      conditions.push(sql`${clientes.nome} LIKE ${`%${params.nome}%`}`)
+      conditions.push(sql`${clientes.nome} ILIKE ${`%${params.nome}%`}`)
     }
 
     const where = sql.join(conditions, sql` AND `)

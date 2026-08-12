@@ -333,6 +333,7 @@ export async function runMigrations(): Promise<void> {
   // NOTA: identificadores em aspas duplas — o PG dobra para minúsculas o que vem sem
   // aspas, e o drizzle/pg-core consulta exatamente os nomes camelCase definidos aqui.
   const ddl = `
+    CREATE EXTENSION IF NOT EXISTS pg_trgm;
     CREATE TABLE IF NOT EXISTS "clientes" (
       "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "cpf" TEXT, "comercio" TEXT NOT NULL,
       "telefone" TEXT NOT NULL, "telefoneComercio" TEXT, "logradouro" TEXT NOT NULL,
@@ -434,6 +435,8 @@ export async function runMigrations(): Promise<void> {
     -- Índices (espelham os do SQLite; justificados em PLAN-070 Fase F)
     CREATE UNIQUE INDEX IF NOT EXISTS "idx_clientes_cpf" ON "clientes"("cpf", "userId") WHERE "cpf" IS NOT NULL AND "deletedAt" IS NULL;
     CREATE INDEX IF NOT EXISTS "idx_clientes_user" ON "clientes"("userId", "deletedAt");
+    -- Busca ILIKE com curinga inicial (Fase F — PLAN-070): GIN pg_trgm
+    CREATE INDEX IF NOT EXISTS "idx_clientes_nome_trgm" ON "clientes" USING GIN ("nome" gin_trgm_ops);
     CREATE INDEX IF NOT EXISTS "idx_movimentacoes_data" ON "movimentacoesFinanceiras"("data");
     CREATE INDEX IF NOT EXISTS "idx_movimentacoes_origem" ON "movimentacoesFinanceiras"("origem", "origemId");
     CREATE INDEX IF NOT EXISTS "idx_movimentacoes_user" ON "movimentacoesFinanceiras"("userId", "data");
