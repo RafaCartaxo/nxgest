@@ -586,6 +586,16 @@ A cidade no endereço do cliente é opcional.
 
 ---
 
+## BR-044
+
+O endereço pessoal do cliente é **opcional** no cadastro — o foco do sistema é o endereço do **comércio** (onde a cobrança acontece). Cliente pode ser cadastrado apenas com nome, telefone e comércio.
+
+- Quando não informado, `endereco.logradouro` fica `NULL` no banco (coluna nullable desde 13/08).
+- Na navegação, o alvo é o comércio (padrão) → fallback para o endereço pessoal; sem nenhum endereço utilizável, o botão "Navegar" não aparece.
+- Na edição, limpar o endereço pessoal zera os campos (pode ser removido).
+
+---
+
 ## BR-043
 
 O CPF do cliente, quando informado, deve ser único por operador.

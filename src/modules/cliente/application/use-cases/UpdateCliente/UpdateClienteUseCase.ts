@@ -31,7 +31,7 @@ export class UpdateClienteUseCase {
 
     if (input.endereco !== undefined) {
       data.endereco = {
-        logradouro: input.endereco.logradouro ?? existing.endereco.logradouro,
+        logradouro: input.endereco.logradouro !== undefined ? input.endereco.logradouro : existing.endereco.logradouro,
         numero: input.endereco.numero,
         complemento: input.endereco.complemento,
         bairro: input.endereco.bairro,
@@ -39,7 +39,6 @@ export class UpdateClienteUseCase {
         estado: input.endereco.estado,
       }
     }
-
     if (input.enderecoComercio !== undefined) {
       data.enderecoComercio = input.enderecoComercio ?? null
     }

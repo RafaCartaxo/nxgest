@@ -246,6 +246,13 @@ async function main() {
     const r = await req("POST", "/api/clientes", { token: opToken, body: { nome: "Invalido", telefone: "83988887777", cpf: "12345678900", comercio: "X", endereco: { logradouro: "Rua A" } } })
     expect(r, 422, "cpf inválido")
   })
+  await t("CLI-014", "POST /clientes sem endereço pessoal (201, BR-044)", async () => {
+    const r = await req("POST", "/api/clientes", { token: opToken, body: { nome: "Cliente Sem Endereço", telefone: "83988889999", cpf: "44116530603", comercio: "Comércio X" } })
+    expect(r, 201, "criar cliente sem endereço pessoal")
+    const g = await req("GET", `/api/clientes/${r.data.id}`, { token: opToken })
+    expect(g, 200, "buscar cliente sem endereço")
+    if (g.data.endereco.logradouro != null) throw new Error("logradouro deveria ser null")
+  })
   await t("CLI-010", "GET /clientes (200, escopado)", async () => {
     const r = await req("GET", "/api/clientes", { token: opToken })
     expect(r, 200, "listar clientes")

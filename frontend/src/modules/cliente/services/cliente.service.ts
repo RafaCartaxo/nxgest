@@ -8,7 +8,7 @@ export interface Cliente {
   telefone: string
   telefoneComercio?: string
   endereco: {
-    logradouro: string
+    logradouro?: string
     numero?: string
     complemento?: string
     bairro?: string

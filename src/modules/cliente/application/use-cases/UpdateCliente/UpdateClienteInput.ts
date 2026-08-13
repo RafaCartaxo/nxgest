@@ -22,7 +22,12 @@ export const updateClienteSchema = z.object({
     .optional(),
   endereco: z
     .object({
-      logradouro: z.string().min(3).max(150).optional(),
+      logradouro: z
+        .string()
+        .max(150)
+        .optional()
+        .nullable()
+        .refine((val) => !val || val.length >= 3, "Endereço deve conter no mínimo 3 caracteres"),
       numero: z.string().optional(),
       complemento: z.string().optional(),
       bairro: z.string().optional(),

@@ -58,9 +58,12 @@ export function getClienteSchema(t: TFunction) {
       .string({ required_error: t("cliente.validacao.required") })
       .min(1, t("cliente.validacao.required")),
     logradouro: z
-      .string({ required_error: t("cliente.validacao.required") })
-      .min(1, t("cliente.validacao.required"))
-      .min(3, t("cliente.validacao.enderecoInvalido")),
+      .string()
+      .optional()
+      .refine(
+        (val) => !val || val.length >= 3,
+        t("cliente.validacao.enderecoInvalido"),
+      ),
     numero: z.string().optional(),
     complemento: z.string().optional(),
     bairro: z.string().optional(),

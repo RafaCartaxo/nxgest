@@ -14,14 +14,21 @@ export const createClienteSchema = z.object({
   comercio: z.string().min(1, "Campo obrigatório"),
   telefone: z.string().regex(/^\d{10,11}$/, "Telefone deve conter 10 ou 11 dígitos"),
   telefoneComercio: z.string().regex(/^\d{10,11}$/, "Telefone deve conter 10 ou 11 dígitos").optional(),
-  endereco: z.object({
-    logradouro: z.string().min(3).max(150),
-    numero: z.string().optional(),
-    complemento: z.string().optional(),
-    bairro: z.string().optional(),
-    cidade: z.string().min(2).max(100).optional(),
-    estado: z.string().length(2).optional(),
-  }),
+  endereco: z
+    .object({
+      logradouro: z
+        .string()
+        .max(150)
+        .optional()
+        .refine((val) => !val || val.length >= 3, "Endereço deve conter no mínimo 3 caracteres"),
+      numero: z.string().optional(),
+      complemento: z.string().optional(),
+      bairro: z.string().optional(),
+      cidade: z.string().min(2).max(100).optional(),
+      estado: z.string().length(2).optional(),
+    })
+    .optional()
+    .nullable(),
   enderecoComercio: z.object({
     logradouro: z.string().optional(),
     numero: z.string().optional(),

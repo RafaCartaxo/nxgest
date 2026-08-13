@@ -181,7 +181,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Endpoint:** `POST /api/clientes` · **Auth:** operador/admin/super_admin
 
-**Request:** `{ nome, telefone, comercio, logradouro, cpf?, numero?, bairro?, complemento?, cidade?, uf? }`
+**Request:** `{ nome, telefone, comercio, cpf?, logradouro?, numero?, bairro?, complemento?, cidade?, uf? }`
 
 **Response 201:** cliente criado (com `saldoDevedor = 0`)
 
@@ -189,17 +189,21 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 - [ ] O cliente aparece em `GET /api/clientes` e no detalhe?
 - [ ] CPF duplicado (mesmo operador) → 409 (BR-043)?
 - [ ] CPF inválido (dígito verificador) → 422 (BR-036)?
+- [ ] Cliente **sem** endereço pessoal → 201 (endereço pessoal opcional, 13/08)?
 
 **Regras:** BR-001, BR-003, BR-036, BR-037, BR-043 · **Postman:** `Clientes > Criar`
 
 ### API-CT-007 — Criar cliente válido
-**Dado** payload com os obrigatórios (nome, telefone, comércio, logradouro) → **Quando** `POST /api/clientes` → **Então** 201 e `GET /api/clientes/:id` retorna o mesmo cliente.
+**Dado** payload com os obrigatórios (nome, telefone, comércio) → **Quando** `POST /api/clientes` → **Então** 201 e `GET /api/clientes/:id` retorna o mesmo cliente.
 
 ### API-CT-008 — CPF duplicado
 **Dado** CPF já cadastrado pelo mesmo operador → **Quando** `POST /api/clientes` → **Então** 409 com mensagem clara.
 
 ### API-CT-009 — CPF inválido / campos obrigatórios
 **Dado** CPF com dígito verificador errado, ou sem nome/comércio → **Quando** `POST /api/clientes` → **Então** 422.
+
+### API-CT-014 — Criar cliente sem endereço pessoal (BR-044)
+**Dado** payload com só os obrigatórios (nome, telefone, comércio, sem `endereco`) → **Quando** `POST /api/clientes` → **Então** 201 e `GET /api/clientes/:id` devolve `endereco.logradouro = null` (endereço pessoal opcional desde 13/08).
 
 ---
 

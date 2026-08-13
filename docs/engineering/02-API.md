@@ -216,7 +216,7 @@ Cria um novo cliente.
 | comercio | Sim | 1 a 100 caracteres |
 | telefone | Sim | 10 a 11 dígitos |
 | endereco | Sim | Objeto Address |
-| endereco.logradouro | Sim | 3 a 150 caracteres |
+| endereco.logradouro | Não | 3 a 150 caracteres (se preenchido) |
 | endereco.numero | Não | Texto livre |
 | endereco.complemento | Não | Texto livre |
 | endereco.bairro | Não | Texto livre |

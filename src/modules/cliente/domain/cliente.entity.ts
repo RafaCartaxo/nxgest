@@ -1,5 +1,5 @@
 export interface Address {
-  logradouro: string
+  logradouro?: string | null
   numero?: string
   complemento?: string
   bairro?: string

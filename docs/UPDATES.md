@@ -2,6 +2,13 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 13/08/2026 — Cadastro de cliente: endereço pessoal opcional + fix do número na localização
+
+- **Endereço pessoal opcional (BR-044)** — cliente pode ser cadastrado só com nome, telefone e comércio (foco = comércio). `endereco.logradouro` deixa de ser obrigatório no front (`cliente.schema.ts`), no backend (`CreateClienteInput`) e vira **nullable no banco** (`ALTER COLUMN logradouro DROP NOT NULL` no `runMigrations`). Edição permite limpar o endereço pessoal (`null`).
+- **Fix GPS: editar o número não descarta a localização** — o reverse geocode não preenche o campo `número`; digitar o número depois invalidava as coords (regra "editar texto descarta coords"). `numero`/`comercioNumero` saem da lista de campos que descartam (ambos os blocos). Logradouro/bairro/cidade/estado/complemento continuam descartando.
+- **Tipos** — `cliente_logradouro` agora `string | null` (COALESCE de comércio×pessoal pode ser NULL quando ambos vazios) em `operacoes.repository` (port + impl + service + `alvo.ts`).
+- **Testes** — +2 no `ClienteForm.test.tsx` (editar número mantém `gps.capturada` em ambos os blocos). **Docs:** UC-015/UC-080, API-UC-004/CT-007, `02-API.md`, BR-044, este registro.
+
 ## 12/08/2026 — Caixa operacional: ajuste unificado em modal + remoção do "Fechar caixa" da Central
 
 - **Ajuste de caixa = modal único nos 2 lugares** — `OperadorDetail` (admin vendo operador) agora abre o **mesmo `AjustarCaixaModal`** da CaixaPage (form único `AjusteCaixaForm`). `AjusteCaixaCard` (card inline) **removido** — padrão de acesso consistente (era 1 modal + 1 inline).

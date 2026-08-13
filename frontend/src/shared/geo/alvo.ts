@@ -10,7 +10,7 @@ export { buildMapsUrl } from "./maps.js"
 export interface ItemCobrancaNavegavel {
   clienteLat: number | null
   clienteLng: number | null
-  clienteLogradouro: string
+  clienteLogradouro: string | null
   clienteNumero: string | null
   clienteBairro: string | null
   clienteCidade: string | null

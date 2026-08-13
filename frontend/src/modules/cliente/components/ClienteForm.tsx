@@ -27,8 +27,8 @@ interface ClienteFormProps {
   onCancel: () => void
 }
 
-const camposComercio = ["comercioLogradouro", "comercioNumero", "comercioBairro", "comercioCidade", "comercioEstado"]
-const camposPrincipal = ["logradouro", "numero", "bairro", "cidade", "estado", "complemento"]
+const camposComercio = ["comercioLogradouro", "comercioBairro", "comercioCidade", "comercioEstado"]
+const camposPrincipal = ["logradouro", "bairro", "cidade", "estado", "complemento"]
 
 const defaultValues: ClienteFormData = {
   nome: "", telefone: "", telefoneComercio: "", cpf: "", comercio: "",
@@ -68,7 +68,6 @@ function EnderecoFields({ prefix, comComplemento, register, errors, t }: Enderec
       <div className="sm:col-span-2">
         <Field
           label={t("cliente.logradouro")}
-          required={!prefix}
           error={!prefix ? errors.logradouro?.message : undefined}
           {...register(f.logradouro)}
         />
@@ -239,7 +238,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       telefone: unmask(data.telefone),
       telefoneComercio: data.telefoneComercio ? unmask(data.telefoneComercio) : undefined,
       endereco: {
-        logradouro: data.logradouro,
+        logradouro: data.logradouro || (editing ? null : undefined),
         numero: data.numero || undefined,
         complemento: data.complemento || undefined,
         bairro: data.bairro || undefined,

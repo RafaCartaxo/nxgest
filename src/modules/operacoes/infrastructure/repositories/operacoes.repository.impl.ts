@@ -31,7 +31,7 @@ interface CobrancaRow {
   cliente_telefone: string
   cliente_lat: number | null
   cliente_lng: number | null
-  cliente_logradouro: string
+  cliente_logradouro: string | null
   cliente_numero: string | null
   cliente_bairro: string | null
   cliente_cidade: string | null

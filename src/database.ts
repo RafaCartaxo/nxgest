@@ -80,7 +80,7 @@ export const clientes = pgTable("clientes", {
   comercio: text("comercio").notNull(),
   telefone: text("telefone").notNull(),
   telefoneComercio: text("telefone_comercio"),
-  logradouro: text("logradouro").notNull(),
+  logradouro: text("logradouro"),
   numero: text("numero"),
   complemento: text("complemento"),
   bairro: text("bairro"),
@@ -378,7 +378,7 @@ CREATE TABLE IF NOT EXISTS "usuarios" (
     );
 CREATE TABLE IF NOT EXISTS "clientes" (
       "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "cpf" TEXT, "comercio" TEXT NOT NULL,
-      "telefone" TEXT NOT NULL, "telefone_comercio" TEXT, "logradouro" TEXT NOT NULL,
+      "telefone" TEXT NOT NULL, "telefone_comercio" TEXT, "logradouro" TEXT,
       "numero" TEXT, "complemento" TEXT, "bairro" TEXT, "cidade" TEXT, "estado" TEXT,
       "lat" DOUBLE PRECISION, "lng" DOUBLE PRECISION,
       "comercio_logradouro" TEXT, "comercio_numero" TEXT, "comercio_bairro" TEXT,
@@ -501,6 +501,10 @@ CREATE TABLE IF NOT EXISTS "auth_tokens" (
     CREATE INDEX IF NOT EXISTS "idx_leads_email" ON "leads"("email");
   `
   await pool.query(ddl)
+
+  // ALTERs idempotentes — endereço pessoal do cliente deixou de ser obrigatório (2026-08-13).
+  // `DROP NOT NULL` é idempotente: em coluna já nullable não faz nada.
+  await pool.query(`ALTER TABLE "clientes" ALTER COLUMN "logradouro" DROP NOT NULL`)
 }
 
 /** Seed básico de boot (idempotente — PLAN-070): admin, super_admin, empresa Desenvolvimento. */

@@ -75,4 +75,44 @@ describe("ClienteForm — regressão do teclado/foco ao editar endereço (fix 12
     // Comércio não tem coords salvas (localizacaoComercio: null) → editar não descarta nada.
     expect(screen.queryByText("gps.descartada")).not.toBeInTheDocument()
   })
+
+  it("editar o número (principal) mantém a localização capturada (fix 13/08)", async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    const numero = screen.getByDisplayValue("100") as HTMLInputElement
+    expect(numero).toHaveValue("100")
+
+    await user.clear(numero)
+    await user.type(numero, "250")
+
+    expect(numero).toHaveValue("250")
+    // Número não descarta coords: badge "capturada" do principal permanece, sem aviso de descarte.
+    expect(screen.getByText("gps.capturada")).toBeInTheDocument()
+    expect(screen.queryByText("gps.descartada")).not.toBeInTheDocument()
+  })
+
+  it("editar o número do comércio mantém a localização capturada (fix 13/08)", async () => {
+    const user = userEvent.setup()
+    render(
+      <FeedbackProvider>
+        <ClienteForm
+          initial={{ ...clienteComLocalizacao, localizacaoComercio: { lat: -7.12, lng: -34.87 } }}
+          onSubmit={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </FeedbackProvider>,
+    )
+
+    const numeroComercio = screen.getByDisplayValue("10") as HTMLInputElement
+    expect(numeroComercio).toHaveValue("10")
+
+    await user.clear(numeroComercio)
+    await user.type(numeroComercio, "320")
+
+    expect(numeroComercio).toHaveValue("320")
+    // Comércio + principal capturados → 2 badges "capturada"; sem descarte.
+    expect(screen.getAllByText("gps.capturada")).toHaveLength(2)
+    expect(screen.queryByText("gps.descartada")).not.toBeInTheDocument()
+  })
 })

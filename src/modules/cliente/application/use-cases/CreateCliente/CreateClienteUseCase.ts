@@ -23,7 +23,7 @@ export class CreateClienteUseCase {
       comercio: input.comercio,
       telefone: input.telefone,
       telefoneComercio: input.telefoneComercio,
-      endereco: input.endereco,
+      endereco: input.endereco ?? {},
       enderecoComercio: input.enderecoComercio,
       localizacao: input.localizacao ?? null,
       foto: input.foto,

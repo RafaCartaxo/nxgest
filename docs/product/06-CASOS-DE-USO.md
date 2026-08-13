@@ -301,7 +301,7 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 **Ator:** operador
 
-**Ação:** acessa `/clientes/novo`, preenche (nome, telefone, comércio, logradouro obrigatórios; CPF opcional), salva.
+**Ação:** acessa `/clientes/novo`, preenche (nome, telefone, comércio obrigatórios; endereço pessoal, CPF opcionais), salva.
 
 **O que DEVE acontecer:** valida CPF (dígito verificador; duplicado → 409); salva e navega para o detalhe do cliente; saldo devedor aparece (0).
 
@@ -312,6 +312,8 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 - [ ] CPF duplicado (mesmo operador) → mensagem clara (409)?
 - [ ] Navegou para `/clientes/:id` com replace?
 - [ ] Saldo devedor inicial = 0 e título correto?
+- [ ] Cliente sem endereço pessoal cadastra (foco = comércio)? *(13/08)*
+- [ ] Editar apenas o número não descarta a localização capturada? *(13/08)*
 
 **Regras:** BR-001 a BR-003, BR-036 a BR-038
 
@@ -1589,7 +1591,7 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 **Regras (PLAN-055):**
 - Alvo de navegação = **comércio (padrão)** → fallback **endereço principal**.
 - Coordenadas têm prioridade sobre o texto na URL (`buildMapsUrl`); sem coordenadas, usa o texto (mín. 2 partes).
-- **Editar o texto do endereço descarta as coordenadas** (a localização capturada fica inválida; botão Recapturar disponível) — o navegador passa a usar o texto novo.
+- **Editar o texto do endereço descarta as coordenadas** (a localização capturada fica inválida; botão Recapturar disponível) — o navegador passa a usar o texto novo. **Exceção: editar/limpar apenas o campo `número` não descarta** (o reverse geocode não preenche o número; o ponto geográfico permanece o mesmo — 13/08).
 - **Limpar o endereço limpa as coordenadas**.
 - Coords sem texto são válidas (S7 — navegação por ponto).
 - "Navegar" **não aparece** quando não há alvo utilizável.
