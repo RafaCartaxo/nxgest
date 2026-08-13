@@ -48,13 +48,15 @@ export class ResendMailer implements IMailer {
 let avisoFailClosedLogado = false
 
 /**
- * Endereço de origem com display name (PLAN-071): `"NX Gest" <no-reply@nxgest.com.br>`.
+ * Endereço de origem com display name (PLAN-071): `NX Gest <no-reply@nxgest.com.br>`.
+ * Sem aspas literais no display name — o Hotmail renderiza aspas de forma visível
+ * (`"NX Geste"`); o nome limpo evita isso (PLAN-email-transacionais-NX-Gest).
  * Fallbacks: `MAIL_FROM` legado como endereço, e `no-reply@nxgest.com.br` como último recurso.
  */
 export function fromAddress(): string {
-  const address = process.env.MAIL_FROM_ADDRESS ?? process.env.MAIL_FROM ?? "no-reply@nxgest.com.br"
+  const address = process.env.MAIL_FROM_ADDRESS?.trim() || process.env.MAIL_FROM || "no-reply@nxgest.com.br"
   const name = process.env.MAIL_FROM_NAME?.trim()
-  return name ? `"${name}" <${address}>` : address
+  return name ? `${name} <${address}>` : address
 }
 
 /**

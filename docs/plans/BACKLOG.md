@@ -411,17 +411,17 @@ O isolamento multi-tenant filtra `userId = ?` em toda consulta, mas nenhuma tabe
 
 ## P029 — IA no produto (WhatsApp inteligente · resumo · rota · OCR · FAQ)
 
-> **Planejado (12/08):** `PLAN-074-ia-produto.md` (plano mestre, F1-F5) + `PLAN-075-ia-whatsapp.md` (F1 detalhada). Provider: **Gemini Flash-Lite** (free tier p/ dev/teste; produção → billing ~US$1-2/mês). Módulo `ai` com port `IGeradorIA` + providers (console/fail/gemini) — padrão do mailer. **IA só gera/sugere — nunca executa transação.**
+> **Planejado (12/08):** `PLAN-073-ia-produto.md` (plano mestre, F1-F5) + `PLAN-074-ia-whatsapp.md` (F1 detalhada). Provider: **Gemini Flash-Lite** (free tier p/ dev/teste; produção → billing ~US$1-2/mês). Módulo `ai` com port `IGeradorIA` + providers (console/fail/gemini) — padrão do mailer. **IA só gera/sugere — nunca executa transação.**
 
 ### Fases
 
 | Fase | Entrega | Plano |
 |---|---|---|
-| F1 | WhatsApp inteligente (P017) — mensagem personalizada com contexto (situação/parcelas/atraso/total) + fallback ao template | PLAN-073 |
-| F2 | Resumo do dia do operador (visitas/pagamentos/promessas/follow-up) | PLAN-072 |
-| F3 | Priorização de rota (heurística primeiro; IA refina) | PLAN-072 |
-| F4 | OCR de anexos (extrair endereço do comprovante) — conecta com a futura miniatura de PDF/imagem | PLAN-072 |
-| F5 | FAQ/assistente interno do operador (ancorado nas BRs/docs) | PLAN-072 |
+| F1 | WhatsApp inteligente (P017) — mensagem personalizada com contexto (situação/parcelas/atraso/total) + fallback ao template | PLAN-074 |
+| F2 | Resumo do dia do operador (visitas/pagamentos/promessas/follow-up) | PLAN-073 |
+| F3 | Priorização de rota (heurística primeiro; IA refina) | PLAN-073 |
+| F4 | OCR de anexos (extrair endereço do comprovante) — conecta com a futura miniatura de PDF/imagem | PLAN-073 |
+| F5 | FAQ/assistente interno do operador (ancorado nas BRs/docs) | PLAN-073 |
 
 ### Principais decisões
 

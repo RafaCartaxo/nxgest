@@ -1,6 +1,6 @@
 # PLAN-071 — E-mail: deliverability (sair do spam) + política de envio dev/staging/prod
 
-**Status:** ✅ Em execução — Fase 1 (código) e Fase 2 (config/docs/compose, incl. F1) concluídas em 11/08 · ⏳ Fase 3 (DNS) manual · ⏳ Fase 4 (monitoramento)
+**Status:** ✅ Em execução — Fase 1 (código) e Fase 2 (config/docs/compose, incl. F1) concluídas em 11/08 · ✅ Fase 3 (DNS: DMARC `rua=`) concluída em 13/08 · ⏳ Fase 4 (monitoramento) · ⏳ endurecer DMARC (`p=quarantine`) após 2–4 semanas
 
 **Versão:** 1.0
 
@@ -23,7 +23,7 @@ Tirar os e-mails transacionais (convite, reset, confirmação de lead) da caixa 
 | Domínio | `nxgest.com.br` — DNS movido p/ Cloudflare em 08/08; **~3 dias de envio** (reputação em construção) |
 | DKIM | ✅ `resend._domainkey` publicado |
 | SPF | ✅ raiz e `send` = `v=spf1 include:amazonses.com ~all` |
-| DMARC | ⚠️ `v=DMARC1; p=none;` — sem `rua=` (sem relatório, sem enforcement) |
+| DMARC | ✅ `v=DMARC1; p=none; rua=mailto:rafael.cartaxo@hotmail.com` (13/08) — relatório ativo; endurecer `p=quarantine` após 2–4 semanas |
 | From | `no-reply@nxgest.com.br` **sem display name** — sinal clássico de automação |
 | `MAIL_PROVIDER` | **config morta** — o código não lê (`criarMailer()` só olha `RESEND_API_KEY` + `NODE_ENV`) |
 | Risco encontrado | dev **com** `RESEND_API_KEY` no `.env` usaria `ResendMailer` (enviaria real) — viola "dev não envia" |
@@ -65,6 +65,11 @@ Tirar os e-mails transacionais (convite, reset, confirmação de lead) da caixa 
 ### Call-sites
 - `CriarLeadUseCase` e `ReenviarConfirmacaoUseCase`: passam `nome` ao `leadTemplate`.
 
+### `src/shared/email/templates.ts` — identidade visual NX (Fase 1b, 13/08)
+- **Layout único reutilizável** (`montar`) com identidade NX: marca **"NX Gest"** violeta (`#0520ae`), título/corpo em `Arial/Helvetica` (compatibilidade máxima), **botão CTA** `#0520ae` com `min-width`, **rodapé institucional** por idioma ("Se não foi você, ignore." + "NX Gest — gestão de cobranças em campo").
+- Cores da marca (equivalente hex do tema `default`): primária `#0520ae` · hover `#02116c` · texto `#1f2430`/`#5b626f` · fundo `#f4f8fc` · borda `#dde3ea`.
+- Os 3 templates (`convite`/`reset`/`lead`) usam o mesmo layout — só título/corpo/botão mudam. Textos atuais preservados.
+
 ### `src/shared/email/mailers.test.ts`
 - Mantidos: prod sem chave → `FailingMailer` · dev sem chave → `ConsoleMailer`.
 - Novos: dev **com** chave → `ConsoleMailer` · `MAIL_PROVIDER=resend`+chave → `ResendMailer` · `fail` → `FailingMailer` · payload com display name e `reply_to`.
@@ -83,12 +88,12 @@ Tirar os e-mails transacionais (convite, reset, confirmação de lead) da caixa 
 
 ---
 
-## Fase 3 — DNS (⏳ manual, Cloudflare)
+## Fase 3 — DNS (✅ 13/08, manual, Cloudflare)
 
-1. Adicionar relatório ao DMARC: `_dmarc.nxgest.com.br` TXT →
-   `v=DMARC1; p=none; rua=mailto:<destino>` — destino **dmarcian** (default; cadastrar domínio e obter o `mailto:`).
-2. Monitorar 2–4 semanas (SPF/DKIM verdes no mail-tester, sem bounces/complaints).
-3. Endurecer: `p=quarantine; rua=mailto:<destino>` (manter `rua` para seguir recebendo relatório).
+1. ✅ Adicionado relatório ao DMARC: `_dmarc.nxgest.com.br` TXT →
+   `v=DMARC1; p=none; rua=mailto:rafael.cartaxo@hotmail.com` (aplicado em 13/08; propagado).
+2. ⏳ Monitorar 2–4 semanas (SPF/DKIM verdes no mail-tester, sem bounces/complaints).
+3. ⏳ Endurecer: `p=quarantine; rua=mailto:<destino>` (manter `rua` para seguir recebendo relatório). **Depois do período de monitoramento.**
 
 ---
 

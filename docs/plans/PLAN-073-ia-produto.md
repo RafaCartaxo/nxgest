@@ -1,6 +1,6 @@
-# PLAN-074 — IA no Produto (plano mestre)
+# PLAN-073 — IA no Produto (plano mestre)
 
-**Status:** ⏳ Planejado — F1 detalhada em **PLAN-075** · F2-F5 como fases deste plano
+**Status:** ⏳ Planejado — F1 detalhada em **PLAN-074** · F2-F5 como fases deste plano
 
 **Versão:** 1.0
 
@@ -50,7 +50,7 @@ Env: `AI_PROVIDER` + `GEMINI_API_KEY` em `.env*` + compose prod/staging.
 
 **Entrega:** endpoint `POST /api/ai/whatsapp/sugerir` — mensagem de cobrança personalizada (situação/parcelas/atraso/total) com fallback ao template atual. Comprovante **fora da IA** (só consolida a duplicação de `montarTextoComprovante`).
 
-**Plano:** `PLAN-075-ia-whatsapp.md`
+**Plano:** `PLAN-074-ia-whatsapp.md`
 
 ## F2 — Resumo do dia do operador
 
@@ -81,7 +81,7 @@ Env: `AI_PROVIDER` + `GEMINI_API_KEY` em `.env*` + compose prod/staging.
 # Ordem de execução e gate
 
 - **F1 primeiro** (caso de maior valor + destrava a infra). Ao concluir: validar provider real no free tier, `npm test`, smoke, deploy, uso real.
-- F2-F5 abrem conforme prioridade do produto; cada uma detalha em PLAN próprio (padrão `PLAN-075`).
+- F2-F5 abrem conforme prioridade do produto; cada uma detalha em PLAN próprio (padrão `PLAN-074`).
 
 # Critérios de aceite (todas as fases)
 

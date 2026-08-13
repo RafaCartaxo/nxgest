@@ -24,6 +24,6 @@ export class EsquecerSenhaUseCase {
     await this.tokenRepo.invalidarPorTipo(usuario.id, "reset")
     await this.tokenRepo.create({ subjectId: usuario.id, tipo: "reset", hash: hashToken(token), expiraEm: expirarEm("reset") })
     const link = `${appUrl()}/resetar-senha?token=${token}`
-    await this.mailer.send({ to: usuario.email, ...resetTemplate({ link, lang: input.lang ?? "pt-BR" }) })
+    await this.mailer.send({ to: usuario.email, ...resetTemplate({ nome: usuario.nome, link, lang: input.lang ?? "pt-BR" }) })
   }
 }

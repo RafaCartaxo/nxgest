@@ -19,6 +19,8 @@
 
 ## Entregas recentes
 
+- **E-mail: identidade visual NX nos templates (13/08, PLAN-071 Fase 1b — local, aguardando commit)** — `templates.ts` com layout único (marca "NX Gest" violeta · CTA `min-width` · rodapé institucional pt/en/es · cores da marca em hex). Os 3 templates (convite/reset/lead) usam o layout; textos preservados. Validado local (tsc/91 testes/render HTML).
+- **PLAN-070 concluído — PostgreSQL em produção (13/08)** — migração SQLite→PG concluída: `nxgest-postgres`/`staging-pg` healthy, cutover aplicado, débitos 1-3 resolvidos (TIMESTAMPTZ + snake_case + node 20). Otimização de queries/índices (PLAN-070 Fases B-I).
 - **Caixa: DRY + seções colapsáveis + movimentações sem truncate (12/08, local — aguardando commit)** — componentes reutilizáveis (`CaixaKpis`, `AjusteHistorico`/`AjusteRow`, `MovimentacoesList`/`MovimentacaoRow`, `CollapsibleSection`) eliminam a duplicação entre CaixaPage e OperadorDetail; movimentações e histórico colapsáveis (limit 8 + "Ver mais"); movimentação em 2 blocos sem truncate. 1 fonte → 2 páginas.
 - **Cliente: lucro realizado (12/08, local — aguardando commit)** — backend expõe `lucroRealizado` (Σ `valorFinal−valorBase` dos contratos `Finalizado`) via helper reutilizado; frontend mostra o KPI "Lucro realizado" (`sm:grid-cols-3`); BR-098, UC-071, API-CT-106 e smoke `CLI-011` atualizados.
 - **Caixa: título do ajuste contextual + label do motivo + reordenação (12/08, local — aguardando commit)** — `AjustarCaixaModal` com `title` contextual (próprio: "Ajustar Caixa Total" · operador: "Ajustar caixa base do operador") · label do motivo corrigido ("Motivo do ajuste", era chave crua) · `OperadorDetail` reordenado (Dados → Caixa → Clientes → Contratos → Ajuste → Histórico) · `CaixaPage` reordenada (KPIs → Gasto → Movimentações → Ajustar → Histórico).
@@ -37,7 +39,9 @@
 
 | Plano | Status | Próximo passo |
 |---|---|---|
-| PLAN-070 (postgres) | ⏳ Planejado (pronto p/ execução — pré-requisito CI/docker na main) | Fase A — baseline (dump de prod + medições) |
+| PLAN-072 (identidade visual autosserviço) | ⏳ Planejado (13/08) | Admin/sócio edita nomeFantasia/tema/logo/contato · super modera · seed na conversão de lead |
+| PLAN-073 (IA mestre) | ⏳ Planejado | F1 WhatsApp detalhada em PLAN-074 · F2-F5 como fases |
+| PLAN-074 (IA F1 — WhatsApp) | ⏳ Planejado | Endpoint `sugerir` (Gemini Flash-Lite) + fallback ao template |
 | PLAN-071 (e-mail) | 🔵 Fase 1+2 ✅ (11/08) | E-mail saindo do spam (display name "NX Gest" · DMARC rua→quarantine · assuntos) + política dev/staging/prod (`MAIL_PROVIDER`) · ⏳ DNS (Fase 3) e monitoramento (Fase 4) manuais |
 | PLAN-069 (polimento UI) | 🔵 Parte 1 ✅ (08/08) | **Parte 2 — Admin** (filtro por papel `SegmentedControl` · "Recebido hoje" em destaque · "Meus dados" → Perfil) |
 | PLAN-067 (testes) | 🔵 F0+F1 parcial+F3-P022+CI (08/08) | F1 restante (financeiro/admin/operações) · F2 (AuthContext/ThemeProvider/api-client) · F3 telas críticas |

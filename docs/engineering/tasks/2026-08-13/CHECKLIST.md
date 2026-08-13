@@ -25,6 +25,7 @@
 - [x] **Cenários (CTs)** — ID-01..31 + LD-19..23 (autosserviço, sessão, moderação, tema, migração/segurança, leads × identidade)
 - [x] **Plano registrado** — `docs/plans/PLAN-072-identidade-visual-autosservico.md` (decisões D1..D7, modelo de dados com ALTER, backend/frontend, ordem de execução em 5 fases)
 - [x] **Índice atualizado** — `docs/plans/README.md` (linha PLAN-072)
+- [x] **PLAN-071 Fase 1b — identidade visual NX nos e-mails** — `templates.ts` com layout único (marca "NX Gest" violeta `#0520ae` · CTA `min-width` · rodapé institucional pt/en/es · cores da marca em hex). 3 templates (convite/reset/lead) usam o layout; textos preservados. Validado local (tsc · 91 testes · render HTML conferido). Local — aguardando commit.
 
 ## Validação (rodar antes de finalizar)
 

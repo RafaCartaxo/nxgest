@@ -690,9 +690,9 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 
 ### 5.11 IA no produto (P029)
 
-- **Plano mestre (12/08):** `PLAN-074-ia-produto.md` — 5 fases: **F1 WhatsApp inteligente** (P017) · F2 resumo do dia · F3 priorização de rota · F4 OCR de anexos · F5 FAQ interno. **Provider:** Gemini Flash-Lite (**free tier** p/ dev/teste; produção → billing ~US$1-2/mês) via port `IGeradorIA` + providers (console/fail/gemini — padrão do mailer).
+- **Plano mestre (12/08):** `PLAN-073-ia-produto.md` — 5 fases: **F1 WhatsApp inteligente** (P017) · F2 resumo do dia · F3 priorização de rota · F4 OCR de anexos · F5 FAQ interno. **Provider:** Gemini Flash-Lite (**free tier** p/ dev/teste; produção → billing ~US$1-2/mês) via port `IGeradorIA` + providers (console/fail/gemini — padrão do mailer).
 - **Princípios:** IA só gera/sugere (nunca executa transação) · não-bloqueante (fallback ao template/heurística) · prompt com escopo resolvido, sem PII desnecessária · multi-tenant respeitado.
-- **F1 detalhada:** `PLAN-075-ia-whatsapp.md` (endpoint `POST /api/ai/whatsapp/sugerir` + fallback ao template atual).
+- **F1 detalhada:** `PLAN-074-ia-whatsapp.md` (endpoint `POST /api/ai/whatsapp/sugerir` + fallback ao template atual).
 
 ---
 

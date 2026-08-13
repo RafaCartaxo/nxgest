@@ -9,6 +9,12 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 - **Botões gatilho padronizados (CaixaPage)** — "Ajustar Caixa Total" agora `primary` (era `soft`), em paridade com "Registrar Gasto" (`primary`) — mesma variante/ícone.
 - **Docs:** `UI-COVERAGE.md` (AjustarCaixaModal; removidos AjusteCaixaCard/FecharCaixaModal) · `PLAN-069` (status/escopo atualizados) · este registro.
 
+## 13/08/2026 — E-mail: identidade visual NX nos templates (PLAN-071 Fase 1b) — local, aguardando commit
+
+- **`templates.ts`** — layout único reutilizável com identidade NX: marca **"NX Gest"** violeta · título/corpo Arial/Helvetica · **botão CTA** com `min-width` · **rodapé institucional** (pt/en/es) · cores da marca (hex `#0520ae`/`#02116c`, texto `#1f2430`/`#5b626f`, fundo `#f4f8fc`).
+- Os 3 templates (convite/reset/lead) usam o mesmo layout — textos atuais preservados. `text` plain mantido (fallback anti-spam).
+- **Validado:** tsc · 91 testes · render HTML conferido (marca + rodapé nos 3). Sem commit/push.
+
 ## 12/08/2026 — Caixa: DRY (componentes reutilizáveis) + seções colapsáveis + movimentações sem truncate (local, aguardando commit)
 
 - **Componentes reutilizáveis (elimina duplicação entre CaixaPage e OperadorDetail):**

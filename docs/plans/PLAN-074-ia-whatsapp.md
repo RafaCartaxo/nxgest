@@ -1,4 +1,4 @@
-# PLAN-075 — IA F1: WhatsApp inteligente (P017)
+# PLAN-074 — IA F1: WhatsApp inteligente (P017)
 
 **Status:** ⏳ Planejado (pronto p/ execução)
 
@@ -6,7 +6,7 @@
 
 **Início:** 12/08/2026
 
-**Origem:** Backlog **P017 — Mensagens Inteligentes do WhatsApp** · plano mestre **PLAN-074** (F1 de 5)
+**Origem:** Backlog **P017 — Mensagens Inteligentes do WhatsApp** · plano mestre **PLAN-073** (F1 de 5)
 
 **Execução:** módulo `ai` novo + endpoint + frontend, seguindo o padrão do projeto (port + provider + use-case).
 
@@ -100,7 +100,7 @@ Arquivos a tocar: `.env.example` · `.env.production.example` · `docker-compose
 ## Fora de escopo (F1)
 
 - Comprovante com IA (mantém factual — só consolida a duplicação).
-- F2-F5 (resumo do dia, priorização de rota, OCR, FAQ) — ver PLAN-074.
+- F2-F5 (resumo do dia, priorização de rota, OCR, FAQ) — ver PLAN-073.
 - Pagamento real pelo WhatsApp / integração oficial WhatsApp Business API (só gera o texto; abertura segue via `wa.me`).
 
 ## Provider — Gemini Flash-Lite (decisão)

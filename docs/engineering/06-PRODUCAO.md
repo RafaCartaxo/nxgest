@@ -328,11 +328,44 @@ git reset --hard <commit-bom>   # cuidado: descarta mudanças locais no repo
 | produção | `resend` + chave | envia real |
 | default (sem `MAIL_PROVIDER`) | — | `production` → resend se houver chave, senão fail-closed · demais → console |
 
-- **Display name:** `MAIL_FROM_NAME=NX Gest` + `MAIL_FROM_ADDRESS=no-reply@nxgest.com.br` → From `"NX Gest" <no-reply@...>` (reduz sinal de automação/spam). **Manual pendente:** adicionar `MAIL_FROM_NAME="NX Gest"` no `.env` do VPS (o `MAIL_FROM` legado vira fallback de endereço).
+- **Display name:** `MAIL_FROM_NAME=NX Gest` (presente no `.env` do VPS) + `MAIL_FROM_ADDRESS`/fallback `MAIL_FROM=no-reply@nxgest.com.br` → From `NX Gest <no-reply@...>` (reduz sinal de automação/spam). **Corrigido (13/08):** `fromAddress()` trata `MAIL_FROM_ADDRESS` vazio com `||`/`.trim()` — nunca mais `NX Gest <>`.
 - **Reply-To:** suportado no payload (`reply_to`); ainda sem endereço monitorado (aguarda caixa corporativa).
-- **DMARC:** hoje `p=none` → **adicionar `rua=mailto:<dmarcian>`** → monitorar 2–4 semanas (SPF/DKIM verdes, sem bounces) → **`p=quarantine`**. DNS manual no Cloudflare (PLAN-071 Fase 3).
+- **DMARC:** ✅ `v=DMARC1; p=none; rua=mailto:rafael.cartaxo@hotmail.com` aplicado (13/08, propagado). **Próximo:** monitorar 2–4 semanas (SPF/DKIM verdes, sem bounces) → **`p=quarantine`** (manter `rua`). DNS manual no Cloudflare (PLAN-071 Fase 3/4).
 - **Aquecimento:** domínio com poucos dias de envio (ativo desde 08/08) → manter volume baixo/consistente; acompanhar Resend dashboard (deliverability/bounces/complaints) e `mail-tester.com` (meta ≥9/10).
 - **Assunto do lead** mudou de "Confirme seu e-mail — NX Gest" → **"Confirme seu interesse no NX Gest"** (menos padrão phishing).
+
+### Validar envio real (VPS) — `mail:test`
+
+Procedimento para disparar um e-mail **de verdade** (Resend) para conferir render, identidade visual e entregabilidade (spam). Executável de qualquer sessão com acesso SSH ao VPS (`root@172.245.152.223`, chave local `~/.ssh/id_ed25519`).
+
+> **Por que via VPS:** o host local roda `NODE_ENV=development` → regra dura "dev não envia" (`ConsoleMailer`). O `.env` de produção (com `RESEND_API_KEY`) só existe no VPS. O host do VPS **não tem `node`** — roda via imagem `node:20-slim` (mesmo padrão do deploy).
+
+1. **Garantir que o VPS tem a versão nova dos arquivos** (se ainda não commitados/deployados):
+   ```bash
+   scp -i ~/.ssh/id_ed25519 src/shared/email/templates.ts root@172.245.152.223:/opt/nxgestao/src/shared/email/
+   scp -i ~/.ssh/id_ed25519 scripts/mail-test.ts root@172.245.152.223:/opt/nxgestao/scripts/
+   ```
+   Depois de commitado/deployado, pular este passo (o repo do VPS já tem).
+
+2. **Disparar o envio real** (envia os 3 templates — convite, reset, lead):
+   ```bash
+   ssh -i ~/.ssh/id_ed25519 root@172.245.152.223 '
+     cd /opt/nxgestao &&
+     docker run --rm -v "$(pwd)":/app -w /app \
+       --env-file "$(pwd)/.env" \
+       node:20-slim npx --yes tsx scripts/mail-test.ts <EMAIL-DESTINO> [pt-BR|en|es]
+   '
+   ```
+   - `<EMAIL-DESTINO>`: seu e-mail real (ex.: `rafael.cartaxo@hotmail.com`)
+   - Idioma opcional (default `pt-BR`): rodar de novo com `en` / `es` para validar os 3 idiomas
+   - O `--env-file` carrega `NODE_ENV=production` + `MAIL_PROVIDER=resend` + `RESEND_API_KEY` (sem ele, cai em fail-closed/console)
+
+3. **Confirmar na caixa de entrada**: 3 e-mails (`convite`, `reset`, `lead`) com marca NX, botão azul `#3571eb`, fallback textual ("Se o botão não funcionar, copie e cole o endereço") e rodapé institucional. Se cair em **spam**, ver seção "Problemas conhecidos" e PLAN-071.
+
+4. **Limpar** o scp manual (se o passo 1 foi usado), revertendo no VPS:
+   ```bash
+   ssh -i ~/.ssh/id_ed25519 root@172.245.152.223 'cd /opt/nxgestao && git checkout -- src/shared/email/templates.ts scripts/mail-test.ts'
+   ```
 
 ### Por que Cloudflare (e não o painel do registro.br)
 
