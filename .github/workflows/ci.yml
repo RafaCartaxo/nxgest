@@ -76,6 +76,40 @@ jobs:
           sleep 6
           node scripts/smoke-api.mjs --baseUrl http://127.0.0.1:3002
 
+  migracao:
+    name: migrate-modelo (schema + idempotência)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: nxgest
+          POSTGRES_USER: nxgest
+          POSTGRES_PASSWORD: nxgest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nxgest -d nxgest"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: |
+          set -euo pipefail
+          export DATABASE_URL=postgres://nxgest:nxgest@localhost:5432/nxgest
+          # cria o schema do modelo atual e roda a migração idempotente sobre ele;
+          # valida as invariantes do modelo (0 camelCase, timestamptz, numeric, FKs, índice parcial)
+          npx tsx scripts/create-schema.mjs
+          node scripts/migrate-modelo.mjs
+          node scripts/valida-modelo.mjs
+
   deploy-staging:
     name: deploy-staging (homologação duckdns)
     runs-on: ubuntu-latest
