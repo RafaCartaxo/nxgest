@@ -17,10 +17,11 @@ export function SituacaoFinanceira({ cliente }: SituacaoFinanceiraProps) {
   const diasEmAtraso = cliente.diasEmAtraso ?? 0
   const valorVenceHoje = cliente.valorVenceHoje ?? 0
   const lucroPrevisto = cliente.lucroPrevisto ?? 0
+  const lucroRealizado = cliente.lucroRealizado ?? 0
 
   return (
     <section aria-label={t("cliente.situacaoFinanceira")}>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <KpiCard
           variant={saldoDevedor > 0 ? "danger" : "green"}
           title={t("cliente.saldoDevedor")}
@@ -52,6 +53,12 @@ export function SituacaoFinanceira({ cliente }: SituacaoFinanceiraProps) {
           title={t("cliente.lucroPrevisto")}
           value={`R$ ${formatCurrency(lucroPrevisto)}`}
           valueClassName={lucroPrevisto > 0 ? "text-success-text" : ""}
+        />
+        <KpiCard
+          variant={lucroRealizado > 0 ? "green" : "gray"}
+          title={t("cliente.lucroRealizado")}
+          value={`R$ ${formatCurrency(lucroRealizado)}`}
+          valueClassName={lucroRealizado > 0 ? "text-success-text" : ""}
         />
       </div>
 

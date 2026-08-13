@@ -8,7 +8,7 @@ import { THEMES } from "./themes.js"
 
 const SWATCH: Record<string, [string, string]> = {
   default: ["#2763d7", "#1649ae"],
-  aurora: ["oklch(0.55 0.22 295)", "oklch(0.46 0.2 295)"],
+  violeta: ["oklch(0.55 0.22 295)", "oklch(0.46 0.2 295)"],
   ocean: ["oklch(0.55 0.13 215)", "oklch(0.46 0.12 215)"],
   grape: ["oklch(0.5 0.21 305)", "oklch(0.42 0.19 305)"],
   sunset: ["oklch(0.62 0.18 42)", "oklch(0.53 0.17 38)"],

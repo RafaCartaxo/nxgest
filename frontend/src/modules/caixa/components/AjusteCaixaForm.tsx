@@ -85,8 +85,10 @@ export function AjusteCaixaForm({ caixaBase, saldoAtual, onAjustar, onSuccess }:
       />
 
       <FieldTextarea
-        label={t("caixa.motivo")}
+        label={t("caixa.motivoPlaceholder")}
         placeholder={t("caixa.ajustarMotivoPlaceholder")}
+        hint={t("caixa.motivoMaximo")}
+        maxLength={100}
         rows={2}
         error={errors.motivo?.message}
         {...form.register("motivo")}

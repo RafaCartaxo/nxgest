@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom"
-import { User } from "lucide-react"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { User, Wallet, ArrowRight } from "lucide-react"
 import { getOperador, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
-import { AjusteCaixaCard } from "../components/AjusteCaixaCard.js"
+import { AjustarCaixaModal } from "../../caixa/components/AjustarCaixaModal.js"
 import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
-import { ContratoCard } from "../../contrato/components/ContratoCard.js"
 import { listClientes, type Cliente } from "../../cliente/services/cliente.service.js"
-import { ClienteCard } from "../../cliente/components/ClienteCard.js"
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -17,7 +15,10 @@ import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.
 import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { Button } from "../../../shared/components/Button.js"
-import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
+import { Card } from "../../../shared/components/Card/Card.js"
+import { CollapsibleSection } from "../../../shared/components/CollapsibleSection/CollapsibleSection.js"
+import { CaixaKpis } from "../../caixa/components/CaixaKpis.js"
+import { AjusteRow } from "../../caixa/components/AjusteHistorico.js"
 import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 
@@ -36,6 +37,7 @@ export function OperadorDetail() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [ajustarModalOpen, setAjustarModalOpen] = useState(false)
 
   const fetch = useCallback(async () => {
     if (!id) return
@@ -111,85 +113,78 @@ export function OperadorDetail() {
             </div>
 
             <SectionHeader title={t("admin.caixaOperador")} />
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <KpiCard title={t("caixa.caixaBase")} value={`R$ ${caixa.caixaBase.toFixed(2)}`} variant="blue" />
-              <KpiCard title={t("caixa.saldoAtual")} value={`R$ ${caixa.saldoAtual.toFixed(2)}`} variant="gray" />
-              <KpiCard
-                title={t("caixa.lucro")}
-                value={`R$ ${caixa.lucro.toFixed(2)}`}
-                variant={caixa.lucro >= 0 ? "green" : "gray"}
-                valueClassName={caixa.lucro >= 0 ? "text-success-text" : "text-danger-text"}
-              />
-              <KpiCard title={t("caixa.aReceberHoje")} value={`R$ ${caixa.aReceberHoje.toFixed(2)}`} variant="blue" />
-              <KpiCard title={t("caixa.recebidoSemana")} value={`R$ ${caixa.recebidoSemana.toFixed(2)}`} variant="green" />
-              <KpiCard title={t("caixa.cobradoHoje")} value={`R$ ${caixa.recebidoHoje.toFixed(2)}`} variant="green" />
-            </div>
-
-            <AjusteCaixaCard caixaBase={caixa.caixaBase} saldoAtual={caixa.saldoAtual} onAjustar={onAjustarCaixa} />
-
-            <SectionHeader title={t("caixa.historicoAjustes")} />
-            {auditoria.length === 0 ? (
-              <p className="text-text-secondary">{t("caixa.ajusteSemRegistros")}</p>
-            ) : (
-              <div className="mt-2 space-y-1">
-                {auditoria.map((a) => (
-                  <div
-                    key={a.id}
-                    className="flex items-center justify-between rounded-xl border border-border bg-card px-3.5 py-2.5"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-text-primary">
-                        R$ {a.valorAnterior.toFixed(2)} → R$ {a.valorNovo.toFixed(2)}
-                      </span>
-                      <span className="text-xs text-text-secondary">
-                        {a.adminNome ? `${t("caixa.ajustePor")} ${a.adminNome}` : ""}
-                      </span>
-                      <span className="text-xs text-text-muted">{a.motivo}</span>
-                    </div>
-                    <span className="text-xs text-text-muted">
-                      {new Date(a.createdAt).toLocaleDateString("pt-BR")}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <SectionHeader title={t("admin.contratosOperador")} />
-            {contratos.length === 0 ? (
-              <p className="text-text-secondary">{t("admin.semContratosOperador")}</p>
-            ) : (
-              <div className="mt-2 space-y-3">
-                {contratos.map((c) => (
-                  <Link
-                    key={c.id}
-                    to={`/contratos/${c.id}?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`}
-                    className="block"
-                  >
-                    <ContratoCard variant="list-item" contrato={c} />
-                  </Link>
-                ))}
-              </div>
-            )}
+            <CaixaKpis caixa={caixa} />
 
             <SectionHeader title={t("admin.clientesOperador")} />
-            {clientes.length === 0 ? (
-              <p className="text-text-secondary">{t("admin.semClientesOperador")}</p>
-            ) : (
-              <div className="mt-2 space-y-3">
-                {clientes.map((c) => (
-                  <Link
-                    key={c.id}
-                    to={`/clientes/${c.id}?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`}
-                    className="block"
-                  >
-                    <ClienteCard variant="list-item" cliente={c} />
-                  </Link>
-                ))}
-              </div>
-            )}
+            <Card.Root variant="list-item">
+              <Card.Body>
+                <Card.Title className="mb-0.5">{t("admin.clientesOperador")}</Card.Title>
+                <Card.Indicators>
+                  <Card.Indicator label={t("cliente.title")} value={`${clientes.length}`} />
+                </Card.Indicators>
+              </Card.Body>
+              <Card.Actions
+                actions={[
+                  {
+                    icon: ArrowRight,
+                    label: t("admin.acessar"),
+                    onClick: () => navigate(`/clientes?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`),
+                  },
+                ]}
+              />
+            </Card.Root>
+
+            <SectionHeader title={t("admin.contratosOperador")} />
+            <Card.Root variant="list-item">
+              <Card.Body>
+                <Card.Title className="mb-0.5">{t("admin.contratosOperador")}</Card.Title>
+                <Card.Indicators>
+                  <Card.Indicator label={t("contrato.title")} value={`${contratos.length}`} />
+                </Card.Indicators>
+              </Card.Body>
+              <Card.Actions
+                actions={[
+                  {
+                    icon: ArrowRight,
+                    label: t("admin.acessar"),
+                    onClick: () => navigate(`/contratos?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`),
+                  },
+                ]}
+              />
+            </Card.Root>
+
+            <div className="mt-6">
+              <SectionHeader title={t("admin.ajusteCaixaSecao")} />
+              <Button type="button" variant="primary" className="w-full" onClick={() => setAjustarModalOpen(true)}>
+                <Wallet className="size-4" aria-hidden />
+                {t("admin.ajustarCaixaOperador")}
+              </Button>
+            </div>
+
+            <div className="mt-6">
+              <CollapsibleSection
+                title={t("caixa.historicoAjustes")}
+                count={auditoria.length}
+                items={auditoria}
+                renderItem={(a) => <AjusteRow key={a.id} ajuste={a} />}
+                limit={8}
+                defaultCollapsed
+              />
+            </div>
             </>
           )}
       </EstadoTela>
+
+      {operador && caixa && (
+        <AjustarCaixaModal
+          open={ajustarModalOpen}
+          onClose={() => setAjustarModalOpen(false)}
+          caixaBase={caixa.caixaBase}
+          saldoAtual={caixa.saldoAtual}
+          title={t("admin.ajustarTituloOperador")}
+          onAjustar={onAjustarCaixa}
+        />
+      )}
     </div>
   )
 }

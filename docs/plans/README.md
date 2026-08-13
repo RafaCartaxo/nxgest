@@ -73,6 +73,9 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-069-polimento-ui-app.md](PLAN-069-polimento-ui-app.md) | Port-back do polimento de UI (protótipo Lovable `42f1adcb` — Config/Fechar caixa/Ajuste caixa/Admin) | 🔵 Em execução — parte 1 ✅ (08/08) · parte 2 (Admin) pendente |
 | [PLAN-070-postgres-otimizacao.md](PLAN-070-postgres-otimizacao.md) | **Migração SQLite → PostgreSQL** + otimização da camada de dados (N+1, subqueries correlacionadas, índices, transações, backup pg_dump) | ⏳ Planejado (pronto p/ execução — fix de CI/docker na main `95d3a53`/`df6bb18`) |
 | [PLAN-071-email-deliverability.md](PLAN-071-email-deliverability.md) | E-mail: sair do spam (display name "NX Gest", DMARC rua→quarantine, assuntos) + política de envio dev/staging/prod via `MAIL_PROVIDER` | 🔵 Fase 1+2 ✅ (11/08) · Fase 3 (DNS) e 4 (monitoramento) manuais |
+| [PLAN-072-identidade-visual-autosservico.md](PLAN-072-identidade-visual-autosservico.md) | **Identidade visual da empresa: autosserviço + branding por tenant** — admin/sócio edita nomeFantasia/tema/logo/contato, super modera, migração com ALTER, seed de identidade na conversão de lead (F2 parcial) | ⏳ Planejado (análises + CTs ID-/LD- registrados, 13/08) |
+| [PLAN-074-ia-produto.md](PLAN-074-ia-produto.md) | **IA no produto (plano mestre F1-F5):** WhatsApp inteligente · resumo do dia · priorização de rota · OCR de anexos · FAQ (P029) | ⏳ Planejado — F1 detalhada |
+| [PLAN-075-ia-whatsapp.md](PLAN-075-ia-whatsapp.md) | **IA F1 — WhatsApp inteligente (P017):** endpoint `sugerir` (Gemini Flash-Lite, free tier) + fallback ao template | ⏳ Planejado |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |
 
 ## Backlog e briefings auxiliares

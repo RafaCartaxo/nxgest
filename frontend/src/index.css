@@ -271,7 +271,7 @@ h3 {
   --brand-far: oklch(0.6 0.19 300);
 }
 
-[data-theme="aurora"] {
+[data-theme="violeta"] {
   --brand-1: oklch(0.55 0.22 295);
   --brand-2: oklch(0.46 0.2 295);
   --brand-accent: oklch(0.7 0.19 350);

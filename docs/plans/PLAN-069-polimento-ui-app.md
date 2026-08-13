@@ -1,6 +1,6 @@
 # PLAN-069 — Polimento de UI (port-back do Lovable)
 
-**Status:** 🔵 Em execução — **Configurações (PreferenciasModal + SegmentedControl) ✅ · Ajuste caixa (AjusteCaixaCard) ✅ · Fechar caixa na Central (FecharCaixaModal) ✅** · Admin (parcial — KPIs/badges já existentes) · 08/08
+**Status:** 🔵 Em execução — **Configurações (PreferenciasModal + SegmentedControl) ✅ · Ajuste caixa (AjusteCaixaForm + AjustarCaixaModal — modal único, CaixaPage + OperadorDetail) ✅ · Fechar caixa na Central (removido 12/08 — repetia KPIs e não gerava dado; fechamento real só na CaixaPage "Liquidar") ✅** · Admin (parcial — KPIs/badges já existentes) · 08/08
 
 **Versão:** 1.1
 
@@ -22,11 +22,9 @@
    - Preview ao vivo · modo segmentado (Sun/Moon/Monitor) · paleta com anel de seleção · idioma com nome+sigla · bottom-sheet mobile.
    - **Novo no kit:** `SegmentedControl` (port de `kit.tsx`) — reusar em Admin.
 2. **Fechar caixa na Central** — `frontend/src/modules/operacoes/pages/OperacoesDashboard.tsx`:
-   - Modal de fechamento (resumo do dia: saldo/recebido/gastos + confirmar), reutilizando o fluxo real do caixa.
-   - **Novo:** `FecharCaixaModal.tsx` (port) ligado ao QuickAction "Fechar caixa".
+   - ~~Modal de fechamento (resumo do dia + confirmar)~~ → **removido (12/08)**: repetia os KPIs da Central e só navegava p/ `/caixa`, sem gerar dado. O fechamento real (semana, `fechamentos_semanais`) é exclusivo da **CaixaPage** ("Liquidar").
 3. **Ajuste de caixa do operador** — `frontend/src/modules/admin/pages/OperadorDetail.tsx`:
-   - Card com contexto (base atual + saldo) + `Field`/`FieldTextarea` + validação inline.
-   - **Novo:** `AjusteCaixaCard.tsx` (port) substituindo os inputs crus atuais.
+   - **Botão "Ajustar caixa base do operador" → abre o `AjustarCaixaModal`** (mesmo da CaixaPage; form único `AjusteCaixaForm`). `AjusteCaixaCard` inline **removido (12/08)** — padrão de acesso unificado em modal.
 4. **Página Admin** — `frontend/src/modules/admin/pages/AdminPage.tsx` + `OperadoresList.tsx`:
    - Hierarquia de KPIs · destaque do "Recebido hoje" · avatar + role badge + status de convite (Ativo/Convite pendente) + reenviar.
 

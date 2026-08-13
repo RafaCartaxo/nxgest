@@ -22,8 +22,11 @@ import { Button } from "../../../shared/components/Button.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { GastosPeriodoModal } from "../components/GastosPeriodoModal.js"
 import { AjustarCaixaModal } from "../components/AjustarCaixaModal.js"
+import { CaixaKpis } from "../components/CaixaKpis.js"
+import { AjusteRow } from "../components/AjusteHistorico.js"
+import { MovimentacaoRow } from "../components/MovimentacoesList.js"
+import { CollapsibleSection } from "../../../shared/components/CollapsibleSection/CollapsibleSection.js"
 import { listGastos, type GastoItem } from "../../gasto/services/gasto.service.js"
-import { CATEGORIA_ICONES } from "../../gasto/schemas/gasto.schema.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 
 export function CaixaPage() {
@@ -242,24 +245,15 @@ export function CaixaPage() {
       ) : status ? (
         <>
           <SectionHeader title={t("caixa.hoje")} />
-          <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <KpiCard
-              variant="blue"
-              title={t("caixa.aReceberHoje")}
-              value={`R$ ${formatCurrency(status.aReceberHoje)}`}
-              onClick={handleAReceberClick}
-            />
-            <KpiCard
-              variant="green"
-              title={t("caixa.recebidoSemana")}
-              value={`R$ ${formatCurrency(status.recebidoSemana)}`}
-              onClick={handleCobradoSemanaClick}
-            />
-            <KpiCard
-              variant="green"
-              title={t("caixa.cobradoHoje")}
-              value={`R$ ${formatCurrency(status.recebidoHoje)}`}
-              onClick={handleRecebidoHojeClick}
+          <div className="mb-6">
+            <CaixaKpis
+              caixa={status}
+              kpis={["aReceberHoje", "recebidoSemana", "cobradoHoje"]}
+              onKpiClick={{
+                aReceberHoje: handleAReceberClick,
+                recebidoSemana: handleCobradoSemanaClick,
+                cobradoHoje: handleRecebidoHojeClick,
+              }}
             />
           </div>
 
@@ -332,23 +326,8 @@ export function CaixaPage() {
               )}
             </div>
           )}
-          <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <KpiCard
-              variant={status.lucro >= 0 ? "green" : "gray"}
-              title={t("caixa.lucro")}
-              value={`R$ ${formatCurrency(status.lucro)}`}
-              valueClassName={status.lucro >= 0 ? "text-success-text" : "text-danger-text"}
-            />
-            <KpiCard
-              variant="gray"
-              title={t("caixa.saldoAtual")}
-              value={`R$ ${formatCurrency(status.saldoAtual)}`}
-            />
-            <KpiCard
-              variant="gray"
-              title={t("caixa.caixaBase")}
-              value={`R$ ${formatCurrency(status.caixaBase)}`}
-            />
+          <div className="mb-6">
+            <CaixaKpis caixa={status} kpis={["lucro", "saldoAtual", "caixaBase"]} />
           </div>
         </>
       ) : null}
@@ -366,82 +345,33 @@ export function CaixaPage() {
             )}
           </div>
 
-          <SectionHeader title={t("caixa.historicoAjustes")} />
-
-          {auditoria.length === 0 ? (
-            <p className="mt-2 text-text-secondary">{t("caixa.ajusteSemRegistros")}</p>
-          ) : (
-            <div className="mt-2 space-y-1">
-              {auditoria.map((a) => (
-                <div
-                  key={a.id}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card px-3.5 py-2.5"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-text-primary">
-                      R$ {a.valorAnterior.toFixed(2)} → R$ {a.valorNovo.toFixed(2)}
-                    </span>
-                    <span className="text-xs text-text-secondary">
-                      {a.adminNome ? `${t("caixa.ajustePor")} ${a.adminNome}` : ""}
-                    </span>
-                    <span className="text-xs text-text-muted">{a.motivo}</span>
-                  </div>
-                  <span className="text-xs text-text-muted">
-                    {new Date(a.createdAt).toLocaleDateString("pt-BR")}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <SectionHeader title={t("caixa.movimentacoes")} />
-
-          {movimentacoes.length === 0 ? (
-            <p className="mt-4 text-text-secondary">{t("caixa.nenhumaMovimentacao")}</p>
-          ) : (
-            <div className="mt-2 space-y-1">
-              {movimentacoes.map((m) => (
-                <div
-                  key={m.id}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5"
-                >
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <span className={`shrink-0 text-sm font-medium ${m.tipo === "entrada" ? "text-success-text" : "text-danger-text"}`}>
-                  {m.tipo === "entrada" ? "+" : "-"} R$ {formatCurrency(m.valor)}
-                </span>
-                <span className="shrink-0 text-xs text-text-secondary">{m.origem}</span>
-                {m.origem === "Cancelamento" && (
-                  <span className="shrink-0 rounded-full bg-warning-light px-2 py-0.5 text-xs font-medium text-warning-text">
-                    {t("caixa.estornoLabel")}
-                  </span>
-                )}
-                {m.origem === "Gasto" && m.categoria && (
-                  <span className="shrink-0 text-xs text-text-muted">
-                    {CATEGORIA_ICONES[m.categoria] ?? "📋"} {m.categoria}
-                  </span>
-                )}
-                {m.clienteNome && (
-                  <span className="truncate text-xs text-text-muted">{m.clienteNome}</span>
-                )}
-                {m.descricao && (
-                  <span className="truncate text-xs text-text-muted">{m.descricao}</span>
-                )}
-              </div>
-                  <span className="shrink-0 text-xs text-text-muted">
-                    {new Date(m.data + "T00:00:00").toLocaleDateString("pt-BR")}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <CollapsibleSection
+            title={t("caixa.movimentacoes")}
+            count={movimentacoes.length}
+            items={movimentacoes}
+            renderItem={(m) => <MovimentacaoRow key={m.id} movimentacao={m} />}
+            limit={8}
+            defaultCollapsed
+          />
 
           {canAdjust && (
             <div className="mt-8">
-              <Button type="button" variant="soft" className="w-full" onClick={() => setAjustarModalOpen(true)}>
+              <Button type="button" variant="primary" className="w-full" onClick={() => setAjustarModalOpen(true)}>
                 <Wallet className="size-4" /> {t("caixa.ajustar")}
               </Button>
             </div>
           )}
+
+          <div className="mt-6">
+            <CollapsibleSection
+              title={t("caixa.historicoAjustes")}
+              count={auditoria.length}
+              items={auditoria}
+              renderItem={(a) => <AjusteRow key={a.id} ajuste={a} />}
+              limit={8}
+              defaultCollapsed
+            />
+          </div>
 
         </>
       ) : null}
@@ -497,6 +427,7 @@ export function CaixaPage() {
           onClose={() => setAjustarModalOpen(false)}
           caixaBase={status.caixaBase}
           saldoAtual={status.saldoAtual}
+          title={t("caixa.ajustarTituloModal")}
           onAjustar={handleAjustar}
         />
       )}

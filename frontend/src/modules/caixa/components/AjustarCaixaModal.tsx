@@ -8,18 +8,20 @@ interface AjustarCaixaModalProps {
   onClose: () => void
   caixaBase: number
   saldoAtual: number
+  /** Título contextual (ex.: "Ajustar Caixa Total" no caixa próprio · "Ajustar caixa base do operador" no operador). */
+  title: string
   onAjustar: (valor: number, motivo: string) => Promise<void>
 }
 
-/** Ajuste da Caixa Total em modal (CaixaPage) — container do form reutilizável. */
-export function AjustarCaixaModal({ open, onClose, caixaBase, saldoAtual, onAjustar }: AjustarCaixaModalProps) {
+/** Ajuste da Caixa (Total/base) em modal — form único reutilizado (CaixaPage e OperadorDetail). */
+export function AjustarCaixaModal({ open, onClose, caixaBase, saldoAtual, title, onAjustar }: AjustarCaixaModalProps) {
   const { t } = useTranslation()
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={t("caixa.ajustarTituloModal")}
+      title={title}
       maxWidth="max-w-md"
       footer={
         <Button variant="ghost" onClick={onClose} className="w-full">

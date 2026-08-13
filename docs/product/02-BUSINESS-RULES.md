@@ -785,7 +785,7 @@ O **último pagamento** do cliente (`ultimoPagamento`) é o pagamento mais recen
 
 ## BR-098
 
-O **lucro previsto** do cliente é a soma de `(valorFinal − valorBase)` dos contratos **Ativos** (não deletados). Contratos **Finalizados** ficam fora — o lucro deles já foi realizado.
+O **lucro previsto** do cliente é a soma de `(valorFinal − valorBase)` dos contratos **Ativos** (não deletados). O **lucro realizado** é a mesma soma para os contratos **Finalizados**. Ambos são expostos no detalhe do cliente (`lucroPrevisto` e `lucroRealizado`). Contratos **Finalizados** não entram no previsto — o lucro deles já foi realizado; o `saldoDevedor` também não considera os finalizados.
 
 ## BR-099
 

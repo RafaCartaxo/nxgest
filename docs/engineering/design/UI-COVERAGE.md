@@ -83,8 +83,11 @@
 | `SuperAdminRoute` | ✅ | `shared/auth` — guard de rota exclusivo do super admin (`/admin/empresas*`, PLAN-061) |
 | `Fab` / `FabContext` | ✅ | `shared/fab` — FAB mobile acima da tab bar; registrado em ClienteList ("Novo cliente") e ContratoList ("Novo contrato") via useEffect (PLAN-062) |
 | `SegmentedControl` | ✅ | `shared/components/SegmentedControl` — pills segmentadas (modo do tema; port Lovable, PLAN-069) |
-| `AjusteCaixaCard` | ✅ | `modules/admin/components` — ajuste da caixa base do operador com contexto + validação inline (port Lovable, PLAN-069) |
-| `FecharCaixaModal` | ✅ | `modules/operacoes/components` — fechamento na Central: resumo do dia + confirmar → `/caixa` (port Lovable, PLAN-069) |
+| `AjustarCaixaModal` | ✅ | `modules/caixa/components` — ajuste da caixa (base) em modal, form único compartilhado; usado na CaixaPage e no OperadorDetail (PLAN-069 · fix 12/08: `AjusteCaixaCard` inline substituído pelo modal) |
+| `CollapsibleSection` | ✅ | `shared/components/CollapsibleSection` — seção com header clicável + chevron, colapsada por padrão, count no header e limite de itens ("Ver mais"); usado na CaixaPage (movimentações/histórico) e OperadorDetail (histórico) |
+| `CaixaKpis` | ✅ | `modules/caixa/components` — 6 KPIs de caixa (Base/Saldo/Lucro/A receber/Recebido semana/Cobrado hoje) com `kpis[]` e `onKpiClick?`; reutilizado na CaixaPage (cliques) e OperadorDetail |
+| `AjusteHistorico` / `AjusteRow` | ✅ | `modules/caixa/components` — histórico de ajustes (valor `value-lg` + "por **Nome**" + motivo + data) reutilizado na CaixaPage e OperadorDetail |
+| `MovimentacoesList` / `MovimentacaoRow` | ✅ | `modules/caixa/components` — movimentações do caixa em 2 blocos (valor/origem/badges/data + cliente/descrição sem truncate) |
 
 ## 4. Legado conhecido / planejado (rastreado)
 

@@ -30,7 +30,10 @@
     "delete": "Delete",
     "loading": "Loading...",
     "back": "Back",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "ver": "View",
+    "verMais": "Show more",
+    "verMenos": "Show less"
   },
   "months": {
     "jan": "Jan",
@@ -207,7 +210,10 @@
       "ufInvalida": "Invalid state."
     },
     "identificacao": "Identification",
-    "nomeComercio": "Business name"
+    "nomeComercio": "Business name",
+    "visaoOperador": "Operator clients",
+    "visaoOperadorSub": "Operator view (read-only)",
+    "lucroRealizado": "Realized Profit"
   },
   "contrato": {
     "title": "Contracts",
@@ -260,7 +266,9 @@
       "minimo1Parcela": "Enter at least 1 installment.",
       "informeDataInicio": "Enter the start date."
     },
-    "selecionarCliente": "Select client"
+    "selecionarCliente": "Select client",
+    "visaoOperador": "Operator contracts",
+    "visaoOperadorSub": "Operator view (read-only)"
   },
   "parcela": {
     "nenhumaEncontrada": "No installments found.",
@@ -341,7 +349,7 @@
     "fechado": "Cash closed!",
     "semMovimento": "No movements today.",
     "gastosHoje": "Expenses today",
-    "motivoMaximo": "The reason must be at most 200 characters.",
+    "motivoMaximo": "The reason must be at most 100 characters.",
     "ajustarTituloModal": "Adjust Total Cash"
   },
   "gasto": {
@@ -535,7 +543,11 @@
     "roleSocio": "Partner",
     "chefe": "Manager (boss)",
     "chefeSem": "No manager (under admin)",
-    "secaoSocios": "Partners"
+    "secaoSocios": "Partners",
+    "totalContratos": "Total contracts: {{total}}",
+    "totalClientesOperador": "Total clients: {{total}}",
+    "ajusteCaixaSecao": "Cash adjustment",
+    "ajustarTituloOperador": "Adjust operator base cash"
   },
   "superAdmin": {
     "title": "Companies",
@@ -636,7 +648,7 @@
   },
   "theme": {
     "default": "Blue",
-    "aurora": "Aurora",
+    "violeta": "Violet",
     "ocean": "Ocean",
     "grape": "Grape",
     "sunset": "Sunset"

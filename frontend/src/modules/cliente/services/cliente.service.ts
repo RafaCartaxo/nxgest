@@ -33,6 +33,7 @@ export interface Cliente {
   valorVenceHoje?: number
   ultimoPagamento?: { data: string; valor: number } | null
   lucroPrevisto?: number
+  lucroRealizado?: number
   createdAt: string
   updatedAt: string
 }

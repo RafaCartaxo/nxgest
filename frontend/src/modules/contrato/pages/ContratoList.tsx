@@ -30,6 +30,7 @@ export function ContratoList() {
 
   const page = Number(searchParams.get("page")) || 1
   const clienteId = searchParams.get("clienteId") || ""
+  const usuarioId = searchParams.get("usuarioId") || ""
 
   const fetch = useCallback(async () => {
     setLoading(true)
@@ -39,7 +40,7 @@ export function ContratoList() {
         page,
         limit: 20,
         clienteId: clienteId || undefined,
-      })
+      }, usuarioId || undefined)
       setContratos(result.data)
       setTotalPages(result.pagination.pages)
     } catch (err) {
@@ -51,16 +52,16 @@ export function ContratoList() {
     } finally {
       setLoading(false)
     }
-  }, [page, clienteId])
+  }, [page, clienteId, usuarioId])
 
   const fetchClientes = useCallback(async () => {
     try {
-      const result = await listClientes({ limit: 100 })
+      const result = await listClientes({ limit: 100, usuarioId: usuarioId || undefined })
       setClientes(result.data)
     } catch {
       // silencioso
     }
-  }, [])
+  }, [usuarioId])
 
   useEffect(() => {
     fetchClientes()
@@ -89,9 +90,9 @@ export function ContratoList() {
 
   // FAB mobile (PLAN-062): "Novo contrato" — limpa no unmount.
   useEffect(() => {
-    setFab({ label: t("contrato.novo"), to: `/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}` })
+    setFab({ label: t("contrato.novo"), to: `/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}${usuarioId ? `${clienteId ? "&" : "?"}usuarioId=${usuarioId}` : ""}` })
     return () => setFab(null)
-  }, [setFab, t, clienteId])
+  }, [setFab, t, clienteId, usuarioId])
 
   function handleClienteFilter(value: string) {
     const params = new URLSearchParams(searchParams)
@@ -124,10 +125,10 @@ export function ContratoList() {
     <div className="mx-auto max-w-2xl p-4">
       <PageHeader
         icon={FileText}
-        title={t("contrato.title")}
-        subtitle={t("contrato.subtitle")}
+        title={usuarioId ? t("contrato.visaoOperador") : t("contrato.title")}
+        subtitle={usuarioId ? t("contrato.visaoOperadorSub") : t("contrato.subtitle")}
         back={{ onClick: () => navigate(temFiltroCliente ? `/clientes/${clienteId}` : "/clientes"), title: t("nav.clientes") }}
-        action={<ButtonLink to={`/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}`} variant="primary" size="sm"><Plus className="size-4" /> {t("contrato.novo")}</ButtonLink>}
+        action={<ButtonLink to={`/contratos/novo${clienteId ? `?clienteId=${clienteId}` : ""}${usuarioId ? `${clienteId ? "&" : "?"}usuarioId=${usuarioId}` : ""}`} variant="primary" size="sm"><Plus className="size-4" /> {t("contrato.novo")}</ButtonLink>}
       />
 
       <div className="mb-4 flex items-center gap-2">
@@ -208,7 +209,7 @@ export function ContratoList() {
       >
         <div className="space-y-3">
           {contratos.map((c) => (
-            <Link key={c.id} to={`/contratos/${c.id}`} className="block">
+            <Link key={c.id} to={`/contratos/${c.id}${usuarioId ? `?usuarioId=${usuarioId}` : ""}`} className="block">
               <ContratoCard variant="list-item" contrato={c} />
             </Link>
           ))}

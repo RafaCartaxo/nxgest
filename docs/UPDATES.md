@@ -2,6 +2,56 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 12/08/2026 — Caixa operacional: ajuste unificado em modal + remoção do "Fechar caixa" da Central
+
+- **Ajuste de caixa = modal único nos 2 lugares** — `OperadorDetail` (admin vendo operador) agora abre o **mesmo `AjustarCaixaModal`** da CaixaPage (form único `AjusteCaixaForm`). `AjusteCaixaCard` (card inline) **removido** — padrão de acesso consistente (era 1 modal + 1 inline).
+- **"Fechar caixa" removido da Central** — `FecharCaixaModal` **removido**: repetia os KPIs da Central e só navegava p/ `/caixa` (não gerava dado). O fechamento real (semana, `fechamentos_semanais`) é **exclusivo da CaixaPage** ("Liquidar"). QuickAction da Central limpa.
+- **Botões gatilho padronizados (CaixaPage)** — "Ajustar Caixa Total" agora `primary` (era `soft`), em paridade com "Registrar Gasto" (`primary`) — mesma variante/ícone.
+- **Docs:** `UI-COVERAGE.md` (AjustarCaixaModal; removidos AjusteCaixaCard/FecharCaixaModal) · `PLAN-069` (status/escopo atualizados) · este registro.
+
+## 12/08/2026 — Caixa: DRY (componentes reutilizáveis) + seções colapsáveis + movimentações sem truncate (local, aguardando commit)
+
+- **Componentes reutilizáveis (elimina duplicação entre CaixaPage e OperadorDetail):**
+  - **`CaixaKpis`** (`modules/caixa/components`) — 6 KPIs de caixa (Base/Saldo/Lucro/A receber/Recebido semana/Cobrado hoje) com `kpis[]` e `onKpiClick?` (CaixaPage com cliques p/ modais · OperadorDetail sem).
+  - **`AjusteHistorico` + `AjusteRow`** — linha do histórico de ajustes (valor `value-lg` + "por **Nome**" + motivo + data) reutilizada nas 2 páginas.
+  - **`MovimentacoesList` + `MovimentacaoRow`** — movimentação reorganizada em 2 blocos (valor/origem/badges/data + cliente/descrição) **sem truncate** (`break-words`).
+  - **`CollapsibleSection`** (`shared/components`) — seção com header clicável + chevron, colapsada por padrão, `count` no header, limite de itens + "Ver mais" (+8).
+- **Aplicado:** CaixaPage (Movimentações + Histórico colapsáveis com `limit=8`; KPIs via `CaixaKpis`) · OperadorDetail (KPIs via `CaixaKpis`; Histórico colapsável). **1 fonte → 2 páginas.**
+- **i18n:** `common.verMais`/`common.verMenos` (3 idiomas).
+- **Docs:** `UPDATES.md` · `STATUS.md` · `tasks/2026-08-12/CHECKLIST.md` · `UI-COVERAGE.md` (componentes novos).
+
+## 12/08/2026 — Cliente: lucro realizado (KPI) — local, aguardando commit
+
+- **Backend** — `ClienteFinanceiroResumo` ganha `lucroRealizado` (Σ `valorFinal − valorBase` dos contratos `Finalizado`), calculado por helper reutilizado `sumLucroPorEstado(userId, clienteId, estado)` (previsto usa `'Ativo'`, realizado usa `'Finalizado'`) — sem duplicar a query.
+- **Frontend** — `SituacaoFinanceira` ganha o KPI **"Lucro realizado"** (verde); layout `grid-cols-2` → `sm:grid-cols-3`; interface `Cliente` + i18n `cliente.lucroRealizado` (3 idiomas).
+- **Docs/CTs** — BR-098 (previsto × realizado), `07` API-CT-106 (novo), UC-071 (grade com lucro realizado), smoke `CLI-011` valida `lucroRealizado`.
+- **Validação** — tsc · build · 91 testes · audits · docs:audit · smoke 250/250 (local, sem commit/push).
+
+## 12/08/2026 — Caixa: título do ajuste contextual + label do motivo + reordenação das páginas (local, aguardando commit)
+
+- **`AjustarCaixaModal` recebe `title` contextual** — no caixa próprio: "Ajustar Caixa Total" (`caixa.ajustarTituloModal`); no operador: **"Ajustar caixa base do operador"** (nova chave `admin.ajustarTituloOperador`, 3 idiomas). Form único (`AjusteCaixaForm`) mantido.
+- **Corrigido label do motivo** — `t("caixa.motivo")` (chave inexistente, renderizava crua) → **`t("caixa.motivoPlaceholder")`** = "Motivo do ajuste".
+- **`OperadorDetail` reordenado** — Dados de operação → Caixa do operador → **Clientes do operador** → **Contratos do operador** → **Ajuste de caixa** → **Histórico de ajustes** (Clientes antes de Contratos; Ajuste+Histórico no fim).
+- **`CaixaPage` reordenada** — KPIs Hoje → KPIs Semana → Seção Caixa → **Registrar Gasto** → **Movimentações** → **Ajustar Caixa Total** → **Histórico de ajustes** (Ajustar+Histórico no fim, como no OperadorDetail).
+- **Docs/CTs** — `06-CASOS-DE-USO.md` UC-025 (título contextual + label motivo) e UC-028/028b (ordem da página) atualizados · `STATUS.md` · `tasks/2026-08-12/CHECKLIST.md`.
+
+## 12/08/2026 — Página do administrador: refinamento com identidade visual canônica (local, aguardando commit)
+
+- **Título da seção de ajuste** — `SectionHeader` passa a usar "Ajuste de caixa" (`admin.ajusteCaixaSecao`); o botão mantém a ação "Ajustar caixa base do operador". Eliminada a repetição do mesmo texto.
+- **Histórico de ajustes unificado + destaque** — `CaixaPage` e `OperadorDetail` agora usam o **mesmo layout** (grid 2 colunas: bloco com valor em destaque `value-lg` · "por **{Nome}**" com o autor em `font-semibold` · motivo; data à direita). Corrige a divergência entre as duas páginas e o alinhamento inconsistente.
+- **Cards Contratos/Clientes do operador → padrão canônico** — migrados para `Card.Root list-item` + `Card.Body` + **`Card.Indicators`** (contador via `Card.Indicator`) + **`Card.Actions`** ("Acessar" com seta → `navigate`), mesmo padrão da `OperadoresList`.
+- **Docs/CTs** — `06-CASOS-DE-USO.md` UC-028/028b atualizados (card canônico, ação "Acessar", CT-CT-01..04 e CT-CL-01..04) · `STATUS.md` · `tasks/2026-08-12/CHECKLIST.md`.
+
+## 12/08/2026 — Página do administrador: hierarquia + histórico em 2 colunas + contadores para listas (local, aguardando commit)
+
+- **Limite do motivo do ajuste de caixa reduzido para 100 caracteres** (era 200) — form (com hint "máx 100" + `maxLength`) e backend alinhados; i18n 3 idiomas.
+- **Histórico de ajustes em 2 colunas** — `OperadorDetail`: bloco à esquerda (valor anterior→novo · "por {Nome}" · motivo) e data à direita; **alinhamento consistente** entre linhas (corrige a quebra que desalinhava "por NX Gest" e a descrição).
+- **Hierarquia/espaçamento** — botão "Ajustar caixa base do operador" separado dos KPIs (seção própria com respiro), mantendo o acesso por modal.
+- **Contratos e Clientes do operador → contador + botão "Ver"** — a página não lista mais tudo inline (ficava gigante); card com contador + botão navega para a lista escopada.
+- **Listas em visão do operador** — `ContratoList` e `ClienteList` leem `?usuarioId=` da URL, filtram pelo operador e o header indica "Contratos/Clientes do operador" (visão somente leitura; sem "Novo cliente" na visão de operador).
+- **CTs documentados** no `06-CASOS-DE-USO.md`: UC-025 (hierarquia admin/sócio/super, CT-AJ-01..05), UC-026 (2 colunas, CT-HI-01..03), UC-028 (contador→lista, CT-CT-01..04), **UC-028b** (clientes, CT-CL-01..04).
+- **Docs:** `UPDATES.md` · `STATUS.md` · `tasks/2026-08-12/CHECKLIST.md`.
+
 ## 12/08/2026 — Validações manuais concluídas em produção + fix do teclado na edição de endereço
 
 - **Fix teclado (commit `7d6060e`)** — editar o endereço de um cliente com **localização salva** descartava as coords (regra PLAN-055 correta), mas **fechava o teclado no celular** (remontagem dos inputs ao invalidar o GPS). Correção: `EnderecoFields`/`blocoComercio` movidos para o **nível de módulo** + `memo` (referência estável → React não remonta os inputs → foco/teclado preservados). Nenhuma regra de negócio alterada.

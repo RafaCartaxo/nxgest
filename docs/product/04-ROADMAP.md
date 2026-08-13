@@ -688,6 +688,12 @@ Backlog de refinamentos em `plans/BACKLOG.md` (P013/P015/P016 ✅ — PLAN-033/0
 - **P028 — índices por `userId` (feito, 11/08):** o isolamento multi-tenant filtra `userId = ?` em toda consulta, mas nenhuma tabela operacional tinha índice nessa coluna → table scan em clientes/contratos/cobranças/caixa/gastos conforme os dados crescem. Adicionados índices `CREATE INDEX IF NOT EXISTS` (criam no boot, idempotentes): `clientes(userId,deletedAt)` · `contratos(userId,deletedAt)` · `parcelas(contratoId,dataVencimento,saldoPendente)` · `pagamentos(userId,data)` · `historico_operacional(userId,createdAt)` · `gastos(userId,data)` · `movimentacoesFinanceiras(userId,data)` · `fechamentos_semanais(userId,dataInicio)`.
 - **Pendência (follow-up): reescrita da query de cobranças do dia** — `listarCobrancasDoDia` tem ~4 subqueries correlacionadas por linha (saldoTotal · proximaParcela · proximoNumeroParcela · diasEmAtraso) + resultado operacional aninhado. Índices já reduzem o custo; reescrever com joins/agregação é o próximo passo (via `docs/plans/BACKLOG.md` P028).
 
+### 5.11 IA no produto (P029)
+
+- **Plano mestre (12/08):** `PLAN-074-ia-produto.md` — 5 fases: **F1 WhatsApp inteligente** (P017) · F2 resumo do dia · F3 priorização de rota · F4 OCR de anexos · F5 FAQ interno. **Provider:** Gemini Flash-Lite (**free tier** p/ dev/teste; produção → billing ~US$1-2/mês) via port `IGeradorIA` + providers (console/fail/gemini — padrão do mailer).
+- **Princípios:** IA só gera/sugere (nunca executa transação) · não-bloqueante (fallback ao template/heurística) · prompt com escopo resolvido, sem PII desnecessária · multi-tenant respeitado.
+- **F1 detalhada:** `PLAN-075-ia-whatsapp.md` (endpoint `POST /api/ai/whatsapp/sugerir` + fallback ao template atual).
+
 ---
 
 # Marcos (Milestones)

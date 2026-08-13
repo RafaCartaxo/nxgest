@@ -53,3 +53,4 @@ tasks/
 | [10/08/2026](2026-08-10/CHECKLIST.md) | Sincronização de documentação + organização (paths infra, índices, planos, ROADMAP, STATUS.md) | Concluído |
 | [11/08/2026](2026-08-11/CHECKLIST.md) | Pipeline CI/CD completo + staging de homologação (CI verde pela 1ª vez · CD prod com gate) | Concluído |
 | [12/08/2026](2026-08-12/CHECKLIST.md) | Validações manuais em produção (GPS, teclado/edição, PWA, anexos, rota) + fix do teclado na edição de endereço | Concluído |
+| [13/08/2026](2026-08-13/CHECKLIST.md) | REGISTRO PLAN-072 — identidade visual da empresa: autosserviço + branding por tenant (análise, gaps G1..14, CTs, verificação do fluxo de leads) | ✅ Registrado |

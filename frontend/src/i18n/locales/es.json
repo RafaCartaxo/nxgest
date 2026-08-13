@@ -30,7 +30,10 @@
     "delete": "Eliminar",
     "loading": "Cargando...",
     "back": "Volver",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "ver": "Ver",
+    "verMais": "Ver más",
+    "verMenos": "Ver menos"
   },
   "months": {
     "jan": "Ene",
@@ -207,7 +210,10 @@
       "ufInvalida": "UF inválida."
     },
     "identificacao": "Identificación",
-    "nomeComercio": "Nombre del comercio"
+    "nomeComercio": "Nombre del comercio",
+    "visaoOperador": "Clientes del operador",
+    "visaoOperadorSub": "Vista del operador (solo lectura)",
+    "lucroRealizado": "Beneficio Realizado"
   },
   "contrato": {
     "title": "Contratos",
@@ -260,7 +266,9 @@
       "minimo1Parcela": "Informe al menos 1 cuota.",
       "informeDataInicio": "Informe la fecha de inicio."
     },
-    "selecionarCliente": "Seleccionar cliente"
+    "selecionarCliente": "Seleccionar cliente",
+    "visaoOperador": "Contratos del operador",
+    "visaoOperadorSub": "Vista del operador (solo lectura)"
   },
   "parcela": {
     "nenhumaEncontrada": "No se encontraron cuotas.",
@@ -341,7 +349,7 @@
     "fechado": "¡Caja cerrada!",
     "semMovimento": "Sin movimientos hoy.",
     "gastosHoje": "Gastos hoy",
-    "motivoMaximo": "El motivo debe tener como máximo 200 caracteres.",
+    "motivoMaximo": "El motivo debe tener como máximo 100 caracteres.",
     "ajustarTituloModal": "Ajustar Caja Total"
   },
   "gasto": {
@@ -535,7 +543,11 @@
     "roleSocio": "Socio",
     "chefe": "Jefe (gestor)",
     "chefeSem": "Sin jefe (bajo el administrador)",
-    "secaoSocios": "Socios"
+    "secaoSocios": "Socios",
+    "totalContratos": "Total de contratos: {{total}}",
+    "totalClientesOperador": "Total de clientes: {{total}}",
+    "ajusteCaixaSecao": "Ajuste de caja",
+    "ajustarTituloOperador": "Ajustar base de caja del operador"
   },
   "superAdmin": {
     "title": "Empresas",
@@ -636,7 +648,7 @@
   },
   "theme": {
     "default": "Azul",
-    "aurora": "Aurora",
+    "violeta": "Violeta",
     "ocean": "Océano",
     "grape": "Uva",
     "sunset": "Atardecer"

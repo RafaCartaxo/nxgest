@@ -14,14 +14,13 @@ import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.
 import { Carousel } from "../../../shared/components/Carousel/Carousel.js"
 import { PagamentosHojeModal } from "../components/PagamentosHojeModal.js"
 import { ParcelasHojeModal } from "../components/ParcelasHojeModal.js"
-import { FecharCaixaModal } from "../components/FecharCaixaModal.js"
 import { GastosPeriodoModal } from "../../caixa/components/GastosPeriodoModal.js"
 import { SuccessState } from "../../../shared/components/SuccessState/SuccessState.js"
 import { totalClientesAtendidos, resumoAtendidos } from "../utils/atendimento.js"
 import { getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { QuickActions } from "../../../shared/components/QuickActions/QuickActions.js"
-import { LayoutDashboard, Banknote, MapPinned, UserPlus, Receipt } from "lucide-react"
+import { LayoutDashboard, Banknote, MapPinned, UserPlus } from "lucide-react"
 
 export function OperacoesDashboard() {
   const { t, i18n } = useTranslation()
@@ -50,7 +49,6 @@ export function OperacoesDashboard() {
 
   const [gastosHoje, setGastosHoje] = useState(0)
   const [gastosHojeItems, setGastosHojeItems] = useState<GastoItem[]>([])
-  const [fecharCaixaOpen, setFecharCaixaOpen] = useState(false)
   const [gastosHojeModalOpen, setGastosHojeModalOpen] = useState(false)
   const [gastosHojeLoading, setGastosHojeLoading] = useState(false)
 
@@ -245,7 +243,6 @@ export function OperacoesDashboard() {
                 { icon: Banknote, label: t("operacoes.receber"), onClick: () => navigate("/cobrancas"), variant: "green", show: cobrancasAtivo },
                 { icon: MapPinned, label: t("operacoes.minhaRota"), onClick: () => navigate("/rota"), variant: "blue", show: rotaAtivo },
                 { icon: UserPlus, label: t("operacoes.novoCliente"), onClick: () => navigate("/clientes/novo"), variant: "blue", show: isWidgetActive(modulos, "novoCliente") },
-                { icon: Receipt, label: t("operacoes.fecharCaixa"), onClick: () => setFecharCaixaOpen(true), variant: "warning", show: isWidgetActive(modulos, "fecharCaixa") },
               ]}
             />
           </div>
@@ -332,18 +329,6 @@ export function OperacoesDashboard() {
         dataFim={getLocalDateString(new Date())}
         loading={gastosHojeLoading}
         onClose={() => setGastosHojeModalOpen(false)}
-      />
-
-      <FecharCaixaModal
-        open={fecharCaixaOpen}
-        onClose={() => setFecharCaixaOpen(false)}
-        resumo={{
-          recebidoHoje: data?.indicadores.recebidoHoje ?? 0,
-          gastosHoje,
-          aReceberHoje: data?.indicadores.aReceberHoje ?? 0,
-          resultadoDoDia: (data?.indicadores.recebidoHoje ?? 0) - (data?.indicadores.aReceberHoje ?? 0),
-        }}
-        onFechar={() => navigate("/caixa")}
       />
     </div>
   )

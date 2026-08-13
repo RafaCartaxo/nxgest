@@ -1,6 +1,6 @@
 export const THEMES = [
   { id: "default", labelKey: "theme.default" },
-  { id: "aurora", labelKey: "theme.aurora" },
+  { id: "violeta", labelKey: "theme.violeta" },
   { id: "ocean", labelKey: "theme.ocean" },
   { id: "grape", labelKey: "theme.grape" },
   { id: "sunset", labelKey: "theme.sunset" },

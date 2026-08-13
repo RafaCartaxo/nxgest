@@ -4,7 +4,7 @@ import type { TFunction } from "i18next"
 /**
  * Schema do formulário de ajuste da Caixa Base (front).
  * Espelha o backend (`AjustarCaixaBaseInput`): valor positivo · motivo
- * obrigatório (trim, máx 200). O valor chega como string mascarada e é
+ * obrigatório (trim, máx 100). O valor chega como string mascarada e é
  * convertido com `unmaskMonetario` antes do envio.
  */
 export function getAjusteCaixaSchema(t: TFunction) {
@@ -22,7 +22,7 @@ export function getAjusteCaixaSchema(t: TFunction) {
       .string({ required_error: t("caixa.motivoObrigatorio") })
       .trim()
       .min(1, t("caixa.motivoObrigatorio"))
-      .max(200, t("caixa.motivoMaximo")),
+      .max(100, t("caixa.motivoMaximo")),
   })
 }
 

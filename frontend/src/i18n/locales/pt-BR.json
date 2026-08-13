@@ -30,7 +30,10 @@
     "delete": "Excluir",
     "loading": "Carregando...",
     "back": "Voltar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "ver": "Ver",
+    "verMais": "Ver mais",
+    "verMenos": "Ver menos"
   },
   "months": {
     "jan": "Jan",
@@ -207,7 +210,10 @@
       "ufInvalida": "UF inválida."
     },
     "identificacao": "Identificação",
-    "nomeComercio": "Nome do comércio"
+    "nomeComercio": "Nome do comércio",
+    "visaoOperador": "Clientes do operador",
+    "visaoOperadorSub": "Visão do operador (somente leitura)",
+    "lucroRealizado": "Lucro Realizado"
   },
   "contrato": {
     "title": "Contratos",
@@ -260,7 +266,9 @@
       "minimo1Parcela": "Informe ao menos 1 parcela.",
       "informeDataInicio": "Informe a data de início."
     },
-    "selecionarCliente": "Selecionar cliente"
+    "selecionarCliente": "Selecionar cliente",
+    "visaoOperador": "Contratos do operador",
+    "visaoOperadorSub": "Visão do operador (somente leitura)"
   },
   "parcela": {
     "nenhumaEncontrada": "Nenhuma parcela encontrada.",
@@ -341,7 +349,7 @@
     "fechado": "Caixa fechado!",
     "semMovimento": "Nenhuma movimentação hoje.",
     "gastosHoje": "Gastos hoje",
-    "motivoMaximo": "O motivo deve ter no máximo 200 caracteres.",
+    "motivoMaximo": "O motivo deve ter no máximo 100 caracteres.",
     "ajustarTituloModal": "Ajustar Caixa Total"
   },
   "gasto": {
@@ -535,7 +543,11 @@
     "roleSocio": "Sócio",
     "chefe": "Chefe (gestor)",
     "chefeSem": "Sem chefe (sob o administrador)",
-    "secaoSocios": "Sócios"
+    "secaoSocios": "Sócios",
+    "totalContratos": "Total de contratos: {{total}}",
+    "totalClientesOperador": "Total de clientes: {{total}}",
+    "ajusteCaixaSecao": "Ajuste de caixa",
+    "ajustarTituloOperador": "Ajustar caixa base do operador"
   },
   "superAdmin": {
     "title": "Empresas",
@@ -636,7 +648,7 @@
   },
   "theme": {
     "default": "Azul",
-    "aurora": "Aurora",
+    "violeta": "Violeta",
     "ocean": "Oceano",
     "grape": "Uva",
     "sunset": "Pôr do sol"

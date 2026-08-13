@@ -600,11 +600,11 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ### UC-025 — Ajustar caixa base do operador
 
-**Ator:** admin
+**Ator:** admin · sócio · super_admin
 
-**Ação:** acessa o operador, preenche novo valor + motivo, salva.
+**Ação:** acessa o operador, preenche novo valor + motivo (máx 100), salva — via **modal** (`AjustarCaixaModal`), mesmo padrão do ajuste do próprio caixa. O **título do modal é contextual** ("Ajustar caixa base do operador" no operador · "Ajustar Caixa Total" no caixa próprio).
 
-**O que DEVE acontecer:** o valor informado é o **novo valor absoluto** da base (não delta); atualiza `caixa_config` e grava **auditoria_caixa** (anterior/novo/motivo/admin/data).
+**O que DEVE acontecer:** o valor informado é o **novo valor absoluto** da base (não delta); atualiza `caixa_config` e grava **auditoria_caixa** (anterior/novo/motivo/admin/data). Acesso por **modal** (não inline), com o mesmo form/visual do ajuste do caixa do admin; o título reflete o alvo (próprio vs operador).
 
 **Reflexos de dados:** caixa_config · auditoria_caixa · KPIs do operador · histórico de ajustes.
 
@@ -612,23 +612,41 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 - [ ] Digitar 5000 sobre base 2000 → base = 5000 (não 7000)?
 - [ ] Auditoria gravada com valores anterior/novo/motivo/admin?
 - [ ] Motivo obrigatório (sem motivo → erro)?
+- [ ] Motivo até **100 caracteres** (limite validado no form e no backend; hint "máx 100")?
+- [ ] Label do campo motivo é **"Motivo do ajuste"** (não a chave crua)?
+- [ ] Título do modal é **contextual** ("Ajustar caixa base do operador" no operador · "Ajustar Caixa Total" no próprio)?
 - [ ] Histórico de ajustes do operador mostra o registro?
+- [ ] O acesso é por **modal** (mesmo `AjustarCaixaModal` do caixa próprio), não inline?
 
-**Regras:** BR-078, BR-088
+**CTs (hierarquia — escopo `resolveUsuarioAlvo`):**
+- **CT-AJ-01** — Dado admin da empresa | Quando ajusta caixa do operador da própria empresa (`?usuarioId=`) | Então 201 e auditoria gravada.
+- **CT-AJ-02** — Dado sócio | Quando ajusta caixa de operador da **subárvore** | Então 201.
+- **CT-AJ-03** — Dado sócio | Quando ajusta caixa de operador **fora da subárvore** (de outro sócio) | Então 404.
+- **CT-AJ-04** — Dado super_admin | Quando ajusta caixa de operador de qualquer empresa (`?usuarioId=` + `?empresaId=`) | Então 201.
+- **CT-AJ-05** — Dado operador | Quando tenta ajustar (próprio ou alheio) | Então **não vê o botão** e API → 403/404.
+
+**Regras:** BR-078, BR-088, BR-325
 
 ---
 
 ### UC-026 — Ver histórico de ajustes do operador
 
-**Ator:** admin
+**Ator:** admin · sócio · super_admin
 
 **Ação:** no detalhe do operador, vê "Histórico de ajustes".
 
-**O que DEVE acontecer:** lista com data, valores (anterior → novo), quem ajustou e motivo.
+**O que DEVE acontecer:** lista com data, valores (anterior → novo), quem ajustou e motivo, em **2 colunas** (bloco à esquerda com valor/admin/motivo; data à direita) — **alinhamento consistente** entre as linhas, independente do tamanho do valor ou do motivo.
 
 **Conferências:**
 - [ ] Mostra data, valores, admin e motivo?
-- [ ] Reflete todos os ajustes feitos (inclusive os do próprio admin)?
+- [ ] Reflete todos os ajustes feitos (inclusive os do próprio admin/sócio/super)?
+- [ ] **2 colunas**: valor/admin/motivo à esquerda em bloco; data à direita?
+- [ ] "por {Nome}" e o motivo ficam **alinhados** entre as linhas (mesma posição)?
+
+**CTs:**
+- **CT-HI-01** — Dado dois ajustes com valores de tamanhos diferentes (ex.: 5000→29000 e 28000→5000) | Quando exibe o histórico | Então o bloco "por {Nome}" e o motivo ficam na **mesma posição** nas duas linhas (grid 2 colunas).
+- **CT-HI-02** — Dado ajustes de admin, sócio e super no mesmo operador | Então todos aparecem com o autor correto.
+- **CT-HI-03** — Dado motivo longo (até 100) | Então quebra dentro do bloco à esquerda sem desalinhar a data.
 
 **Regras:** BR-088
 
@@ -653,15 +671,50 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ### UC-028 — Acessar o contexto do operador
 
-**Ator:** admin
+**Ator:** admin · sócio · super_admin
 
-**Ação:** no detalhe do operador, vê a lista de contratos do operador e abre um contrato.
+**Ação:** no detalhe do operador, vê o card **"Contratos do operador"** com o **contador** e a ação **"Acessar"** (com seta) que navega para a lista de contratos escopada (`/contratos?usuarioId=`).
 
-**O que DEVE acontecer:** lista os contratos do operador (escopo `?usuarioId=`); abre o contrato em modo admin.
+**O que DEVE acontecer:** o detalhe não lista os contratos inline (a página ficava gigante); mostra **card canônico** (padrão `Card.Indicators` + `Card.Actions`, como a lista de operadores) com **contador em destaque** e ação "Acessar"; ao clicar, abre `ContratoList` em **visão do operador** (header indica "Contratos do operador"; só lista os do operador, escopo `?usuarioId=`); abrir um contrato → modo admin.
 
 **Conferências:**
-- [ ] Contratos listados são do operador (não do admin)?
-- [ ] Abrir o contrato mostra os dados do operador corretamente?
+- [ ] Ordem da página: Dados de operação → Caixa do operador → **Clientes do operador** → **Contratos do operador** → **Ajuste de caixa** → **Histórico de ajustes**?
+- [ ] Detalhe mostra **card canônico com contador + ação "Acessar"** (não a lista inline)?
+- [ ] Contador (via `Card.Indicator`) bate com o total de contratos do operador?
+- [ ] Ação "Acessar" navega para `/contratos?usuarioId=` (preservando `?empresaId=` quando super)?
+- [ ] A lista em visão de operador mostra só os contratos dele (header indica a visão)?
+- [ ] Abrir o contrato mostra os dados do operador corretamente (modo admin)?
+
+**CTs:**
+- **CT-CT-01** — Dado operador com N contratos | Quando abre o detalhe | Então o card (canônico) mostra contador N e ação "Acessar".
+- **CT-CT-02** — Dado clique em "Acessar" | Então navega para `/contratos?usuarioId=<id>` e a lista filtra pelo operador (não mostra contratos de outros).
+- **CT-CT-03** — Dado super_admin em empresa | Então a URL preserva `?empresaId=` na navegação.
+- **CT-CT-04** — Dado operador sem contratos | Então o card mostra contador 0 e "Acessar" abre a lista vazia (não quebra).
+
+**Regras:** BR-078, BR-080
+
+---
+
+### UC-028b — Clientes do operador (contador + botão para a lista)
+
+**Ator:** admin · sócio · super_admin
+
+**Ação:** no detalhe do operador, vê o card **"Clientes do operador"** com o **contador** e a ação **"Acessar"** (com seta) que navega para a lista de clientes escopada (`/clientes?usuarioId=`).
+
+**O que DEVE acontecer:** o detalhe não lista os clientes inline (a página ficava gigante); mostra **card canônico** (padrão `Card.Indicators` + `Card.Actions`, como a lista de operadores) com **contador em destaque** e ação "Acessar"; ao clicar, abre `ClienteList` em **visão do operador** (header indica "Clientes do operador"; só lista os do operador, escopo `?usuarioId=`); sem botão "Novo cliente" nessa visão.
+
+**Conferências:**
+- [ ] Detalhe mostra **card canônico com contador + ação "Acessar"** (não a lista inline)?
+- [ ] Contador (via `Card.Indicator`) bate com o total de clientes do operador?
+- [ ] Ação "Acessar" navega para `/clientes?usuarioId=` (preservando `?empresaId=` quando super)?
+- [ ] A lista em visão de operador mostra só os clientes dele (header indica a visão, sem "Novo cliente")?
+- [ ] Abrir o cliente mostra os dados do operador corretamente (modo admin)?
+
+**CTs:**
+- **CT-CL-01** — Dado operador com N clientes | Quando abre o detalhe | Então o card (canônico) mostra contador N e ação "Acessar".
+- **CT-CL-02** — Dado clique em "Acessar" | Então navega para `/clientes?usuarioId=<id>` e a lista filtra pelo operador.
+- **CT-CL-03** — Dado visão de operador na lista de clientes | Então o header indica a visão e **não** aparece o botão "Novo cliente".
+- **CT-CL-04** — Dado operador sem clientes | Então o card mostra contador 0 e "Acessar" abre a lista vazia (não quebra).
 
 **Regras:** BR-078, BR-080
 
@@ -1328,17 +1381,19 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 **Ação:** abre o detalhe do cliente (`/clientes/:id`).
 
-**O que DEVE acontecer:** o bloco "Situação Financeira" mostra, em grade 2×2 de KPI:
+**O que DEVE acontecer:** o bloco "Situação Financeira" mostra, em grade de KPIs (`grid-cols-2` mobile / `sm:grid-cols-3`):
 - **Saldo Devedor** (vermelho se > 0);
 - **Em atraso** (vermelho): `R$ valorEmAtraso` com subtítulo "N parcelas · D dias" (dias do vencimento mais antigo em aberto);
 - **Vence hoje** (azul/info): `R$ valorVenceHoje`;
-- **Lucro Previsto** (verde): `R$ lucroPrevisto` (P015, BR-098).
+- **Lucro Previsto** (verde): `R$ lucroPrevisto` (P015, BR-098);
+- **Lucro Realizado** (verde): `R$ lucroRealizado` (contratos Finalizados, BR-098).
 - Abaixo da grade, uma linha discreta **"Último pagamento: dd/mm · R$ X"** quando houver (BR-097).
 
 **Conferências:**
 - [ ] Valores coerentes com as parcelas do cliente (soma de `saldoPendente` vencidas)?
 - [ ] Parcela `Parcial` vencida entra no atraso?
 - [ ] Cliente sem atraso mostra `R$ 0` em "Em atraso" e sem subtítulo?
+- [ ] `lucroPrevisto` considera só contratos `Ativo` e `lucroRealizado` só `Finalizado`?
 - [ ] Último pagamento ignora estornados e mostra o mais recente?
 
 **Regras:** BR-096, BR-097, BR-098

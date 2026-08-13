@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { Plus, Users } from "lucide-react"
 import { SearchBar } from "../../../shared/components/SearchBar/SearchBar.js"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { ClienteCard } from "../components/ClienteCard.js"
 import {
   listClientes,
@@ -19,6 +19,8 @@ export function ClienteList() {
   const { t } = useTranslation()
   const { setFab } = useFab()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const usuarioId = searchParams.get("usuarioId") || ""
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,7 +32,7 @@ export function ClienteList() {
     setError(null)
 
     try {
-      const result = await listClientes(nome ? { nome } : undefined)
+      const result = await listClientes(nome ? { nome, usuarioId: usuarioId || undefined } : { usuarioId: usuarioId || undefined })
       setClientes(result.data)
     } catch (err) {
       if (err instanceof ApiError) {
@@ -41,13 +43,13 @@ export function ClienteList() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [usuarioId])
 
-  // FAB mobile (PLAN-062): "Novo cliente" — limpa no unmount.
+  // FAB mobile (PLAN-062): "Novo cliente" — limpa no unmount. Em visão de operador (drill-down) não cria.
   useEffect(() => {
-    setFab({ label: t("cliente.novo"), to: "/clientes/novo" })
+    setFab(!usuarioId ? { label: t("cliente.novo"), to: "/clientes/novo" } : null)
     return () => setFab(null)
-  }, [setFab, t])
+  }, [setFab, t, usuarioId])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -65,10 +67,10 @@ export function ClienteList() {
     <div className="mx-auto max-w-2xl p-4">
       <PageHeader
         icon={Users}
-        title={t("cliente.title")}
-        subtitle={t("cliente.subtitle")}
+        title={usuarioId ? t("cliente.visaoOperador") : t("cliente.title")}
+        subtitle={usuarioId ? t("cliente.visaoOperadorSub") : t("cliente.subtitle")}
         back={{ onClick: () => navigate("/"), title: t("nav.central") }}
-        action={<ButtonLink to="/clientes/novo" variant="primary" size="sm"><Plus className="size-4" /> {t("cliente.novo")}</ButtonLink>}
+        action={!usuarioId ? <ButtonLink to="/clientes/novo" variant="primary" size="sm"><Plus className="size-4" /> {t("cliente.novo")}</ButtonLink> : undefined}
       />
 
       <div className="mb-4">
@@ -84,12 +86,12 @@ export function ClienteList() {
         error={error}
         empty={clientes.length === 0}
         emptyMessage={t("cliente.nenhumEncontrado")}
-        emptyAction={{ label: t("cliente.novo"), to: "/clientes/novo" }}
+        emptyAction={!usuarioId ? { label: t("cliente.novo"), to: "/clientes/novo" } : undefined}
         onRetry={() => fetch(searchTerm || undefined)}
       >
         <div className="space-y-4">
           {clientes.map((cliente) => (
-            <Link key={cliente.id} to={`/clientes/${cliente.id}`} className="block">
+            <Link key={cliente.id} to={`/clientes/${cliente.id}${usuarioId ? `?usuarioId=${usuarioId}` : ""}`} className="block">
               <ClienteCard variant="list-item" cliente={cliente} />
             </Link>
           ))}

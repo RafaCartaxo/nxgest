@@ -233,6 +233,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 - [ ] `valorVenceHoje` = Σ parcelas com vencimento hoje? (BR-096)
 - [ ] `ultimoPagamento` ignora estornados e é o mais recente por `data`? (BR-097)
 - [ ] `lucroPrevisto` = Σ(`valorFinal − valorBase`) dos contratos `Ativo`? (BR-098)
+- [ ] `lucroRealizado` = Σ(`valorFinal − valorBase`) dos contratos `Finalizado`? (BR-098)
 - [ ] Cliente de outro operador → 404 (não expõe existência)?
 
 **Regras:** BR-056, BR-096, BR-097, BR-098 · **Postman:** `Clientes > Detalhe`
@@ -248,6 +249,9 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### API-CT-104 — Parcial vencida e lucro (Finalizado fora)
 **Dado** cliente com parcela `Parcial` vencida e contrato `Finalizado` → **Quando** `GET /api/clientes/:id` → **Então** a parcela `Parcial` vencida conta no atraso e o contrato `Finalizado` não entra no `lucroPrevisto`.
+
+### API-CT-106 — Lucro previsto × realizado
+**Dado** cliente com contrato `Ativo` (lucro previsto) e contrato `Finalizado` (lucro realizado) → **Quando** `GET /api/clientes/:id` → **Então** `lucroPrevisto` = Σ lucro dos `Ativo`, `lucroRealizado` = Σ lucro dos `Finalizado`, e `saldoDevedor` não considera os finalizados (BR-098).
 
 ---
 

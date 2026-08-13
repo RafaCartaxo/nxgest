@@ -8,7 +8,7 @@ const PALETTE_KEY = "nxgest_palette"
 const MODE_KEY = "nxgest_mode"
 
 interface ThemeContextValue {
-  /** Paleta ativa (default/aurora/ocean/grape/sunset). */
+  /** Paleta ativa (default/violeta/ocean/grape/sunset). */
   palette: ThemeId
   /** Modo de tema: claro/escuro/sistema (preferência do SO). */
   mode: ThemeMode
@@ -42,7 +42,9 @@ function getInitialMode(): ThemeMode {
 }
 
 function getInitialPalette(): ThemeId {
-  const stored = localStorage.getItem(PALETTE_KEY)
+  let stored = localStorage.getItem(PALETTE_KEY)
+  // migração legado: tema "aurora" -> "violeta" (padronização de nomenclatura)
+  if (stored === "aurora") stored = "violeta"
   if (isThemeId(stored)) return stored
   return "default"
 }
