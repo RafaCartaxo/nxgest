@@ -100,6 +100,7 @@ describe("criarMailer (política de envio dev/staging/prod — PLAN-071)", () =>
       from: "NX Gest <no-reply@nxgest.com.br>",
       to: "a@b.com",
       reply_to: "contato@nxgest.com.br",
+      headers: { "List-Unsubscribe": "<mailto:rafael.cartaxo@hotmail.com>" },
     })
   })
 

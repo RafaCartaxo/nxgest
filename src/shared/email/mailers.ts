@@ -35,6 +35,7 @@ export class ResendMailer implements IMailer {
         subject,
         html,
         text,
+        headers: { "List-Unsubscribe": "<mailto:rafael.cartaxo@hotmail.com>" },
         ...(replyTo ? { reply_to: replyTo } : {}),
       }),
     })
