@@ -254,7 +254,7 @@ async function main() {
     const r = await req("GET", `/api/clientes/${clienteId}`, { token: opToken })
     expect(r, 200, "detalhe cliente")
     const c = r.data
-    for (const f of ["saldoDevedor", "valorEmAtraso", "parcelasEmAtraso", "diasEmAtraso", "valorVenceHoje", "lucroPrevisto"]) {
+    for (const f of ["saldoDevedor", "valorEmAtraso", "parcelasEmAtraso", "diasEmAtraso", "valorVenceHoje", "lucroPrevisto", "lucroRealizado"]) {
       if (typeof c[f] !== "number") throw new Error(`cliente detalhe: campo ${f} ausente/não-numérico (BR-096/098)`)
     }
     if (c.ultimoPagamento != null && (typeof c.ultimoPagamento.data !== "string" || typeof c.ultimoPagamento.valor !== "number")) {

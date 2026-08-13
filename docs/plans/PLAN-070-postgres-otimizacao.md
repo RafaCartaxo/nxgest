@@ -395,3 +395,21 @@ PostgreSQL
 ```
 
 Próxima evolução (plano separado): camada MCP sobre os Application Services, sem acesso direto ao banco.
+
+---
+
+## Pendências em aberto (atualização 13/08)
+
+**Banco (PLAN-070):**
+- **P1 · Estabilização** — monitorar produção alguns dias; rollback pronto (`/opt/backups/v2-prod.dump`).
+- **P2 · CI — teste de migração** (validar `migrate-modelo` automaticamente) — *decisão: incluir job?*
+- **P3 · Limpeza do SQLite residual (G15)** — remover `better-sqlite3`/arquivar `migrate-sqlite-to-pg` *após estabilizar* — *decisão*.
+- **P4 · Node 20 local** — rodar `nvm use` (`.nvmrc` no repo).
+
+**E-mail (PLAN-071):**
+- **P5 · `MAIL_FROM_NAME="NX Gest"` não está no `.env` de prod** → display name **não ativo em produção** — adicionar no VPS.
+- **P6 · DMARC Fase 3** — `rua=mailto:<destino>` (default **dmarcian**) → monitorar → `p=quarantine`.
+- **P7 · Verificação de deliverability** (`mail-tester` + Resend dashboard) após P5.
+
+**Funcionalidade:**
+- **P8 · KPI "Lucro realizado" (cliente)** — implementado no working tree (backend `sumLucroPorEstado('Finalizado')` + port + frontend `SituacaoFinanceira` + i18n + asserção no smoke) e validado (smoke 250/250). **Aguardando commit/deploy** — entrelaçado com o frontend em andamento (working tree do Rafael).

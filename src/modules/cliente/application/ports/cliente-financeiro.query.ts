@@ -10,6 +10,7 @@ export interface ClienteFinanceiroResumo {
   valorVenceHoje: number
   ultimoPagamento: UltimoPagamentoInfo | null
   lucroPrevisto: number
+  lucroRealizado: number
 }
 
 export interface IClienteFinanceiroQuery {

@@ -21,10 +21,23 @@ interface PagamentoRow {
 }
 
 interface LucroRow {
-  lucro_previsto: number
+  lucro_por_estado: number
 }
 
 export class ClienteFinanceiroQuery implements IClienteFinanceiroQuery {
+  /** Soma do lucro (valorFinal − valorBase) dos contratos do cliente num estado ('Ativo' = previsto · 'Finalizado' = realizado). */
+  private async sumLucroPorEstado(userId: string, clienteId: string, estado: string): Promise<number> {
+    const { rows } = await rawQuery<LucroRow>(`
+        SELECT COALESCE(SUM(ct."valor_final" - ct."valor_base"), 0) AS "lucro_por_estado"
+        FROM contratos ct
+        WHERE ct."cliente_id" = ?
+          AND ct."user_id" = ?
+          AND ct."estado" = ?
+          AND ct."deleted_at" IS NULL
+      `, [clienteId, userId, estado])
+    return rows[0]?.lucro_por_estado ?? 0
+  }
+
   async resumoByClienteId(userId: string, clienteId: string): Promise<ClienteFinanceiroResumo> {
     const hoje = getLocalDateString(new Date())
 
@@ -72,15 +85,10 @@ export class ClienteFinanceiroQuery implements IClienteFinanceiroQuery {
       `, [clienteId, userId])
     const ultimoPagamento = ultimoRows[0]
 
-    const { rows: lucroRows } = await rawQuery<LucroRow>(`
-        SELECT COALESCE(SUM(ct."valor_final" - ct."valor_base"), 0) AS "lucro_previsto"
-        FROM contratos ct
-        WHERE ct."cliente_id" = ?
-          AND ct."user_id" = ?
-          AND ct."estado" = 'Ativo'
-          AND ct."deleted_at" IS NULL
-      `, [clienteId, userId])
-    const lucro = lucroRows[0]
+    const [lucroPrevisto, lucroRealizado] = await Promise.all([
+      this.sumLucroPorEstado(userId, clienteId, "Ativo"),
+      this.sumLucroPorEstado(userId, clienteId, "Finalizado"),
+    ])
 
     const diasEmAtraso =
       atraso?.mais_antiga != null
@@ -98,7 +106,8 @@ export class ClienteFinanceiroQuery implements IClienteFinanceiroQuery {
       ultimoPagamento: ultimoPagamento
         ? { data: ultimoPagamento.data, valor: Math.round(ultimoPagamento.valor * 100) / 100 }
         : null,
-      lucroPrevisto: Math.round((lucro?.lucro_previsto ?? 0) * 100) / 100,
+      lucroPrevisto: Math.round(lucroPrevisto * 100) / 100,
+      lucroRealizado: Math.round(lucroRealizado * 100) / 100,
     }
   }
 }
