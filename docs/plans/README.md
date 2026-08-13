@@ -76,6 +76,7 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-072-identidade-visual-autosservico.md](PLAN-072-identidade-visual-autosservico.md) | **Identidade visual da empresa: autosserviço + branding por tenant** — admin/sócio edita nomeFantasia/tema/logo/contato, super modera, migração com ALTER, seed de identidade na conversão de lead | ⏳ Planejado (análises + CTs ID-/LD- registrados, 13/08) |
 | [PLAN-073-ia-produto.md](PLAN-073-ia-produto.md) | **IA no produto (plano mestre F1-F5):** WhatsApp inteligente · resumo do dia · priorização de rota · OCR de anexos · FAQ (P029) | ⏳ Planejado — F1 detalhada |
 | [PLAN-074-ia-whatsapp.md](PLAN-074-ia-whatsapp.md) | **IA F1 — WhatsApp inteligente (P017):** endpoint `sugerir` (Gemini Flash-Lite, free tier) + fallback ao template | ⏳ Planejado |
+| [PLAN-075-dados-cadastrais-acesso-seguranca-email.md](PLAN-075-dados-cadastrais-acesso-seguranca-email.md) | **Cadastro, perfil, convites e segurança de usuários** — ciclo de vida de usuário (convidado/ativo/suspenso), convite com tabela `convites` (status/email_alvo/criado_por), troca de e-mail com verificação, admin nunca define senha, seed de contato na conversão, dedup global | ⏳ Planejado (canônico v1.0 + notas de implementação, 13/08) |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |
 
 ## Backlog e briefings auxiliares

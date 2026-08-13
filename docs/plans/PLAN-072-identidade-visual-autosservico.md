@@ -24,7 +24,7 @@ Dar ao **admin/sócio** da empresa autosserviço de **identidade visual** (nome 
 |---|---|
 | Form da empresa (`EmpresaForm`) | Mínimo: nome, nomeFantasia, documento, ativa + admin no create — **só super edita** (`empresa.routes.ts:13`, `superAdminMiddleware`) |
 | Admin/sócio | Só recebe `empresaNome` (string) via `login`/`me`; **não enxerga nem edita** a própria empresa |
-| Temas | 5 paletas × light/dark/system **por usuário em localStorage** (`ThemeProvider.tsx`); CSS jsá tem seam `--tenant-primary` que sobrescreve `[data-theme="default"]` (`index.css:55,266-272`) |
+| Temas | 5 paletas × light/dark/system **por usuário em localStorage** (`ThemeProvider.tsx`); CSS já tem seam `--tenant-primary` que sobrescreve `[data-theme="default"]` (`index.css:55,266-272`) |
 | Logo | Marca estática "NX Gest" (`Logo.tsx`) — sem per-empresa; favicon **já lê tokens** e adaptaria a cor do tenant de graça (`favicon.ts`) |
 | Colunas `empresas` | `id, nome, created_at, modulos, capacidades, documento, nome_fantasia, ativa` — **zero colunas de branding** (`database.ts:302-311`) |
 | Migrações | `runMigrations` só tem `CREATE TABLE IF NOT EXISTS` + índices — **sem padrão `ALTER TABLE ADD COLUMN IF NOT EXISTS`** ainda (`database.ts:369-466`) |
@@ -42,7 +42,7 @@ Dar ao **admin/sócio** da empresa autosserviço de **identidade visual** (nome 
 | D3 | Alcance do tema | **Por empresa como default**, usuário pode sobrescrever: paleta da empresa = default de todos os usuários do tenant; preferência individual (localStorage) tem prioridade |
 | D4 | Cor custom | **Fora da v1** — `--tenant-primary` só vale no tema `default` (`index.css:266-272`); cor custom exigiria contraste por tenant. v1 = empresa escolhe entre os **5 presets** |
 | D5 | Logo | Reusa `validarFoto` (`foto.ts`): data URL, **sem SVG** (XSS), ≤1MB, magic bytes. Componente de upload **novo** (logo é quadrada; `AvatarField` é circular) |
-| D6 | Suprface de branding | **Dentro do app**: sidebar + mobile header + header do AdminPage + favicon (cor). **Login/landing/`/quero-conhecer` seguem marca NX** — pré-auth, sem contexto de tenant (logo no login = F3/URL por tenant) |
+| D6 | Superfície de branding | **Dentro do app**: sidebar + mobile header + header do AdminPage + favicon (cor). **Login/landing/`/quero-conhecer` seguem marca NX** — pré-auth, sem contexto de tenant (logo no login = F3/URL por tenant) |
 | D7 | Leads | **Seed de identidade na conversão**: `nomeFantasia = lead.empresa` (v1, barato). **Onboarding com conteúdo** (super pré-configura branding em `EM_ONBOARDING`) = v1.5 |
 
 ---
@@ -69,10 +69,13 @@ ALTER TABLE "empresas" ADD COLUMN IF NOT EXISTS "telefone_contato" TEXT;
 | `src/database.ts` | Colunas novas em `empresas` (DDL do CREATE + bloco ALTER) |
 | `src/modules/admin/domain/empresa.entity.ts` | `Empresa`/`EmpresaComStats` ganham `tema`, `logo`, `emailContato`, `telefoneContato` |
 | `src/modules/admin/infrastructure/repositories/empresa.repository.impl.ts` | `toComStats` + campos novos; `update` aceita branding; `create` aceita `tema`/`logo`/`contato` |
-| `src/modules/admin/presentation/controllers/empresa.controller.ts` | `update` estende campos de branding (super); novo handler de autosserviço |
-| `src/modules/admin/presentation/routes/empresa.routes.ts` | `GET/PATCH /api/admin/me/empresa` (admin/sócio, **escopado por `req.empresaId` do JWT** — nunca aceita id no body) |
-| `src/modules/leads/application/use-cases/ConverterLead/ConverterLeadUseCase.ts` | Seed: passsar `nomeFantasia: lead.empresa` ao `criarEmpresa.execute` (D7) |
-| `src/modules/auth/presentation/controllers/auth.controller.ts` | `enriquecer` (`:38`) passa a devolver `empresa: { nome, nomeFantasia, tema, logo, emailContato, telefoneContato }` em `login`/`me` (substitui `empresaNome` plano — manter compat) |
+| `src/modules/admin/presentation/controllers/empresa.controller.ts` | `update` estende campos de branding (super) |
+| `src/modules/admin/presentation/routes/admin.routes.ts` | Novo `GET/PATCH /me/empresa` (admin/sócio/super, `adminMiddleware` já cobre; **escopado por `req.empresaId` do JWT** — nunca aceita id no body). **Correção pós-verificação:** não vai em `empresa.routes.ts` — aquele router é `superAdminMiddleware` exclusivo (`router.use(superAdminMiddleware)` em `empresa.routes.ts:13`) e bloquearia o admin |
+| `src/modules/admin/presentation/controllers/admin.controller.ts` | Handler de autosserviço `meEmpresa` (GET/PATCH): lê/escreve branding da própria empresa via `req.empresaId` + `EmpresaRepository.findById/update` |
+| `src/modules/leads/application/use-cases/ConverterLead/ConverterLeadUseCase.ts` | Seed: passar `nomeFantasia: lead.empresa` ao `criarEmpresa.execute` (D7) |
+| `src/modules/auth/presentation/controllers/auth.controller.ts` | `enriquecer` (`:38`) passa a devolver `empresa: { nome, nomeFantasia, tema, logo, emailContato, telefoneContato }` em `login`/`me` (além de `empresaNome`, mantido para compat) |
+
+> **Payload do `listEmpresas`:** com o logo (data URL +1MB) em `toComStats`, o array retornado ao super admin fica pesado. Ok para dezenas de empresas; se quiser enxugar, devolver branding completo só em `findById`/`me` e omitir o `logo` no list (registrar na Fase 1).
 
 Regras de segurança:
 - Autosserviço exige token; admin **da empresa A** jamais altera a empresa B (escopo por JWT) — mesmo padrão de `PATCH /api/auth/foto`/`senha`.
@@ -106,7 +109,7 @@ Regras de segurança:
 | # | Gap | Mitigação |
 |---|---|---|
 | G1 | `me`/`login` não expõem branding | `enriquecer` devolve `empresa` completo |
-| G2 | Sem endpoint self-service (tudo atrás de `superAdminMiddleware`) | Novo `GET/PATCH /admin/me/empresa` |
+| G2 | Sem endpoint self-service (tudo atrás de `superAdminMiddleware`) | Novo `GET/PATCH /admin/me/empresa` em `admin.routes.ts` (adminMiddleware) — ver tabela Backend |
 | G3 | Migração sem `ALTER ADD COLUMN` | Criar padrão ALTER (caminho duplo CREATE + ALTER) |
 | G4 | `--tenant-primary` só no tema `default` | v1 sem cor custom (D4) |
 | G5 | Favicon adapta cor, não logo | Aceito na v1 (documentar) |
@@ -186,7 +189,7 @@ Fase 5 — Testes (CTs ID/LD) + audits + docs-sync (SKILL-009)               [G1
 
 ## Critérios de aceitação
 
-Admin/sócio edita identidade da empresa em autosserviço (escopo D1) · branding por empresa como default com override individual (D3) · super modera sem perder o cadastral (D9) · migração idempotente em banco novo e existente (G3) · `/quero-conhecer`, login e landing intactos · cliente com contratos sem regressão · `npm run build` + `audit:ui/styles/modules` + `npm test` + `docs:audit` limpos.
+Admin/sócio edita identidade da empresa em autosserviço (escopo D1) · branding por empresa como default com override individual (D3) · super modera sem perder o cadastral (G9) · migração idempotente em banco novo e existente (G3) · `/quero-conhecer`, login e landing intactos · cliente com contratos sem regressão · `npm run build` + `audit:ui/styles/modules` + `npm test` + `docs:audit` limpos.
 
 ## Fora de escopo (v1)
 
