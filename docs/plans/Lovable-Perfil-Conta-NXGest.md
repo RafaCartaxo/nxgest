@@ -133,6 +133,27 @@
 - **EmpresaForm → `Modal.footer` (B3):** o `EmpresaForm` (SuperAdminPage) ainda tem os botões dentro do form, diferente do `OperadorForm` (footer). Mover exige `requestSubmit` via ref (validação `required` nativa) + risco no fluxo de criação/edição de empresa (sem teste front direto, só smoke `EMP-*`). Fora de escopo do port.
 - **Spinner nos botões de Resetar/Recuperar senha (B5):** páginas públicas que não passaram pelo port; adicionar o mesmo spinner do AtivarPage por consistência. Barato, porém fora do escopo desta rodada.
 
+---
+
+## Melhorias de UX sugeridas (anexo — para avaliar no Lovable)
+
+Boas práticas que elevam a qualidade das 8 superfícies **sem criar novos padrões/tokens** — usam os canônicos existentes. Listadas por tela; prioridade sugerida (impacto × esforço).
+
+| # | Melhoria | Tela | Impacto | Esforço |
+|---|---|---|---|---|
+| 1 | **Dirty-state no Salvar** — botão "Salvar" só ativo quando nome/telefone mudaram (hoje sempre habilitado) | Perfil | Alto | Baixo |
+| 2 | **Trocar e-mail com copy de segurança** — sublinhado no card Conta: "requer verificação do novo endereço · seu e-mail atual segue valendo até confirmar" | Perfil | Alto | Baixo |
+| 3 | **Suspensão com motivo opcional** — campo texto no `ConfirmModal` de suspender (registra por quê; útil na reativação) | OperadorDetail | Médio | Médio |
+| 4 | **Badges priorizados na lista** — mostrar role sempre + 1 badge de estado (suspenso/convidado) com `title` explicando o resto (evita "muro de badges") | OperadoresList | Médio | Baixo |
+| 5 | **Indicador de força de senha** (fraco/médio/forte) na primeira definição | AtivarPage | Médio | Baixo |
+| 6 | **Nome do convidado na ativação** — "Olá, {nome}" quando o backend prover (hoje só `{ok:true}`) | AtivarPage | Médio | Backend |
+| 7 | **Tone danger/neutral na Conta suspensa** — hoje é warning/amarelo; bloqueio total pede visual de bloqueio, não de aviso leve | ContaSuspensaScreen | Médio | Baixo |
+| 8 | **Botão "Tentar novamente"** na Conta suspensa — revalida `me` (útil se já reativado) | ContaSuspensaScreen | Baixo | Baixo |
+| 9 | **Mensagens específicas** para convite revogado / já usado / e-mail não confere (hoje caem em `TOKEN_INVALID` genérico) | AtivarPage | Médio | Backend |
+| 10 | **Empty states** nos cards de Clientes/Contratos do OperadorDetail ("Nenhum cliente ainda") | OperadorDetail | Baixo | Baixo |
+
+> **Não bloquear o port:** itens 5/6/9 dependem do backend (hoje `ativar` retorna `{ok:true}` sem nome). Itens 1/2/3/4/7/8/10 são puramente de front e podem entrar em qualquer rodada de polimento.
+
 ## Entregáveis
 
 8 superfícies no padrão NX Gest (estado atual): **mobile + desktop + dark + 5 paletas** — Perfil · OperadorForm · OperadorDetail · OperadoresList · AtivarPage · VerificarEmailPage · ContaSuspensaScreen (+ ajuste de Login).

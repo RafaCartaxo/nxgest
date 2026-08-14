@@ -5,7 +5,7 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 ## 14/08/2026 — OperadorDetail: modal "Alterar status" + KPIs clicáveis
 
 - **Card "Status da conta"** — o card de ações do operador foi renomeado de "Conta —" para **"Status da conta"**: removida a linha "—" (`admin.semConta`) e adicionado **`StatusBadge` do status atual** (Ativo `success` / Suspenso `danger` / Convidado `warning`) junto ao título, antes dos botões de ação. i18n nova: `admin.statusConta` (pt/en/es).
-- **Variantes alinhadas** — botão **Reativar** agora usa `secondary` tanto no card quanto no modal "Alterar status" (antes: secondary no card, primary no modal — divergência). Suspender continua `danger` nos dois.
+- **Variantes alinhadas** — botão **Reativar** agora usa `primary` tanto no card quanto no modal "Alterar status" (padrão do sistema: ação não-destrutiva = `primary`, como no `ConfirmModal`). Suspender continua `danger` nos dois.
 - **Modal "Alterar status"** — o botão **Suspender/Reativar** do operador abre um **`Modal` próprio** no padrão do Perfil (Trocar e-mail): título "Alterar status", descrição contextual, **status atual** do operador (`StatusBadge`) e rodapé Cancelar + ação. Substitui o `ConfirmModal` genérico. i18n nova: `admin.alterarStatus` + `admin.statusAtivo` (pt/en/es).
 - **KPIs clicáveis** — no OperadorDetail os KPIs **Clientes/Contratos** agora navegam para as listas do operador (`/clientes?usuarioId=...`, `/contratos?usuarioId=...`), mesmo padrão do painel admin; ficam **lado a lado** (`grid-cols-2 lg:col-span-2`). Removidos os **cards Clientes/Contratos redundantes** do bloco caixa + código morto (`listContratos`/`listClientes`, states, `ArrowRight`).
 

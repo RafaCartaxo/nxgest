@@ -213,7 +213,7 @@ export function OperadorDetail() {
                       </Button>
                     )}
                     {isSuspenso ? (
-                      <Button type="button" variant="secondary" onClick={() => setSuspenderAcao("reativar")}>
+                      <Button type="button" variant="primary" onClick={() => setSuspenderAcao("reativar")}>
                         <RefreshCw className="size-4" aria-hidden /> {t("admin.reativar")}
                       </Button>
                     ) : (
@@ -300,7 +300,7 @@ export function OperadorDetail() {
             </Button>
             <Button
               type="button"
-              variant={suspenderAcao === "suspender" ? "danger" : "secondary"}
+              variant={suspenderAcao === "suspender" ? "danger" : "primary"}
               onClick={() => onSuspensao(suspenderAcao === "suspender")}
             >
               {suspenderAcao === "suspender" ? <Ban className="size-4" aria-hidden /> : <RefreshCw className="size-4" aria-hidden />}
