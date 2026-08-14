@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
@@ -13,6 +13,7 @@ export function LoginPage() {
   const { t } = useTranslation()
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
@@ -26,6 +27,11 @@ export function LoginPage() {
 
     try {
       const response = await login(email, senha)
+      const from = (location.state as { from?: { pathname: string; search?: string } } | null)?.from
+      if (from && from.pathname !== "/login") {
+        navigate(from.pathname + (from.search ?? ""))
+        return
+      }
       const role = response.usuario.role
       navigate(role === "super_admin" ? "/admin/empresas" : role === "admin" || role === "socio" ? "/admin" : "/")
     } catch (err) {

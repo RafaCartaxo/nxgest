@@ -107,9 +107,9 @@ export function AdminPage() {
     op.email.toLowerCase().includes(search.toLowerCase())
   )
 
-  async function handleCreate(data: { nome: string; email: string; role: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null }) {
+  async function handleCreate(data: { nome: string; email: string; telefone?: string | null; role: "admin" | "socio" | "operator"; chefeId?: string | null }) {
     await feedback.run({
-      action: async () => { await createOperador({ nome: data.nome, email: data.email, senha: data.senha, role: data.role, empresaId, chefeId: data.chefeId }) },
+      action: async () => { await createOperador({ nome: data.nome, email: data.email, telefone: data.telefone, role: data.role, empresaId, chefeId: data.chefeId }) },
       loading: t("common.saving"),
       success: t("admin.criarSucesso"),
       error: t("admin.erroCarregar"),
@@ -118,7 +118,7 @@ export function AdminPage() {
     fetchData()
   }
 
-  async function handleUpdate(data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null }) {
+  async function handleUpdate(data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; chefeId?: string | null; foto?: string | null; telefone?: string | null }) {
     if (!editingOp) return
     setSavingUpdate(true)
     try {

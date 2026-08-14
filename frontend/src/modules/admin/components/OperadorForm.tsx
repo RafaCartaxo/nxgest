@@ -10,7 +10,15 @@ import type { OperadorRow } from "../services/admin.service.js"
 interface FieldErrors {
   nome?: string
   email?: string
-  senha?: string
+}
+
+export interface OperadorFormData {
+  nome: string
+  email: string
+  telefone: string | null
+  role: "admin" | "socio" | "operator"
+  chefeId?: string | null
+  foto?: string | null
 }
 
 interface Props {
@@ -19,15 +27,19 @@ interface Props {
   chefes?: OperadorRow[]
   /** Role de quem está criando/gerenciando (admin/socio/super_admin). */
   actorRole?: "admin" | "socio" | "super_admin"
-  onSubmit: (data: { nome: string; email: string; role: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null }) => Promise<void>
+  onSubmit: (data: OperadorFormData) => Promise<void>
   onCancel: () => void
+}
+
+function Secao({ children }: { children: React.ReactNode }) {
+  return <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">{children}</p>
 }
 
 export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCancel }: Props) {
   const { t } = useTranslation()
   const [nome, setNome] = useState(editing?.nome ?? "")
   const [email, setEmail] = useState(editing?.email ?? "")
-  const [senha, setSenha] = useState("")
+  const [telefone, setTelefone] = useState(editing?.telefone ?? "")
   const [role, setRole] = useState<"admin" | "socio" | "operator">(editing && editing.role !== "super_admin" ? editing.role : "operator")
   const [chefeId, setChefeId] = useState<string>(editing?.chefeId ?? "")
   const [foto, setFoto] = useState<string | null>(editing?.foto ?? null)
@@ -35,14 +47,13 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
   const [loading, setLoading] = useState(false)
   const nomeRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
-  const senhaRef = useRef<HTMLInputElement>(null)
 
   const isActorSocio = actorRole === "socio"
 
   useEffect(() => {
     const firstKey = (Object.keys(errors) as (keyof FieldErrors)[]).find((k) => errors[k])
     if (!firstKey) return
-    const refs: Record<keyof FieldErrors, React.RefObject<HTMLInputElement | null>> = { nome: nomeRef, email: emailRef, senha: senhaRef }
+    const refs: Record<keyof FieldErrors, React.RefObject<HTMLInputElement | null>> = { nome: nomeRef, email: emailRef }
     refs[firstKey]?.current?.scrollIntoView({ behavior: "smooth", block: "center" })
     refs[firstKey]?.current?.focus()
   }, [errors])
@@ -51,8 +62,6 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
     const e: FieldErrors = {}
     if (nome.trim().length < 3) e.nome = t("admin.validacao.nomeObrigatorio")
     if (!email.trim() || !email.includes("@")) e.email = t("admin.validacao.emailInvalido")
-    // PLAN-065: senha opcional ao criar (sem senha → convite). Só valida se preenchida.
-    if (!editing && senha.length > 0 && senha.length < 6) e.senha = t("admin.validacao.senhaCurta")
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -65,8 +74,8 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
       await onSubmit({
         nome: nome.trim(),
         email: email.trim(),
+        telefone: telefone.trim() === "" ? null : telefone.trim(),
         role,
-        senha: senha || undefined,
         foto: editing ? foto : undefined,
         // Sócio: chefe é ele mesmo; admin/super: chefe selecionado (ou null = sob o admin)
         chefeId: isActorSocio ? undefined : role === "admin" ? null : chefeId || null,
@@ -80,78 +89,91 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Field
-        label={t("admin.nome")}
-        ref={nomeRef}
-        value={nome}
-        onChange={(e) => setNome(e.target.value)}
-        error={errors.nome}
-      />
+      <div>
+        <Secao>{t("admin.secaoDadosPessoais")}</Secao>
+        <div className="flex items-start gap-3">
+          <AvatarField
+            nome={nome}
+            foto={foto}
+            label={t("avatar.foto")}
+            size="lg"
+            onChange={(f) => setFoto(f)}
+          />
+          <div className="flex-1 space-y-4">
+            <Field
+              label={t("admin.nome")}
+              ref={nomeRef}
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              error={errors.nome}
+            />
+            <Field
+              label={t("admin.telefone")}
+              type="tel"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              placeholder={t("perfil.telefoneOpcional")}
+            />
+          </div>
+        </div>
+      </div>
 
-      <Field
-        label={t("admin.email")}
-        type="email"
-        ref={emailRef}
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        error={errors.email}
-      />
-
-      <Field
-        label={t("admin.senha")}
-        type="password"
-        ref={senhaRef}
-        value={senha}
-        onChange={(e) => setSenha(e.target.value)}
-        placeholder={editing ? t("admin.senhaOpcional") : ""}
-        hint={!editing ? t("admin.conviteHint") : undefined}
-        error={errors.senha}
-      />
-
-      <AvatarField
-        nome={nome}
-        foto={foto}
-        label={t("avatar.foto")}
-        size="lg"
-        onChange={(f) => setFoto(f)}
-      />
-
-      {isActorSocio ? (
-        <Field label={t("admin.role")} value={t("admin.roleOperator")} disabled />
-      ) : (
-        <FieldSelect
-          label={t("admin.role")}
-          value={role}
-          onChange={(e) => setRole(e.target.value as "admin" | "socio" | "operator")}
-          options={[
-            { value: "operator", label: t("admin.roleOperator") },
-            { value: "socio", label: t("admin.roleSocio") },
-            { value: "admin", label: t("admin.roleAdmin") },
-          ]}
+      <div>
+        <Secao>{t("admin.secaoAcesso")}</Secao>
+        <Field
+          label={t("admin.email")}
+          type="email"
+          ref={emailRef}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={errors.email}
         />
-      )}
+        {!editing && (
+          <p className="mt-2 text-xs text-text-muted">{t("admin.conviteExplicacao")}</p>
+        )}
+      </div>
 
-      {showChefe && (
-        <FieldSelect
-          label={t("admin.chefe")}
-          value={chefeId}
-          onChange={(e) => setChefeId(e.target.value)}
-          options={[
-            { value: "", label: t("admin.chefeSem") },
-            ...chefes.map((c) => ({
-              value: c.id,
-              label: `${c.nome} · ${c.role === "socio" ? t("admin.roleSocio") : t("admin.roleAdmin")}`,
-            })),
-          ]}
-        />
-      )}
+      <div>
+        <Secao>{t("admin.secaoPermissoes")}</Secao>
+        <div className="space-y-4">
+          {isActorSocio ? (
+            <Field label={t("admin.role")} value={t("admin.roleOperator")} disabled />
+          ) : (
+            <FieldSelect
+              label={t("admin.role")}
+              value={role}
+              onChange={(e) => setRole(e.target.value as "admin" | "socio" | "operator")}
+              options={[
+                { value: "operator", label: t("admin.roleOperator") },
+                { value: "socio", label: t("admin.roleSocio") },
+                { value: "admin", label: t("admin.roleAdmin") },
+              ]}
+            />
+          )}
+
+          {showChefe && (
+            <FieldSelect
+              label={t("admin.chefe")}
+              value={chefeId}
+              onChange={(e) => setChefeId(e.target.value)}
+              options={[
+                { value: "", label: t("admin.chefeSem") },
+                ...chefes.map((c) => ({
+                  value: c.id,
+                  label: `${c.nome} · ${c.role === "socio" ? t("admin.roleSocio") : t("admin.roleAdmin")}`,
+                })),
+              ]}
+            />
+          )}
+        </div>
+      </div>
 
       <div className="flex gap-2 justify-end pt-2">
         <Button type="button" variant="ghost" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
         <Button type="submit" disabled={loading}>
-          <Check className="size-4" /> {loading ? t("common.saving") : t("common.save")}
+          <Check className="size-4" /> {loading ? t("common.saving") : editing ? t("common.save") : t("admin.enviarConvite")}
         </Button>
       </div>
     </form>

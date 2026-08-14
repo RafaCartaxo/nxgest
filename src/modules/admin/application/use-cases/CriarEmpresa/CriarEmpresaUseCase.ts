@@ -12,7 +12,10 @@ export class CriarEmpresaUseCase {
       ativa: input.ativa,
       adminNome: input.adminNome,
       adminEmail: input.adminEmail,
-      adminSenhaHash: input.adminSenhaHash,
+      adminTelefone: input.adminTelefone,
+      origem: input.origem,
+      emailContato: input.emailContato,
+      telefoneContato: input.telefoneContato,
     })
   }
 }

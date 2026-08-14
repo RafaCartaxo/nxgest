@@ -2,6 +2,17 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 14/08/2026 — PLAN-075: fechamento completo (login espelha /me, troca administrativa, suspensão de usuário, limpeza)
+
+- **Login espelha `/me`** — `POST /auth/login` passa a devolver `telefone`, `emailPendente` e `emailVerificado` (shape idêntico ao `GET /auth/me`). Front `AuthContext` já repassava; tipo `UsuarioComum` já os previa.
+- **Semântica de convite invalidado (achado 7)** — `AtivarContaUseCase`: convite `EXPIRADO` **dentro** do `expiraEm` = substituído por reenvio → **400 `TOKEN_INVALID`** (mensagem do backend); `TOKEN_EXPIRED` reservado ao **vencimento real**. `marcarExpirado` perde o param `agora` não usado.
+- **Suspensão de usuário coberta no smoke** — novos `SUSP-USR-*` (suspender ativo → login 403 `CONTA_SUSPENSA`; token vivo → 403; `/me` → `status: "suspenso"`; reativar → 200; auto-suspensão 403; convidado 409; inexistente 404).
+- **Troca administrativa de e-mail no smoke** — `ADM-TROC-CONV` (convidado: troca direta), `ADM-TROC-ATIVO` (`email_pendente` + e-mail atual segue), `ADM-TROC-DUP` (409), `SOC-TROC-SUB`/`SOC-TROC-FORA` (sócio 200/404). **Doc 07:** CT-P-12..15.
+- **Fix: reuso de e-mail de operador removido (soft-delete libera o e-mail)** — o smoke `ADM-TROC-REUSE` expôs um **500**: `usuarios.email` tinha unique **hard** (`usuarios_email_key`) enquanto a dedup de aplicação (N1.6) ignora soft-deleted → reutilizar o e-mail de um operador removido passava na validação e estourava no banco. Correção alinhada ao padrão do CPF de clientes: `usuarios.email` virou **índice único parcial** (`idx_usuarios_email ... WHERE "deleted_at" IS NULL`), com `DROP CONSTRAINT IF EXISTS "usuarios_email_key"` no DDL idempotente. **Doc 07:** CT-P-16; **BR-751**.
+- **Limpeza de código morto** — `senhaHash` removido de `IAdminRepository.create/update` (nunca era enviado — P-04); i18n morto `adminSenhaCurta/adminSenhaObrigatoria` removido (3 idiomas); `conviteStatusPorUsuario` duplicado no `AdminRepository` delegado ao `ConviteRepository` (fonte única).
+- **Collection sem `adminSenha`** — `build-collection.mjs` (criar empresa/operador) sem o campo; `docs/api-collection.json` regenerada; `02-API.md`, `UC-046`, `BR-750` atualizados.
+- **Validado:** tsc · 115 testes · build · audits (UI/styles/docs). Smoke completo (**263/263**) na instância isolada — incluindo SUSP-USR-*, ADM-TROC-CONV/ATIVO/DUP/REUSE e SOC-TROC-SUB/FORA.
+
 ## 13/08/2026 — Cadastro de cliente: endereço pessoal opcional + fix do número na localização
 
 - **Endereço pessoal opcional (BR-044)** — cliente pode ser cadastrado só com nome, telefone e comércio (foco = comércio). `endereco.logradouro` deixa de ser obrigatório no front (`cliente.schema.ts`), no backend (`CreateClienteInput`) e vira **nullable no banco** (`ALTER COLUMN logradouro DROP NOT NULL` no `runMigrations`). Edição permite limpar o endereço pessoal (`null`).

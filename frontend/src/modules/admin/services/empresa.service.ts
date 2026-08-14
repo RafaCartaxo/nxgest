@@ -40,7 +40,7 @@ export async function getEmpresa(id: string): Promise<EmpresaComStats> {
   return apiRequest<EmpresaComStats>("GET", `/admin/empresas/${id}`)
 }
 
-export async function createEmpresa(data: { nome: string; documento?: string; nomeFantasia?: string; ativa?: boolean; adminNome: string; adminEmail: string; adminSenha?: string }): Promise<{ empresa: Empresa; admin: { id: string; nome: string; email: string } }> {
+export async function createEmpresa(data: { nome: string; documento?: string; nomeFantasia?: string; ativa?: boolean; adminNome: string; adminEmail: string }): Promise<{ empresa: Empresa; admin: { id: string; nome: string; email: string } }> {
   return apiRequest<{ empresa: Empresa; admin: { id: string; nome: string; email: string } }>("POST", "/admin/empresas", data)
 }
 

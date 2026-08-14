@@ -277,7 +277,7 @@ export const snapshotsAtraso = pgTable("snapshots_atraso", {
 export const usuarios = pgTable("usuarios", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
-  email: text("email").notNull().unique(),
+  email: text("email").notNull(),
   senhaHash: text("senha_hash"),
   role: text("role").notNull().default("operator"),
   createdAt: ts("created_at").notNull(),
@@ -285,7 +285,12 @@ export const usuarios = pgTable("usuarios", {
   empresaId: text("empresa_id"),
   chefeId: text("chefe_id"),
   foto: text("foto"),
+  // PLAN-075 — dados cadastrais/acesso/segurança
+  telefone: text("telefone"),
+  emailPendente: text("email_pendente"),
+  suspensoEm: ts("suspenso_em"),
 }, (t) => [
+  uniqueIndex("idx_usuarios_email").on(t.email).where(sql`${t.deletedAt} IS NULL`),
   index("idx_usuarios_empresa_role").on(t.empresaId, t.role),
 ])
 
@@ -308,7 +313,32 @@ export const empresas = pgTable("empresas", {
   documento: text("documento"),
   nomeFantasia: text("nome_fantasia"),
   ativa: integer("ativa").notNull().default(1),
+  // PLAN-075 — seed de contato/origem (conversão de lead)
+  origem: text("origem"),
+  emailContato: text("email_contato"),
+  telefoneContato: text("telefone_contato"),
 })
+
+export const convites = pgTable("convites", {
+  id: text("id").primaryKey(),
+  usuarioId: text("usuario_id")
+    .notNull()
+    .references(() => usuarios.id),
+  emailAlvo: text("email_alvo").notNull(),
+  criadoPor: text("criado_por").references(() => usuarios.id),
+  roleAlvo: text("role_alvo"),
+  idioma: text("idioma").notNull().default("pt-BR"),
+  status: text("status").notNull().default("PENDENTE"),
+  tokenHash: text("token_hash").notNull(),
+  criadoEm: ts("criado_em").notNull(),
+  expiraEm: ts("expira_em").notNull(),
+  usadoEm: ts("usado_em"),
+  revogadoEm: ts("revogado_em"),
+}, (t) => [
+  uniqueIndex("idx_convites_token").on(t.tokenHash),
+  index("idx_convites_usuario_status").on(t.usuarioId, t.status),
+  index("idx_convites_expirados").on(t.status, t.expiraEm),
+])
 
 export const auditoriaModulos = pgTable("auditoria_modulos", {
   id: text("id").primaryKey(),
@@ -369,12 +399,20 @@ export async function runMigrations(): Promise<void> {
     CREATE EXTENSION IF NOT EXISTS pg_trgm;
     CREATE TABLE IF NOT EXISTS "empresas" (
       "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "created_at" TIMESTAMPTZ NOT NULL, "modulos" TEXT DEFAULT '["clientes","contratos","caixa","gastos","rota","cobrancas","atendidos"]',
-      "capacidades" TEXT, "documento" TEXT, "nome_fantasia" TEXT, "ativa" INTEGER NOT NULL DEFAULT 1
+      "capacidades" TEXT, "documento" TEXT, "nome_fantasia" TEXT, "ativa" INTEGER NOT NULL DEFAULT 1,
+      "origem" TEXT, "email_contato" TEXT, "telefone_contato" TEXT
     );
 CREATE TABLE IF NOT EXISTS "usuarios" (
-      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "email" TEXT NOT NULL UNIQUE, "senha_hash" TEXT,
+      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "email" TEXT NOT NULL, "senha_hash" TEXT,
       "role" TEXT NOT NULL DEFAULT 'operator', "created_at" TIMESTAMPTZ NOT NULL, "deleted_at" TIMESTAMPTZ,
-      "empresa_id" TEXT REFERENCES "empresas"("id"), "chefe_id" TEXT, "foto" TEXT
+      "empresa_id" TEXT REFERENCES "empresas"("id"), "chefe_id" TEXT, "foto" TEXT,
+      "telefone" TEXT, "email_pendente" TEXT, "suspenso_em" TIMESTAMPTZ
+    );
+CREATE TABLE IF NOT EXISTS "convites" (
+      "id" TEXT PRIMARY KEY, "usuario_id" TEXT NOT NULL REFERENCES "usuarios"("id"), "email_alvo" TEXT NOT NULL,
+      "criado_por" TEXT REFERENCES "usuarios"("id"), "role_alvo" TEXT, "idioma" TEXT NOT NULL DEFAULT 'pt-BR',
+      "status" TEXT NOT NULL DEFAULT 'PENDENTE', "token_hash" TEXT NOT NULL,
+      "criado_em" TIMESTAMPTZ NOT NULL, "expira_em" TIMESTAMPTZ NOT NULL, "usado_em" TIMESTAMPTZ, "revogado_em" TIMESTAMPTZ
     );
 CREATE TABLE IF NOT EXISTS "clientes" (
       "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "cpf" TEXT, "comercio" TEXT NOT NULL,
@@ -496,15 +534,47 @@ CREATE TABLE IF NOT EXISTS "auth_tokens" (
     CREATE UNIQUE INDEX IF NOT EXISTS "snapshots_atraso_user_data" ON "snapshots_atraso"("user_id", "data");
     CREATE INDEX IF NOT EXISTS "idx_snapshots_atraso_data" ON "snapshots_atraso"("user_id", "data");
     CREATE INDEX IF NOT EXISTS "idx_usuarios_empresa_role" ON "usuarios"("empresa_id", "role");
+    -- E-mail único entre usuários ATIVOS (PLAN-075): soft-delete libera o e-mail p/ reuso,
+    -- espelhando o padrão do CPF de clientes (idx_clientes_cpf). De banco legado (unique hard
+    -- inline "usuarios_email_key"), o constraint antigo é descartado.
+    ALTER TABLE "usuarios" DROP CONSTRAINT IF EXISTS "usuarios_email_key";
+    CREATE UNIQUE INDEX IF NOT EXISTS "idx_usuarios_email" ON "usuarios"("email") WHERE "deleted_at" IS NULL;
     CREATE INDEX IF NOT EXISTS "idx_anexos_cliente" ON "anexos"("cliente_id");
     CREATE INDEX IF NOT EXISTS "idx_leads_status" ON "leads"("status");
     CREATE INDEX IF NOT EXISTS "idx_leads_email" ON "leads"("email");
+    CREATE UNIQUE INDEX IF NOT EXISTS "idx_convites_token" ON "convites"("token_hash");
+    CREATE INDEX IF NOT EXISTS "idx_convites_usuario_status" ON "convites"("usuario_id", "status");
+    CREATE INDEX IF NOT EXISTS "idx_convites_expirados" ON "convites"("status", "expira_em");
   `
   await pool.query(ddl)
 
   // ALTERs idempotentes — endereço pessoal do cliente deixou de ser obrigatório (2026-08-13).
   // `DROP NOT NULL` é idempotente: em coluna já nullable não faz nada.
   await pool.query(`ALTER TABLE "clientes" ALTER COLUMN "logradouro" DROP NOT NULL`)
+
+  // PLAN-075 (13/08) — dados cadastrais, acesso e segurança de usuários: idempotente em
+  // banco novo e existente (mesmo padrão `ADD COLUMN IF NOT EXISTS` do PLAN-070/072).
+  await pool.query(`
+    ALTER TABLE "usuarios" ADD COLUMN IF NOT EXISTS "telefone" TEXT;
+    ALTER TABLE "usuarios" ADD COLUMN IF NOT EXISTS "email_pendente" TEXT;
+    ALTER TABLE "usuarios" ADD COLUMN IF NOT EXISTS "suspenso_em" TIMESTAMPTZ;
+    ALTER TABLE "empresas" ADD COLUMN IF NOT EXISTS "origem" TEXT;
+    ALTER TABLE "empresas" ADD COLUMN IF NOT EXISTS "email_contato" TEXT;
+    ALTER TABLE "empresas" ADD COLUMN IF NOT EXISTS "telefone_contato" TEXT;
+  `)
+
+  // Backfill PLAN-075 (13/08, uma vez — idempotente por `ON CONFLICT (token_hash)`):
+  // convites pendentes históricos em `auth_tokens` (tipo='convite' não-usado) migram para a
+  // tabela dedicada `convites`. Sem `criado_por`/`email_alvo` históricos: `email_alvo =
+  // usuarios.email`, `criado_por = NULL`, role/idioma atuais do usuário.
+  await pool.query(`
+    INSERT INTO "convites" ("id", "usuario_id", "email_alvo", "criado_por", "role_alvo", "idioma", "status", "token_hash", "criado_em", "expira_em")
+    SELECT gen_random_uuid()::text, at."subject_id", u."email", NULL, u."role", 'pt-BR', 'PENDENTE', at."hash", at."created_at", at."expira_em"
+    FROM "auth_tokens" at
+    JOIN "usuarios" u ON u."id" = at."subject_id"
+    WHERE at."tipo" = 'convite' AND at."usado_em" IS NULL AND at."expira_em" > now()
+    ON CONFLICT ("token_hash") DO NOTHING
+  `)
 }
 
 /** Seed básico de boot (idempotente — PLAN-070): admin, super_admin, empresa Desenvolvimento. */

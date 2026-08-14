@@ -1,5 +1,4 @@
 import type { Request, Response } from "express"
-import bcrypt from "bcryptjs"
 import type { IEmpresaRepository } from "../../application/ports/empresa.repository.js"
 import type { IImpactoDesativacaoQuery } from "../../application/ports/impacto-desativacao.port.js"
 import type { IAuditoriaModulosWriter } from "../../application/ports/auditoria-modulos.port.js"
@@ -13,7 +12,7 @@ import { EmpresaNaoEncontradaError } from "../../domain/errors/empresa.error.js"
 import { ModulosInvalidosError, CapacidadesInvalidasError, MotivoObrigatorioError, ModuloComDadosEmAbertoError } from "../../domain/errors/modulos.error.js"
 import { isValidCpf } from "../../../../shared/validators/cpf.js"
 import { ConvidarUseCase } from "../../../auth/application/use-cases/Convidar/ConvidarUseCase.js"
-import { AuthTokenRepository } from "../../../auth/infrastructure/repositories/auth-token.repository.impl.js"
+import { ConviteRepository } from "../../../auth/infrastructure/repositories/convite.repository.impl.js"
 import { criarMailer } from "../../../../shared/email/mailers.js"
 import { resolverLang } from "../../../../shared/email/templates.js"
 import { EmailEnvioFalhouError } from "../../../../shared/email/errors.js"
@@ -51,7 +50,7 @@ export class EmpresaController {
     this.atualizarModulosUseCase = new AtualizarModulosUseCase(repository, impactoQuery, auditoria)
     this.atualizarCapacidadesUseCase = new AtualizarCapacidadesUseCase(repository, auditoria)
     this.calcularImpactoUseCase = new CalcularImpactoUseCase(repository, impactoQuery)
-    this.convidarUseCase = new ConvidarUseCase(new AuthTokenRepository(), criarMailer())
+    this.convidarUseCase = new ConvidarUseCase(new ConviteRepository(), criarMailer())
   }
 
   list = async (_req: Request, res: Response) => {
@@ -80,16 +79,11 @@ export class EmpresaController {
 
   create = async (req: Request, res: Response) => {
     try {
-      const { nome, documento, nomeFantasia, ativa, adminNome, adminEmail, adminSenha } = req.body
+      const { nome, documento, nomeFantasia, ativa, adminNome, adminEmail } = req.body
       if (!nome || !adminNome || !adminEmail) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Nome, adminNome e adminEmail são obrigatórios." })
         return
       }
-      if (adminSenha !== undefined && adminSenha !== null && (typeof adminSenha !== "string" || adminSenha.length < 6)) {
-        res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
-        return
-      }
-      const senhaHash = adminSenha ? bcrypt.hashSync(adminSenha, 10) : null
       const doc = validarDocumento(documento)
       if (!doc.ok) {
         res.status(422).json({ code: "VALIDATION_ERROR", message: "Documento inválido — informe um CPF ou CNPJ válido." })
@@ -102,17 +96,18 @@ export class EmpresaController {
         ativa: typeof ativa === "boolean" ? ativa : true,
         adminNome,
         adminEmail,
-        adminSenhaHash: senhaHash,
+        adminTelefone: typeof req.body.adminTelefone === "string" ? req.body.adminTelefone : undefined,
       })
-      // Sem senha → admin convidado (recebe convite por e-mail, PLAN-065).
-      if (senhaHash === null) {
-        await this.convidarUseCase.execute({
-          subjectId: result.admin.id,
-          nome: result.admin.nome,
-          email: result.admin.email,
-          lang: resolverLang(req.headers["accept-language"]),
-        })
-      }
+      // R6 (PLAN-075): admin da nova empresa nasce convidado — o convite é o único caminho de ativação.
+      await this.convidarUseCase.execute({
+        subjectId: result.admin.id,
+        nome: result.admin.nome,
+        email: result.admin.email,
+        role: "admin",
+        lang: resolverLang(req.headers["accept-language"]),
+        criadoPor: req.userId ?? null,
+        empresaNome: nome,
+      })
       res.status(201).json(result)
     } catch (err: unknown) {
       if (err instanceof EmailDuplicadoError) {

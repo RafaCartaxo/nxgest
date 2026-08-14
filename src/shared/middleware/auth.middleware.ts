@@ -40,6 +40,14 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       }
     }
 
+    // Conta suspensa (N3 — PLAN-075): bloqueia TODAS as rotas, inclusive sessões com
+    // JWT ainda vivo (a suspensão vale por-request, não só no login). Exceção: só o
+    // `GET /api/auth/me` fica liberado para o front exibir o status "Suspenso".
+    if (usuario.suspensoEm && req.originalUrl !== "/api/auth/me") {
+      res.status(403).json({ code: "CONTA_SUSPENSA", message: "Conta suspensa. Fale com o administrador da sua empresa." })
+      return
+    }
+
     // Conta convidada sem senha (PLAN-065) → bloqueia rotas operacionais, exceto
     // `/api/auth/me` (que devolve o status para o front saber do convite).
     if (!usuario.senhaHash && !req.originalUrl.startsWith("/api/auth/")) {

@@ -17,6 +17,9 @@ const usuario: Usuario = {
   empresaId: null,
   chefeId: null,
   foto: null,
+  emailPendente: null,
+  telefone: null,
+  suspensoEm: null,
 }
 
 function setup(findByEmail: () => Promise<Usuario | null>) {
@@ -26,6 +29,12 @@ function setup(findByEmail: () => Promise<Usuario | null>) {
     create: vi.fn(),
     updateSenha: vi.fn(),
     updateFoto: vi.fn(),
+    emailEmUso: vi.fn(),
+    updatePerfil: vi.fn(),
+    setEmailPendente: vi.fn(),
+    confirmarEmail: vi.fn(),
+    updateEmail: vi.fn(),
+    setSuspenso: vi.fn(),
   }
   const tokenRepo: IAuthTokenRepository = {
     create: vi.fn().mockResolvedValue(undefined),

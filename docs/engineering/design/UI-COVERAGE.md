@@ -2,7 +2,7 @@
 
 **Status:** Ativo — manter atualizado a cada tela/componente novo ou redesign
 
-**Última atualização:** 07/08/2026
+**Última atualização:** 14/08/2026
 
 **Objetivo:** ser o **mapa único** de cobertura da identidade "Nexus". Evita o débito invisível que o redesign deixou (raiz A do ADR-005): o critério de "está redesenhado" é **todo elemento segue o DS**, não "a página tem PageHeader". Rastreia também itens legado/planejados — nada fica invisível.
 
@@ -25,7 +25,7 @@
 | Botão | `Button` / `ButtonLink` | `<button>` inline com estilo próprio |
 | Modal | `Modal` base | overlay custom cru |
 
-## 2. Telas (19) — status de cobertura
+## 2. Telas (27) — status de cobertura
 
 | # | Tela | Shell (PageHeader/layout) | Superfícies internas | Status |
 |---|---|---|---|---|
@@ -54,6 +54,8 @@
 | 23 | Quero Conhecer (`/quero-conhecer`) | ✅ (novo, PLAN-064) | Shell login + Field (zod) + SuccessState dedup/reenviar | ✅ Canônico |
 | 24 | Confirmar Lead (`/quero-conhecer/confirmar`) | ✅ (novo, PLAN-064) | PublicPageShell + SuccessState/ErrorBanner + reenviar | ✅ Canônico |
 | 25 | Leads Super (`/admin/leads`) | ✅ (novo, PLAN-064) | PageHeader + FieldSelect filtro + Card list-item + badges status + modais (Confirm/descarte) | ✅ Canônico |
+| 26 | Confirmar E-mail (`/verificar-email?token=`) | ✅ (novo, PLAN-075) | PublicPageShell + SuccessState/ErrorBanner + Button "Ir para Meus dados" | ✅ Canônico |
+| 27 | Conta Suspensa (bloqueio no `ProtectedRoute`) | ✅ (novo, PLAN-075) | Shell login + Logo público + card warning (ícone Ban + Button sair) | ✅ Canônico |
 
 ## 3. Componentes compartilhados
 

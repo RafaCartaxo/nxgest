@@ -37,6 +37,11 @@ const textos = {
     en: { assunto: "Confirm your interest in NX Gest", titulo: "Confirm your interest", corpo: "We received your request to learn more about NX Gest. To confirm your interest, click the button below.", botao: "Confirm my interest", seguro: "If you didn't make this request, you can ignore this email." },
     es: { assunto: "Confirma tu interés en NX Gest", titulo: "Confirma tu interés", corpo: "Recibimos tu solicitud para conocer más sobre NX Gest. Para confirmar tu interés, haz clic en el botón de abajo.", botao: "Confirmar mi interés", seguro: "Si no realizaste esta solicitud, puedes ignorar este correo." },
   },
+  verificarEmail: {
+    "pt-BR": { assunto: "Confirme seu novo e-mail — NX Gest", titulo: "Confirme seu novo e-mail", corpo: "Você iniciou a troca do e-mail da sua conta no NX Gest. Confirme o novo endereço para concluir a alteração.", botao: "Confirmar novo e-mail", seguro: "O e-mail antigo continua valendo até a confirmação. O link é válido por 24 horas." },
+    en: { assunto: "Confirm your new email — NX Gest", titulo: "Confirm your new email", corpo: "You started changing the email of your NX Gest account. Confirm your new address to finish the change.", botao: "Confirm new email", seguro: "Your old email stays valid until confirmation. This link is valid for 24 hours." },
+    es: { assunto: "Confirma tu nuevo correo — NX Gest", titulo: "Confirma tu nuevo correo", corpo: "Iniciaste el cambio del correo de tu cuenta en NX Gest. Confirma la nueva dirección para completar el cambio.", botao: "Confirmar nuevo correo", seguro: "Tu correo anterior sigue válido hasta la confirmación. El enlace tiene validez de 24 horas." },
+  },
 }
 
 /** Fallback textual do CTA (plano §12) — aparência secundária. */
@@ -107,9 +112,13 @@ function montar(
   }
 }
 
-export function conviteTemplate({ nome, link, lang }: { nome: string; link: string; lang: EmailLang }) {
+export function conviteTemplate({ nome, link, lang, empresaNome, convidadoPor }: { nome: string; link: string; lang: EmailLang; empresaNome?: string | null; convidadoPor?: string | null }) {
   const t = textos.convite[lang]
-  return montar(t.assunto, t.titulo, saudacao(nome, lang), t.corpo, t.botao, link, lang, t.seguro)
+  const ctx: string[] = []
+  if (empresaNome) ctx.push(empresaNome)
+  if (convidadoPor) ctx.push(lang === "pt-BR" ? `Convidado por ${convidadoPor}` : lang === "en" ? `Invited by ${convidadoPor}` : `Invitado por ${convidadoPor}`)
+  const corpo = ctx.length > 0 ? `${t.corpo} (${ctx.join(" · ")})` : t.corpo
+  return montar(t.assunto, t.titulo, saudacao(nome, lang), corpo, t.botao, link, lang, t.seguro)
 }
 
 export function resetTemplate({ nome, link, lang }: { nome: string; link: string; lang: EmailLang }) {
@@ -121,4 +130,10 @@ export function leadTemplate({ nome, link, lang }: { nome?: string; link: string
   const t = textos.lead[lang]
   const saudacaoTexto = nome ? saudacao(nome, lang, true) : ""
   return montar(t.assunto, t.titulo, saudacaoTexto, t.corpo, t.botao, link, lang, t.seguro)
+}
+
+export function verificarEmailTemplate({ link, lang, novoEmail }: { link: string; lang: EmailLang; novoEmail?: string | null }) {
+  const t = textos.verificarEmail[lang]
+  const corpo = novoEmail ? `${t.corpo} Novo endereço: ${novoEmail}.` : t.corpo
+  return montar(t.assunto, t.titulo, "", corpo, t.botao, link, lang, t.seguro)
 }

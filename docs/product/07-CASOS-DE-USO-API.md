@@ -13,6 +13,8 @@
 > **Validação executada (03/08/2026):** 104 cenários executados via `scripts/smoke-api.mjs` — todos PASS contra instância isolada, incluindo as variações V1–V8 (pagamento que atravessa parcelas, quitar→Finalizado, estorno reverte, 2 contratos, ajuste absoluto, cross-tenant, super admin, token inválido), o **PLAN-030** (`GET /api/admin/equipe`, coerência Σ operadores = totais), o **PLAN-031** (módulos/whitelabel — MOD-091..096) e o **PLAN-032** (hierarquia/sócio — SC-001..006, subárvore). Corrigidos no PLAN-029: `dataPromessa` obrigatória para promessa e senha mín. 6 no backend admin.
 >
 > **Smoke atual (11/08/2026):** **250/250 PASS** no CI (job `smoke-api`, DB isolado) — inclui `SC-006b` (sócio ajusta caixa da subárvore → 201) e `SC-006c` (sócio fora da subárvore → 404). Contagem viva em `docs/engineering/TESTES.md` · `docs/STATUS.md`.
+>
+> **Smoke PLAN-075 (14/08/2026):** **263/263 PASS** — instância isolada (PG `localhost:5433`), seed reaplicado, `LOGIN_RATE_LIMIT_MAX=1000` + `PUBLICO_RATE_LIMIT_MAX=1000`. Novos: `SUSP-USR-1..5` (suspensão de usuário), `ADM-TROC-CONV/ATIVO/DUP/REUSE` (troca administrativa + reuso de e-mail de soft-deleted), `SOC-TROC-SUB/FORA`. O `ADM-TROC-REUSE` expôs e fechou um bug real (unique hard `usuarios_email_key` → único parcial `idx_usuarios_email WHERE deleted_at IS NULL`, ver CT-P-16).
 
 ---
 
@@ -39,8 +41,8 @@ rm -f /tmp/nxgest-smoke.db*
 DB_PATH=/tmp/nxgest-smoke.db PORT=3002 npx tsx src/main.ts &   # cria tabelas
 # parar, então:
 DB_PATH=/tmp/nxgest-smoke.db node scripts/seed-demo.mjs        # seed (senha teste123!)
-# subir de novo com limite de login ampliado (o smoke faz ~12 logins):
-DB_PATH=/tmp/nxgest-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=1000 npx tsx src/main.ts &
+# subir de novo com limite de login ampliado (o smoke faz ~12 logins e ~30 ativações):
+DB_PATH=/tmp/nxgest-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=1000 PUBLICO_RATE_LIMIT_MAX=1000 npx tsx src/main.ts &
 
 # 2) rodar
 node scripts/smoke-api.mjs --baseUrl http://localhost:3002       # ou npm run smoke:api
@@ -966,27 +968,28 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Endpoint:** `POST /api/admin/operadores` · **Auth:** admin/super_admin
 
-**Request:** `{ nome, email, senha, role (admin|operator) }`
+**Request:** `{ nome, email, role (admin|socio|operator) }` — P-04: **sem `senha`**; todo cadastro nasce `convidado` (convite é o único caminho de ativação)
 
-**Response 201:** operador criado (empresa herdada — BR-075)
+**Response 201:** operador criado (empresa herdada — BR-075) com `status: "convidado"`
 
 **Coerência:**
 - [ ] `role = super_admin` é recusado (BR-076)?
-- [ ] E-mail duplicado → 409? Senha < 6 → 422?
+- [ ] E-mail duplicado → 409?
+- [ ] `senha` no body é **ignorada** (P-04) — continua `convidado`, `senhaHash` NULL?
 
-**Regras:** BR-057, BR-067, BR-075, BR-076 · **Postman:** `Admin > Criar operador`
+**Regras:** BR-057, BR-067, BR-075, BR-076, P-04 · **Postman:** `Admin > Criar operador`
 
 ### API-CT-060 — Criar válido
-**Dado** payload válido → **Então** 201; login do novo operador funciona com a senha informada.
+**Dado** payload válido → **Então** 201 com `status: "convidado"` + convite gerado; login antes da ativação → **403** `ACCOUNT_PENDING`; após ativar via convite, login funciona.
 
 ### API-CT-061 — E-mail duplicado
 **Dado** e-mail já usado → **Então** 409.
 
-### API-CT-062 — Role inválido / senha curta
-**Dado** `role: "super_admin"` ou senha < 6 → **Então** 400 `VALIDATION_ERROR`.
+### API-CT-062 — Role inválido
+**Dado** `role: "super_admin"` → **Então** 400 `VALIDATION_ERROR`.
 
-### API-CT-079 — Senha curta ao criar/editar operador
-**Dado** `senha` com menos de 6 caracteres em `POST` ou `PATCH /api/admin/operadores` → **Então** 400 (validação no backend, PLAN-029 — não depende só do front).
+### API-CT-079 — Senha no create é ignorada (P-04)
+**Dado** `senha` informada em `POST /api/admin/operadores` → **Então** 201, operador nasce `convidado` (senha < 6 não valida mais no create — P-04 removeu senha da administração).
 
 ---
 
@@ -994,16 +997,17 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Endpoint:** `PATCH /api/admin/operadores/:id` · **Auth:** admin/super_admin
 
-**Request:** parcial `{ nome?, email?, role?, senha? }`
+**Request:** parcial `{ nome?, email?, role?, chefeId?, suspensoEm? }` — P-04: **sem `senha`** (senha só muda via reset/convite, fluxo do próprio usuário)
 
 **Coerência:**
 - [ ] Não permite auto-rebaixar (BR-069)?
 - [ ] Não permite alterar `super_admin`?
+- [ ] Não permite auto-suspender/reativar (R4)?
 
-**Regras:** BR-069, BR-070 · **Postman:** `Admin > Editar operador`
+**Regras:** BR-069, BR-070, P-04, R4 · **Postman:** `Admin > Editar operador`
 
 ### API-CT-063 — Editar válido
-**Dado** admin → **Então** 200; senha nova passada passa a valer no login.
+**Dado** admin → **Então** 200; `senha` (se enviada) é **ignorada** — a senha original continua valendo no login.
 
 ### API-CT-064 — Auto-rebaixar bloqueado
 **Dado** admin tentando rebaixar o próprio role → **Então** 403 FORBIDDEN (BR-069).
@@ -1126,20 +1130,20 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Endpoint:** `POST /api/admin/empresas` · **Auth:** super_admin
 
-**Request:** `{ nome, documento?, nomeFantasia?, ativa?, adminNome, adminEmail, adminSenha }`
+**Request:** `{ nome, documento?, nomeFantasia?, ativa?, adminNome, adminEmail }` — R6: **sem `adminSenha`**; admin da nova empresa nasce `convidado` (convite é o único caminho de ativação)
 
 **Response 201:** `{ empresa, admin }` — transação atômica (BR-072)
 
 **Coerência:**
 - [ ] Empresa **e** admin criados juntos (ou nada)?
-- [ ] Login do admin inicial funciona?
+- [ ] Admin inicial nasce `convidado` → login → 403 `ACCOUNT_PENDING` até ativar?
 - [ ] E-mail duplicado → 409?
 - [ ] Cadastro **sem** `documento`/`nomeFantasia`/`ativa` → 201 (campos opcionais, não bloqueiam)?
 
-**Regras:** BR-072, BR-076 · **Postman:** `Empresas > Criar`
+**Regras:** BR-072, BR-076, R6 · **Postman:** `Empresas > Criar`
 
 ### API-CT-073 — Criar empresa
-**Dado** payload válido → **Então** 201 com empresa + admin; login do admin inicial funciona.
+**Dado** payload válido → **Então** 201 com empresa + admin (`status: "convidado"`); após ativar via convite, login do admin inicial funciona.
 
 ### API-CT-074 — E-mail duplicado
 **Dado** `adminEmail` já usado → **Então** 409 e **nenhuma** empresa criada (atômico).
@@ -1439,7 +1443,9 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
-# FLUXO DE CONTA (PLAN-065) — convite/ativação + forgot/reset
+# FLUXO DE CONTA (PLAN-065 → PLAN-075) — convite/ativação + forgot/reset
+
+> **P-04 (PLAN-075):** convite vive na tabela dedicada `convites` (status PENDENTE/CONCLUIDO/EXPIRADO/REVOGADO, `email_alvo`, `criado_por`) — **não mais** em `auth_tokens`. `auth_tokens` continua para reset (`reset`) e confirmação de lead (`lead`).
 
 **Smoke:** `AC-13..20`, `ES-02..11`, `SE-01/04`, `SM-1/2`
 
@@ -1452,16 +1458,16 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 **Dado** conta sem senha (convidada) → **Então** `POST /auth/login` → **403** `ACCOUNT_PENDING`.
 
 ### AC-CT-15 — Criar operador sem senha → convidado + convite
-**Dado** `POST /admin/operadores` sem `senha` → **Então** **201** com `status: "convidado"` + token de convite gerado.
+**Dado** `POST /admin/operadores` sem `senha` → **Então** **201** com `status: "convidado"` + convite gerado (linha PENDENTE na tabela `convites`).
 
 ### AC-CT-05 — Ativar com token válido → login funciona
 **Dado** `POST /auth/ativar` com token válido + senha ≥6 → **Então** **200**; login com a nova senha → **200** (`status: "ativo"`).
 
 ### AC-CT-08 — Token já usado → 400 TOKEN_INVALID
-**Dado** ativar 2× com o mesmo token → **Então** 2ª → **400**.
+**Dado** ativar 2× com o mesmo token → **Então** 2ª → **400** (convite marcado CONCLUIDO na 1ª).
 
 ### AC-CT-20 — Empresa sem adminSenha → admin convidado
-**Dado** `POST /admin/empresas` sem `adminSenha` → **Então** **201**; login do admin → **403** `ACCOUNT_PENDING`.
+**Dado** `POST /admin/empresas` sem `adminSenha` (R6: campo inexistente, admin sempre convidado) → **Então** **201**; login do admin → **403** `ACCOUNT_PENDING`.
 
 ### ES-CT-02/03 — Forgot genérico
 **Dado** e-mail existente OU inexistente → **Então** **200** sempre (não vaza).
@@ -1469,8 +1475,8 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 ### ES-CT-05 — Reset com token válido → login nova senha
 **Dado** `POST /auth/reset` com token válido → **Então** **200**; login com a nova senha → **200**.
 
-### SE-CT-01 — Token armazenado com hash
-**Dado** token gerado → **Então** no banco `auth_tokens.hash` é SHA-256 (64 hex), nunca o token em texto.
+### SE-CT-01 — Token de convite armazenado com hash
+**Dado** convite gerado → **Então** no banco `convites.token_hash` é SHA-256 (64 hex), nunca o token em texto.
 
 ---
 
@@ -1514,6 +1520,68 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 - **Dado** data URL >500KB decodificados → **Então** 422 `FOTO_LIMITE`.
 
 **Regras:** BR-101 · **Postman:** `Auth > Alterar foto`
+
+---
+
+# AUTOSSERVIÇO E CONTA (PLAN-075) — perfil, troca de e-mail e suspensão
+
+## Endpoints
+
+**Endpoint:** `PATCH /api/auth/me` · **Auth:** Bearer (qualquer perfil)
+**Endpoint:** `POST /api/auth/me/email` · **Auth:** Bearer (qualquer perfil)
+**Endpoint:** `POST /api/auth/me/email/verificar` · **Auth:** Bearer (qualquer perfil)
+**Endpoint:** `DELETE /api/auth/me/email` · **Auth:** Bearer (qualquer perfil)
+**Endpoint:** `PATCH /api/admin/operadores/:id/revogar-convite` — admin/super
+**Endpoint:** `PATCH /api/admin/operadores/:id/suspender` — admin/super
+**Endpoint:** `PATCH /api/admin/operadores/:id/reativar` — admin/super
+
+### CT-P-01 — Perfil: atualizar nome/telefone
+**Dado** usuário autenticado → **Quando** `PATCH /api/auth/me` com `{ nome, telefone }` → **Então** 200; `GET /api/auth/me` reflete os novos valores. `telefone: null` remove o telefone; `nome` em branco → 422.
+
+### CT-P-02 — Perfil: só dados pessoais
+**Dado** tentativa de alterar `email`/`role`/`chefeId` via `PATCH /api/auth/me` → **Então** o body é ignorado (endpoint só aceita nome/telefone) e nada muda.
+
+### CT-P-03 — Troca de e-mail: senha errada
+**Dado** `POST /api/auth/me/email` com `senhaAtual` incorreta → **Então** **422** `INVALID_CURRENT_PASSWORD` e `email_pendente` permanece `null`.
+
+### CT-P-04 — Troca de e-mail: duplicidade (inclui pendente)
+**Dado** novo e-mail já usado por outra conta **OU** já em `email_pendente` de terceiro → **Então** **409** `EMAIL_DUPLICATED` **antes** de gravar qualquer pendência.
+
+### CT-P-05 — Troca de e-mail: pendência + verificação
+**Dado** `POST /api/auth/me/email` válido → **Então** **200**; `me` passa a expor `email_pendente`; o **e-mail atual segue usado no login** até `POST /api/auth/me/email/verificar` com o token (24h); após verificar, `email_pendente → email` e `emailVerificado` volta a `true`.
+
+### CT-P-06 — Troca de e-mail: re-solicitação invalida o anterior
+**Dado** uma pendência viva → **Quando** nova solicitação → **Então** `email_pendente` é sobrescrito e **só o novo token funciona** (o anterior deixa de validar).
+
+### CT-P-07 — Cancelar troca exigindo senha
+**Dado** pendência viva → **Quando** `DELETE /api/auth/me/email` **sem** `senhaAtual` → **Então** 422. **Com** senha correta → **200**; `email_pendente` limpo e o token invalidado; e-mail atual intacto.
+
+### CT-P-08 — Suspensão bloqueia login e rotas
+**Dado** usuário ativo → **Quando** admin executa `PATCH .../operadores/:id/suspender` → **Então** 200; `login` do suspenso → **403** `CONTA_SUSPENSA`; qualquer rota autenticada (exceto `GET /api/auth/me`) → 403; `me` devolve `status: "suspenso"`.
+
+### CT-P-09 — Reativação volta a funcionar
+**Dado** usuário suspenso → **Quando** `PATCH .../operadores/:id/reativar` → **Então** **200** e `login` volta a funcionar.
+
+### CT-P-10 — Suspender convidado é bloqueado
+**Dado** usuário convidado → **Quando** `PATCH .../operadores/:id/suspender` → **Então** **409** (conta convidada — remova ou reenvie o convite).
+
+### CT-P-11 — Revogar convite
+**Dado** convidado com convite pendente → **Quando** `PATCH .../operadores/:id/revogar-convite` → **Então** **200**; o link de ativação deixa de funcionar (ativação → 400); o usuário permanece convidado, sem convite válido. Sem convite pendente → **409**.
+
+### CT-P-12 — Troca de e-mail de convidado (troca direta + novo convite)
+**Dado** usuário `convidado` → **Quando** admin/super `PATCH /api/admin/operadores/:id` com `email` novo → **Então** **200**; `email` já é o novo (sem `email_pendente`); novo convite gerado para o novo endereço; status permanece `convidado`.
+
+### CT-P-13 — Troca de e-mail de usuário ativo (email_pendente + verificação)
+**Dado** usuário `ativo` → **Quando** admin/super `PATCH /api/admin/operadores/:id` com `email` novo → **Então** **200**; `email` atual **não muda**, `email_pendente` = novo e-mail (verificação pelo dono — P-07); login continua pelo e-mail atual.
+
+### CT-P-14 — Troca de e-mail: duplicidade → 409
+**Dado** `email` novo já em uso (ou em `email_pendente` de terceiro) → **Quando** `PATCH /api/admin/operadores/:id` → **Então** **409** `EMAIL_DUPLICATED` antes de gravar.
+
+### CT-P-15 — Sócio troca e-mail dentro da subárvore
+**Dado** sócio → **Quando** `PATCH /api/admin/operadores/:id` com `email` novo de operador **da subárvore** → **Então** **200** (mesma regra P-06/P-07 por estado). **Dado** operador **fora** da subárvore → **404**.
+
+### CT-P-16 — Reuso de e-mail de operador removido (soft-delete libera o e-mail)
+**Dado** operador removido (soft-delete) → **Quando** `POST /api/admin/operadores` ou `PATCH /api/admin/operadores/:id` com o e-mail do removido → **Então** **201/200** (e-mail disponível — unique parcial `idx_usuarios_email` com `deleted_at IS NULL`, padrão CPF de clientes). Regressão: antes do fix, passava na dedup (ignora soft-deleted) e estourava `usuarios_email_key` no banco → **500**.
 
 ---
 

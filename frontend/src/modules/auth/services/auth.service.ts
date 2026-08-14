@@ -12,7 +12,11 @@ interface UsuarioComum {
   chefeId?: string | null
   foto?: string | null
   /** PLAN-065: "convidado" = conta sem senha definida (aguardando ativação). */
-  status?: "convidado" | "ativo"
+  status?: "convidado" | "ativo" | "suspenso"
+  /** PLAN-075: dados de contato, troca de e-mail e e-mail verificado (derivado). */
+  telefone?: string | null
+  emailPendente?: string | null
+  emailVerificado?: boolean
 }
 
 export interface LoginResponse {
@@ -36,6 +40,26 @@ export async function alterarSenha(senhaAtual: string, novaSenha: string): Promi
 
 export async function alterarFoto(foto: string | null): Promise<{ ok: boolean }> {
   return apiRequest<{ ok: boolean }>("PATCH", "/auth/foto", { foto })
+}
+
+/** PLAN-075 F3: atualiza nome/telefone do próprio perfil (PATCH /me). */
+export async function atualizarPerfil(data: { nome?: string; telefone?: string | null }): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>("PATCH", "/auth/me", data)
+}
+
+/** PLAN-075 F4: inicia troca de e-mail (novo e-mail + senha atual) → email_pendente. */
+export async function trocarEmail(novoEmail: string, senhaAtual: string): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>("POST", "/auth/me/email", { novoEmail, senhaAtual })
+}
+
+/** PLAN-075 F4: confirma a troca pelo link (token). */
+export async function verificarEmail(token: string): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>("POST", "/auth/me/email/verificar", { token })
+}
+
+/** PLAN-075 P-03: cancela troca de e-mail pendente (senha atual obrigatória). */
+export async function cancelarTrocaEmail(senhaAtual: string): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>("DELETE", "/auth/me/email", { senhaAtual })
 }
 
 /** PLAN-065: define a senha da conta convidada (link /ativar?token=). */

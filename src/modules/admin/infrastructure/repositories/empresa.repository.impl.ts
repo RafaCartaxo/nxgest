@@ -69,9 +69,12 @@ export class EmpresaRepository implements IEmpresaRepository {
     return toComStats(row, stats.get(row.id)!)
   }
 
-  async create(input: { nome: string; documento?: string | null; nomeFantasia?: string | null; ativa?: boolean; adminNome: string; adminEmail: string; adminSenhaHash: string | null }) {
-    const existente = await this.authRepository.findByEmail(input.adminEmail)
-    if (existente) {
+  async create(input: { nome: string; documento?: string | null; nomeFantasia?: string | null; ativa?: boolean; adminNome: string; adminEmail: string; adminTelefone?: string | null; origem?: string | null; emailContato?: string | null; telefoneContato?: string | null }) {
+    // E-mail do admin normalizado (minúsculas/trim) antes da dedup — login é case-insensitive (PLAN-075).
+    const adminEmail = input.adminEmail.trim().toLowerCase()
+    // Dedup N1.6: email (ou email pendente de troca) já pertence a outro usuário → 409.
+    const emailEmUso = await this.authRepository.emailEmUso(adminEmail)
+    if (emailEmUso) {
       throw new EmailDuplicadoError()
     }
 
@@ -85,22 +88,26 @@ export class EmpresaRepository implements IEmpresaRepository {
         documento: input.documento ?? null,
         nomeFantasia: input.nomeFantasia ?? null,
         ativa: input.ativa === false ? 0 : 1,
+        origem: input.origem ?? null,
+        emailContato: input.emailContato ?? null,
+        telefoneContato: input.telefoneContato ?? null,
         createdAt: new Date().toISOString(),
       })
 
       await tx.insert(usuarios).values({
         id: adminId,
         nome: input.adminNome,
-        email: input.adminEmail,
-        senhaHash: input.adminSenhaHash,
+        email: adminEmail,
+        senhaHash: null, // R6 (PLAN-075): admin sempre convidado — ativação via convite.
         role: "admin",
         empresaId: empresaId,
+        telefone: input.adminTelefone ?? null,
         createdAt: new Date().toISOString(),
       })
 
       return {
         empresa: { id: empresaId, nome: input.nome, documento: input.documento ?? null, nomeFantasia: input.nomeFantasia ?? null, ativa: input.ativa === false ? false : true, createdAt: new Date().toISOString(), totalUsuarios: 1, totalClientes: 0, contratosAtivos: 0, modulos: [...DEFAULT_MODULOS], capacidades: null },
-        admin: { id: adminId, nome: input.adminNome, email: input.adminEmail },
+        admin: { id: adminId, nome: input.adminNome, email: adminEmail },
       }
     })
   }

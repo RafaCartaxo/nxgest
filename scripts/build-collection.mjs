@@ -91,6 +91,22 @@ const endpoints = [
       body: { foto: "data:image/jpeg;base64,/9j/..." },
       description: "API-UC-042 · 200 {ok, foto} · 422 FOTO_TIPO/FOTO_LIMITE · null remove (BR-101, PLAN-041)",
     }),
+    req("Atualizar perfil", "PATCH", "/api/auth/me", {
+      body: { nome: "João Atualizado", telefone: "11988887777" },
+      description: "PLAN-075 F3 · 200 {ok, nome, telefone} · 422 nome/telefone inválidos · só dados pessoais (foto/senha têm fluxos próprios)",
+    }),
+    req("Trocar e-mail", "POST", "/api/auth/me/email", {
+      body: { novoEmail: "novo@exemplo.com", senhaAtual: "teste123!" },
+      description: "PLAN-075 F4 · 200 · 422 senha atual · 409 EMAIL_DUPLICATED (inclui email_pendente) · 503 envio",
+    }),
+    req("Verificar novo e-mail", "POST", "/api/auth/me/email/verificar", {
+      body: { token: "{{emailToken}}" },
+      description: "PLAN-075 F4 · 200 · 400 TOKEN_EXPIRED/TOKEN_INVALID · promove email_pendente→email",
+    }),
+    req("Cancelar troca de e-mail", "DELETE", "/api/auth/me/email", {
+      body: { senhaAtual: "teste123!" },
+      description: "PLAN-075 P-03 · 200 · 422 sem senha/senha incorreta · limpa pendência + invalida token",
+    }),
   ]),
 
   mod("Leads", "Aquisição comercial (PLAN-064) — público + super admin", [
@@ -213,14 +229,17 @@ const endpoints = [
     req("Listar operadores", "GET", "/api/admin/operadores", { description: "API-UC-032 · 200 · 403 operator" }),
     req("Detalhe operador", "GET", "/api/admin/operadores/{{operadorId}}", { description: "API-UC-033 · 200 · 404 outra empresa" }),
     req("Criar operador", "POST", "/api/admin/operadores", {
-      body: { nome: "Maria Op", email: "maria.nx@uorak.com", senha: "teste123!", role: "operator" },
-      description: "API-UC-034 · 201 · 409 e-mail · 400 role inválido/senha < 6",
+      body: { nome: "Maria Op", email: "maria.nx@uorak.com", role: "operator" },
+      description: "API-UC-034 · 201 (convidado, senha SEMPRE ignorada — P-04/R6) · 409 e-mail · 400 role inválido",
     }),
     req("Editar operador", "PATCH", "/api/admin/operadores/{{operadorId}}", {
-      body: { role: "operator", reatribuirParaChefeId: "{{novoChefeAdminId}}" },
-      description: "API-UC-035 · 200 · 403 auto-rebaixar · 422 OPERATOR_HAS_SUBORDINATES (rebaixar com subordinados) · reatribuirParaChefeId move os subordinados no mesmo ato (PLAN-061)",
+      body: { role: "operator", reatribuirParaChefeId: "{{novoChefeAdminId}}", email: "novo@uorak.com" },
+      description: "API-UC-035 · 200 · 403 auto-rebaixar · 422 OPERATOR_HAS_SUBORDINATES (rebaixar com subordinados) · reatribuirParaChefeId move os subordinados no mesmo ato (PLAN-061) · email: convidado troca direto + novo convite; ativo → email_pendente (P-06/P-07) · 409 duplicado",
     }),
     req("Reenviar convite", "PATCH", "/api/admin/operadores/{{operadorId}}/reenviar-convite", { description: "PLAN-065 · 200 · 404 · 409 conta já ativa" }),
+    req("Revogar convite", "PATCH", "/api/admin/operadores/{{operadorId}}/revogar-convite", { description: "PLAN-075 P-10 · 200 · 404 · 409 sem convite pendente" }),
+    req("Suspender", "PATCH", "/api/admin/operadores/{{operadorId}}/suspender", { description: "PLAN-075 N3 · 200 · 404 · 409 conta convidada · login → 403 CONTA_SUSPENSA" }),
+    req("Reativar", "PATCH", "/api/admin/operadores/{{operadorId}}/reativar", { description: "PLAN-075 N3 · 200 · 404 · login volta a funcionar" }),
     req("Remover operador", "DELETE", "/api/admin/operadores/{{operadorId}}", { description: "API-UC-036 · 204 · 403 auto-remover" }),
     req("Dashboard", "GET", "/api/admin/dashboard", { query: [{ key: "empresaId", value: "" }], description: "API-UC-037 · 200 KPIs · 403 operator" }),
     req("Equipe", "GET", "/api/admin/equipe", { query: [{ key: "empresaId", value: "" }], description: "API-UC-042 · 200 operadores+totais (BR-091) · 403 operator · 400 super sem empresaId" }),
@@ -230,8 +249,8 @@ const endpoints = [
     req("Listar", "GET", "/api/admin/empresas", { description: "API-UC-038 · 200 · 403 não-super" }),
     req("Detalhe", "GET", "/api/admin/empresas/{{empresaId}}", { description: "API-UC-039 · 200 · 404 inexistente" }),
     req("Criar", "POST", "/api/admin/empresas", {
-      body: { nome: "Empresa Exemplo", documento: "00.000.000/0000-00", nomeFantasia: "Exemplo", ativa: true, adminNome: "João Admin", adminEmail: "admin@empresa.com", adminSenha: "senhaSegura123" },
-      description: "API-UC-040 · 201 empresa+admin atômico · 409 e-mail duplicado · documento/nomeFantasia/ativa opcionais",
+      body: { nome: "Empresa Exemplo", documento: "00.000.000/0000-00", nomeFantasia: "Exemplo", ativa: true, adminNome: "João Admin", adminEmail: "admin@empresa.com", adminTelefone: "(83) 99999-9999" },
+      description: "API-UC-040 · 201 empresa+admin atômico (admin nasce CONVIDADO — R6, sem senha) · 409 e-mail duplicado · documento/nomeFantasia/ativa opcionais",
     }),
     req("Editar dados", "PATCH", "/api/admin/empresas/{{empresaId}}", {
       body: { nomeFantasia: "Exemplo Atualizado", ativa: false },

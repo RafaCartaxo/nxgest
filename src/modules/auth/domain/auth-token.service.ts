@@ -5,6 +5,7 @@ const EXPIRACAO_MS: Record<AuthTokenTipo, number> = {
   convite: 7 * 24 * 60 * 60 * 1000, // 7d
   reset: 30 * 60 * 1000, // 30min
   lead: 24 * 60 * 60 * 1000, // 24h
+  email: 24 * 60 * 60 * 1000, // 24h (troca de e-mail — PLAN-075)
 }
 
 /** Token aleatório (32 bytes hex). Nunca logar. */

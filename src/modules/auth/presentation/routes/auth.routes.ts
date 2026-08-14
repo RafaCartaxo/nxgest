@@ -34,7 +34,7 @@ const forgotLimiter = rateLimit({
 
 const publicoLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: envNumber("PUBLICO_RATE_LIMIT_MAX", 10),
   standardHeaders: true,
   legacyHeaders: false,
   message: { code: "RATE_LIMIT", message: "Muitas tentativas. Tente novamente em 15 minutos." },
@@ -45,7 +45,11 @@ router.post("/ativar", publicoLimiter, controller.ativar)
 router.post("/forgot", forgotLimiter, controller.forgot)
 router.post("/reset", publicoLimiter, controller.reset)
 router.get("/me", authMiddleware, controller.me)
+router.patch("/me", authMiddleware, controller.atualizarPerfil)
 router.patch("/senha", authMiddleware, controller.alterarSenha)
 router.patch("/foto", authMiddleware, controller.alterarFoto)
+router.post("/me/email", authMiddleware, controller.trocarEmail)
+router.post("/me/email/verificar", authMiddleware, controller.verificarEmail)
+router.delete("/me/email", authMiddleware, controller.cancelarTrocaEmail)
 
 export { router as authRoutes }

@@ -1,5 +1,6 @@
 import type { Request, Response } from "express"
-import bcrypt from "bcryptjs"
+import { eq } from "drizzle-orm"
+import { db, empresas } from "../../../../database.js"
 import type { IAdminRepository } from "../../application/ports/admin.repository.js"
 import { ListOperadoresUseCase } from "../../application/use-cases/ListOperadores/ListOperadoresUseCase.js"
 import { ListarEquipeUseCase } from "../../application/use-cases/ListarEquipe/ListarEquipeUseCase.js"
@@ -8,11 +9,14 @@ import { EditarOperadorUseCase } from "../../application/use-cases/EditarOperado
 import { RemoverOperadorUseCase } from "../../application/use-cases/RemoverOperador/RemoverOperadorUseCase.js"
 import { OperadorNaoEncontradoError, NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, NaoPodeAtribuirSuperAdminError, NaoPodeRebaixarComSubordinadosError } from "../../domain/errors/admin.error.js"
 import { validarFoto } from "../../../../shared/utils/foto.js"
-import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
+import { EmailDuplicadoError, TokenExpiradoError, TokenInvalidoError } from "../../../../modules/auth/domain/errors/auth.error.js"
 import { ConvidarUseCase } from "../../../../modules/auth/application/use-cases/Convidar/ConvidarUseCase.js"
 import { AuthTokenRepository } from "../../../../modules/auth/infrastructure/repositories/auth-token.repository.impl.js"
+import { ConviteRepository } from "../../../../modules/auth/infrastructure/repositories/convite.repository.impl.js"
 import { criarMailer } from "../../../../shared/email/mailers.js"
-import { resolverLang } from "../../../../shared/email/templates.js"
+import { appUrl } from "../../../../shared/email/mailers.js"
+import { resolverLang, verificarEmailTemplate, type EmailLang } from "../../../../shared/email/templates.js"
+import { gerarToken, hashToken, expirarEm } from "../../../../modules/auth/domain/auth-token.service.js"
 import { EmailEnvioFalhouError } from "../../../../shared/email/errors.js"
 
 const ROLES_ADMIN = ["admin", "socio", "operator"] as const
@@ -35,7 +39,7 @@ export class AdminController {
     this.editarUseCase = new EditarOperadorUseCase(repository)
     this.removerUseCase = new RemoverOperadorUseCase(repository)
     this.dashboardGetter = repository
-    this.convidarUseCase = new ConvidarUseCase(new AuthTokenRepository(), criarMailer())
+    this.convidarUseCase = new ConvidarUseCase(new ConviteRepository(), criarMailer())
   }
 
   private resolveEmpresaId(req: Request): string | null | undefined {
@@ -51,6 +55,18 @@ export class AdminController {
       return this.repository.subarvoreIds(req.userId!)
     }
     return undefined
+  }
+
+  /** Nome do próprio usuário (para "Convidado por" no e-mail). */
+  private async nomeDe(req: Request): Promise<string> {
+    const self = await this.repository.findById(req.userId!)
+    return self?.nome ?? ""
+  }
+
+  private async empresaNomeDe(id?: string | null): Promise<string | null> {
+    if (!id) return null
+    const [row] = await db.select({ nome: empresas.nome }).from(empresas).where(eq(empresas.id, id)).limit(1)
+    return row?.nome ?? null
   }
 
   /** Valida o chefe: existe, mesma empresa, não-self (em relação ao alvo), role compatível. */
@@ -97,6 +113,7 @@ export class AdminController {
     }
   }
 
+  /** Criação administrativa (P-04/N4 — PLAN-075): sem senha, todo cadastro nasce CONVIDADO. */
   create = async (req: Request, res: Response) => {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req) ?? null
@@ -104,17 +121,13 @@ export class AdminController {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Informe a empresa (empresaId)." })
         return
       }
-      const { nome, email, senha, role, chefeId } = req.body
+      const { nome, email, role, chefeId, telefone } = req.body
       if (!nome || !email || !role) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Nome, email e role são obrigatórios." })
         return
       }
       if (!(ROLES_ADMIN as readonly string[]).includes(role)) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Role deve ser 'admin', 'socio' ou 'operator'." })
-        return
-      }
-      if (senha !== undefined && senha !== null && (typeof senha !== "string" || senha.length < 6)) {
-        res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
         return
       }
 
@@ -134,12 +147,18 @@ export class AdminController {
         }
       }
 
-      // Senha opcional (PLAN-065): sem senha → convidado (recebe convite por e-mail).
-      const senhaHash = senha ? await bcrypt.hash(senha, 10) : null
-      const operador = await this.criarUseCase.execute({ nome, email, senhaHash, role, empresaId: targetEmpresaId, chefeId: finalChefeId })
-      if (senhaHash === null) {
-        await this.convidarUseCase.execute({ subjectId: operador.id, nome: operador.nome, email: operador.email, lang: resolverLang(req.headers["accept-language"]) })
-      }
+      // PLAN-075 P-04: senha nunca vem da administração — o convite define a senha.
+      const operador = await this.criarUseCase.execute({ nome, email, role, empresaId: targetEmpresaId, chefeId: finalChefeId, telefone: telefone ?? null })
+      await this.convidarUseCase.execute({
+        subjectId: operador.id,
+        nome: operador.nome,
+        email: operador.email,
+        role: operador.role,
+        lang: resolverLang(req.headers["accept-language"]),
+        criadoPor: req.userId ?? null,
+        empresaNome: await this.empresaNomeDe(targetEmpresaId),
+        convidadoPor: await this.nomeDe(req),
+      })
       res.status(201).json(operador)
     } catch (err) {
       if (err instanceof EmailDuplicadoError) {
@@ -178,7 +197,11 @@ export class AdminController {
         subjectId: operador.id,
         nome: operador.nome,
         email: operador.email,
+        role: operador.role,
         lang: resolverLang(req.headers["accept-language"]),
+        criadoPor: req.userId ?? null,
+        empresaNome: await this.empresaNomeDe(targetEmpresaId),
+        convidadoPor: await this.nomeDe(req),
       })
       res.json({ ok: true })
     } catch (err) {
@@ -192,12 +215,75 @@ export class AdminController {
     }
   }
 
+  /** Revoga o convite pendente do usuário (P-10 — PLAN-075). Link deixa de funcionar. */
+  revogarConvite = async (req: Request, res: Response) => {
+    try {
+      const targetEmpresaId = this.resolveEmpresaId(req)
+      const scope = await this.resolveScope(req)
+      const operador = await this.repository.findById(req.params.id, targetEmpresaId, scope)
+      if (!operador) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
+        return
+      }
+      const conviteRepo = new ConviteRepository()
+      const convite = await conviteRepo.findValidoPorUsuario(operador.id)
+      if (!convite) {
+        res.status(409).json({ code: "VALIDATION_ERROR", message: "Nenhum convite pendente para revogar." })
+        return
+      }
+      await conviteRepo.revogar(convite.id, new Date().toISOString())
+      res.json({ ok: true })
+    } catch (err) {
+      console.error("Erro ao revogar convite:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao revogar convite." })
+    }
+  }
+
+  /** Suspende/reativa usuário ativo (N3 — PLAN-075). Convidado não faz sentido suspender. */
+  suspender = async (req: Request, res: Response, status: boolean) => {
+    try {
+      const targetEmpresaId = this.resolveEmpresaId(req)
+      const scope = await this.resolveScope(req)
+      if (req.params.id === req.userId) {
+        res.status(403).json({ code: "FORBIDDEN", message: "Você não pode suspender ou reativar a própria conta." })
+        return
+      }
+      const existing = await this.repository.findById(req.params.id, targetEmpresaId, scope)
+      if (!existing) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
+        return
+      }
+      if (existing.status === "convidado") {
+        res.status(409).json({ code: "VALIDATION_ERROR", message: "Conta convidada não pode ser suspensa — remova ou reenvie o convite." })
+        return
+      }
+      const data = status ? { suspensoEm: new Date().toISOString() } : { suspensoEm: null as string | null }
+      const operador = await this.editarUseCase.execute(
+        req.params.id, data, req.userId!, targetEmpresaId, scope,
+      )
+      res.json(operador)
+    } catch (err) {
+      if (err instanceof OperadorNaoEncontradoError) {
+        res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: err.message })
+        return
+      }
+      if (err instanceof NaoPodeAutoModificarError || err instanceof NaoPodeAlterarSuperAdminError) {
+        res.status(403).json({ code: "FORBIDDEN", message: err.message })
+        return
+      }
+      console.error("Erro em suspender/reativar:", err)
+      res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao alterar a suspensão." })
+    }
+  }
+
   update = async (req: Request, res: Response) => {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req)
       const scope = await this.resolveScope(req)
       const userId = req.userId!
-      const { nome, email, role, senha, chefeId, foto, reatribuirParaChefeId } = req.body
+      const { nome, email, role, chefeId, foto, telefone, reatribuirParaChefeId } = req.body
+      // Normaliza o e-mail alvo ANTES da comparação/dedup — P-06/P-07 (PLAN-075).
+      const emailNormalizado = email !== undefined && email !== null && typeof email === "string" ? String(email).trim().toLowerCase() : email
 
       const existing = await this.repository.findById(req.params.id, targetEmpresaId, scope)
       if (!existing) {
@@ -206,10 +292,6 @@ export class AdminController {
       }
       if (role !== undefined && !(ROLES_ADMIN as readonly string[]).includes(role)) {
         res.status(400).json({ code: "VALIDATION_ERROR", message: "Role deve ser 'admin', 'socio' ou 'operator'." })
-        return
-      }
-      if (senha !== undefined && (typeof senha !== "string" || senha.length < 6)) {
-        res.status(400).json({ code: "VALIDATION_ERROR", message: "A senha deve ter ao menos 6 caracteres." })
         return
       }
       if (foto !== null && foto !== undefined) {
@@ -250,22 +332,56 @@ export class AdminController {
         }
       }
 
-      const data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null; reatribuirParaChefeId?: string | null } = {}
+      const data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; chefeId?: string | null; foto?: string | null; telefone?: string | null; reatribuirParaChefeId?: string | null; emailPendente?: string | null } = {}
       if (nome !== undefined) data.nome = nome
-      if (email !== undefined) data.email = email
+      if (telefone !== undefined) data.telefone = telefone ?? null
       if (role !== undefined) data.role = role
-      if (senha !== undefined) data.senhaHash = await bcrypt.hash(senha, 10)
       // Higiene (WS7): admin não tem chefe — zera mesmo quando o body não envia.
       if (role === "admin" || targetRole === "admin") data.chefeId = null
       else if (chefeId !== undefined) data.chefeId = chefeId
       if (foto !== undefined) data.foto = foto
       if (reatribuirParaChefeId !== undefined) data.reatribuirParaChefeId = reatribuirParaChefeId ?? null
 
+      // Troca de e-mail administrativa por estado (P-06/P-07 — PLAN-075):
+      // - convidado → troca direta do e-mail + NOVO convite ao novo endereço (sem pendência);
+      // - ativo → email_pendente + verificação pelo dono (e-mail atual segue valendo).
+      const vaiTrocarEmail = emailNormalizado !== undefined && emailNormalizado !== null && String(emailNormalizado).trim() !== "" && String(emailNormalizado).toLowerCase() !== (existing.email ?? "").trim().toLowerCase()
+      let novoConvitePara: string | null = null
+      if (vaiTrocarEmail) {
+        const novoEmail = String(emailNormalizado).trim()
+        if (existing.status === "convidado") {
+          data.email = novoEmail
+          novoConvitePara = novoEmail
+        } else {
+          data.emailPendente = novoEmail
+        }
+      }
+
       const operador = await this.editarUseCase.execute(req.params.id, data, userId, targetEmpresaId, scope)
+
+      if (vaiTrocarEmail && existing.status === "convidado") {
+        await this.convidarUseCase.execute({
+          subjectId: operador!.id,
+          nome: operador!.nome,
+          email: novoConvitePara!,
+          role: operador!.role,
+          lang: resolverLang(req.headers["accept-language"]),
+          criadoPor: req.userId ?? null,
+          empresaNome: await this.empresaNomeDe(targetEmpresaId),
+          convidadoPor: await this.nomeDe(req),
+        })
+      } else if (vaiTrocarEmail && existing.status === "ativo") {
+        await this.emitirVerificacaoEmail(operador!.id, novoConvitePara ?? String(emailNormalizado).trim(), resolverLang(req.headers["accept-language"]))
+      }
+
       res.json(operador)
     } catch (err) {
       if (err instanceof OperadorNaoEncontradoError) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: err.message })
+        return
+      }
+      if (err instanceof EmailDuplicadoError) {
+        res.status(409).json({ code: "EMAIL_DUPLICATED", message: err.message })
         return
       }
       if (err instanceof NaoPodeRebaixarComSubordinadosError) {
@@ -276,9 +392,25 @@ export class AdminController {
         res.status(403).json({ code: "FORBIDDEN", message: err.message })
         return
       }
+      if (err instanceof EmailEnvioFalhouError) {
+        console.error("[EMAIL] Falha no envio após edição:", err.message)
+        res.status(503).json({ code: "EMAIL_UNAVAILABLE", message: "Usuário atualizado, mas o e-mail não foi enviado. Use 'Reenviar' quando puder." })
+        return
+      }
       console.error("Erro ao editar operador:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro ao editar operador." })
     }
+  }
+
+  /** Emite token `email` (24h) e envia link de verificação para o novo endereço. */
+  private async emitirVerificacaoEmail(userId: string, novoEmail: string, lang: EmailLang): Promise<void> {
+    const tokenRepo = new AuthTokenRepository()
+    const mailer = criarMailer()
+    const token = gerarToken()
+    await tokenRepo.invalidarPorTipo(userId, "email")
+    await tokenRepo.create({ subjectId: userId, tipo: "email", hash: hashToken(token), expiraEm: expirarEm("email") })
+    const link = `${appUrl()}/verificar-email?token=${token}`
+    await mailer.send({ to: novoEmail, ...verificarEmailTemplate({ link, lang, novoEmail }) })
   }
 
   remove = async (req: Request, res: Response) => {

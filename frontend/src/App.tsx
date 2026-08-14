@@ -12,6 +12,7 @@ import { PerfilPage } from "./modules/auth/pages/PerfilPage.js"
 import { RecuperarSenhaPage } from "./modules/auth/pages/RecuperarSenhaPage.js"
 import { ResetarSenhaPage } from "./modules/auth/pages/ResetarSenhaPage.js"
 import { AtivarPage } from "./modules/auth/pages/AtivarPage.js"
+import { VerificarEmailPage } from "./modules/auth/pages/VerificarEmailPage.js"
 import { QueroConhecerPage } from "./modules/leads/pages/QueroConhecerPage.js"
 import { ConfirmarLeadPage } from "./modules/leads/pages/ConfirmarLeadPage.js"
 import { LeadsAdminPage } from "./modules/leads/pages/LeadsAdminPage.js"
@@ -43,6 +44,7 @@ export function App() {
         <Route path="/recuperar-senha" element={<RecuperarSenhaPage />} />
         <Route path="/resetar-senha" element={<ResetarSenhaPage />} />
         <Route path="/ativar" element={<AtivarPage />} />
+        <Route path="/verificar-email" element={<VerificarEmailPage />} />
         <Route path="/quero-conhecer" element={<QueroConhecerPage />} />
         <Route path="/quero-conhecer/confirmar" element={<ConfirmarLeadPage />} />
         <Route path="*" element={

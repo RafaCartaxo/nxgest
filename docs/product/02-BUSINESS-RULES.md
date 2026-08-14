@@ -747,7 +747,8 @@ Regras:
 - A senha atual deve ser validada — se incorreta, a alteração é rejeitada (422 `INVALID_CURRENT_PASSWORD`) e a senha não muda.
 - A nova senha é armazenada como hash (bcrypt) — nunca em texto puro.
 - O endpoint é autenticado (`PATCH /api/auth/senha`) e opera sempre sobre o `req.userId` (o usuário só altera a própria senha; `?usuarioId=` é ignorado).
-- O admin/super_admin continua podendo redefinir a senha de operadores via `PATCH /api/admin/operadores/:id` (UC-046) — fluxos independentes.
+- **BR-750 (PLAN-075 P-04/R6):** **ninguém define senha de ninguém** — não existe redefinição administrativa de senha. Os únicos autores de senha são o próprio usuário: ativação via convite (`/auth/ativar`), reset (`/auth/reset`) e alteração (`/auth/senha`). Endpoints administrativos (`POST/PATCH /api/admin/operadores`, `POST /api/admin/empresas`) **nunca recebem `senha`/`adminSenha`** — qualquer valor enviado é ignorado; cadastro administrativo nasce `convidado`.
+- **BR-751 (PLAN-075, fix 14/08):** **remover um operador (soft-delete) libera o e-mail para reuso.** O e-mail é único apenas entre usuários **ativos** (`deleted_at IS NULL` — índice único parcial `idx_usuarios_email`, mesmo padrão do CPF de clientes). Depois de `DELETE /api/admin/operadores/:id`, o mesmo e-mail pode ser usado em novo cadastro (`POST` → 201) ou troca administrativa (`PATCH` → 200). Regressão corrigida: antes o banco tinha unique hard (`usuarios_email_key`) e o reuso passava na dedup (que ignora soft-deleted) mas estourava no banco com **500**.
 - > **Decisão (PLAN-029):** senha atual incorreta responde **422** (e não 401) para não disparar o logout automático do cliente — o token continua válido.
 
 ## BR-090

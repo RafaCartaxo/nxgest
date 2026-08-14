@@ -51,6 +51,34 @@ async function inserirAuthToken(subjectId, tipo, rawToken, expiraEm, usadoEm = n
   )
 }
 
+/** Conta convites de `convites` (N2) por usuário/status. -1 se indisponível. */
+async function convitesCount(usuarioId, statuses = ["PENDENTE"]) {
+  try {
+    const sql = `SELECT COUNT(*)::int AS c FROM convites WHERE "usuario_id" = $1${statuses.length ? " AND status = ANY($2)" : ""}`
+    const { rows } = await SMOKE_POOL.query(sql, statuses.length ? [usuarioId, statuses] : [usuarioId])
+    return rows[0]?.c ?? 0
+  } catch {
+    return -1
+  }
+}
+
+/** Insere um convite PENDENTE conhecido na tabela `convites` (P-04/N2). */
+async function inserirConvite(usuarioId, emailAlvo, rawToken, expiraEm) {
+  const hash = createHash("sha256").update(rawToken).digest("hex")
+  await SMOKE_POOL.query(
+    "INSERT INTO convites (id, \"usuario_id\", \"email_alvo\", \"criado_por\", \"role_alvo\", idioma, status, \"token_hash\", \"criado_em\", \"expira_em\") VALUES ($1, $2, $3, NULL, NULL, 'pt-BR', 'PENDENTE', $4, $5, $6)",
+    [randomUUID(), usuarioId, emailAlvo, hash, new Date().toISOString(), expiraEm],
+  )
+}
+
+/** Ativa um usuário convidado pelo fluxo real (convite → POST /auth/ativar). */
+async function ativarUsuario(usuarioId, email, senha = SENHA) {
+  const raw = `rawtoken-smoke-${Date.now()}-${Math.floor(Math.random() * 1e6)}`
+  await inserirConvite(usuarioId, email, raw, new Date(Date.now() + 3600e3).toISOString())
+  const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha } })
+  if (r.status !== 200) throw new Error(`ativar usuário falhou: ${r.status} ${JSON.stringify(r.data)?.slice(0, 200)}`)
+}
+
 /** Hash SHA-256 de um token (para comparar o que está no banco — SE-06). */
 function sha256(token) {
   return createHash("sha256").update(token).digest("hex")
@@ -778,30 +806,38 @@ async function main() {
   // ---------- ADMIN: CRUD operador ----------
   let novoOpId
   const novoEmail = `smoke.${Date.now()}@uorak.com`
-  await t("ADM-060", "POST /admin/operadores (201) + login funciona", async () => {
-    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Smoke Operador", email: novoEmail, senha: SENHA, role: "operator" } })
+  await t("ADM-060", "POST /admin/operadores (201, convidado) + ativação via convite + login", async () => {
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Smoke Operador", email: novoEmail, role: "operator" } })
     expect(r, 201, "criar operador")
     novoOpId = r.data.id
+    if (r.data.status !== "convidado") throw new Error(`status=${r.data.status}`)
+    await ativarUsuario(novoOpId, novoEmail)
     const login = await req("POST", "/api/auth/login", { body: { email: novoEmail, senha: SENHA } })
     expect(login, 200, "login novo operador")
   })
   await t("ADM-061", "E-mail duplicado (409)", async () => {
-    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Duplicado", email: novoEmail, senha: SENHA, role: "operator" } })
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Duplicado", email: novoEmail, role: "operator" } })
     expect(r, 409, "email duplicado")
   })
-  await t("ADM-N3", "Senha curta (400, gap 10)", async () => {
+  await t("ADM-N3", "senha no create é ignorada (P-04) → 201 convidado, senhaHash NULL", async () => {
     const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Curta", email: `curta.${Date.now()}@uorak.com`, senha: "123", role: "operator" } })
-    expect(r, 400, "senha curta")
+    expect(r, 201, "senha ignorada no create")
+    if (r.data.status !== "convidado") throw new Error(`status=${r.data.status}`)
+    const { rows } = await SMOKE_POOL.query("SELECT \"senha_hash\" FROM usuarios WHERE id = $1", [r.data.id])
+    if (rows[0]?.["senha_hash"] !== null) throw new Error("senhaHash deveria ser NULL")
   })
   await t("ADM-062", "Role inválido (400)", async () => {
-    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Role", email: `role.${Date.now()}@uorak.com`, senha: SENHA, role: "super_admin" } })
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Role", email: `role.${Date.now()}@uorak.com`, role: "super_admin" } })
     expect(r, 400, "role inválido")
   })
-  await t("ADM-063", "PATCH /admin/operadores/:id (200, senha nova vale)", async () => {
-    const r = await req("PATCH", `/api/admin/operadores/${novoOpId}`, { token: adminToken, body: { nome: "Smoke Editado", senha: "outraSenha456" } })
+  await t("ADM-063", "PATCH /admin/operadores/:id (200, dados básicos; senha não muda — P-04)", async () => {
+    const r = await req("PATCH", `/api/admin/operadores/${novoOpId}`, { token: adminToken, body: { nome: "Smoke Editado" } })
     expect(r, 200, "editar operador")
-    const loginNovo = await req("POST", "/api/auth/login", { body: { email: novoEmail, senha: "outraSenha456" } })
-    expect(loginNovo, 200, "login com senha redefinida")
+    if (r.data.nome !== "Smoke Editado") throw new Error(`nome=${r.data.nome}`)
+    const loginOriginal = await req("POST", "/api/auth/login", { body: { email: novoEmail, senha: SENHA } })
+    expect(loginOriginal, 200, "senha original continua valendo")
+    const loginOutra = await req("POST", "/api/auth/login", { body: { email: novoEmail, senha: "outraSenha456" } })
+    expect(loginOutra, 401, "senha 'nova' ignorada no PATCH")
   })
   await t("ADM-064", "Auto-rebaixar (403)", async () => {
     const me = await req("GET", "/api/auth/me", { token: adminToken })
@@ -836,14 +872,15 @@ async function main() {
   })
   let novaEmpresaId
   let novaEmpresaAdminEmail
-  await t("EMP-073", "POST /admin/empresas (201, CNPJ válido) + login admin novo + dashboard", async () => {
+  await t("EMP-073", "POST /admin/empresas (201, CNPJ válido) + admin convidado ativado + login + dashboard", async () => {
     const nome = `Empresa Smoke ${Date.now()}`
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, documento: "11222333000181", nomeFantasia: "Smoke Fantasia", ativa: true, adminNome: "Admin Smoke", adminEmail: `smoke.${Date.now()}@empresa.com`, adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, documento: "11222333000181", nomeFantasia: "Smoke Fantasia", ativa: true, adminNome: "Admin Smoke", adminEmail: `smoke.${Date.now()}@empresa.com` } })
     expect(r, 201, "criar empresa")
     novaEmpresaId = r.data.empresa.id
     novaEmpresaAdminEmail = r.data.admin.email
     if (r.data.empresa.documento !== "11222333000181") throw new Error("documento não persistido")
     if (r.data.empresa.ativa !== true) throw new Error("ativa não persistido")
+    await ativarUsuario(r.data.admin.id, novaEmpresaAdminEmail)
     const login = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
     expect(login, 200, "login admin da nova empresa")
     const dash = await req("GET", "/api/admin/dashboard", { token: superToken, query: { empresaId: novaEmpresaId } })
@@ -861,23 +898,23 @@ async function main() {
     expect(volta, 200, "reativar novaEmpresa")
   })
   await t("EMP-095b", "POST /admin/empresas SEM opcionais (201, não bloqueia)", async () => {
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Min ${Date.now()}`, adminNome: "Admin Min", adminEmail: `min.${Date.now()}@empresa.com`, adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Min ${Date.now()}`, adminNome: "Admin Min", adminEmail: `min.${Date.now()}@empresa.com` } })
     expect(r, 201, "empresa sem opcionais")
   })
   await t("EMP-074", "Admin email duplicado (409)", async () => {
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: "Duplicada", adminNome: "X", adminEmail: "admin@cobranca.com", adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: "Duplicada", adminNome: "X", adminEmail: "admin@cobranca.com" } })
     expect(r, 409, "email admin duplicado")
   })
 
   // ---------- DOCUMENTO DA EMPRESA: CPF ou CNPJ (P11) ----------
   const docEmpresaCpf = "39053344705"
   await t("EMP-096", "POST empresa com CPF válido (201, dígitos persistidos)", async () => {
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa CPF ${Date.now()}`, documento: docEmpresaCpf, adminNome: "Admin CPF", adminEmail: `cpf.${Date.now()}@empresa.com`, adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa CPF ${Date.now()}`, documento: docEmpresaCpf, adminNome: "Admin CPF", adminEmail: `cpf.${Date.now()}@empresa.com` } })
     expect(r, 201, "empresa com CPF")
     if (r.data.empresa.documento !== docEmpresaCpf) throw new Error("CPF não persistido em dígitos")
   })
   await t("EMP-097", "POST empresa com documento inválido (422)", async () => {
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Inv ${Date.now()}`, documento: "11222333000182", adminNome: "Admin Inv", adminEmail: `inv.${Date.now()}@empresa.com`, adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Inv ${Date.now()}`, documento: "11222333000182", adminNome: "Admin Inv", adminEmail: `inv.${Date.now()}@empresa.com` } })
     expect(r, 422, "documento inválido")
   })
   await t("EMP-098", "PATCH empresa documento CPF (200) e inválido (422)", async () => {
@@ -950,8 +987,9 @@ async function main() {
     const tenantLogin = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
     expect(tenantLogin, 200, "login tenant")
     const socioEmail = `msocio.${Date.now()}@uorak.com`
-    const created = await req("POST", "/api/admin/operadores", { token: tenantLogin.data.token, body: { nome: "Sócio MOD", email: socioEmail, senha: SENHA, role: "socio" } })
+    const created = await req("POST", "/api/admin/operadores", { token: tenantLogin.data.token, body: { nome: "Sócio MOD", email: socioEmail, role: "socio" } })
     expect(created, 201, "criar sócio nova empresa")
+    await ativarUsuario(created.data.id, socioEmail)
     const socioLogin = await req("POST", "/api/auth/login", { body: { email: socioEmail, senha: SENHA } })
     expect(socioLogin, 200, "login sócio")
     const socioTok = socioLogin.data.token
@@ -1100,9 +1138,10 @@ async function main() {
   await t("MOD-G-S", "Setup: empresa de guarda com cliente + contrato (3 parcelas em aberto)", async () => {
     const nome = `Empresa Guard ${Date.now()}`
     const email = `guard.${Date.now()}@uorak.com`
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, adminNome: "Guard Admin", adminEmail: email, adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome, adminNome: "Guard Admin", adminEmail: email } })
     expect(r, 201, "criar empresa guarda")
     guardEmpresaId = r.data.empresa.id
+    await ativarUsuario(r.data.admin.id, email)
     const login = await req("POST", "/api/auth/login", { body: { email, senha: SENHA } })
     expect(login, 200, "login admin guarda")
     guardAdminToken = login.data.token
@@ -1168,9 +1207,10 @@ async function main() {
   let guardEmpresa2Id, guardAdmin2Token
   await t("MOD-G-S2", "Setup: empresa de guarda 2 sem dados", async () => {
     const email = `guard2.${Date.now()}@uorak.com`
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Guard2 ${Date.now()}`, adminNome: "Guard2 Admin", adminEmail: email, adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Guard2 ${Date.now()}`, adminNome: "Guard2 Admin", adminEmail: email } })
     expect(r, 201, "criar empresa guarda 2")
     guardEmpresa2Id = r.data.empresa.id
+    await ativarUsuario(r.data.admin.id, email)
     const login = await req("POST", "/api/auth/login", { body: { email, senha: SENHA } })
     expect(login, 200, "login guarda 2")
     guardAdmin2Token = login.data.token
@@ -1268,10 +1308,11 @@ async function main() {
   let suspEmpresaId, suspAdminEmail
   await t("SUSP-S", "Setup: empresa dedicada de suspensão", async () => {
     const email = `susp.${Date.now()}@uorak.com`
-    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Susp ${Date.now()}`, adminNome: "Susp Admin", adminEmail: email, adminSenha: SENHA } })
+    const r = await req("POST", "/api/admin/empresas", { token: superToken, body: { nome: `Empresa Susp ${Date.now()}`, adminNome: "Susp Admin", adminEmail: email } })
     expect(r, 201, "criar empresa susp")
     suspEmpresaId = r.data.empresa.id
     suspAdminEmail = email
+    await ativarUsuario(r.data.admin.id, email)
   })
 
   await t("SUSP-1", "Empresa inativa → login 403 EMPRESA_INATIVA", async () => {
@@ -1306,6 +1347,59 @@ async function main() {
     expect(me, 200, "super /me intacto")
     await req("PATCH", `/api/admin/empresas/${suspEmpresaId}`, { token: superToken, body: { ativa: true } })
     if (await auditoriaCount("empresa", suspEmpresaId) < 2) throw new Error("auditoria de suspensão não gravada")
+  })
+
+  // ---------- SUSPENSÃO DE USUÁRIO (PLAN-075 N3): conta ativa suspensa bloqueia login + token ----------
+  let suspUsrId, suspUsrEmail, suspUsrToken
+  await t("SUSP-USR-S", "Setup: operador ativo dedicado à suspensão de usuário", async () => {
+    suspUsrEmail = `suspusr.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Susp Usr", email: suspUsrEmail, role: "operator" } })
+    expect(r, 201, "criar operador suspensão")
+    suspUsrId = r.data.id
+    await ativarUsuario(suspUsrId, suspUsrEmail)
+    const login = await req("POST", "/api/auth/login", { body: { email: suspUsrEmail, senha: SENHA } })
+    expect(login, 200, "login antes de suspender")
+    suspUsrToken = login.data.token
+  })
+
+  await t("SUSP-USR-1", "Suspender usuário ativo → login 403 CONTA_SUSPENSA", async () => {
+    const susp = await req("PATCH", `/api/admin/operadores/${suspUsrId}/suspender`, { token: adminToken })
+    expect(susp, 200, "suspender usuário")
+    const login = await req("POST", "/api/auth/login", { body: { email: suspUsrEmail, senha: SENHA } })
+    expect(login, 403, "login usuário suspenso")
+    if (login.data?.code !== "CONTA_SUSPENSA") throw new Error(`code=${login.data?.code}`)
+  })
+
+  await t("SUSP-USR-2", "Token pré-suspensão: rota operacional → 403 CONTA_SUSPENSA; /me → 200 status suspenso", async () => {
+    const r = await req("GET", "/api/clientes", { token: suspUsrToken })
+    expect(r, 403, "rota bloqueada com token antigo")
+    if (r.data?.code !== "CONTA_SUSPENSA") throw new Error(`code=${r.data?.code}`)
+    const me = await req("GET", "/api/auth/me", { token: suspUsrToken })
+    expect(me, 200, "/me liberado p/ exibir status")
+    if (me.data?.status !== "suspenso") throw new Error(`status=${me.data?.status}`)
+  })
+
+  await t("SUSP-USR-3", "Reativar → login volta a 200", async () => {
+    const re = await req("PATCH", `/api/admin/operadores/${suspUsrId}/reativar`, { token: adminToken })
+    expect(re, 200, "reativar usuário")
+    const login = await req("POST", "/api/auth/login", { body: { email: suspUsrEmail, senha: SENHA } })
+    expect(login, 200, "login após reativar")
+  })
+
+  await t("SUSP-USR-4", "Auto-suspensão (403) + convidado não suspende (409)", async () => {
+    const me = await req("GET", "/api/auth/me", { token: adminToken })
+    const self = await req("PATCH", `/api/admin/operadores/${me.data.id}/suspender`, { token: adminToken })
+    expect(self, 403, "auto-suspensão")
+    if (self.data?.code !== "FORBIDDEN") throw new Error(`code=${self.data?.code}`)
+    const conv = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Conv Susp", email: `suspconv.${Date.now()}@uorak.com`, role: "operator" } })
+    expect(conv, 201, "criar convidado")
+    const r = await req("PATCH", `/api/admin/operadores/${conv.data.id}/suspender`, { token: adminToken })
+    expect(r, 409, "convidado não suspende")
+  })
+
+  await t("SUSP-USR-5", "Suspender usuário inexistente (404)", async () => {
+    const r = await req("PATCH", "/api/admin/operadores/00000000-0000-4000-8000-000000000000/suspender", { token: adminToken })
+    expect(r, 404, "usuário inexistente")
   })
 
   // ---------- PERSISTÊNCIA DESATIVAÇÃO/ATIVAÇÃO (full cycle — garantir que a mudança é FEITA e RESPEITADA) ----------
@@ -1377,8 +1471,9 @@ async function main() {
 
   await t("P13-2", "socio com ?usuarioId= fora da subárvore → 404", async () => {
     const sEmail = `p13socio.${Date.now()}@uorak.com`
-    const created = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "P13 Socio", email: sEmail, senha: SENHA, role: "socio" } })
+    const created = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "P13 Socio", email: sEmail, role: "socio" } })
     expect(created, 201, "criar socio p13")
+    await ativarUsuario(created.data.id, sEmail)
     const login = await req("POST", "/api/auth/login", { body: { email: sEmail, senha: SENHA } })
     const r = await req("GET", "/api/clientes", { token: login.data.token, query: { usuarioId: gabrielId } })
     expect(r, 404, "socio fora da subárvore")
@@ -1410,7 +1505,7 @@ async function main() {
     if (r.data.status !== "convidado") throw new Error(`status=${r.data.status}`)
     convId = r.data.id
     convEmail = email
-    if (await authTokensCount(convId, "convite") < 1) throw new Error("token de convite não criado")
+    if (await convitesCount(convId) < 1) throw new Error("convite não criado na tabela convites")
   })
 
   await t("AC-16", "convidado → senhaHash NULL no banco", async () => {
@@ -1425,19 +1520,20 @@ async function main() {
   })
 
   await t("SE-01", "token de convite armazenado como HASH (64 hex)", async () => {
-    const { rows: se01 } = await SMOKE_POOL.query("SELECT hash FROM auth_tokens WHERE \"subject_id\" = $1 AND tipo = 'convite' AND \"usado_em\" IS NULL ORDER BY \"created_at\" DESC LIMIT 1", [convId])
-    if (!se01[0]?.hash || !/^[0-9a-f]{64}$/.test(se01[0].hash)) throw new Error(`hash=${se01[0]?.hash}`)
+    const { rows: se01 } = await SMOKE_POOL.query("SELECT \"token_hash\" FROM convites WHERE \"usuario_id\" = $1 AND status = 'PENDENTE' ORDER BY \"criado_em\" DESC LIMIT 1", [convId])
+    if (!se01[0]?.["token_hash"] || !/^[0-9a-f]{64}$/.test(se01[0]["token_hash"])) throw new Error(`hash=${se01[0]?.["token_hash"]}`)
   })
 
-  await t("SE-04", "reenviar-convite invalida o token anterior", async () => {
+  await t("SE-04", "reenviar-convite invalida o convite anterior", async () => {
     const r = await req("PATCH", `/api/admin/operadores/${convId}/reenviar-convite`, { token: adminToken })
     expect(r, 200, "reenviar convite")
-    if (await authTokensCount(convId, "convite", true) !== 1) throw new Error("deveria haver exatamente 1 token não usado")
+    if (await convitesCount(convId) !== 1) throw new Error("deveria haver exatamente 1 convite PENDENTE")
   })
 
   await t("AC-17", "reenviar-convite em conta ativa → 409", async () => {
-    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Ativo S", email: `ativo.${Date.now()}@uorak.com`, role: "operator", senha: "senha123" } })
-    expect(criado, 201, "criar ativo")
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Ativo S", email: `ativo.${Date.now()}@uorak.com`, role: "operator" } })
+    expect(criado, 201, "criar convidado")
+    await ativarUsuario(criado.data.id, criado.data.email)
     const r = await req("PATCH", `/api/admin/operadores/${criado.data.id}/reenviar-convite`, { token: adminToken })
     expect(r, 409, "ativo não reenvia")
   })
@@ -1449,7 +1545,7 @@ async function main() {
 
   await t("AC-05", "ativar com token válido → ok + login funciona", async () => {
     const raw = "rawtoken-ativar-123456"
-    await inserirAuthToken(convId, "convite", raw, new Date(Date.now() + 3600e3).toISOString())
+    await inserirConvite(convId, convEmail, raw, new Date(Date.now() + 3600e3).toISOString())
     const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "novaSenha123" } })
     expect(r, 200, "ativar")
     const login = await req("POST", "/api/auth/login", { body: { email: convEmail, senha: "novaSenha123" } })
@@ -1475,7 +1571,7 @@ async function main() {
     const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Conv Exp", email: `convexp.${Date.now()}@uorak.com`, role: "operator" } })
     expect(criado, 201, "criar convidado expirado")
     const raw = "rawtoken-expirado-000"
-    await inserirAuthToken(criado.data.id, "convite", raw, new Date(Date.now() - 1000).toISOString())
+    await inserirConvite(criado.data.id, criado.data.email, raw, new Date(Date.now() - 1000).toISOString())
     const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "outra123" } })
     expect(r, 400, "expirado")
     if (r.data.code !== "TOKEN_EXPIRED") throw new Error(`code=${r.data.code}`)
@@ -1510,7 +1606,7 @@ async function main() {
 
   let resetUserId
   await t("ES-05", "reset com token válido → login com a nova senha", async () => {
-    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Reset S", email: `reset.${Date.now()}@uorak.com`, role: "operator", senha: "senhaAntiga123" } })
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Reset S", email: `reset.${Date.now()}@uorak.com`, role: "operator" } })
     expect(criado, 201, "criar ativo p/ reset")
     resetUserId = criado.data.id
     const raw = "rawtoken-reset-123456"
@@ -1529,7 +1625,7 @@ async function main() {
   })
 
   await t("ES-10", "reset com token expirado → 400 TOKEN_EXPIRED", async () => {
-    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Reset Exp", email: `resetexp.${Date.now()}@uorak.com`, role: "operator", senha: "senha123" } })
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Reset Exp", email: `resetexp.${Date.now()}@uorak.com`, role: "operator" } })
     expect(criado, 201, "criar p/ reset expirado")
     const raw = "rawtoken-reset-expired"
     await inserirAuthToken(criado.data.id, "reset", raw, new Date(Date.now() - 1000).toISOString())
@@ -1548,7 +1644,7 @@ async function main() {
     const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "SM1", email, role: "operator" } })
     expect(criado, 201, "criar convidado SM1")
     const raw = "rawtoken-sm1"
-    await inserirAuthToken(criado.data.id, "convite", raw, new Date(Date.now() + 3600e3).toISOString())
+    await inserirConvite(criado.data.id, email, raw, new Date(Date.now() + 3600e3).toISOString())
     await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "sm1Senha123" } })
     const login = await req("POST", "/api/auth/login", { body: { email, senha: "sm1Senha123" } })
     expect(login, 200, "login SM1")
@@ -1560,7 +1656,7 @@ async function main() {
 
   await t("SM-2", "ciclo completo: forgot → reset → login novo", async () => {
     const email = `sm2.${Date.now()}@uorak.com`
-    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "SM2", email, role: "operator", senha: "sm2Antiga123" } })
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "SM2", email, role: "operator" } })
     expect(criado, 201, "criar p/ SM2")
     const raw = "rawtoken-sm2"
     await inserirAuthToken(criado.data.id, "reset", raw, new Date(Date.now() + 1800e3).toISOString())
@@ -1583,13 +1679,14 @@ async function main() {
   let socioId, socioEmail, socioOpId, socioToken
   await t("SC-001", "Admin cria sócio (201, chefe = admin)", async () => {
     const email = `socio.${Date.now()}@uorak.com`
-    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Sócio Smoke", email, senha: SENHA, role: "socio" } })
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Sócio Smoke", email, role: "socio" } })
     expect(r, 201, "criar sócio")
     socioId = r.data.id
     socioEmail = email
     if (r.data.chefeId !== adminLogin.data.usuario.id) throw new Error("chefeId do sócio não é o admin")
   })
-  await t("SC-002", "Login do sócio (role socio + chefeId)", async () => {
+  await t("SC-002", "Ativação do sócio + login (role socio + chefeId)", async () => {
+    await ativarUsuario(socioId, socioEmail)
     const r = await req("POST", "/api/auth/login", { body: { email: socioEmail, senha: SENHA } })
     expect(r, 200, "login sócio")
     socioToken = r.data.token
@@ -1597,15 +1694,15 @@ async function main() {
     if (r.data.usuario.chefeId !== adminLogin.data.usuario.id) throw new Error("chefeId errado no login")
   })
   await t("SC-003", "Sócio cria operador do grupo (201, chefe = sócio)", async () => {
-    const r = await req("POST", "/api/admin/operadores", { token: socioToken, body: { nome: "Op do Sócio", email: `opsocio.${Date.now()}@uorak.com`, senha: SENHA, role: "operator" } })
+    const r = await req("POST", "/api/admin/operadores", { token: socioToken, body: { nome: "Op do Sócio", email: `opsocio.${Date.now()}@uorak.com`, role: "operator" } })
     expect(r, 201, "sócio cria operador")
     socioOpId = r.data.id
     if (r.data.chefeId !== socioId) throw new Error("chefeId do operador não é o sócio")
   })
   await t("SC-004", "Sócio cria admin/socio (403)", async () => {
-    const a = await req("POST", "/api/admin/operadores", { token: socioToken, body: { nome: "X", email: `x.${Date.now()}@uorak.com`, senha: SENHA, role: "admin" } })
+    const a = await req("POST", "/api/admin/operadores", { token: socioToken, body: { nome: "X", email: `x.${Date.now()}@uorak.com`, role: "admin" } })
     expect(a, 403, "sócio cria admin")
-    const b = await req("POST", "/api/admin/operadores", { token: socioToken, body: { nome: "Y", email: `y.${Date.now()}@uorak.com`, senha: SENHA, role: "socio" } })
+    const b = await req("POST", "/api/admin/operadores", { token: socioToken, body: { nome: "Y", email: `y.${Date.now()}@uorak.com`, role: "socio" } })
     expect(b, 403, "sócio cria socio")
   })
   await t("SC-005", "Sócio vê equipe da subárvore (não a empresa toda)", async () => {
@@ -1630,13 +1727,78 @@ async function main() {
     expect(r, 404, "sócio ajusta fora da subárvore")
   })
 
+  // ---------- TROCA ADMINISTRATIVA DE E-MAIL (PLAN-075 P-06/P-07) ----------
+  await t("ADM-TROC-CONV", "Admin troca e-mail de CONVIDADO → troca direta + 201 convidado no novo e-mail", async () => {
+    const email = `troc.${Date.now()}@uorak.com`
+    const novo = `troc.novo.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Troc Conv", email, role: "operator" } })
+    expect(r, 201, "criar convidado")
+    const troca = await req("PATCH", `/api/admin/operadores/${r.data.id}`, { token: adminToken, body: { email: novo } })
+    expect(troca, 200, "troca e-mail convidado")
+    if (troca.data.email !== novo) throw new Error(`email=${troca.data.email} (esperava ${novo})`)
+    if (troca.data.status !== "convidado") throw new Error(`status=${troca.data.status}`)
+    const dupe = await req("GET", "/api/admin/operadores", { token: adminToken })
+    expect(dupe, 200, "listar operadores")
+  })
+
+  await t("ADM-TROC-ATIVO", "Admin troca e-mail de usuário ATIVO → email_pendente + verificação (email antigo segue)", async () => {
+    const email = `troc.ativo.${Date.now()}@uorak.com`
+    const novo = `troc.ativo.novo.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Troc Ativo", email, role: "operator" } })
+    expect(r, 201, "criar operador")
+    await ativarUsuario(r.data.id, email)
+    const troca = await req("PATCH", `/api/admin/operadores/${r.data.id}`, { token: adminToken, body: { email: novo } })
+    expect(troca, 200, "troca e-mail ativo")
+    if (troca.data.email !== email) throw new Error(`email mudou direto: ${troca.data.email}`)
+    if (troca.data.emailPendente !== novo) throw new Error(`emailPendente=${troca.data.emailPendente}`)
+    const login = await req("POST", "/api/auth/login", { body: { email, senha: SENHA } })
+    expect(login, 200, "email antigo segue valendo")
+  })
+
+  await t("ADM-TROC-DUP", "Troca para e-mail já em uso (vivo) → 409", async () => {
+    const email = `troc.dup.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Troc Dup", email, role: "operator" } })
+    expect(r, 201, "criar operador dup")
+    const troca = await req("PATCH", `/api/admin/operadores/${r.data.id}`, { token: adminToken, body: { email: adminLogin.data.usuario.email } })
+    expect(troca, 409, "e-mail duplicado na troca")
+    if (troca.data?.code !== "EMAIL_DUPLICATED") throw new Error(`code=${troca.data?.code}`)
+  })
+  await t("ADM-TROC-REUSE", "Reuso de e-mail de operador removido (soft-deleted) → 201 no create e 200 no PATCH", async () => {
+    const email = `troc.reuse.${Date.now()}@uorak.com`
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Reuso", email, role: "operator" } })
+    expect(r, 201, "criar p/ remover")
+    const del = await req("DELETE", `/api/admin/operadores/${r.data.id}`, { token: adminToken })
+    expect(del, 204, "remover operador")
+    const novamente = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Reuso2", email, role: "operator" } })
+    expect(novamente, 201, "reuso no create")
+    const del2 = await req("DELETE", `/api/admin/operadores/${novamente.data.id}`, { token: adminToken })
+    expect(del2, 204, "remover 2")
+    const alvo = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Alvo", email: `alvo.${Date.now()}@uorak.com`, role: "operator" } })
+    expect(alvo, 201, "criar alvo")
+    const troca = await req("PATCH", `/api/admin/operadores/${alvo.data.id}`, { token: adminToken, body: { email } })
+    expect(troca, 200, "reuso no PATCH")
+    if (troca.data.email !== email) throw new Error(`email=${troca.data.email}`)
+  })
+
+  await t("SOC-TROC-SUB", "Sócio troca e-mail do operador da subárvore (200)", async () => {
+    const novo = `troc.sub.${Date.now()}@uorak.com`
+    const r = await req("PATCH", `/api/admin/operadores/${socioOpId}`, { token: socioToken, body: { email: novo } })
+    expect(r, 200, "sócio troca e-mail da subárvore")
+  })
+
+  await t("SOC-TROC-FORA", "Sócio tenta trocar e-mail de operador fora da subárvore (404)", async () => {
+    const r = await req("PATCH", `/api/admin/operadores/${gabrielId}`, { token: socioToken, body: { email: `troc.fora.${Date.now()}@uorak.com` } })
+    expect(r, 404, "sócio troca fora da subárvore")
+  })
+
   // ---------- TRANSIÇÕES DE PAPEL (WS7) — CTs 120+ ----------
   // Cada teste cria seus próprios usuários (isolamento; emails com Date.now()).
   const adminId = adminLogin.data.usuario.id
   const criarUsuario = async (role, chefeId) => {
     const email = `tr.${role}.${Date.now()}.${Math.floor(Math.random() * 1e4)}@uorak.com`
-    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: `TR ${role}`, email, senha: SENHA, role, chefeId } })
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: `TR ${role}`, email, role, chefeId } })
     expect(r, 201, `criar ${role}`)
+    await ativarUsuario(r.data.id, email)
     return { id: r.data.id, email }
   }
 
@@ -1819,7 +1981,7 @@ async function main() {
 
   await t("SUP-6", "super rebaixa admin de OUTRA empresa via ?empresaId= → 200", async () => {
     const email = `rb.xt.${Date.now()}@uorak.com`
-    const created = await req("POST", "/api/admin/operadores", { token: guardAdmin2Token, body: { nome: "RB XT", email, senha: SENHA, role: "admin" } })
+    const created = await req("POST", "/api/admin/operadores", { token: guardAdmin2Token, body: { nome: "RB XT", email, role: "admin" } })
     expect(created, 201, "criar admin outra empresa")
     const r = await req("PATCH", `/api/admin/operadores/${created.data.id}`, { token: superToken, body: { role: "operator" }, query: { empresaId: guardEmpresa2Id } })
     expect(r, 200, "super rebaixa cross-tenant")

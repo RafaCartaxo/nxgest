@@ -205,7 +205,7 @@ const RESET_TABLES = [
   "historico_operacional", "anexos", "caixa_config", "auditoria_caixa",
   "auditoria_modulos", "contratos", "clientes", "movimentacoes_financeiras",
   "gastos", "fechamentos_semanais", "snapshots_atraso", "auth_tokens",
-  "leads", "usuarios", "empresas",
+  "leads", "convites", "usuarios", "empresas",
 ]
 for (const table of RESET_TABLES) await q(`DELETE FROM "${table}"`)
 

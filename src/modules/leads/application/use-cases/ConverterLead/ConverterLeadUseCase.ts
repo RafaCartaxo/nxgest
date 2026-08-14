@@ -7,7 +7,7 @@ import { LeadNaoEncontradoError, LeadStatusInvalidoError } from "../../../domain
 
 /**
  * Conversão (LD-11): Lead → Empresa + Administrador (convite) + auditoria (quem/quando).
- * Reusa o fluxo existente de criação de empresa com adminSenha opcional (PLAN-065).
+ * Reusa o fluxo existente de criação de empresa (PLAN-065/075 R6): admin sempre convidado.
  * Só aceita lead com e-mail confirmado (EMAIL_CONFIRMADO) ou em onboarding.
  */
 export class ConverterLeadUseCase {
@@ -23,10 +23,20 @@ export class ConverterLeadUseCase {
       nome: lead.empresa,
       adminNome: lead.nomeResponsavel,
       adminEmail: lead.email,
-      adminSenhaHash: null, // admin convidado → ativa pelo link
+      adminTelefone: lead.telefone ?? null, // F7: telefone do lead vira telefone do admin
+      origem: lead.origem, // F7: origem declarada no lead
+      emailContato: lead.email,
+      telefoneContato: lead.telefone ?? null,
     })
 
-    await this.deps.convidar.execute({ subjectId: admin.id, nome: admin.nome, email: admin.email, lang: input.lang ?? "pt-BR" })
+    await this.deps.convidar.execute({
+      subjectId: admin.id,
+      nome: admin.nome,
+      email: admin.email,
+      role: "admin",
+      lang: input.lang ?? "pt-BR",
+      criadoPor: null,
+    })
 
     const atualizado = await this.deps.repo.marcarConvertido(lead.id, { empresaId: empresa.id, por: input.por })
     return { lead: atualizado!, empresaId: empresa.id }

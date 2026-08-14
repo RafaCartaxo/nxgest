@@ -5,13 +5,17 @@ import { NaoPodeAtribuirSuperAdminError } from "../../../domain/errors/admin.err
 interface CriarOperadorInput {
   nome: string
   email: string
-  /** Nullable (PLAN-065): sem senha = convidado (recebe convite). */
-  senhaHash: string | null
   role: "super_admin" | "admin" | "socio" | "operator"
   empresaId: string | null
   chefeId?: string | null
+  /** PLAN-075 (P-09): telefone opcional do convidado. */
+  telefone?: string | null
 }
 
+/**
+ * Criação administrativa (PLAN-075 P-04/N4): NUNCA recebe senha — todo cadastro nasce
+ * `CONVIDADO` (recebe convite pelo fluxo de ativação). `senhaHash` fica sempre null.
+ */
 export class CriarOperadorUseCase {
   constructor(private readonly repo: IAdminRepository) {}
 
@@ -19,10 +23,13 @@ export class CriarOperadorUseCase {
     if (input.role === "super_admin") {
       throw new NaoPodeAtribuirSuperAdminError()
     }
-    const existente = await this.repo.findByEmail(input.email)
-    if (existente) {
+    // E-mail normalizado (minúsculas/trim) antes da dedup — login é case-insensitive (PLAN-075).
+    const email = input.email.trim().toLowerCase()
+    // Dedup global (N1.6): contrato na aplicação, nunca depender do unique constraint.
+    const emUso = await this.repo.emailEmUso(email)
+    if (emUso) {
       throw new EmailDuplicadoError()
     }
-    return this.repo.create(input)
+    return this.repo.create({ ...input, email })
   }
 }

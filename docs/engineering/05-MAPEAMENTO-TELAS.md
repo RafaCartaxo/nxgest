@@ -34,6 +34,7 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 11a | Recuperar Senha | `/recuperar-senha` | auth | Formulário |
 | 11b | Redefinir Senha | `/resetar-senha` | auth | Formulário |
 | 11c | Ativar Conta | `/ativar` | auth | Formulário |
+| 11f | Confirmar E-mail | `/verificar-email` | auth | Fluxo (link) |
 | 11d | Quero Conhecer (lead) | `/quero-conhecer` | leads | Formulário |
 | 11e | Confirmar Lead | `/quero-conhecer/confirmar` | leads | Formulário |
 | 12 | Administração | `/admin` | admin | Dashboard |
@@ -45,7 +46,7 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 17 | Gastos | `/gastos` | gasto | Formulário |
 | 18 | Perfil (Meus dados) | `/perfil` | auth | Formulário |
 
-**Total:** 25 telas (páginas) · 26 rotas | 8 módulos | 45 componentes (15 shared + 2 feedback + 3 auth + 25 módulo)
+**Total:** 26 telas (páginas) · 27 rotas | 8 módulos | 45 componentes (15 shared + 2 feedback + 3 auth + 25 módulo)
 
 > **Nota de navegação:** esta tabela é o espelho das rotas de `frontend/src/App.tsx`. Qualquer rota nova (ou removida) exige atualizar esta tabela + a seção correspondente — ver `SKILL-009-documentation-sync.md`.
 
@@ -99,7 +100,7 @@ App
     │   ├── Botão Entrar + feedback de erro
     │   └── Link "Esqueci minha senha" → /recuperar-senha [PLAN-065]
     │
-    ├── RecuperarSenhaPage · ResetarSenhaPage · AtivarPage (públicas, `PublicPageShell`) [PLAN-065]
+    ├── RecuperarSenhaPage · ResetarSenhaPage · AtivarPage · VerificarEmailPage (públicas, `PublicPageShell`) [PLAN-065/075]
     │   └── Fluxo de conta: e-mail → link → definir senha
     │
     ├── QueroConhecerPage · ConfirmarLeadPage (públicas, shell do login) [PLAN-064]
@@ -759,7 +760,20 @@ App
 
 ---
 
-## 11d. Quero Conhecer / 11e. Confirmar Lead (PLAN-064)
+## 11f. Confirmar E-mail (PLAN-075 F4)
+**Destino do link** de confirmação de troca de e-mail (`/verificar-email?token=`, gerado por `TrocarEmailUseCase`/admin). Página **pública** (`PublicPageShell`), fora do `ProtectedRoute`.
+
+**Arquivo:** `frontend/src/modules/auth/pages/VerificarEmailPage.tsx` · rota `/verificar-email`
+
+**Comportamento:**
+- Sem `token` na URL → `ErrorBanner` "link inválido ou incompleto".
+- **Sem sessão** (link aberto no navegador sem login): redireciona pro `/login` com `state.from` apontando pra cá → após login, `LoginPage` respeita `state.from` e retorna → confirma no load.
+- Com sessão: chama `POST /auth/me/email/verificar` no load (uma vez) → sucesso: `refreshUser` + `SuccessState` "E-mail confirmado" + "Ir para Meus dados" (`/perfil`); `TOKEN_EXPIRED`/`TOKEN_INVALID` → `ErrorBanner` + botão "Ir para Meus dados".
+- @demanda: exige sessão porque o token pertence ao usuário logado (aceita por `authMiddleware`).
+
+**Aderência:** mesmo padrão do §11a–11c (`Field`/`Button`/`ErrorBanner`/`SuccessState`, i18n `auth.verificar*`).
+
+---
 **Formulários públicos** de aquisição comercial (fora do `ProtectedRoute`), shell no estilo do login.
 
 **Arquivos:** `frontend/src/modules/leads/pages/QueroConhecerPage.tsx`, `ConfirmarLeadPage.tsx`

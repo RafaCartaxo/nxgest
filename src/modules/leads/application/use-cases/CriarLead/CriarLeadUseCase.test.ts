@@ -42,6 +42,12 @@ function setup(mailer: IMailer) {
     create: vi.fn(),
     updateSenha: vi.fn(),
     updateFoto: vi.fn(),
+    emailEmUso: vi.fn(),
+    updatePerfil: vi.fn(),
+    setEmailPendente: vi.fn(),
+    confirmarEmail: vi.fn(),
+    updateEmail: vi.fn(),
+    setSuspenso: vi.fn(),
   }
   const tokenRepo: IAuthTokenRepository = {
     create: vi.fn().mockResolvedValue(undefined),

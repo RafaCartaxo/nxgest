@@ -948,21 +948,29 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
-### UC-046 — Admin redefine a senha de um operador
+### UC-046 — Admin gerencia a conta de um operador (sem definir senha)
 
-**Ator:** admin / super_admin
+**Ator:** admin / super_admin (sócio restrito à subárvore)
 
-**Ação:** edita um operador e preenche uma nova senha no campo (opcional na edição).
+**Ação:** gerencia cadastro, acesso e convite do operador na tela de operadores.
 
-**O que DEVE acontecer:** o novo hash é gravado (`PATCH /api/admin/operadores/:id`); a senha antiga deixa de funcionar; campo em branco mantém a senha atual.
+**O que DEVE acontecer:** o admin **nunca define senha** (P-04/R6 — nenhum fluxo administrativo recebe senha). Quem define senha é o próprio usuário: ativação via convite (`/auth/ativar`), reset (`/auth/reset`) e alteração (`/auth/senha`). As ações administrativas possíveis são:
+
+- **Criar operador** (`POST /api/admin/operadores`) → nasce **convidado**; o único caminho de ativação é o convite.
+- **Editar dados** (`PATCH /api/admin/operadores/:id`) → nome, telefone, role, chefe; **senha não existe aqui**.
+- **Trocar e-mail** (P-06/P-07): convidado → troca direta + novo convite; ativo → `email_pendente` + verificação pelo dono.
+- **Reenviar / revogar convite** (PLAN-065/P-10).
+- **Suspender / reativar** conta ativa (N3) — convidado não se suspende.
+- **Remover** (soft-delete).
 
 **Conferências:**
-- [ ] Campo senha é opcional na edição (em branco mantém)?
-- [ ] Nova senha ≥ 6 caracteres validada?
-- [ ] Operador logado não pode alterar a própria senha aqui (bloqueado/fora do escopo)?
-- [ ] Sessões ativas do operador-alvo? (decisão: token atual continua válido até expirar — registrar)
+- [ ] Nenhum endpoint administrativo aceita `senha`/`adminSenha` (senha no body é ignorada)?
+- [ ] Criar operador → status `convidado`, sem senha no banco?
+- [ ] Troca de e-mail de convidado → novo convite para o novo endereço?
+- [ ] Troca de e-mail de ativo → `email_pendente`, e-mail atual segue valendo?
+- [ ] Reenviar/revogar convite e suspender/reativar conforme as regras?
 
-**Regras:** BR-057, BR-067
+**Regras:** BR-057, BR-067, BR-089, BR-750
 
 ---
 

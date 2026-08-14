@@ -1657,7 +1657,7 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
     "ativa": true,
     "adminNome": "João Administrador",
     "adminEmail": "admin@empresa.com",
-    "adminSenha": "senhaSegura123"
+    "adminTelefone": "(83) 99999-9999"
 }
 ```
 
@@ -1668,12 +1668,14 @@ Cria uma nova empresa e o administrador inicial vinculado a ela (transação at�
 | nome | Sim | 1 a 100 caracteres |
 | adminNome | Sim | 1 a 100 caracteres |
 | adminEmail | Sim | Email válido |
-| adminSenha | Sim | Mínimo 6 caracteres |
+| adminTelefone | Não | Telefone opcional do admin (P-09) |
 | documento | Não | **CPF ou CNPJ** — validado com check-digit (11 ou 14 dígitos), armazenado em dígitos. **Opcional** (não impede cadastro) |
 | nomeFantasia | Não | Nome fantasia — **opcional** (usado no card) |
 | ativa | Não | Booleano, default `true` — **opcional** (situação da empresa) |
 
 > **Decisão (WS5):** `documento`, `nomeFantasia` e `ativa` são **opcionais** de propósito — não bloqueiam o cadastro de empresa/admin inicial.
+
+> **PLAN-075 R6 (P-04):** **não existe `adminSenha`** — o admin inicial nasce **convidado** (senha definida pelo dono no fluxo `/auth/ativar`). Qualquer `senha`/`adminSenha` enviada é ignorada.
 
 ## Response 201
 
@@ -1932,11 +1934,13 @@ Gestão de operadores e dashboard consolidado. Acesso para administradores (`rol
 |---------|----------|------|-----------|
 | GET | `/api/admin/operadores` | Admin / Super Admin | Listar operadores (filtrados por empresa) |
 | GET | `/api/admin/operadores/:id` | Admin / Super Admin | Buscar operador por id (validado dentro da empresa) |
-| POST | `/api/admin/operadores` | Admin / Super Admin | Criar novo operador vinculado à empresa |
-| PATCH | `/api/admin/operadores/:id` | Admin / Super Admin | Editar operador (nome, email, role, senha) |
+| POST | `/api/admin/operadores` | Admin / Super Admin | Criar novo operador vinculado à empresa — **nasce convidado** (P-04, sem senha) |
+| PATCH | `/api/admin/operadores/:id` | Admin / Super Admin | Editar operador (nome, email, role, telefone, chefe) |
 
 > **Rebaixamento (PLAN-061):** rebaixar um usuário com subordinados ativos responde **422 `OPERATOR_HAS_SUBORDINATES`** com `subordinados` (contagem) — mensagem específica. Para rebaixar no mesmo ato, enviar `reatribuirParaChefeId` (novo chefe, deve ser **admin** da mesma empresa) → os subordinados são movidos na transação e o demote aplicado.
 > **Corpo:** `{ "role": "operator", "reatribuirParaChefeId": "<adminId>" }`.
+>
+> **Troca administrativa de e-mail (P-06/P-07 — PLAN-075):** enviar `email` no PATCH. **Convidado** → troca direta do e-mail + novo convite ao novo endereço; **ativo** → `email_pendente` + verificação pelo dono (e-mail atual segue valendo). **409** se o novo e-mail já estiver em uso.
 | DELETE | `/api/admin/operadores/:id` | Admin / Super Admin | Remover operador (soft-delete) |
 | GET | `/api/admin/dashboard` | Admin / Super Admin | KPIs consolidados (filtrados por empresa) |
 | GET | `/api/admin/equipe` | Admin / Super Admin | Equipe com contribuição por operador + totais (PLAN-030) |
@@ -2173,6 +2177,127 @@ Para **remover** a foto, enviar `"foto": null`.
 
 ---
 
+# PATCH /api/auth/me
+
+Atualiza os **dados pessoais do próprio usuário** (PLAN-075 F3): `nome` e `telefone`. Opera sempre sobre o `req.userId`. Foto (**`PATCH /api/auth/foto`**) e senha (**`PATCH /api/auth/senha`**) têm fluxos próprios. Não altera e-mail/role/chefe/empresa.
+
+**Auth:** Sim (Bearer)
+
+## Request
+
+```json
+{ "nome": "João Atualizado", "telefone": "11988887777" }
+```
+
+## Validações
+
+| Campo | Obrigatório | Regra |
+|--------|------------|-------|
+| nome | Não | Se presente, string não-vazia (trim) |
+| telefone | Não | `null` (remove) ou string |
+
+## Response 200
+
+```json
+{ "ok": true, "nome": "João Atualizado", "telefone": "11988887777" }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| VALIDATION_ERROR | 422 (nome/telefone inválidos) |
+| UNAUTHORIZED | 401 |
+
+---
+
+# POST /api/auth/me/email
+
+Inicia a **troca de e-mail** (PLAN-075 F4): valida a **senha atual**, verifica duplicidade (`email` + `email_pendente`) **antes** de gravar e registra `email_pendente`. Envia e-mail de verificação (token tipo `email`, validade **24h**). O e-mail atual segue valendo para login até a confirmação. Re-solicitar com pendência viva invalida o token anterior e sobrescreve o pendente.
+
+**Auth:** Sim (Bearer)
+
+## Request
+
+```json
+{ "novoEmail": "novo@exemplo.com", "senhaAtual": "senhaAtual123" }
+```
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| VALIDATION_ERROR | 422 (sem novo e-mail ou sem senha atual) |
+| INVALID_CURRENT_PASSWORD | 422 (senha atual incorreta) |
+| EMAIL_DUPLICATED | 409 (novo endereço já é usado por outra conta, inclusive pendente) |
+| EMAIL_UNAVAILABLE | 503 (pendência gravada, mas envio falhou) |
+| UNAUTHORIZED | 401 |
+
+---
+
+# POST /api/auth/me/email/verificar
+
+Confirma a troca de e-mail (PLAN-075 F4): valida o token `email` (24h) e promove `email_pendente → email`, limpando a pendência e invalidando o token.
+
+**Auth:** Sim (Bearer)
+
+## Request
+
+```json
+{ "token": "<token de verificação>" }
+```
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| VALIDATION_ERROR | 422 (sem token) |
+| TOKEN_EXPIRED | 400 |
+| TOKEN_INVALID | 400 |
+| UNAUTHORIZED | 401 |
+
+---
+
+# DELETE /api/auth/me/email
+
+Cancela uma **troca de e-mail pendente** (PLAN-075 P-03): exige a **senha atual**, limpa `email_pendente` e invalida o token. O e-mail atual permanece inalterado.
+
+**Auth:** Sim (Bearer)
+
+## Request
+
+```json
+{ "senhaAtual": "senhaAtual123" }
+```
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| VALIDATION_ERROR | 422 (sem senha atual) |
+| INVALID_CURRENT_PASSWORD | 422 (senha atual incorreta) |
+| UNAUTHORIZED | 401 |
+
+---
+
 # POST /api/auth/ativar
 
 Ativação de conta **convidada** (PLAN-065): valida o token de convite (enviado por e-mail) e define a senha.
@@ -2279,6 +2404,71 @@ Reenvia o convite de ativação para um operador **convidado** (PLAN-065) — no
 | VALIDATION_ERROR | 409 (conta já ativa) |
 | EMAIL_UNAVAILABLE | 503 (envio falhou — tente novamente) |
 | FORBIDDEN | 403 |
+---
+
+# PATCH /api/admin/operadores/{id}/revogar-convite
+
+Revoga o **convite pendente** de um operador convidado (PLAN-075 P-10): o convite vira `REVOGADO` e o link de ativação deixa de funcionar. O usuário permanece cadastrado como convidado, podendo receber um novo convite depois. Sem convite pendente → **409**.
+
+**Auth:** Admin / Super Admin
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| OPERATOR_NOT_FOUND | 404 |
+| VALIDATION_ERROR | 409 (nenhum convite pendente) |
+| FORBIDDEN | 403 |
+
+---
+
+# PATCH /api/admin/operadores/{id}/suspender
+
+Suspende um usuário **ativo** (PLAN-075 N3): grava `suspenso_em`, bloqueando o login (**`403 CONTA_SUSPENSA`**) e todas as rotas operacionais (o `GET /api/auth/me` fica liberado para exibir o status). Conta convidada não pode ser suspensa → **409**. Para reativar, ver `PATCH .../reativar`.
+
+**Auth:** Admin / Super Admin
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| OPERATOR_NOT_FOUND | 404 |
+| VALIDATION_ERROR | 409 (conta convidada — remova ou reenvie o convite) |
+| FORBIDDEN | 403 |
+
+---
+
+# PATCH /api/admin/operadores/{id}/reativar
+
+Reativa um usuário suspenso (PLAN-075 N3): limpa `suspenso_em` e o login volta a funcionar.
+
+**Auth:** Admin / Super Admin
+
+## Response 200
+
+```json
+{ "ok": true }
+```
+
+## Possíveis Erros
+
+| Código | HTTP |
+|--------|------|
+| OPERATOR_NOT_FOUND | 404 |
+| FORBIDDEN | 403 |
+
 ---
 
 # POST /api/leads

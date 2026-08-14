@@ -1,4 +1,4 @@
-export type AuthTokenTipo = "convite" | "reset" | "lead"
+export type AuthTokenTipo = "convite" | "reset" | "lead" | "email"
 
 export interface AuthToken {
   id: string

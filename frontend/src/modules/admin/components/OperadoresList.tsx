@@ -64,8 +64,14 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete, onReen
                   <Card.Header className="flex-wrap">
                     <Avatar nome={op.nome} foto={op.foto ?? null} size="md" />
                     <span className="min-w-0 flex-1 truncate text-base font-semibold">{op.nome}</span>
+                    {op.suspensoEm && (
+                      <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />
+                    )}
+                    {op.emailPendente && (
+                      <StatusBadge variant="warning" size="sm" label={t("admin.verificacaoPendente")} />
+                    )}
                     {op.status === "convidado" && (
-                      <StatusBadge variant="warning" size="sm" label={t("admin.convitePendente")} />
+                      <StatusBadge variant="warning" size="sm" label={op.conviteStatus === "EXPIRADO" ? t("admin.conviteExpirado") : op.conviteStatus === "REVOGADO" ? t("admin.conviteRevogado") : t("admin.convitePendente")} />
                     )}
                     {isSelf && <StatusBadge variant="success" size="sm" label={t("admin.eu")} />}
                     <StatusBadge
@@ -75,7 +81,10 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete, onReen
                     />
                   </Card.Header>
                   <Card.Body>
-                    <p className="truncate text-sm text-text-secondary">{op.email}</p>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="truncate text-sm text-text-secondary">{op.email}</p>
+                      {op.telefone && <p className="shrink-0 text-xs text-text-muted">{op.telefone}</p>}
+                    </div>
                     <Card.Indicators>
                       <Card.Indicator label={`${t("cliente.title")}`} value={`${op.totalClientes}`} />
                       <Card.Indicator label={`${t("contrato.title")}`} value={`${op.contratosAtivos}`} />

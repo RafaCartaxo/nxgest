@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs"
 import { signToken } from "../../../../../shared/utils/jwt.js"
 import type { IAuthRepository } from "../../ports/auth.repository.js"
-import { CredenciaisInvalidasError, ContaConvidadaError } from "../../../domain/errors/auth.error.js"
+import { CredenciaisInvalidasError, ContaConvidadaError, ContaSuspensaError } from "../../../domain/errors/auth.error.js"
 
 export class LoginUseCase {
   constructor(private readonly authRepository: IAuthRepository) {}
@@ -27,6 +27,12 @@ export class LoginUseCase {
       throw new CredenciaisInvalidasError()
     }
 
+    // N3 (PLAN-075): conta suspensa com credencial válida → 403 CONTA_SUSPENSA.
+    // Checado DEPOIS da credencial (só quem conhece a senha fica sabendo — não vaza em público).
+    if (usuario.suspensoEm) {
+      throw new ContaSuspensaError()
+    }
+
     const token = signToken({ userId: usuario.id, role: usuario.role, empresaId: usuario.empresaId })
 
     return {
@@ -39,6 +45,10 @@ export class LoginUseCase {
         empresaId: usuario.empresaId,
         chefeId: usuario.chefeId,
         foto: usuario.foto,
+        telefone: usuario.telefone,
+        emailPendente: usuario.emailPendente,
+        // Espelha /me (PLAN-075 N1.8): verificado = senha definida (garantida aqui) e sem pendência.
+        emailVerificado: !usuario.emailPendente,
         status: "ativo" as const,
       },
     }

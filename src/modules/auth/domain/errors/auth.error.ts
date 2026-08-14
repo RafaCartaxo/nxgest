@@ -34,6 +34,14 @@ export class ContaConvidadaError extends Error {
   }
 }
 
+/** Login de conta suspensa (N3 — PLAN-075): credencial válida, conta bloqueada. */
+export class ContaSuspensaError extends Error {
+  constructor() {
+    super("Conta suspensa. Fale com o administrador da sua empresa.")
+    this.name = "ContaSuspensaError"
+  }
+}
+
 export class TokenInvalidoError extends Error {
   constructor() {
     super("Token inválido ou já utilizado.")

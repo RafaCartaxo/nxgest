@@ -13,7 +13,6 @@ interface EmpresaFormData {
   ativa: boolean
   adminNome: string
   adminEmail: string
-  adminSenha?: string
 }
 
 export interface EmpresaFormInitial {
@@ -39,7 +38,6 @@ export function EmpresaForm({ onSubmit, onCancel, initial }: EmpresaFormProps) {
   const [ativa, setAtiva] = useState<"ativa" | "inativa">(initial ? (initial.ativa ? "ativa" : "inativa") : "ativa")
   const [adminNome, setAdminNome] = useState("")
   const [adminEmail, setAdminEmail] = useState("")
-  const [adminSenha, setAdminSenha] = useState("")
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -50,7 +48,6 @@ export function EmpresaForm({ onSubmit, onCancel, initial }: EmpresaFormProps) {
       ativa: ativa === "ativa",
       adminNome,
       adminEmail,
-      adminSenha,
     })
   }
 
@@ -98,13 +95,6 @@ export function EmpresaForm({ onSubmit, onCancel, initial }: EmpresaFormProps) {
             required
             value={adminEmail}
             onChange={(e) => setAdminEmail(e.target.value)}
-          />
-          <Field
-            label={t("superAdmin.adminSenha")}
-            type="password"
-            hint={t("superAdmin.adminSenhaHint")}
-            value={adminSenha}
-            onChange={(e) => setAdminSenha(e.target.value)}
           />
         </>
       )}

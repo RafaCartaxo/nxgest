@@ -13,7 +13,11 @@ export interface AuthUser {
   chefeId?: string | null
   foto?: string | null
   /** PLAN-065: "convidado" = conta sem senha definida (aguardando ativação). */
-  status?: "convidado" | "ativo"
+  status?: "convidado" | "ativo" | "suspenso"
+  /** PLAN-075: dados de contato, troca de e-mail e e-mail verificado (derivado). */
+  telefone?: string | null
+  emailPendente?: string | null
+  emailVerificado?: boolean
 }
 
 interface AuthContextType {
@@ -36,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const applyMe = useCallback((me: MeResponse) => {
-    setUser({ id: me.id, nome: me.nome, email: me.email, role: me.role, empresaId: me.empresaId, empresaNome: me.empresaNome, modulos: me.modulos ?? null, capacidades: me.capacidades ?? null, chefeId: me.chefeId ?? null, foto: me.foto ?? null, status: me.status })
+    setUser({ id: me.id, nome: me.nome, email: me.email, role: me.role, empresaId: me.empresaId, empresaNome: me.empresaNome, modulos: me.modulos ?? null, capacidades: me.capacidades ?? null, chefeId: me.chefeId ?? null, foto: me.foto ?? null, status: me.status, telefone: me.telefone ?? null, emailPendente: me.emailPendente ?? null, emailVerificado: me.emailVerificado ?? false })
   }, [])
 
   useEffect(() => {

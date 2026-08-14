@@ -1,5 +1,7 @@
 import { apiRequest } from "../../../api/client.js"
 
+export type ConviteStatus = "PENDENTE" | "CONCLUIDO" | "EXPIRADO" | "REVOGADO"
+
 export interface OperadorRow {
   id: string
   nome: string
@@ -13,6 +15,13 @@ export interface OperadorRow {
   foto?: string | null
   /** PLAN-065: conta sem senha definida (aguardando convite). */
   status?: "convidado" | "ativo"
+  /** PLAN-075: dados de contato e troca de e-mail. */
+  telefone?: string | null
+  emailPendente?: string | null
+  /** PLAN-075 N3: usuário suspenso (conta ativa, acesso bloqueado). */
+  suspensoEm?: string | null
+  /** PLAN-075 P-10: status do convite mais recente (ciclo próprio). */
+  conviteStatus?: ConviteStatus | null
 }
 
 export interface AdminDashboardStats {
@@ -53,7 +62,7 @@ export async function getOperador(id: string, empresaId?: string): Promise<Opera
   return apiRequest<OperadorRow>(`GET`, `/admin/operadores/${id}${params}`)
 }
 
-export async function createOperador(data: { nome: string; email: string; senha?: string; role: "admin" | "socio" | "operator"; empresaId?: string; chefeId?: string | null }): Promise<OperadorRow> {
+export async function createOperador(data: { nome: string; email: string; role: "admin" | "socio" | "operator"; empresaId?: string; chefeId?: string | null; telefone?: string | null }): Promise<OperadorRow> {
   const params = data.empresaId ? `?empresaId=${data.empresaId}` : ""
   const { empresaId, ...body } = data
   return apiRequest<OperadorRow>("POST", `/admin/operadores${params}`, body)
@@ -65,7 +74,20 @@ export async function reenviarConvite(id: string, empresaId?: string): Promise<{
   return apiRequest<{ ok: boolean }>("PATCH", `/admin/operadores/${id}/reenviar-convite${params}`)
 }
 
-export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senha?: string; chefeId?: string | null; foto?: string | null; reatribuirParaChefeId?: string | null }, empresaId?: string): Promise<OperadorRow> {
+/** PLAN-075 P-10: revoga o convite pendente — link deixa de funcionar. */
+export async function revogarConvite(id: string, empresaId?: string): Promise<{ ok: boolean }> {
+  const params = empresaId ? `?empresaId=${empresaId}` : ""
+  return apiRequest<{ ok: boolean }>("PATCH", `/admin/operadores/${id}/revogar-convite${params}`)
+}
+
+/** PLAN-075 N3: suspende/reativa um usuário ativo. */
+export async function setSuspensao(id: string, suspender: boolean, empresaId?: string): Promise<{ ok: boolean }> {
+  const params = empresaId ? `?empresaId=${empresaId}` : ""
+  const acao = suspender ? "suspender" : "reativar"
+  return apiRequest<{ ok: boolean }>("PATCH", `/admin/operadores/${id}/${acao}${params}`)
+}
+
+export async function updateOperador(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; chefeId?: string | null; foto?: string | null; telefone?: string | null; reatribuirParaChefeId?: string | null }, empresaId?: string): Promise<OperadorRow> {
   const params = empresaId ? `?empresaId=${empresaId}` : ""
   return apiRequest<OperadorRow>("PATCH", `/admin/operadores/${id}${params}`, data)
 }

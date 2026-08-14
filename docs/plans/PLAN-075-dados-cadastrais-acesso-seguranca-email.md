@@ -1032,66 +1032,66 @@ As seguintes regras são obrigatórias:
 
 ## F1 — Modelo de usuário e dados
 
-- [ ] Revisar modelo de usuário/convidado/ativo.
-- [ ] Adicionar `telefone`.
-- [ ] Adicionar `email_pendente`.
-- [ ] Adicionar campos de contato/origem da empresa.
-- [ ] Garantir migração idempotente.
-- [ ] Padronizar deduplicação de e-mail.
+- [x] Revisar modelo de usuário/convidado/ativo.
+- [x] Adicionar `telefone`.
+- [x] Adicionar `email_pendente`.
+- [x] Adicionar campos de contato/origem da empresa.
+- [x] Garantir migração idempotente.
+- [x] Padronizar deduplicação de e-mail.
 
 ## F2 — Convites
 
-- [ ] Remover conceito de senha no cadastro administrativo.
-- [ ] Padronizar criação como `CONVIDADO`.
-- [ ] Implementar ciclo de vida do convite.
-- [ ] Implementar revogação.
-- [ ] Garantir invalidação no reenvio.
-- [ ] Garantir ativação somente pelo próprio usuário.
+- [x] Remover conceito de senha no cadastro administrativo.
+- [x] Padronizar criação como `CONVIDADO`.
+- [x] Implementar ciclo de vida do convite.
+- [x] Implementar revogação.
+- [x] Garantir invalidação no reenvio.
+- [x] Garantir ativação somente pelo próprio usuário.
 
 ## F3 — Autosserviço
 
-- [ ] Permitir alteração de nome.
-- [ ] Permitir alteração de telefone.
-- [ ] Manter alteração de foto.
-- [ ] Organizar página de perfil.
-- [ ] Separar dados pessoais, conta e segurança.
+- [x] Permitir alteração de nome.
+- [x] Permitir alteração de telefone.
+- [x] Manter alteração de foto.
+- [x] Organizar página de perfil.
+- [x] Separar dados pessoais, conta e segurança.
 
 ## F4 — Troca de e-mail
 
-- [ ] Implementar `email_pendente`.
-- [ ] Implementar token de e-mail.
-- [ ] Implementar solicitação de troca.
-- [ ] Exigir senha atual.
-- [ ] Implementar confirmação.
-- [ ] Implementar cancelamento.
-- [ ] Implementar troca administrativa para convidados.
-- [ ] Implementar troca administrativa para usuários ativos.
+- [x] Implementar `email_pendente`.
+- [x] Implementar token de e-mail.
+- [x] Implementar solicitação de troca.
+- [x] Exigir senha atual.
+- [x] Implementar confirmação.
+- [x] Implementar cancelamento.
+- [x] Implementar troca administrativa para convidados.
+- [x] Implementar troca administrativa para usuários ativos (P-07 — 14/08: `admin.controller.update` → convidado troca direta + novo convite; ativo → `email_pendente` + verificação pelo dono).
 
 ## F5 — Permissões
 
-- [ ] Definir roles permitidas por role do criador.
-- [ ] Aplicar escopo existente (`resolveScope`).
-- [ ] Garantir que operador não possa convidar.
-- [ ] Garantir que usuário não possa alterar suas próprias permissões.
+- [x] Definir roles permitidas por role do criador.
+- [x] Aplicar escopo existente (`resolveScope`).
+- [x] Garantir que operador não possa convidar.
+- [x] Garantir que usuário não possa alterar suas próprias permissões.
 
 ## F6 — UX e e-mails
 
-- [ ] Reorganizar formulários.
-- [ ] Criar estado visual de convidado.
-- [ ] Criar estado visual de convite expirado.
-- [ ] Criar estado visual de verificação de e-mail pendente.
-- [ ] Atualizar template de convite.
-- [ ] Criar template de verificação de novo e-mail.
-- [ ] Revisar pt-BR/en/es.
+- [x] Reorganizar formulários.
+- [x] Criar estado visual de convidado.
+- [x] Criar estado visual de convite expirado.
+- [x] Criar estado visual de verificação de e-mail pendente.
+- [x] Atualizar template de convite.
+- [x] Criar template de verificação de novo e-mail.
+- [x] Revisar pt-BR/en/es.
 
 ## F7 — Conversão de lead
 
-- [ ] Preservar telefone.
-- [ ] Preservar e-mail de contato da empresa.
-- [ ] Preservar telefone de contato da empresa.
-- [ ] Preservar origem.
-- [ ] Criar usuário seguindo o fluxo de convite.
-- [ ] Garantir deduplicação.
+- [x] Preservar telefone.
+- [x] Preservar e-mail de contato da empresa.
+- [x] Preservar telefone de contato da empresa.
+- [x] Preservar origem.
+- [x] Criar usuário seguindo o fluxo de convite.
+- [x] Garantir deduplicação.
 
 ---
 
@@ -1287,6 +1287,7 @@ CREATE INDEX IF NOT EXISTS "idx_convites_expirados" ON "convites"("status","expi
 ```
 
 - **Invariante "nunca dois convites válidos":** transacional (revalidar/invalidar o atual antes de criar novo — mesmo padrão do `invalidarPorTipo`) + `unique(token_hash)`.
+- **E-mail único parcial (fix fechado no smoke 14/08):** `usuarios.email` saiu do unique **hard** inline (`usuarios_email_key`) para índice único **parcial** `idx_usuarios_email ON "usuarios"("email") WHERE "deleted_at" IS NULL` — mesmo padrão do CPF de clientes (`idx_clientes_cpf`). Motivo: a dedup de aplicação (N1.6) ignora soft-deleted, mas o constraint hard bloqueava o reuso de e-mail de operador removido com **500** (DrizzleQueryError no UPDATE/INSERT). DDL idempotente: `ALTER TABLE "usuarios" DROP CONSTRAINT IF EXISTS "usuarios_email_key"; CREATE UNIQUE INDEX IF NOT EXISTS "idx_usuarios_email" ...`.
 - **Backfill:** `auth_tokens` (`tipo='convite'`, `usado_em IS NULL`, `expira_em > now`) → `convites` como `PENDENTE` (sem `criado_por`/`email_alvo` históricos → `email_alvo = usuarios.email`, `criado_por = NULL`).
 - Token continua no `auth_tokens`? **Não para convite** — o `token_hash` vive no próprio `convites` (atomicidade e auditoria coesas). `auth_tokens` permanece para `lead`/`reset`/`email`.
 
@@ -1333,8 +1334,16 @@ CREATE INDEX IF NOT EXISTS "idx_convites_expirados" ON "convites"("status","expi
 - `OperadorForm`: campo senha removido — placar substituído por "O usuário receberá um convite por e-mail e criará sua própria senha durante a ativação".
 - `admin.controller create/update`: removido `bcrypt.hash` e validação de senha; `senhaHash` sempre `null` → todo cadastro nasce `convidado`.
 - `update` não aceita mais `senhaHash` (sem ativação manual e sem o cenário "convidado+senha na mesma edição" — ambiguidade eliminada).
-- `CriarEmpresaInput`/`CriarEmpresaUseCase`/`empresa.repository.create`: extrai `adminSenhaHash` do fluxo de conversão (mantém só como valor fixo `null` ou remove o campo — decisão de limpeza na execução).
+- `CriarEmpresaInput`/`CriarEmpresaUseCase`/`empresa.repository.create`/`empresa.controller`: **R6 executado (14/08)** — campo `adminSenhaHash`/`adminSenha` **removido por completo** (`CriarEmpresaInput`, `CriarEmpresaUseCase`, port + impl, controller, `ConverterLeadUseCase`; import `bcrypt` limpo). Admin de nova empresa nasce `convidado` via convite, sem exceção (ver EMP-073/AC-20 no smoke).
 - `EsquecerSenha`/`reset` permanecem como recuperação self-service (não é definição de senha por admin).
+
+**Fechamento 14/08 (revisão PLAN-075):**
+- **`LoginUseCase` agora espelha `/me`** — login devolve `telefone`, `emailPendente` e `emailVerificado` (shape idêntico ao `GET /auth/me`); teste novo no `LoginUseCase.test.ts`.
+- **Achado 7 (semântica de convite invalidado)** — `AtivarContaUseCase`: convite `EXPIRADO` dentro do `expiraEm` (substituído por reenvio, N2) → `TOKEN_INVALID`; `TOKEN_EXPIRED` só no vencimento real. `marcarExpirado` sem o param `agora` morto.
+- **Limpeza de código morto** — `senhaHash` removido de `IAdminRepository.create/update` (nunca enviado — P-04); i18n morto `adminSenhaCurta`/`adminSenhaObrigatoria` removido (3 idiomas); `conviteStatusPorUsuario` duplicado no `AdminRepository` delegado ao `ConviteRepository` (fonte única).
+- **Smoke N3 de usuário** — novos `SUSP-USR-S/1/2/3/4/5` (suspender ativo → login 403 `CONTA_SUSPENSA`; token pré-suspensão → 403; `/me` → `status: "suspenso"`; reativar → 200; auto-suspensão 403; convidado 409; inexistente 404).
+- **Smoke de troca administrativa (P-06/P-07)** — `ADM-TROC-CONV` (convidado: troca direta + novo convite), `ADM-TROC-ATIVO` (`email_pendente` + e-mail atual segue), `ADM-TROC-DUP` (409), `SOC-TROC-SUB`/`SOC-TROC-FORA` (sócio 200/404). **Doc 07:** CT-P-12..15.
+- **Docs** — `build-collection.mjs` sem `adminSenha` (collection regenerada), `02-API.md` (criar empresa/operador/editar + troca administrativa), `UC-046` reescrito, `BR-750`, `UPDATES.md` 14/08.
 
 ## N5 — Troca de e-mail (endpoints + regras)
 

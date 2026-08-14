@@ -2,6 +2,7 @@ import type { Request, Response } from "express"
 import { LeadRepository } from "../../infrastructure/repositories/lead.repository.impl.js"
 import { AuthRepository } from "../../../auth/infrastructure/repositories/auth.repository.impl.js"
 import { AuthTokenRepository } from "../../../auth/infrastructure/repositories/auth-token.repository.impl.js"
+import { ConviteRepository } from "../../../auth/infrastructure/repositories/convite.repository.impl.js"
 import { EmpresaRepository } from "../../../admin/infrastructure/repositories/empresa.repository.impl.js"
 import { CriarEmpresaUseCase } from "../../../admin/application/use-cases/CriarEmpresa/CriarEmpresaUseCase.js"
 import { ConvidarUseCase } from "../../../auth/application/use-cases/Convidar/ConvidarUseCase.js"
@@ -39,7 +40,7 @@ export class LeadController {
     this.reenviarConfirmacao = new ReenviarConfirmacaoUseCase(repo, tokenRepo, mailer)
     this.listarLeads = new ListarLeadsUseCase(repo)
     this.iniciarOnboarding = new IniciarOnboardingUseCase(repo)
-    this.converterLead = new ConverterLeadUseCase({ repo, criarEmpresa, convidar: new ConvidarUseCase(tokenRepo, mailer) })
+    this.converterLead = new ConverterLeadUseCase({ repo, criarEmpresa, convidar: new ConvidarUseCase(new ConviteRepository(), mailer) })
     this.descartarLead = new DescartarLeadUseCase(repo)
   }
 

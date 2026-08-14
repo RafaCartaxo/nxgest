@@ -1,17 +1,38 @@
-import { eq, and, count, isNull, ne, sum, inArray } from "drizzle-orm"
+import { eq, and, count, isNull, ne, sum, inArray, sql } from "drizzle-orm"
 import { db, rawQuery, usuarios, clientes, contratos, pagamentos, movimentacoesFinanceiras } from "../../../../database.js"
 import type { IAdminRepository, OperadorRow, AdminDashboardStats, EquipeItem } from "../../application/ports/admin.repository.js"
+import type { ConviteStatus } from "../../../../modules/auth/domain/convite.entity.js"
+import { ConviteRepository } from "../../../../modules/auth/infrastructure/repositories/convite.repository.impl.js"
+import type { IConviteRepository } from "../../../../modules/auth/application/ports/convite.repository.js"
 import { v4 as uuid } from "uuid"
 import { NaoPodeAutoModificarError, NaoPodeAlterarSuperAdminError, OperadorNaoEncontradoError, NaoPodeRebaixarComSubordinadosError } from "../../domain/errors/admin.error.js"
+import { EmailDuplicadoError } from "../../../../modules/auth/domain/errors/auth.error.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
 const SCOPE_NOT_SUPER = [isNull(usuarios.deletedAt), ne(usuarios.role, "super_admin")]
 
+type LinhaUsuario = {
+  id: string
+  nome: string
+  email: string
+  senhaHash: string | null
+  role: string
+  createdAt: string
+  deletedAt: string | null
+  empresaId: string | null
+  chefeId: string | null
+  foto: string | null
+  telefone: string | null
+  emailPendente: string | null
+  suspensoEm: string | null
+}
+
 /** Mapeia a linha completa (com senhaHash) → OperadorRow público (strip + status). */
 function toOperadorRow(
-  row: { id: string; nome: string; email: string; senhaHash: string | null; role: string; createdAt: string; deletedAt: string | null; empresaId: string | null; chefeId: string | null; foto: string | null },
+  row: LinhaUsuario,
   totalClientes = 0,
   contratosAtivos = 0,
+  conviteStatus: ConviteStatus | null = null,
 ): OperadorRow {
   return {
     id: row.id,
@@ -23,13 +44,24 @@ function toOperadorRow(
     empresaId: row.empresaId ?? null,
     chefeId: row.chefeId ?? null,
     foto: row.foto ?? null,
+    telefone: row.telefone ?? null,
+    emailPendente: row.emailPendente ?? null,
+    suspensoEm: row.suspensoEm ?? null,
     status: row.senhaHash ? "ativo" : "convidado",
+    conviteStatus,
     totalClientes,
     contratosAtivos,
   }
 }
 
 export class AdminRepository implements IAdminRepository {
+  /** Status do convite mais recente por usuário — delega ao ConviteRepository (fonte única). */
+  private readonly conviteRepo: IConviteRepository
+
+  constructor(conviteRepo: IConviteRepository = new ConviteRepository()) {
+    this.conviteRepo = conviteRepo
+  }
+
   /** Contagens de clientes/contratos ativos por usuário em 2 queries (E2 — anti N+1). */
   private async countsPorUsuario(userIds: string[]): Promise<Map<string, { totalClientes: number; contratosAtivos: number }>> {
     const map = new Map<string, { totalClientes: number; contratosAtivos: number }>()
@@ -47,6 +79,16 @@ export class AdminRepository implements IAdminRepository {
     return map
   }
 
+  async emailEmUso(email: string, ignoreId?: string | null): Promise<boolean> {
+    const conds = [
+      sql`(lower("email") = lower(${email}) OR lower("email_pendente") = lower(${email}))`,
+      sql`"deleted_at" IS NULL`,
+      ignoreId ? sql`"id" <> ${ignoreId}` : undefined,
+    ]
+    const rows = await db.select({ id: usuarios.id }).from(usuarios).where(and(...conds))
+    return rows.length > 0
+  }
+
   async findAllOperadores(empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow[]> {
     const conditions = [...SCOPE_NOT_SUPER]
     if (empresaId) {
@@ -57,10 +99,13 @@ export class AdminRepository implements IAdminRepository {
     }
     const rows = await db.select().from(usuarios).where(and(...conditions)).orderBy(usuarios.createdAt)
 
-    const counts = await this.countsPorUsuario(rows.map((r) => r.id))
+    const [counts, conviteStatus] = await Promise.all([
+      this.countsPorUsuario(rows.map((r) => r.id)),
+      this.conviteRepo.statusPorUsuario(rows.map((r) => r.id)),
+    ])
     return rows.map((row) => {
       const c = counts.get(row.id)!
-      return toOperadorRow(row, c.totalClientes, c.contratosAtivos)
+      return toOperadorRow(row as LinhaUsuario, c.totalClientes, c.contratosAtivos, conviteStatus.get(row.id) ?? null)
     })
   }
 
@@ -75,40 +120,45 @@ export class AdminRepository implements IAdminRepository {
     const rows = await db.select().from(usuarios).where(and(...conditions))
     if (rows.length === 0) return null
     const row = rows[0]
-    const [clientesCount, contratosCount] = await Promise.all([
+    const [clientesCount, contratosCount, conviteStatus] = await Promise.all([
       db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
       db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
+      this.conviteRepo.statusPorUsuario([row.id]).then((m) => m.get(row.id) ?? null),
     ])
-    return toOperadorRow(row, clientesCount[0].total, contratosCount[0].total)
+    return toOperadorRow(row as LinhaUsuario, clientesCount[0].total, contratosCount[0].total, conviteStatus)
   }
 
   async findByEmail(email: string): Promise<OperadorRow | null> {
-    const rows = await db.select().from(usuarios).where(eq(usuarios.email, email))
+    const rows = await db.select().from(usuarios).where(sql`lower("email") = lower(${email})`)
     if (rows.length === 0) return null
     const row = rows[0]
     const [clientesCount, contratosCount] = await Promise.all([
       db.select({ total: count() }).from(clientes).where(and(eq(clientes.userId, row.id), isNull(clientes.deletedAt))),
       db.select({ total: count() }).from(contratos).where(and(eq(contratos.userId, row.id), isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"))),
     ])
-    return toOperadorRow(row, clientesCount[0].total, contratosCount[0].total)
+    return toOperadorRow(row as LinhaUsuario, clientesCount[0].total, contratosCount[0].total)
   }
 
-  async create(input: { nome: string; email: string; senhaHash: string | null; role: "super_admin" | "admin" | "socio" | "operator"; empresaId: string | null; chefeId?: string | null }): Promise<OperadorRow> {
+  async create(input: { nome: string; email: string; role: "super_admin" | "admin" | "socio" | "operator"; empresaId: string | null; chefeId?: string | null; telefone?: string | null }): Promise<OperadorRow> {
     const id = uuid()
+    // PLAN-075 P-04: cadastro administrativo NUNCA tem senha — nasce CONVIDADO (N4).
     await db.insert(usuarios).values({
       id,
       nome: input.nome,
       email: input.email,
-      senhaHash: input.senhaHash,
+      senhaHash: null,
       role: input.role,
       empresaId: input.empresaId,
       chefeId: input.chefeId ?? null,
+      telefone: input.telefone ?? null,
       createdAt: new Date().toISOString(),
     })
-    return { id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, chefeId: input.chefeId ?? null, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0, foto: null, status: input.senhaHash ? "ativo" : "convidado" }
+    return {
+      id, nome: input.nome, email: input.email, role: input.role, empresaId: input.empresaId, chefeId: input.chefeId ?? null, createdAt: new Date().toISOString(), deletedAt: null, totalClientes: 0, contratosAtivos: 0, foto: null, telefone: input.telefone ?? null, emailPendente: null, suspensoEm: null, status: "convidado", conviteStatus: null,
+    }
   }
 
-  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; senhaHash?: string; chefeId?: string | null; foto?: string | null; reatribuirParaChefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
+  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; chefeId?: string | null; foto?: string | null; telefone?: string | null; emailPendente?: string | null; suspensoEm?: string | null; reatribuirParaChefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
     if (id === currentUserId && data.role !== undefined) {
       throw new NaoPodeAutoModificarError("Você não pode alterar seu próprio papel.")
     }
@@ -117,6 +167,13 @@ export class AdminRepository implements IAdminRepository {
     if (!existing) throw new OperadorNaoEncontradoError()
     if (existing.role === "super_admin") {
       throw new NaoPodeAlterarSuperAdminError()
+    }
+
+    // Dedup global de e-mail (N1.6 — PLAN-075): email a novo precisa ser único entre
+    // `email` e `email_pendente` de terceiros, ANTES de escrever (nunca depender do unique).
+    if (data.email !== undefined && data.email !== existing.email) {
+      const emUso = await this.emailEmUso(data.email, id)
+      if (emUso) throw new EmailDuplicadoError()
     }
 
     // Bloqueio de "chefe órfão" (WS7): rebaixar pode deixar subordinados com chefe inválido.
@@ -152,9 +209,11 @@ export class AdminRepository implements IAdminRepository {
       if (data.nome !== undefined) updateData.nome = data.nome
       if (data.email !== undefined) updateData.email = data.email
       if (data.role !== undefined) updateData.role = data.role
-      if (data.senhaHash !== undefined) updateData.senhaHash = data.senhaHash
       if (data.chefeId !== undefined) updateData.chefeId = data.chefeId
       if (data.foto !== undefined) updateData.foto = data.foto
+      if (data.telefone !== undefined) updateData.telefone = data.telefone
+      if (data.emailPendente !== undefined) updateData.emailPendente = data.emailPendente
+      if (data.suspensoEm !== undefined) updateData.suspensoEm = data.suspensoEm
 
       await tx.update(usuarios).set(updateData).where(eq(usuarios.id, id))
     })

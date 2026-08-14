@@ -39,7 +39,13 @@ export function AtivarPage() {
       await ativarConta(token, senha)
       setFeito(true)
     } catch (err) {
-      setErro(err instanceof ApiError ? err.message : t("auth.erroAtivar"))
+      if (err instanceof ApiError) {
+        // PLAN-075 P-10: convite expirado tem tratamento próprio; os demais
+        // (revogado/já usado/e-mail não confere) caem na mensagem genérica.
+        setErro(err.code === "TOKEN_EXPIRED" ? t("auth.conviteExpiradoDetail") : err.message)
+      } else {
+        setErro(t("auth.erroAtivar"))
+      }
     } finally {
       setLoading(false)
     }
