@@ -55,7 +55,7 @@
 
 ## Pendências
 
-- [ ] Commitar (Rafael confirma escopo/PR)
+- [x] Commitar (Rafael confirma escopo/PR) — commit `552f7b9` (77 arquivos, sem push)
 - [ ] Parar a instância smoke (porta 3002) que ficou no ar após a validação
 
 ## Observações
