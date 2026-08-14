@@ -70,7 +70,7 @@ jobs:
           # 1) schema isolado; 2) seed; 3) sobe UMA instância (rate limit ampliado) e roda o smoke
           npx tsx scripts/create-schema.mjs
           node scripts/seed-demo.mjs
-          PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
+          PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 PUBLICO_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
           SERVER_PID=$!
           trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
           sleep 6
