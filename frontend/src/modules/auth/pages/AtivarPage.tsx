@@ -101,6 +101,7 @@ export function AtivarPage() {
           {erro && <ErrorBanner message={erro} onDismiss={() => setErro("")} />}
 
           <Button type="submit" disabled={loading} className="w-full">
+            {loading ? <span className="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden /> : null}
             {loading ? t("common.loading") : t("auth.ativarConta")}
             {!loading && <ArrowRight className="size-4" aria-hidden />}
           </Button>

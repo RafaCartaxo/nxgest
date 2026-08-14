@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { ArrowRight, Edit3, Mail, Trash2 } from "lucide-react"
-import { Card } from "../../../shared/components/Card/Card.js"
+import { ArrowRight, Edit3, Mail, Trash2, Phone } from "lucide-react"
+import { Card, type CardTone } from "../../../shared/components/Card/Card.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
@@ -17,6 +17,13 @@ interface Props {
 }
 
 const roleRank: Record<string, number> = { super_admin: 0, admin: 1, socio: 2, operator: 3 }
+
+const tonePorRole: Record<string, CardTone> = {
+  super_admin: "danger",
+  admin: "info",
+  socio: "success",
+  operator: "neutral",
+}
 
 function isAdminRole(role: OperadorRow["role"]): boolean {
   return role === "super_admin" || role === "admin"
@@ -52,72 +59,105 @@ export function OperadoresList({ operadores, empresaId, onEdit, onDelete, onReen
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {groups.map((group) => (
         <div key={group.label}>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">{group.label}</p>
-          <div className="space-y-3">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted border-b border-border-light pb-1">
+            {group.label}
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {group.items.map((op) => {
               const isSelf = user?.id === op.id
               return (
-                <Card.Root key={op.id} variant="list-item">
-                  <Card.Header className="flex-wrap">
+                <Card.Root key={op.id} variant="list-item" tone={tonePorRole[op.role] ?? "neutral"} className="flex flex-col gap-3">
+                  <div className="flex items-start gap-3">
                     <Avatar nome={op.nome} foto={op.foto ?? null} size="md" />
-                    <span className="min-w-0 flex-1 truncate text-base font-semibold">{op.nome}</span>
-                    {op.suspensoEm && (
-                      <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />
-                    )}
-                    {op.emailPendente && (
-                      <StatusBadge variant="warning" size="sm" label={t("admin.verificacaoPendente")} />
-                    )}
-                    {op.status === "convidado" && (
-                      <StatusBadge variant="warning" size="sm" label={op.conviteStatus === "EXPIRADO" ? t("admin.conviteExpirado") : op.conviteStatus === "REVOGADO" ? t("admin.conviteRevogado") : t("admin.convitePendente")} />
-                    )}
-                    {isSelf && <StatusBadge variant="success" size="sm" label={t("admin.eu")} />}
-                    <StatusBadge
-                      variant={roleVariant(op.role)}
-                      size="sm"
-                      label={roleLabel(op.role, t)}
-                    />
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="flex items-baseline justify-between gap-2">
-                      <p className="truncate text-sm text-text-secondary">{op.email}</p>
-                      {op.telefone && <p className="shrink-0 text-xs text-text-muted">{op.telefone}</p>}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-base font-semibold text-text-primary">{op.nome}</p>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {isSelf && <StatusBadge variant="success" size="sm" label={t("admin.eu")} />}
+                        {op.suspensoEm && <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />}
+                        {op.emailPendente && <StatusBadge variant="warning" size="sm" label={t("admin.verificacaoPendente")} />}
+                        {op.status === "convidado" && (
+                          <StatusBadge variant="warning" size="sm" label={op.conviteStatus === "EXPIRADO" ? t("admin.conviteExpirado") : op.conviteStatus === "REVOGADO" ? t("admin.conviteRevogado") : t("admin.convitePendente")} />
+                        )}
+                        <StatusBadge
+                          variant={roleVariant(op.role)}
+                          size="sm"
+                          label={roleLabel(op.role, t)}
+                        />
+                      </div>
                     </div>
-                    <Card.Indicators>
-                      <Card.Indicator label={`${t("cliente.title")}`} value={`${op.totalClientes}`} />
-                      <Card.Indicator label={`${t("contrato.title")}`} value={`${op.contratosAtivos}`} />
-                    </Card.Indicators>
-                  </Card.Body>
-                  <Card.Actions
-                    actions={[
-                      {
-                        icon: ArrowRight,
-                        label: t("admin.acessar"),
-                        onClick: () => navigate(`/admin/operadores/${op.id}${empresaId ? `?empresaId=${empresaId}` : ""}`),
-                      },
-                      {
-                        icon: Mail,
-                        label: t("admin.reenviarConvite"),
-                        onClick: () => onReenviarConvite(op.id),
-                        show: op.status === "convidado" && !isSelf,
-                      },
-                      {
-                        icon: Edit3,
-                        label: t("admin.editar"),
-                        onClick: () => onEdit(op),
-                        show: !isSelf,
-                      },
-                      {
-                        icon: Trash2,
-                        label: t("admin.remover"),
-                        onClick: () => onDelete(op.id),
-                        show: !isSelf,
-                        variant: "danger",
-                      },
-                    ]}
-                  />
+                  </div>
+
+                  <div className="space-y-1 text-sm text-text-secondary">
+                    <p className="flex items-center gap-1.5 truncate">
+                      <Mail className="size-3.5 shrink-0 text-text-muted" aria-hidden />
+                      <span className="truncate">{op.email}</span>
+                    </p>
+                    {op.telefone && (
+                      <p className="flex items-center gap-1.5">
+                        <Phone className="size-3.5 shrink-0 text-text-muted" aria-hidden />
+                        {op.telefone}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-auto flex items-center justify-between gap-2 border-t border-border-light pt-3">
+                    <div className="flex gap-4">
+                      <div>
+                        <p className="text-[11px] text-text-muted">{t("cliente.title")}</p>
+                        <p className="text-lg font-semibold tabular-nums text-text-primary leading-none mt-0.5">{op.totalClientes}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-text-muted">{t("contrato.title")}</p>
+                        <p className="text-lg font-semibold tabular-nums text-text-primary leading-none mt-0.5">{op.contratosAtivos}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/operadores/${op.id}${empresaId ? `?empresaId=${empresaId}` : ""}`)}
+                        title={t("admin.acessar")}
+                        aria-label={t("admin.acessar")}
+                        className="grid size-9 place-items-center rounded-lg text-primary-text transition-colors hover:bg-primary-light"
+                      >
+                        <ArrowRight className="size-4" aria-hidden />
+                      </button>
+                      {op.status === "convidado" && !isSelf && (
+                        <button
+                          type="button"
+                          onClick={() => onReenviarConvite(op.id)}
+                          title={t("admin.reenviarConvite")}
+                          aria-label={t("admin.reenviarConvite")}
+                          className="grid size-9 place-items-center rounded-lg text-primary-text transition-colors hover:bg-primary-light"
+                        >
+                          <Mail className="size-4" aria-hidden />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onEdit(op)}
+                        title={t("admin.editar")}
+                        aria-label={t("admin.editar")}
+                        disabled={isSelf}
+                        className="grid size-9 place-items-center rounded-lg text-text-secondary transition-colors hover:bg-surface-hover disabled:opacity-40"
+                      >
+                        <Edit3 className="size-4" aria-hidden />
+                      </button>
+                      {!isSelf && (
+                        <button
+                          type="button"
+                          onClick={() => onDelete(op.id)}
+                          title={t("admin.remover")}
+                          aria-label={t("admin.remover")}
+                          className="grid size-9 place-items-center rounded-lg text-danger-text transition-colors hover:bg-danger-light"
+                        >
+                          <Trash2 className="size-4" aria-hidden />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </Card.Root>
               )
             })}

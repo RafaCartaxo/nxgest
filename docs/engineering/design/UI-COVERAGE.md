@@ -43,19 +43,19 @@
 | 12 | Detalhe do Contrato | ✅ | ParcelaList, pagamentos (Card), estorno, comprovante | ✅ Canônico |
 | 13 | Caixa (`CaixaPage`) | ✅ | KpiCard, auditoria + movimentações (Card), ajuste (input canônico + Button) | ✅ Canônico |
 | 14 | Gastos (`GastoPage`) | ✅ | GastoForm (Field) + GastoList (Card) | ✅ Canônico |
-| 15 | Administração (`AdminPage`) | ✅ | Equipe/Operação (KpiCard), EquipeModal, OperadoresList (badge "Convite pendente" + reenviar — PLAN-065) | ✅ Canônico |
-| 16 | Detalhe do Operador | ✅ | KpiCard, ajuste, auditoria (Card), contratos (Card) | ✅ Canônico |
+| 15 | Administração (`AdminPage`) | ✅ | Equipe/Operação (KpiCard), EquipeModal, OperadoresList (**grid de cards** com tone por role + badges + contadores tabular-nums + **botão Acessar → detail**, sempre visível — Stitch 14/08), **OperadorForm no `Modal.footer`** + callout convite | ✅ Canônico |
+| 16 | Detalhe do Operador | ✅ | **bento 3col** (Contato&Status / **KpiCard irmãos clicáveis** Clientes+Contratos — navegam para as listas do operador, padrão do painel adm / **Status da conta** com badge + ações) + bloco caixa 2col (CaixaKpis + Ajustar modal + histórico); **modal "Alterar status"** (Suspender/Reativar, variantes alinhadas) — Stitch 14/08 | ✅ Canônico |
 | 17 | Empresas (`SuperAdminPage`) | ✅ | EmpresaList, EmpresaForm (Field), ModulosModal | ✅ Canônico |
-| 18 | Perfil (`PerfilPage`) | ✅ | Field (senha) + Card | ✅ Canônico |
+| 18 | Perfil (`PerfilPage`) | ✅ | **bento grid** (Dados pessoais + Conta 8col · Segurança 4col) com `Card` tone (sucesso/info/**neutral**) + título dentro do card; Dados pessoais com avatar em coluna própria; Conta com **sub-cards** (E-mail/Empresa, `bg-surface-secondary`) + badges Status/Role + "Trocar e-mail" no rodapé; selo `BadgeCheck` — Stitch 14/08 | ✅ Canônico |
 | 19 | Login | ✅ (redesenhado) | Field (email/senha + mostrar) · link "Esqueci minha senha" → `/recuperar-senha` (PLAN-065) | ✅ Canônico |
 | 20 | Recuperar Senha (`/recuperar-senha`) | ✅ (novo, PLAN-065) | PublicPageShell + Field email + SuccessState (resposta genérica) | ✅ Canônico |
 | 21 | Redefinir Senha (`/resetar-senha?token=`) | ✅ (novo, PLAN-065) | PublicPageShell + Field (senha+confirmar) + ErrorBanner token | ✅ Canônico |
-| 22 | Ativar Conta (`/ativar?token=`) | ✅ (novo, PLAN-065) | PublicPageShell + Field (senha+confirmar) + ErrorBanner token | ✅ Canônico |
+| 22 | Ativar Conta (`/ativar?token=`) | ✅ (novo, PLAN-065) | PublicPageShell + Field (senha+confirmar, toggle eye) + ErrorBanner token + botão com spinner | ✅ Canônico |
 | 23 | Quero Conhecer (`/quero-conhecer`) | ✅ (novo, PLAN-064) | Shell login + Field (zod) + SuccessState dedup/reenviar | ✅ Canônico |
 | 24 | Confirmar Lead (`/quero-conhecer/confirmar`) | ✅ (novo, PLAN-064) | PublicPageShell + SuccessState/ErrorBanner + reenviar | ✅ Canônico |
 | 25 | Leads Super (`/admin/leads`) | ✅ (novo, PLAN-064) | PageHeader + FieldSelect filtro + Card list-item + badges status + modais (Confirm/descarte) | ✅ Canônico |
 | 26 | Confirmar E-mail (`/verificar-email?token=`) | ✅ (novo, PLAN-075) | PublicPageShell + SuccessState/ErrorBanner + Button "Ir para Meus dados" | ✅ Canônico |
-| 27 | Conta Suspensa (bloqueio no `ProtectedRoute`) | ✅ (novo, PLAN-075) | Shell login + Logo público + card warning (ícone Ban + Button sair) | ✅ Canônico |
+| 27 | Conta Suspensa (bloqueio no `ProtectedRoute`) | ✅ (novo, PLAN-075) | Shell login + Logo público + card warning com tone stripe + box de aviso (`AlertTriangle`) + Button Sair (`LogOut`) — Stitch 14/08 | ✅ Canônico |
 
 ## 3. Componentes compartilhados
 

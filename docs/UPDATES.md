@@ -2,6 +2,34 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 14/08/2026 — OperadorDetail: modal "Alterar status" + KPIs clicáveis
+
+- **Card "Status da conta"** — o card de ações do operador foi renomeado de "Conta —" para **"Status da conta"**: removida a linha "—" (`admin.semConta`) e adicionado **`StatusBadge` do status atual** (Ativo `success` / Suspenso `danger` / Convidado `warning`) junto ao título, antes dos botões de ação. i18n nova: `admin.statusConta` (pt/en/es).
+- **Variantes alinhadas** — botão **Reativar** agora usa `secondary` tanto no card quanto no modal "Alterar status" (antes: secondary no card, primary no modal — divergência). Suspender continua `danger` nos dois.
+- **Modal "Alterar status"** — o botão **Suspender/Reativar** do operador abre um **`Modal` próprio** no padrão do Perfil (Trocar e-mail): título "Alterar status", descrição contextual, **status atual** do operador (`StatusBadge`) e rodapé Cancelar + ação. Substitui o `ConfirmModal` genérico. i18n nova: `admin.alterarStatus` + `admin.statusAtivo` (pt/en/es).
+- **KPIs clicáveis** — no OperadorDetail os KPIs **Clientes/Contratos** agora navegam para as listas do operador (`/clientes?usuarioId=...`, `/contratos?usuarioId=...`), mesmo padrão do painel admin; ficam **lado a lado** (`grid-cols-2 lg:col-span-2`). Removidos os **cards Clientes/Contratos redundantes** do bloco caixa + código morto (`listContratos`/`listClientes`, states, `ArrowRight`).
+
+## 14/08/2026 — Ajustes de consistência pós-port (QA review)
+
+- **OperadoresList** — restaurado o **botão "Acessar" (→)** para o detalhe do operador (`/admin/operadores/:id`, com `empresaId` quando houver) — perdido no port do grid de cards; **sempre visível** (inclusive para o próprio usuário). **a11y:** `aria-label` em todos os botões-ícone (Acessar/Reenviar/Editar/Remover).
+- **OperadorForm** — seções em **`Card` tone** (Dados pessoais `success` / Acesso `info` / Permissões `neutral`) com título `font-display` dentro + **avatar em coluna própria** (espelha o Meu Perfil); removido código morto (`onCancel` não usado, `loading` interno sem função — botões no `Modal.footer` usam `savingUpdate` do AdminPage).
+- **PerfilPage** — card **Segurança** alinhado ao padrão (`Card` tone `neutral` + título dentro), uniforme com Dados pessoais/Conta.
+- **OperadorDetail** — card "Desempenho" sem `KpiCard` aninhado (borda dupla): agora **`KpiCard` irmãos** (Clientes green · Contratos yellow) direto no grid do bento, **mesmo padrão do painel admin** (AdminPage). **KPIs agora são clicáveis** (navegam para as listas de clientes/contratos do operador) e ficam **lado a lado** (`grid-cols-2 lg:col-span-2`). Removidos os **cards Clientes/Contratos redundantes** do bloco caixa (acesso agora pelos KPIs) + código morto (`listContratos`/`listClientes`, states, `ArrowRight`). `CaixaKpis` intocado (compartilhado com CaixaPage).
+- **Pendências despriorizadas (consistência futura):** EmpresaForm → `Modal.footer` (B3) e spinner nos botões de Resetar/Recuperar senha (B5).
+- **Validado:** tsc · 115 testes · build · audits (UI/styles/docs).
+
+## 14/08/2026 — Port telas Stitch `stitch_personality_plus_portal` (identidade "Nexus" nas 8 superfícies)
+
+- **Perfil (`PerfilPage`)** — **bento grid** (Dados pessoais + Conta na coluna principal 8col · Segurança na lateral 4col); selo `BadgeCheck` "E-mail verificado" no e-mail; **"Trocar e-mail" movido para dentro do card Conta** (rodapé `border-t`); banner de pendência com ícone `Info` + botão Cancelar.
+  - **Ajuste (mesmo dia):** Dados pessoais e Conta refeitos seguindo o protótipo Stitch — cards com `Card` tone (sucesso/info) + título `font-display` **dentro do card**; **avatar em coluna própria** à esquerda (respiro `gap-lg` com os campos, fim do "impressado"); Conta com **sub-cards** `bg-surface-secondary` (E-mail com selo `BadgeCheck` · Empresa) + **badges Status/Role em linha**; corrigido token inválido `bg-surface-container-lowest` (M3) → `bg-surface` no banner.
+- **OperadorForm + AdminPage** — callout do convite em **bloco próprio** (seção PERMISSÕES, `bg-primary-light` + `Mail`); botões de ação movidos para o **`Modal.footer`** (padrão canônico; `OperadorForm` expõe `submit()` via ref) — resolve o "submit fixo" do Stitch sem conflitar com o bottom-sheet.
+- **OperadorDetail** — **bento 3col** (Contato & Status com badges · Desempenho com KpiCards · Ações de Conta `lg:col-span-3` em linha) + bloco caixa em 2col (CaixaKpis + card Clientes/Contratos + Ajustar + histórico colapsável). Mantém R3 (caixa independente) e `isSelf`.
+- **OperadoresList** — **grid de cards** (1/2/3 col) com **tone stripe por role** (admin=info, sócio=success, operador=neutral), badges, e-mail/telefone com ícones, contadores `tabular-nums`; busca nome+e-mail mantida.
+- **ContaSuspensaScreen** — card warning com tone stripe + box de aviso (`AlertTriangle`) + Button Sair (`LogOut`); copy atual mantida (sem "violações de termos"/ID fake).
+- **AtivarPage** — botão submit com spinner; demais já canônicos.
+- **Respeita a arquitetura**: sem token/tema novo (M3 do Stitch mapeado para tokens Nexus), `lucide-react` (sem Material Symbols), sem sidebar mock, sem dados fictícios, sem chave i18n nova.
+- **Validado:** tsc · 115 testes · build · audits (UI/styles/docs). `UI-COVERAGE.md` atualizado.
+
 ## 14/08/2026 — PLAN-075: fechamento completo (login espelha /me, troca administrativa, suspensão de usuário, limpeza)
 
 - **Login espelha `/me`** — `POST /auth/login` passa a devolver `telefone`, `emailPendente` e `emailVerificado` (shape idêntico ao `GET /auth/me`). Front `AuthContext` já repassava; tipo `UsuarioComum` já os previa.

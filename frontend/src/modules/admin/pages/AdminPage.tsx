@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams, Navigate, useNavigate } from "react-router-dom"
 import { Settings, User } from "lucide-react"
@@ -16,7 +16,7 @@ import { Button } from "../../../shared/components/Button.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { roleLabel } from "../../../shared/utils/role.js"
 import { OperadoresList } from "../components/OperadoresList.js"
-import { OperadorForm } from "../components/OperadorForm.js"
+import { OperadorForm, type OperadorFormHandle } from "../components/OperadorForm.js"
 import { ReassignModal, type ReassignState } from "../components/ReassignModal.js"
 import { EquipeModal } from "../components/EquipeModal.js"
 import { ContribuicaoModal } from "../components/ContribuicaoModal.js"
@@ -52,6 +52,7 @@ export function AdminPage() {
   const [equipeModal, setEquipeModal] = useState<"admin" | "operator" | "socio" | null>(null)
   const [contribuicaoMetric, setContribuicaoMetric] = useState<ContribuicaoMetric | null>(null)
   const [savingUpdate, setSavingUpdate] = useState(false)
+  const operadorFormRef = useRef<OperadorFormHandle>(null)
 
   const isAdminSelf = (user?.role === "admin" || user?.role === "socio") && !empresaId
 
@@ -108,12 +109,14 @@ export function AdminPage() {
   )
 
   async function handleCreate(data: { nome: string; email: string; telefone?: string | null; role: "admin" | "socio" | "operator"; chefeId?: string | null }) {
+    setSavingUpdate(true)
     await feedback.run({
       action: async () => { await createOperador({ nome: data.nome, email: data.email, telefone: data.telefone, role: data.role, empresaId, chefeId: data.chefeId }) },
       loading: t("common.saving"),
       success: t("admin.criarSucesso"),
       error: t("admin.erroCarregar"),
     })
+    setSavingUpdate(false)
     setFormOpen(false)
     fetchData()
   }
@@ -244,8 +247,19 @@ export function AdminPage() {
               onClose={() => { setFormOpen(false); setEditingOp(null) }}
               title={editingOp ? t("admin.editarOperador") : t("admin.novoOperador")}
               maxWidth="max-w-md"
+              footer={
+                <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <Button type="button" variant="ghost" onClick={() => { setFormOpen(false); setEditingOp(null) }}>
+                    {t("common.cancel")}
+                  </Button>
+                  <Button type="button" disabled={savingUpdate} onClick={() => void operadorFormRef.current?.submit()}>
+                    {editingOp ? t("common.save") : t("admin.enviarConvite")}
+                  </Button>
+                </div>
+              }
             >
                 <OperadorForm
+                  ref={operadorFormRef}
                   editing={editingOp}
                   chefes={operadores.filter((op) => op.role === "admin" || op.role === "socio")}
                   actorRole={user?.role === "socio" ? "socio" : user?.role === "super_admin" ? "super_admin" : "admin"}

@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react"
 import { useTranslation } from "react-i18next"
-import { Check } from "lucide-react"
-import { Button } from "../../../shared/components/Button.js"
+import { Mail } from "lucide-react"
+import { Card } from "../../../shared/components/Card/Card.js"
 import { Field } from "../../../shared/components/Field/Field.js"
 import { FieldSelect } from "../../../shared/components/Field/FieldSelect.js"
 import { AvatarField } from "../../../shared/components/Avatar/Avatar.js"
@@ -31,11 +31,14 @@ interface Props {
   onCancel: () => void
 }
 
-function Secao({ children }: { children: React.ReactNode }) {
-  return <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">{children}</p>
+export interface OperadorFormHandle {
+  submit: () => Promise<void>
 }
 
-export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCancel }: Props) {
+export const OperadorForm = forwardRef<OperadorFormHandle, Props>(function OperadorForm(
+  { editing, chefes = [], actorRole, onSubmit }: Props,
+  ref,
+) {
   const { t } = useTranslation()
   const [nome, setNome] = useState(editing?.nome ?? "")
   const [email, setEmail] = useState(editing?.email ?? "")
@@ -44,7 +47,6 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
   const [chefeId, setChefeId] = useState<string>(editing?.chefeId ?? "")
   const [foto, setFoto] = useState<string | null>(editing?.foto ?? null)
   const [errors, setErrors] = useState<FieldErrors>({})
-  const [loading, setLoading] = useState(false)
   const nomeRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
 
@@ -66,39 +68,43 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
     return Object.keys(e).length === 0
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function submit() {
     if (!validate()) return
-    setLoading(true)
-    try {
-      await onSubmit({
-        nome: nome.trim(),
-        email: email.trim(),
-        telefone: telefone.trim() === "" ? null : telefone.trim(),
-        role,
-        foto: editing ? foto : undefined,
-        // Sócio: chefe é ele mesmo; admin/super: chefe selecionado (ou null = sob o admin)
-        chefeId: isActorSocio ? undefined : role === "admin" ? null : chefeId || null,
-      })
-    } finally {
-      setLoading(false)
-    }
+    await onSubmit({
+      nome: nome.trim(),
+      email: email.trim(),
+      telefone: telefone.trim() === "" ? null : telefone.trim(),
+      role,
+      foto: editing ? foto : undefined,
+      // Sócio: chefe é ele mesmo; admin/super: chefe selecionado (ou null = sob o admin)
+      chefeId: isActorSocio ? undefined : role === "admin" ? null : chefeId || null,
+    })
+  }
+
+  // Botões de ação ficam no `Modal.footer` (AdminPage) — expomos submit() via ref.
+  useImperativeHandle(ref, () => ({ submit }))
+
+  async function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    await submit()
   }
 
   const showChefe = !isActorSocio && (role === "operator" || role === "socio")
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Secao>{t("admin.secaoDadosPessoais")}</Secao>
-        <div className="flex items-start gap-3">
-          <AvatarField
-            nome={nome}
-            foto={foto}
-            label={t("avatar.foto")}
-            size="lg"
-            onChange={(f) => setFoto(f)}
-          />
+    <form onSubmit={handleFormSubmit} className="space-y-4">
+      <Card.Root tone="success" className="p-4">
+        <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("admin.secaoDadosPessoais")}</h2>
+        <div className="flex flex-col gap-6 md:flex-row md:items-start">
+          <div className="flex shrink-0 flex-col items-center gap-3 md:pt-1">
+            <AvatarField
+              nome={nome}
+              foto={foto}
+              label={t("avatar.foto")}
+              size="lg"
+              onChange={(f) => setFoto(f)}
+            />
+          </div>
           <div className="flex-1 space-y-4">
             <Field
               label={t("admin.nome")}
@@ -116,10 +122,10 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
             />
           </div>
         </div>
-      </div>
+      </Card.Root>
 
-      <div>
-        <Secao>{t("admin.secaoAcesso")}</Secao>
+      <Card.Root tone="info" className="p-4">
+        <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("admin.secaoAcesso")}</h2>
         <Field
           label={t("admin.email")}
           type="email"
@@ -128,13 +134,10 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
           onChange={(e) => setEmail(e.target.value)}
           error={errors.email}
         />
-        {!editing && (
-          <p className="mt-2 text-xs text-text-muted">{t("admin.conviteExplicacao")}</p>
-        )}
-      </div>
+      </Card.Root>
 
-      <div>
-        <Secao>{t("admin.secaoPermissoes")}</Secao>
+      <Card.Root tone="neutral" className="p-4">
+        <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("admin.secaoPermissoes")}</h2>
         <div className="space-y-4">
           {isActorSocio ? (
             <Field label={t("admin.role")} value={t("admin.roleOperator")} disabled />
@@ -165,17 +168,15 @@ export function OperadorForm({ editing, chefes = [], actorRole, onSubmit, onCanc
               ]}
             />
           )}
-        </div>
-      </div>
 
-      <div className="flex gap-2 justify-end pt-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          {t("common.cancel")}
-        </Button>
-        <Button type="submit" disabled={loading}>
-          <Check className="size-4" /> {loading ? t("common.saving") : editing ? t("common.save") : t("admin.enviarConvite")}
-        </Button>
-      </div>
+          {!editing && (
+            <div className="flex items-start gap-2 rounded-lg border border-border bg-primary-light p-3">
+              <Mail className="mt-0.5 size-4 shrink-0 text-primary-text" aria-hidden />
+              <p className="text-xs leading-relaxed text-text-secondary">{t("admin.conviteExplicacao")}</p>
+            </div>
+          )}
+        </div>
+      </Card.Root>
     </form>
   )
-}
+})

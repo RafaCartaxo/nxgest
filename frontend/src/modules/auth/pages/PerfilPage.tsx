@@ -1,14 +1,14 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Check, Save, User, Mail, Undo2 } from "lucide-react"
+import { Check, Save, User, Mail, Undo2, BadgeCheck, Info } from "lucide-react"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { Button } from "../../../shared/components/Button.js"
 import { Field } from "../../../shared/components/Field/Field.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
-import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { Card } from "../../../shared/components/Card/Card.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { AvatarField } from "../../../shared/components/Avatar/Avatar.js"
 import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
@@ -155,125 +155,137 @@ export function PerfilPage() {
         : { variant: "success" as const, label: t("perfil.statusAtivo") }
 
   return (
-    <div className="mx-auto max-w-2xl p-4 space-y-6">
+    <div className="mx-auto max-w-5xl p-4 space-y-6">
       <PageHeader
         icon={User}
         title={t("perfil.title")}
         back={{ onClick: () => navigate(-1), title: t("common.back") }}
       />
 
-      {/* Dados pessoais */}
-      <div>
-        <SectionHeader title={t("perfil.secaoDadosPessoais")} />
-        <form onSubmit={handleSalvarDados} className="mt-3 space-y-4 rounded-xl border border-border bg-card p-4">
-          <div className="flex items-start gap-3">
-            <AvatarField
-              nome={nome}
-              foto={foto}
-              onChange={(f) => void handleFoto(f)}
-            />
-            <div className="flex-1 space-y-4">
-              <Field
-                label={t("perfil.nome")}
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-              />
-              <Field
-                label={t("perfil.telefone")}
-                type="tel"
-                value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-                placeholder={t("perfil.telefoneOpcional")}
-              />
+      {/* Banner de pendência de e-mail */}
+      {user?.emailPendente && (
+        <div className="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-border bg-surface p-4 md:flex-row md:items-center md:justify-between">
+          <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-warning" />
+          <div className="flex items-start gap-2 pl-2 md:items-center">
+            <Info className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden />
+            <div>
+              <p className="text-sm font-medium text-text-primary">{t("perfil.emailPendenteAviso")}</p>
+              <p className="text-sm text-text-secondary">{t("perfil.emailPendenteDetail", { email: user.emailPendente })}</p>
             </div>
           </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <Button type="submit" disabled={savingDados}>
-              <Save className="size-4" /> {savingDados ? t("common.saving") : t("perfil.salvarDados")}
-            </Button>
-          </div>
-        </form>
-      </div>
+          <Button type="button" variant="soft" size="sm" className="self-start md:self-center" onClick={() => setCancelarModalOpen(true)}>
+            <Undo2 className="size-4" aria-hidden /> {t("perfil.cancelarTroca")}
+          </Button>
+        </div>
+      )}
 
-      {/* Conta */}
-      <div>
-        <SectionHeader title={t("perfil.secaoConta")} />
-        <div className="mt-3 space-y-3 rounded-xl border border-border bg-card p-4 text-sm">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-text-secondary">{t("perfil.email")}</span>
-            <span className="flex min-w-0 items-center justify-end gap-2">
-              <span className="truncate font-medium text-text-primary">{user?.email}</span>
-              {user?.emailVerificado && !user?.emailPendente ? (
-                <StatusBadge variant="success" size="sm" label={t("perfil.emailVerificado")} />
-              ) : user?.emailPendente ? (
-                <StatusBadge variant="warning" size="sm" label={t("perfil.emailPendenteAviso")} />
-              ) : null}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-text-secondary">{t("perfil.status")}</span>
-            <StatusBadge variant={statusBadge.variant} size="sm" label={statusBadge.label} />
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-text-secondary">{t("perfil.perfilRole")}</span>
-            <StatusBadge variant={roleVariant(user?.role)} size="sm" label={roleLabel(user?.role, t)} />
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-text-secondary">{t("perfil.empresa")}</span>
-            <span className="truncate font-medium text-text-primary">{user?.empresaNome ?? t("perfil.semEmpresa")}</span>
-          </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Coluna principal: Dados pessoais + Conta */}
+        <div className="flex flex-col gap-6 lg:col-span-8">
+          {/* Dados pessoais */}
+          <Card.Root tone="success" className="p-4">
+            <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("perfil.secaoDadosPessoais")}</h2>
+            <form onSubmit={handleSalvarDados} className="space-y-4">
+              <div className="flex flex-col gap-6 md:flex-row md:items-start">
+                <div className="flex shrink-0 flex-col items-center gap-3 md:pt-1">
+                  <AvatarField
+                    nome={nome}
+                    foto={foto}
+                    onChange={(f) => void handleFoto(f)}
+                  />
+                </div>
+                <div className="flex-1 space-y-4">
+                  <Field
+                    label={t("perfil.nome")}
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                  />
+                  <Field
+                    label={t("perfil.telefone")}
+                    type="tel"
+                    value={telefone}
+                    onChange={(e) => setTelefone(e.target.value)}
+                    placeholder={t("perfil.telefoneOpcional")}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <Button type="submit" disabled={savingDados}>
+                  <Save className="size-4" /> {savingDados ? t("common.saving") : t("perfil.salvarDados")}
+                </Button>
+              </div>
+            </form>
+          </Card.Root>
 
-          {user?.emailPendente && (
-            <div className="rounded-lg bg-warning-light px-3 py-2.5">
-              <p className="text-xs text-warning-text">{t("perfil.emailPendenteDetail", { email: user.emailPendente })}</p>
-              <Button type="button" variant="soft" size="sm" className="mt-2" onClick={() => setCancelarModalOpen(true)}>
-                <Undo2 className="size-4" aria-hidden /> {t("perfil.cancelarTroca")}
+          {/* Conta */}
+          <Card.Root tone="info" className="p-4">
+            <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("perfil.secaoConta")}</h2>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="rounded-lg border border-border bg-surface-secondary p-3">
+                <p className="text-xs font-medium text-text-secondary">{t("perfil.email")}</p>
+                <div className="mt-1 flex min-w-0 items-center gap-2">
+                  <span className="truncate font-medium text-text-primary">{user?.email}</span>
+                  {user?.emailVerificado && !user?.emailPendente ? (
+                    <BadgeCheck className="size-4 shrink-0 text-success" aria-hidden />
+                  ) : user?.emailPendente ? (
+                    <StatusBadge variant="warning" size="sm" label={t("perfil.emailPendenteAviso")} />
+                  ) : null}
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-surface-secondary p-3">
+                <p className="text-xs font-medium text-text-secondary">{t("perfil.empresa")}</p>
+                <p className="mt-1 truncate font-medium text-text-primary">{user?.empresaNome ?? t("perfil.semEmpresa")}</p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <StatusBadge variant={statusBadge.variant} size="sm" label={statusBadge.label} />
+              <StatusBadge variant={roleVariant(user?.role)} size="sm" label={roleLabel(user?.role, t)} />
+            </div>
+            <div className="mt-4 flex gap-2 border-t border-border-light pt-3">
+              <Button type="button" variant="outline" className="w-full" onClick={() => setTrocarModalOpen(true)}>
+                <Mail className="size-4" /> {t("perfil.trocarEmail")}
               </Button>
             </div>
-          )}
+          </Card.Root>
         </div>
-      </div>
 
-      {/* Segurança */}
-      <div>
-        <SectionHeader title={t("perfil.secaoSeguranca")} />
-        <form onSubmit={handleSenha} className="mt-3 space-y-4 rounded-xl border border-border bg-card p-4">
-          <Field
-            label={t("perfil.senhaAtual")}
-            type="password"
-            value={senhaAtual}
-            onChange={(e) => setSenhaAtual(e.target.value)}
-            autoComplete="current-password"
-            error={erros.senhaAtual}
-          />
+        {/* Coluna lateral: Segurança */}
+        <div className="flex flex-col gap-6 lg:col-span-4">
+          <Card.Root tone="neutral" className="p-4">
+            <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("perfil.secaoSeguranca")}</h2>
+            <form onSubmit={handleSenha} className="space-y-4">
+              <Field
+                label={t("perfil.senhaAtual")}
+                type="password"
+                value={senhaAtual}
+                onChange={(e) => setSenhaAtual(e.target.value)}
+                autoComplete="current-password"
+                error={erros.senhaAtual}
+              />
 
-          <Field
-            label={t("perfil.novaSenha")}
-            type="password"
-            value={novaSenha}
-            onChange={(e) => setNovaSenha(e.target.value)}
-            autoComplete="new-password"
-            error={erros.novaSenha}
-          />
+              <Field
+                label={t("perfil.novaSenha")}
+                type="password"
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                autoComplete="new-password"
+                error={erros.novaSenha}
+              />
 
-          <Field
-            label={t("perfil.confirmarSenha")}
-            type="password"
-            value={confirmarSenha}
-            onChange={(e) => setConfirmarSenha(e.target.value)}
-            autoComplete="new-password"
-            error={erros.confirmarSenha}
-          />
+              <Field
+                label={t("perfil.confirmarSenha")}
+                type="password"
+                value={confirmarSenha}
+                onChange={(e) => setConfirmarSenha(e.target.value)}
+                autoComplete="new-password"
+                error={erros.confirmarSenha}
+              />
 
-          <div className="flex gap-2 justify-end pt-2">
-            <Button type="submit"><Check className="size-4" /> {t("perfil.trocarSenha")}</Button>
-          </div>
-        </form>
-
-        <div className="mt-3">
-          <Button type="button" variant="outline" className="w-full" onClick={() => setTrocarModalOpen(true)}>
-            <Mail className="size-4" /> {t("perfil.trocarEmail")}
-          </Button>
+              <div className="flex gap-2 justify-end pt-2">
+                <Button type="submit"><Check className="size-4" /> {t("perfil.trocarSenha")}</Button>
+              </div>
+            </form>
+          </Card.Root>
         </div>
       </div>
 

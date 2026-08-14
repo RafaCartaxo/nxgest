@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { User, Wallet, ArrowRight, Mail, XCircle, Ban, RefreshCw } from "lucide-react"
+import { User, Wallet, Mail, XCircle, Ban, RefreshCw } from "lucide-react"
 import { getOperador, reenviarConvite, revogarConvite, setSuspensao, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
 import { AjustarCaixaModal } from "../../caixa/components/AjustarCaixaModal.js"
-import { listContratos, type Contrato } from "../../contrato/services/contrato.service.js"
-import { listClientes, type Cliente } from "../../cliente/services/cliente.service.js"
 import { ApiError } from "../../../api/client.js"
 import { EstadoTela } from "../../../shared/components/EstadoTela.js"
 import { SectionHeader } from "../../../shared/components/SectionHeader/SectionHeader.js"
@@ -17,6 +15,7 @@ import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { Button } from "../../../shared/components/Button.js"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
+import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { CollapsibleSection } from "../../../shared/components/CollapsibleSection/CollapsibleSection.js"
 import { CaixaKpis } from "../../caixa/components/CaixaKpis.js"
 import { AjusteRow } from "../../caixa/components/AjusteHistorico.js"
@@ -37,8 +36,6 @@ export function OperadorDetail() {
   const [caixa, setCaixa] = useState<CaixaStatus | null>(null)
   const [erroCaixa, setErroCaixa] = useState<string | null>(null)
   const [auditoria, setAuditoria] = useState<AuditoriaCaixaItem[]>([])
-  const [contratos, setContratos] = useState<Contrato[]>([])
-  const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ajustarModalOpen, setAjustarModalOpen] = useState(false)
@@ -61,17 +58,13 @@ export function OperadorDetail() {
     // R3: o bloco de caixa é independente do operador — uma falha aqui não
     // derruba a página (as ações de conta continuam acessíveis).
     try {
-      const [cx, aud, ctr, cli] = await Promise.all([
+      const [cx, aud] = await Promise.all([
         getCaixaStatus(undefined, undefined, id),
         listarAuditoriaCaixa({ limit: 20 }, id),
-        listContratos({ limit: 50 }, id),
-        listClientes({ limit: 50, usuarioId: id }),
       ])
       setCaixa(cx)
       setErroCaixa(null)
       setAuditoria(aud.data)
-      setContratos(ctr.data)
-      setClientes(cli.data)
     } catch (err) {
       setErroCaixa(err instanceof ApiError ? err.message : t("admin.erroCarregar"))
     } finally {
@@ -166,109 +159,89 @@ export function OperadorDetail() {
       <EstadoTela loading={loading} error={error} onRetry={fetch} empty={!loading && !operador} emptyMessage={t("admin.erroCarregar")}>
         {operador && (
           <>
-            <div className="mb-4 rounded-xl border border-border bg-card p-4">
-              <div className="space-y-1.5 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-text-secondary">{t("admin.email")}:</span>
-                  <span className="truncate font-medium text-text-primary">{operador.email}</span>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {/* Contato & Status */}
+              <Card.Root tone="neutral" className="flex flex-col gap-3">
+                <p className="text-sm font-semibold text-text-primary">{t("admin.operadorData")}</p>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-text-secondary">{t("admin.email")}:</span>
+                    <span className="truncate font-medium text-text-primary">{operador.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-text-secondary">{t("admin.telefone")}:</span>
+                    <span className="truncate font-medium text-text-primary">{operador.telefone ?? t("admin.semTelefone")}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-text-secondary">{t("admin.telefone")}:</span>
-                  <span className="truncate font-medium text-text-primary">{operador.telefone ?? t("admin.semTelefone")}</span>
+                <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-border-light pt-3">
+                  {isSuspenso && <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />}
+                  {operador.emailPendente && <StatusBadge variant="warning" size="sm" label={t("admin.verificacaoPendente")} />}
+                  {badgeConvite && <StatusBadge variant={badgeConvite.variant} size="sm" label={badgeConvite.label} />}
                 </div>
-              </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {isSuspenso && <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />}
-                {operador.emailPendente && <StatusBadge variant="warning" size="sm" label={t("admin.verificacaoPendente")} />}
-                {badgeConvite && <StatusBadge variant={badgeConvite.variant} size="sm" label={badgeConvite.label} />}
-              </div>
-            </div>
+              </Card.Root>
 
-            <SectionHeader title={t("admin.dadosOperador")} />
-            <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <KpiCard title={t("admin.totalClientes")} value={operador.totalClientes.toString()} variant="green" />
-              <KpiCard title={t("admin.contratosAtivos")} value={operador.contratosAtivos.toString()} variant="yellow" />
-            </div>
+              {/* Desempenho (KpiCard irmãos clicáveis — mesmo padrão do painel admin) */}
+              <div className="grid grid-cols-2 gap-4 lg:col-span-2">
+                <KpiCard title={t("admin.totalClientes")} value={operador.totalClientes.toString()} variant="green"
+                  onClick={() => navigate(`/clientes?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`)} />
+                <KpiCard title={t("admin.contratosAtivos")} value={operador.contratosAtivos.toString()} variant="yellow"
+                  onClick={() => navigate(`/contratos?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`)} />
+              </div>
 
-            {/* R3: área de conta independe do bloco de caixa — acessível mesmo se o caixa falhar. */}
-            {!isSelf && (
-              <>
-                <SectionHeader title={t("admin.conta")} />
-                <div className="mb-6 flex flex-wrap gap-2">
-                  {isConvidado && (
-                    <Button type="button" variant="soft" size="sm" onClick={onReenviarConvite}>
-                      <Mail className="size-4" aria-hidden /> {t("admin.reenviarConvite")}
-                    </Button>
-                  )}
-                  {isConvidado && temConviteValido && (
-                    <Button type="button" variant="secondary" size="sm" onClick={() => setRevogarModalOpen(true)}>
-                      <XCircle className="size-4" aria-hidden /> {t("admin.revogarConvite")}
-                    </Button>
-                  )}
-                  {isSuspenso ? (
-                    <Button type="button" variant="secondary" size="sm" onClick={() => setSuspenderAcao("reativar")}>
-                      <RefreshCw className="size-4" aria-hidden /> {t("admin.reativar")}
-                    </Button>
-                  ) : (
-                    !isConvidado && (
-                      <Button type="button" variant="danger" size="sm" onClick={() => setSuspenderAcao("suspender")}>
-                        <Ban className="size-4" aria-hidden /> {t("admin.suspender")}
+              {/* Status da conta (isSelf oculta — segurança) */}
+              {!isSelf && (
+                <Card.Root tone="warning" className="flex flex-col gap-3 lg:col-span-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-text-primary">{t("admin.statusConta")}</p>
+                    {isSuspenso ? (
+                      <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />
+                    ) : isConvidado ? (
+                      <StatusBadge variant="warning" size="sm" label={t("perfil.statusConvidado")} />
+                    ) : (
+                      <StatusBadge variant="success" size="sm" label={t("admin.statusAtivo")} />
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    {isConvidado && (
+                      <Button type="button" variant="soft" onClick={onReenviarConvite}>
+                        <Mail className="size-4" aria-hidden /> {t("admin.reenviarConvite")}
                       </Button>
-                    )
-                  )}
-                </div>
-              </>
-            )}
+                    )}
+                    {isConvidado && temConviteValido && (
+                      <Button type="button" variant="secondary" onClick={() => setRevogarModalOpen(true)}>
+                        <XCircle className="size-4" aria-hidden /> {t("admin.revogarConvite")}
+                      </Button>
+                    )}
+                    {isSuspenso ? (
+                      <Button type="button" variant="secondary" onClick={() => setSuspenderAcao("reativar")}>
+                        <RefreshCw className="size-4" aria-hidden /> {t("admin.reativar")}
+                      </Button>
+                    ) : (
+                      !isConvidado && (
+                        <Button type="button" variant="danger" onClick={() => setSuspenderAcao("suspender")}>
+                          <Ban className="size-4" aria-hidden /> {t("admin.suspender")}
+                        </Button>
+                      )
+                    )}
+                  </div>
+                </Card.Root>
+              )}
+            </div>
 
             {caixa && (
               <>
                 <SectionHeader title={t("admin.caixaOperador")} />
-                <CaixaKpis caixa={caixa} />
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <CaixaKpis caixa={caixa} />
 
-                <SectionHeader title={t("admin.clientesOperador")} />
-                <Card.Root variant="list-item">
-                  <Card.Body>
-                    <Card.Title className="mb-0.5">{t("admin.clientesOperador")}</Card.Title>
-                    <Card.Indicators>
-                      <Card.Indicator label={t("cliente.title")} value={`${clientes.length}`} />
-                    </Card.Indicators>
-                  </Card.Body>
-                  <Card.Actions
-                    actions={[
-                      {
-                        icon: ArrowRight,
-                        label: t("admin.acessar"),
-                        onClick: () => navigate(`/clientes?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`),
-                      },
-                    ]}
-                  />
-                </Card.Root>
-
-                <SectionHeader title={t("admin.contratosOperador")} />
-                <Card.Root variant="list-item">
-                  <Card.Body>
-                    <Card.Title className="mb-0.5">{t("admin.contratosOperador")}</Card.Title>
-                    <Card.Indicators>
-                      <Card.Indicator label={t("contrato.title")} value={`${contratos.length}`} />
-                    </Card.Indicators>
-                  </Card.Body>
-                  <Card.Actions
-                    actions={[
-                      {
-                        icon: ArrowRight,
-                        label: t("admin.acessar"),
-                        onClick: () => navigate(`/contratos?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`),
-                      },
-                    ]}
-                  />
-                </Card.Root>
-
-                <div className="mt-6">
-                  <SectionHeader title={t("admin.ajusteCaixaSecao")} />
-                  <Button type="button" variant="primary" className="w-full" onClick={() => setAjustarModalOpen(true)}>
-                    <Wallet className="size-4" aria-hidden />
-                    {t("admin.ajustarCaixaOperador")}
-                  </Button>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <Button type="button" variant="primary" className="w-full" onClick={() => setAjustarModalOpen(true)}>
+                        <Wallet className="size-4" aria-hidden />
+                        {t("admin.ajustarCaixaOperador")}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-6">
@@ -314,15 +287,42 @@ export function OperadorDetail() {
         onCancel={() => setRevogarModalOpen(false)}
       />
 
-      <ConfirmModal
+      <Modal
         open={suspenderAcao !== null}
-        title={suspenderAcao === "suspender" ? t("admin.suspenderConfirmacao") : t("admin.reativarConfirmacao")}
-        message={suspenderAcao === "suspender" ? t("admin.suspenderConfirmacaoMessage") : t("admin.reativarConfirmacaoMessage")}
-        confirmLabel={suspenderAcao === "suspender" ? t("admin.suspender") : t("admin.reativar")}
-        danger={suspenderAcao === "suspender"}
-        onConfirm={() => onSuspensao(suspenderAcao === "suspender")}
-        onCancel={() => setSuspenderAcao(null)}
-      />
+        onClose={() => setSuspenderAcao(null)}
+        title={t("admin.alterarStatus")}
+        descricao={suspenderAcao === "suspender" ? t("admin.suspenderConfirmacaoMessage") : t("admin.reativarConfirmacaoMessage")}
+        maxWidth="max-w-md"
+        footer={
+          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="ghost" onClick={() => setSuspenderAcao(null)}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant={suspenderAcao === "suspender" ? "danger" : "secondary"}
+              onClick={() => onSuspensao(suspenderAcao === "suspender")}
+            >
+              {suspenderAcao === "suspender" ? <Ban className="size-4" aria-hidden /> : <RefreshCw className="size-4" aria-hidden />}
+              {suspenderAcao === "suspender" ? t("admin.suspender") : t("admin.reativar")}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface-secondary p-3 text-sm">
+            <span className="text-text-secondary">{t("admin.operadorData")}: {operador?.nome}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <span className="text-text-secondary">{t("perfil.status")}</span>
+            {isSuspenso ? (
+              <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />
+            ) : (
+              <StatusBadge variant="success" size="sm" label={t("admin.statusAtivo")} />
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
