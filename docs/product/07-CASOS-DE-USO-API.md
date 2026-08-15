@@ -14,7 +14,7 @@
 >
 > **Smoke atual (11/08/2026):** **250/250 PASS** no CI (job `smoke-api`, DB isolado) — inclui `SC-006b` (sócio ajusta caixa da subárvore → 201) e `SC-006c` (sócio fora da subárvore → 404). Contagem viva em `docs/engineering/TESTES.md` · `docs/STATUS.md`.
 >
-> **Smoke PLAN-075 (14/08/2026):** **263/263 PASS** — instância isolada (PG `localhost:5433`), seed reaplicado, `LOGIN_RATE_LIMIT_MAX=1000` + `PUBLICO_RATE_LIMIT_MAX=1000`. Novos: `SUSP-USR-1..5` (suspensão de usuário), `ADM-TROC-CONV/ATIVO/DUP/REUSE` (troca administrativa + reuso de e-mail de soft-deleted), `SOC-TROC-SUB/FORA`. O `ADM-TROC-REUSE` expôs e fechou um bug real (unique hard `usuarios_email_key` → único parcial `idx_usuarios_email WHERE deleted_at IS NULL`, ver CT-P-16).
+> **Smoke (15/08/2026):** **274/274 PASS** — instância isolada (PG `localhost:5433`), seed reaplicado, node 20. Inclui `SUSP-USR-1..12` (suspensão de usuário + **combinações suspensão × edição/reassign/email/reativar** — CT-P-17..21), `ADM-TROC-CONV/ATIVO/DUP/REUSE`, `SOC-TROC-SUB/FORA`. O `ADM-TROC-REUSE` expôs e fechou um bug real (unique hard `usuarios_email_key` → único parcial `idx_usuarios_email WHERE deleted_at IS NULL`, ver CT-P-16).
 
 ---
 
@@ -659,15 +659,20 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Query:** `dataInicio?`, `dataFim?` (período)
 
-**Response 200:** lista de pagamentos do período
+**Response 200:** lista de pagamentos do período — cada item com `pagamentoId`, `valor`, `clienteId`, `clienteNome`, `clienteBairro`, `contratoId`, `data`, `createdAt`, `parcelasPagas` (números das parcelas quitadas), `totalParcelasContrato`.
 
 **Coerência:**
 - [ ] KPI "recebido hoje" do dashboard = Σ da lista com `data` = hoje?
+- [ ] `clienteBairro` = `COALESCE(comercio_bairro, bairro)` do cliente (padrão de `cobrancas-do-dia`)?
+- [ ] `parcelasPagas` ⊆ 1..`totalParcelasContrato` e `Σ pagamento_parcelas.valor` = `valor` do pagamento?
 
 **Regras:** BR-025 · **Postman:** `Operações > Pagamentos hoje`
 
 ### API-CT-036 — Pagamentos do dia
 **Dado** pagamentos de hoje e de ontem → **Então** 200 e, sem filtro, retorna apenas os de hoje.
+
+### API-CT-036a — Pagamentos do dia: parcelas e bairro
+**Dado** um pagamento registrado hoje (quitando parcela `X` de `Y`) → **Então** 200 e o item retorna `clienteBairro` do cliente, `parcelasPagas` = `[X]` e `totalParcelasContrato` = `Y`. Pagamento que quita múltiplas parcelas → `parcelasPagas` = `[X, X+1, ...]` (ordenado).
 
 ---
 
@@ -1578,6 +1583,21 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### CT-P-09 — Reativação volta a funcionar
 **Dado** usuário suspenso → **Quando** `PATCH .../operadores/:id/reativar` → **Então** **200** e `login` volta a funcionar.
+
+### CT-P-17 — Rebaixar suspenso com subordinados → 422; reassign atômico → 200 e suspensão preservada
+**Dado** admin **suspenso** com subordinado → **Quando** `PATCH .../operadores/:id` com `role: "operator"` (sem reassign) → **Então** **422** `OPERATOR_HAS_SUBORDINATES` (com `subordinados`); `suspensoEm` permanece. **Com** `reatribuirParaChefeId` → **200**; subordinados migram para o novo chefe; `suspensoEm` **preservado** (reassign não limpa suspensão).
+
+### CT-P-18 — Editar dados de suspenso não reativa
+**Dado** usuário suspenso → **Quando** `PATCH .../operadores/:id` com `nome`/`telefone` → **Então** **200**; `suspensoEm` permanece e `login` segue **403** `CONTA_SUSPENSA`.
+
+### CT-P-19 — Reativar + rebaixar sem subordinados (fluxo completo)
+**Dado** usuário suspenso (sem subordinados) → **Quando** `reativar` → **200** e `login` 200; em seguida `PATCH role: "operator"` → **200**.
+
+### CT-P-20 — Troca de e-mail de suspenso (ativo) → email_pendente + verificação
+**Dado** usuário **ativo e suspenso** → **Quando** admin `PATCH .../operadores/:id` com `email` novo → **Então** **200**; `email_pendente` = novo e-mail (verificação pelo dono); `email` atual não muda; `login` pelo e-mail antigo segue **403** enquanto suspenso.
+
+### CT-P-21 — Token de suspenso não age em rotas de admin
+**Dado** usuário suspenso com token ainda vivo → **Quando** usa esse token em `PATCH .../reativar` (próprio) ou `.../suspender` (outro) → **Então** **403** `CONTA_SUSPENSA` (bloqueio no authMiddleware — suspensão vale por-request).
 
 ### CT-P-10 — Suspender convidado é bloqueado
 **Dado** usuário convidado → **Quando** `PATCH .../operadores/:id/suspender` → **Então** **409** (conta convidada — remova ou reenvie o convite).

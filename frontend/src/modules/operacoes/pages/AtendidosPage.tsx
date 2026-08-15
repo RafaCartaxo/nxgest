@@ -6,9 +6,9 @@ import { listarCobrancasDoDia, listarPagamentosHoje, ResultadoOperacional, type 
 import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
 import { sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
-import { formatCurrency } from "../../../shared/utils/masks.js"
 import { resumoAtendidos } from "../utils/atendimento.js"
 import { CobrancaList } from "../components/CobrancaList.js"
+import { PagamentoCard } from "../components/PagamentoCard.js"
 import { ErrorBanner } from "../../../shared/components/ErrorBanner/ErrorBanner.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 
@@ -119,25 +119,26 @@ export function AtendidosPage() {
 
   function renderPagamentos() {
     if (pagamentosHoje.length === 0) return null
+    // Agrupa por cliente (jornada de rota: 1 contrato por vez) — soma parcelas pagas do dia.
+    const porCliente = new Map<string, { pagamento: PagamentoDoDiaItem; parcelas: number[]; valor: number }>()
+    for (const p of pagamentosHoje) {
+      const grupo = porCliente.get(p.clienteId) ?? { pagamento: p, parcelas: [], valor: 0 }
+      grupo.parcelas = Array.from(new Set([...grupo.parcelas, ...p.parcelasPagas]))
+      grupo.valor += p.valor
+      porCliente.set(p.clienteId, grupo)
+    }
     return (
       <div className="space-y-2">
-        {pagamentosHoje.map((p) => {
-          const clientPayments = pagamentosHoje.filter((pp) => pp.clienteId === p.clienteId)
-          const totalCliente = clientPayments.reduce((s, pp) => s + pp.valor, 0)
-          const isFirst = clientPayments[0] === p
-          if (!isFirst) return null
-          return (
-            <div key={p.clienteId} className="rounded-xl border border-border bg-card p-4">
-              <p className="font-semibold">{p.clienteNome}</p>
-              <p className="mt-1 text-lg font-bold text-success">
-                R$ {formatCurrency(totalCliente)}
-              </p>
-              {clientPayments.length > 1 && (
-                <p className="text-xs text-text-muted">{clientPayments.length} {t("operacoes.parcelas")}</p>
-              )}
-            </div>
-          )
-        })}
+        {[...porCliente.values()].map((grupo) => (
+          <PagamentoCard
+            key={grupo.pagamento.clienteId}
+            item={{
+              ...grupo.pagamento,
+              valor: grupo.valor,
+              parcelasPagas: grupo.parcelas,
+            }}
+          />
+        ))}
       </div>
     )
   }

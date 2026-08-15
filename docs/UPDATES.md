@@ -2,6 +2,22 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 15/08/2026 — Fix reassign no OperadorDetail + cenários de suspensão × ações
+
+- **Fix `OperadorDetail` (beco sem saída silencioso)** — rebaixar um operador **com subordinados** pela página de detalhe (`/admin/operadores/:id` → Editar → mudar role) retornava `OPERATOR_HAS_SUBORDINATES` no backend, o hook gravava `reassignState`, mas a página **não renderizava o `ReassignModal`** → nada acontecia (sem modal, sem erro). Agora espelha o `AdminPage`: destrutura `reassignState`/`handleReassignConfirm`/`closeReassign` + renderiza o `<ReassignModal>` (chefes = admins da empresa, carregados no fetch). Sem mudança no comportamento de fechamento dos modais (mantém `onSaved` como padrão).
+- **Cenários smoke combinados (`SUSP-USR-6..12`)** — suspensão × ações coerentes: rebaixar suspenso com subordinados (422 + count; reassign atômico 200 com `suspensoEm` preservado) · editar dados de suspenso (200, login segue 403) · reativar → rebaixar (fluxo completo) · trocar e-mail de suspenso ativo (`email_pendente` + verificação) · sócio suspenso reassign via super · token de suspenso bloqueado em rotas de admin (403 `CONTA_SUSPENSA`).
+- **Docs:** API-CT-P-17..21 (07) · smoke **274/274** (era 267) · este registro.
+
+## 15/08/2026 — Card "Pago" no padrão CobrancaCard (Atendidos hoje)
+
+- **Fix seed (fuso local)** — `seed-demo.mjs`: `nowISO` agora usa `TODAY.toISOString()` (meio-dia local) em vez de `new Date().toISOString()`. Antes, execução na madrugada UTC gerava `created_at` fora do range do dia local → históricos/visitas "de hoje" não apareciam no endpoint `cobrancas` (resultadoOperacional ficava `PENDENTE` → "Todos" sem visitados/promessas/não-encontrados). O fix alinha todos os timestamps ao dia local de `TODAY` — robusto em qualquer TZ.
+
+- **Estabilização (fonte única)** — `listarPagamentosHoje` (front service) agora **normaliza o shape**: tolera backend sem `clienteBairro`/`parcelasPagas`/`totalParcelasContrato` (deploy atrasado) — defaults `null`/`[]`/`0`. Imune a crash no filtro "Todos" (Atendidos) com payload antigo; futuros consumidores do item ficam protegidos.
+- **`PagamentoCard`** novo (`operacoes/components`) — card de pagamento do dia com a **mesma anatomia do `CobrancaCard`** (Card.Root `collection` + tone `success` + 4 linhas: nome+valor, bairro, parcela, badge "Pago"), para `PagamentoDoDiaItem`. Sem duplicação: usado no **Atendidos hoje**.
+- **`pagamentos-hoje` enriquecido** — o backend `listarPagamentosDoDia` agora retorna `clienteBairro` (COALESCE comércio/pessoal), `parcelasPagas` (números das parcelas quitadas via `pagamento_parcelas → parcelas`) e `totalParcelasContrato`. **Aditivo** — não quebra modais de caixa/Dashboard (usam campos existentes) nem o smoke (OPS-019 valida 200 + novos campos).
+- **Atendidos hoje** — `renderPagamentos` agora renderiza `PagamentoCard` (agrupado por cliente, somando parcelas do dia); mostra "Parcela X de Y" (1 parcela) ou "X parcelas pagas" (múltiplas).
+- **i18n:** `operacoes.parcelasPagas` (pt/en/es). **Docs:** API-UC-019 shape + API-CT-036a; smoke OPS-019 com asserção.
+
 ## 15/08/2026 — Contrato periódico (PLAN-076) + Performance (PLAN-077) + UI consolidada — **em produção**
 
 - **Contrato com periodicidade diária/semanal (PLAN-076)** — campo `periodicidade` (`diaria` default | `semanal`), vencimento semanal `+7 dias`, `dataInicio` em domingo bloqueado para semanal (BR-040-A), edição regenera parcelas, badge Diária/Semanal no card. Migração idempotente (`ADD COLUMN IF NOT EXISTS`); contratos existentes herdam `diaria`.

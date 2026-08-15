@@ -81,7 +81,7 @@ function gerarParcelas(contratoId, valorFinal, qtd, dataInicio, periodicidade = 
   const intervalo = periodicidade === "semanal" ? 7 : 1
   const parcelaBase = Math.floor((valorFinal / qtd) * 100) / 100
   const residual = Math.round((valorFinal - parcelaBase * qtd) * 100) / 100
-  const now = new Date().toISOString()
+  const now = TODAY.toISOString()
   let vencimento = new Date(dataInicio)
   const out = []
   for (let i = 0; i < qtd; i++) {
@@ -205,7 +205,11 @@ const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
 // ---------- Reset total ----------
-const nowISO = new Date().toISOString()
+// Timestamps no MEIO-DIA LOCAL do dia base (TODAY) — `TODAY.toISOString()` cai sempre
+// dentro do range do dia local (rangeDoDiaLocal usa as fronteiras do relógio local).
+// `new Date().toISOString()` quebraria em execução na madrugada UTC (created_at fora
+// do range local → históricos/visitas "de hoje" não apareciam no endpoint cobrancas).
+const nowISO = TODAY.toISOString()
 // Ordem filho→pai (respeita as FKs — PLAN-070 modelo).
 const RESET_TABLES = [
   "pagamento_parcelas", "auditoria_estornos", "pagamentos", "parcelas",

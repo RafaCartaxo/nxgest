@@ -90,6 +90,8 @@
     "erroGerarComprovante": "Error al generar el comprobante.",
     "parcelas": "cuota(s)",
     "parcelaDe": "Cuota {{atual}} de {{total}}",
+    "parcelasPagas_one": "{{count}} cuota pagada",
+    "parcelasPagas_other": "{{count}} cuotas pagadas",
     "diasAtraso_one": "{{count}} día de retraso",
     "diasAtraso_other": "{{count}} días de retraso",
     "whatsappTemplate": "Hola, {{nome}}.\n\nLe recuerdo que hoy tiene una cuota de su contrato prevista para pago por valor de R$ {{valor}}.\n\nSi tiene alguna duda, estoy a disposición.",

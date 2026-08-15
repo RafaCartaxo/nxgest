@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { User, Wallet, Ban, RefreshCw, Edit3 } from "lucide-react"
-import { getOperador, reenviarConvite, revogarConvite, setSuspensao, type OperadorRow } from "../services/admin.service.js"
+import { getOperador, listOperadores, reenviarConvite, revogarConvite, setSuspensao, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
 import { AjustarCaixaModal } from "../../caixa/components/AjustarCaixaModal.js"
 import { ApiError } from "../../../api/client.js"
@@ -22,6 +22,7 @@ import { roleLabel } from "../../../shared/utils/role.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { OperadorForm, type OperadorFormData, type OperadorFormHandle } from "../components/OperadorForm.js"
+import { ReassignModal } from "../components/ReassignModal.js"
 import { useEditarOperador } from "../hooks/useEditarOperador.js"
 
 export function OperadorDetail() {
@@ -34,6 +35,7 @@ export function OperadorDetail() {
   const empresaId = searchParams.get("empresaId") || undefined
 
   const [operador, setOperador] = useState<OperadorRow | null>(null)
+  const [operadores, setOperadores] = useState<OperadorRow[]>([])
   const [caixa, setCaixa] = useState<CaixaStatus | null>(null)
   const [erroCaixa, setErroCaixa] = useState<string | null>(null)
   const [auditoria, setAuditoria] = useState<AuditoriaCaixaItem[]>([])
@@ -44,7 +46,7 @@ export function OperadorDetail() {
   const [suspenderAcao, setSuspenderAcao] = useState<"suspender" | "reativar" | null>(null)
   const operadorFormRef = useRef<OperadorFormHandle>(null)
 
-  const { saving: savingEdit, handleUpdate } = useEditarOperador({ empresaId, onSaved: () => { setEditarOpen(false); void fetch() } })
+  const { saving: savingEdit, reassignState, handleUpdate, handleReassignConfirm, closeReassign } = useEditarOperador({ empresaId, onSaved: () => { setEditarOpen(false); void fetch() } })
 
   const fetch = useCallback(async () => {
     if (!id) return
@@ -61,14 +63,17 @@ export function OperadorDetail() {
 
     // R3: o bloco de caixa é independente do operador — uma falha aqui não
     // derruba a página (as ações de conta continuam acessíveis).
+    // Chefes (admins) carregados de forma independente para o ReassignModal.
     try {
-      const [cx, aud] = await Promise.all([
+      const [cx, aud, ops] = await Promise.all([
         getCaixaStatus(undefined, undefined, id),
         listarAuditoriaCaixa({ limit: 20 }, id),
+        listOperadores(empresaId),
       ])
       setCaixa(cx)
       setErroCaixa(null)
       setAuditoria(aud.data)
+      setOperadores(ops)
     } catch (err) {
       setErroCaixa(err instanceof ApiError ? err.message : t("admin.erroCarregar"))
     } finally {
@@ -134,6 +139,10 @@ export function OperadorDetail() {
   async function onEditarSubmit(data: OperadorFormData) {
     if (!operador) return
     await handleUpdate(operador, data)
+  }
+
+  async function onReassignConfirm(novoChefeId: string) {
+    await handleReassignConfirm(novoChefeId)
   }
 
   const isSelf = user?.id === operador?.id
@@ -278,6 +287,15 @@ export function OperadorDetail() {
           />
         </Modal>
       )}
+
+      <ReassignModal
+        open={reassignState !== null}
+        reassign={reassignState}
+        chefes={operadores.filter((op) => op.role === "admin")}
+        saving={savingEdit}
+        onConfirm={onReassignConfirm}
+        onClose={closeReassign}
+      />
 
       <Modal
         open={suspenderAcao !== null}

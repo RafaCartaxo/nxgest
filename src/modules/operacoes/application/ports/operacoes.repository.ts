@@ -37,9 +37,13 @@ export interface PagamentoDoDiaItem {
   valor: number
   clienteId: string
   clienteNome: string
+  clienteBairro: string | null
   contratoId: string
   data: string
   createdAt: string
+  /** Números das parcelas quitadas por este pagamento (ex.: [3] ou [2, 3]). */
+  parcelasPagas: number[]
+  totalParcelasContrato: number
 }
 
 export interface RegistrarVisitaInput {

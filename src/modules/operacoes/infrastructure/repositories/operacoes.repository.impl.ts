@@ -263,7 +263,10 @@ export class OperacoesRepository implements IOperacoesRepository {
       created_at: string
       cliente_id: string
       cliente_nome: string
+      cliente_bairro: string | null
       contrato_id: string
+      parcelas_pagas: number[] | null
+      total_parcelas_contrato: number
     }>(`
       SELECT
         p.id AS "pagamento_id",
@@ -272,7 +275,15 @@ export class OperacoesRepository implements IOperacoesRepository {
         p."created_at",
         cli.id AS "cliente_id",
         cli.nome AS "cliente_nome",
-        ct.id AS "contrato_id"
+        COALESCE(cli."comercio_bairro", cli.bairro) AS "cliente_bairro",
+        ct.id AS "contrato_id",
+        COALESCE((
+          SELECT array_agg(par.numero ORDER BY par.numero)
+          FROM pagamento_parcelas pp
+          JOIN parcelas par ON par.id = pp."parcela_id"
+          WHERE pp."pagamento_id" = p.id
+        ), '{}') AS "parcelas_pagas",
+        ct."quantidade_parcelas" AS "total_parcelas_contrato"
       FROM pagamentos p
       JOIN contratos ct ON ct.id = p."contrato_id"
       JOIN clientes cli ON cli.id = ct."cliente_id"
@@ -290,7 +301,10 @@ export class OperacoesRepository implements IOperacoesRepository {
       createdAt: r.created_at,
       clienteId: r.cliente_id,
       clienteNome: r.cliente_nome,
+      clienteBairro: r.cliente_bairro ?? null,
       contratoId: r.contrato_id,
+      parcelasPagas: r.parcelas_pagas ?? [],
+      totalParcelasContrato: r.total_parcelas_contrato,
     }))
   }
 

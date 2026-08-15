@@ -219,6 +219,11 @@ async function main() {
   await t("OPS-019", "GET /operacoes/pagamentos-hoje (200)", async () => {
     const r = await req("GET", "/api/operacoes/pagamentos-hoje", { token: opToken })
     expect(r, 200, "pagamentos-hoje")
+    if (Array.isArray(r.data) && r.data.length > 0) {
+      const p = r.data[0]
+      if (typeof p.parcelasPagas !== "object" || !Array.isArray(p.parcelasPagas)) throw new Error("parcelasPagas deve ser array")
+      if (typeof p.totalParcelasContrato !== "number") throw new Error("totalParcelasContrato deve ser número")
+    }
   })
   await t("OPS-022", "GET /operacoes/historico-atrasos (200)", async () => {
     const r = await req("GET", "/api/operacoes/historico-atrasos", { token: opToken })
@@ -1444,6 +1449,109 @@ async function main() {
   await t("SUSP-USR-5", "Suspender usuário inexistente (404)", async () => {
     const r = await req("PATCH", "/api/admin/operadores/00000000-0000-4000-8000-000000000000/suspender", { token: adminToken })
     expect(r, 404, "usuário inexistente")
+  })
+
+  // ---------- COMBINAÇÕES SUSPENSÃO × AÇÕES (suspenso × edição/reassign/email/reativar) ----------
+  // Cada cenário cria seus próprios usuários (isolamento) e reativa no fim quando
+  // precisa evitar vazar estado suspenso para as seções seguintes.
+  const criarUsuarioSusp = async (role, chefeId) => {
+    const email = `suspcmb.${role}.${Date.now()}.${Math.floor(Math.random() * 1e4)}@uorak.com`
+    const r = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: `SUSP CMB ${role}`, email, role, chefeId } })
+    expect(r, 201, `criar ${role} (combinado)`)
+    await ativarUsuario(r.data.id, email)
+    return { id: r.data.id, email }
+  }
+  const suspenderOp = (id, token = adminToken) => req("PATCH", `/api/admin/operadores/${id}/suspender`, { token })
+  const reativarOp = (id, token = adminToken) => req("PATCH", `/api/admin/operadores/${id}/reativar`, { token })
+
+  await t("SUSP-USR-6", "Suspenso (admin c/ subordinado) → rebaixar role = 422 OPERATOR_HAS_SUBORDINATES", async () => {
+    const a = await criarUsuarioSusp("admin")
+    const sub = await criarUsuarioSusp("operator", a.id)
+    const susp = await suspenderOp(a.id)
+    expect(susp, 200, "suspender admin")
+    const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: adminToken, body: { role: "operator" } })
+    expect(r, 422, "rebaixar suspenso com subordinado")
+    if (r.data.code !== "OPERATOR_HAS_SUBORDINATES") throw new Error(`code=${r.data.code}`)
+    if (r.data.subordinados !== 1) throw new Error(`subordinados=${r.data.subordinados}`)
+    // Suspensão preservada após a tentativa de rebaixamento.
+    const g = await req("GET", `/api/admin/operadores/${a.id}`, { token: adminToken })
+    if (!g.data.suspensoEm) throw new Error("suspensoEm deveria permanecer")
+    await reativarOp(a.id)
+  })
+
+  await t("SUSP-USR-7", "Suspenso (admin c/ subordinado) → rebaixar com reatribuirParaChefeId = 200; subordinado migra; suspensão preservada", async () => {
+    const a = await criarUsuarioSusp("admin")
+    const sub = await criarUsuarioSusp("operator", a.id)
+    const novoChefe = await criarUsuarioSusp("admin")
+    await suspenderOp(a.id)
+    const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: adminToken, body: { role: "operator", reatribuirParaChefeId: novoChefe.id } })
+    expect(r, 200, "reassign atômico em suspenso")
+    if (r.data.role !== "operator") throw new Error(`role=${r.data.role}`)
+    if (!r.data.suspensoEm) throw new Error("suspensoEm deveria ser preservado no reassign")
+    // Subordinado migrou para o novo chefe.
+    const gSub = await req("GET", `/api/admin/operadores/${sub.id}`, { token: adminToken })
+    if (gSub.data.chefeId !== novoChefe.id) throw new Error(`chefeId=${gSub.data.chefeId}`)
+  })
+
+  await t("SUSP-USR-8", "Editar dados de suspenso (nome/telefone) → 200; login segue 403 CONTA_SUSPENSA", async () => {
+    const op = await criarUsuarioSusp("operator")
+    await suspenderOp(op.id)
+    const r = await req("PATCH", `/api/admin/operadores/${op.id}`, { token: adminToken, body: { nome: "Susp Editado", telefone: "83999998888" } })
+    expect(r, 200, "editar suspenso")
+    if (r.data.nome !== "Susp Editado") throw new Error(`nome=${r.data.nome}`)
+    const login = await req("POST", "/api/auth/login", { body: { email: op.email, senha: SENHA } })
+    expect(login, 403, "login segue bloqueado")
+    if (login.data.code !== "CONTA_SUSPENSA") throw new Error(`code=${login.data.code}`)
+  })
+
+  await t("SUSP-USR-9", "Reativar → login 200 → rebaixar sem subordinados = 200", async () => {
+    const a = await criarUsuarioSusp("admin")
+    await suspenderOp(a.id)
+    const re = await reativarOp(a.id)
+    expect(re, 200, "reativar")
+    const login = await req("POST", "/api/auth/login", { body: { email: a.email, senha: SENHA } })
+    expect(login, 200, "login após reativar")
+    const r = await req("PATCH", `/api/admin/operadores/${a.id}`, { token: adminToken, body: { role: "operator" } })
+    expect(r, 200, "rebaixar após reativar (sem subordinados)")
+  })
+
+  await t("SUSP-USR-10", "Trocar e-mail de suspenso (ativo) → email_pendente + verificação; login antigo segue 403 enquanto suspenso", async () => {
+    const op = await criarUsuarioSusp("operator")
+    await suspenderOp(op.id)
+    const novoEmail = `suspnova.${Date.now()}@uorak.com`
+    const r = await req("PATCH", `/api/admin/operadores/${op.id}`, { token: adminToken, body: { email: novoEmail } })
+    expect(r, 200, "trocar email de suspenso (ativo)")
+    const g = await req("GET", `/api/admin/operadores/${op.id}`, { token: adminToken })
+    if (g.data.emailPendente !== novoEmail) throw new Error(`emailPendente=${g.data.emailPendente}`)
+    if (g.data.email === novoEmail) throw new Error("email não deveria trocar direto (conta ativa → pendente)")
+    const login = await req("POST", "/api/auth/login", { body: { email: op.email, senha: SENHA } })
+    expect(login, 403, "login antigo segue bloqueado (suspenso)")
+  })
+
+  await t("SUSP-USR-11", "Suspenso (sócio c/ subordinados) → super rebaixa com reassign = 200; subordinados migram", async () => {
+    const s = await criarUsuarioSusp("socio")
+    const sub = await criarUsuarioSusp("operator", s.id)
+    const novoChefe = await criarUsuarioSusp("admin")
+    await suspenderOp(s.id, superToken)
+    const r = await req("PATCH", `/api/admin/operadores/${s.id}`, { token: superToken, body: { role: "operator", reatribuirParaChefeId: novoChefe.id } })
+    expect(r, 200, "super reassign sócio suspenso")
+    if (r.data.role !== "operator") throw new Error(`role=${r.data.role}`)
+    const gSub = await req("GET", `/api/admin/operadores/${sub.id}`, { token: superToken })
+    if (gSub.data.chefeId !== novoChefe.id) throw new Error(`chefeId=${gSub.data.chefeId}`)
+  })
+
+  await t("SUSP-USR-12", "Token de suspenso não age em rotas de admin (reativar próprio/outro) → 403 CONTA_SUSPENSA", async () => {
+    const op = await criarUsuarioSusp("operator")
+    const alvo = await criarUsuarioSusp("operator")
+    const tokenOp = (await req("POST", "/api/auth/login", { body: { email: op.email, senha: SENHA } })).data.token
+    await suspenderOp(op.id)
+    // Token do suspenso (mesmo que ainda vivo) é bloqueado no authMiddleware.
+    const r1 = await req("PATCH", `/api/admin/operadores/${op.id}/reativar`, { token: tokenOp })
+    expect(r1, 403, "suspenso não reativa a si")
+    if (r1.data.code !== "CONTA_SUSPENSA") throw new Error(`code=${r1.data.code}`)
+    const r2 = await req("PATCH", `/api/admin/operadores/${alvo.id}/suspender`, { token: tokenOp })
+    expect(r2, 403, "suspenso não suspende outro")
+    if (r2.data.code !== "CONTA_SUSPENSA") throw new Error(`code=${r2.data.code}`)
   })
 
   // ---------- PERSISTÊNCIA DESATIVAÇÃO/ATIVAÇÃO (full cycle — garantir que a mudança é FEITA e RESPEITADA) ----------

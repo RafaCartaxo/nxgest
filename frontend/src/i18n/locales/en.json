@@ -90,6 +90,8 @@
     "erroGerarComprovante": "Error generating the receipt.",
     "parcelas": "installment(s)",
     "parcelaDe": "Installment {{atual}} of {{total}}",
+    "parcelasPagas_one": "{{count}} installment paid",
+    "parcelasPagas_other": "{{count}} installments paid",
     "diasAtraso_one": "{{count}} day overdue",
     "diasAtraso_other": "{{count}} days overdue",
     "whatsappTemplate": "Hello, {{nome}}.\n\nJust reminding you that today there is an installment of your contract due in the amount of R$ {{valor}}.\n\nIf you have any questions, I'm available.",

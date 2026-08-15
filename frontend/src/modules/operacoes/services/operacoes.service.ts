@@ -48,9 +48,13 @@ export interface PagamentoDoDiaItem {
   valor: number
   clienteId: string
   clienteNome: string
+  clienteBairro: string | null
   contratoId: string
   data: string
   createdAt: string
+  /** Números das parcelas quitadas por este pagamento (ex.: [3] ou [2, 3]). */
+  parcelasPagas: number[]
+  totalParcelasContrato: number
 }
 
 export async function listarCobrancasDoDia(operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult> {
@@ -69,7 +73,15 @@ export async function listarPagamentosHoje(dataInicio?: string, dataFim?: string
   if (dataInicio) params.set("dataInicio", dataInicio)
   if (dataFim) params.set("dataFim", dataFim)
   const qs = params.toString()
-  return apiRequest<PagamentoDoDiaItem[]>("GET", `/operacoes/pagamentos-hoje${qs ? `?${qs}` : ""}`)
+  const raw = await apiRequest<PagamentoDoDiaItem[]>("GET", `/operacoes/pagamentos-hoje${qs ? `?${qs}` : ""}`)
+  // Normalização do shape (fonte única): tolera backend sem os campos novos
+  // (clienteBairro/parcelasPagas/totalParcelasContrato) — ex.: deploy atrasado.
+  return raw.map((p) => ({
+    ...p,
+    clienteBairro: p.clienteBairro ?? null,
+    parcelasPagas: Array.isArray(p.parcelasPagas) ? p.parcelasPagas : [],
+    totalParcelasContrato: typeof p.totalParcelasContrato === "number" ? p.totalParcelasContrato : 0,
+  }))
 }
 
 export interface ParcelaDoDia {

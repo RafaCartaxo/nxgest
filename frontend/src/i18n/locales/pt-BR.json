@@ -90,6 +90,8 @@
     "erroGerarComprovante": "Erro ao gerar o comprovante.",
     "parcelas": "parcela(s)",
     "parcelaDe": "Parcela {{atual}} de {{total}}",
+    "parcelasPagas_one": "{{count}} parcela paga",
+    "parcelasPagas_other": "{{count}} parcelas pagas",
     "diasAtraso_one": "{{count}} dia de atraso",
     "diasAtraso_other": "{{count}} dias de atraso",
     "whatsappTemplate": "Olá, {{nome}}.\n\nPassando para lembrar que hoje existe uma parcela do seu contrato prevista para pagamento no valor de R$ {{valor}}.\n\nQualquer dúvida estou à disposição.",
