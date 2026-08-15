@@ -2,7 +2,7 @@
 
 > **Regra:** atualizar a cada sessão de trabalho, junto com o `CHECKLIST` do dia (e o `UPDATES.md` quando houver entrega relevante). Fonte de verdade dos detalhes: planos e docs linkados.
 
-**Última atualização:** 12/08/2026
+**Última atualização:** 15/08/2026
 
 ---
 
@@ -19,6 +19,7 @@
 
 ## Entregas recentes
 
+- **PLAN-076 + PLAN-077 + UI consolidada em produção (15/08)** — contrato com **periodicidade diária/semanal** (migração idempotente, BR-040-A); **performance**: pool PG com timeout, auth/módulo sem re-query (3→2 queries/request), `listarCobrancasDoDia` com `LATERAL`, N+1 em pagamentos, code-splitting frontend + GPS throttle; UI de Perfil/Operador/Admin consolidada. **Node 20 em todos os ambientes** (prod já era; dev migrado). Smoke **267/267** · testes **125/125** · CI/CD verdes · deploy prod ok.
 - **E-mail: identidade visual NX nos templates (13/08, PLAN-071 Fase 1b — local, aguardando commit)** — `templates.ts` com layout único (marca "NX Gest" violeta · CTA `min-width` · rodapé institucional pt/en/es · cores da marca em hex). Os 3 templates (convite/reset/lead) usam o layout; textos preservados. Validado local (tsc/91 testes/render HTML).
 - **PLAN-070 concluído — PostgreSQL em produção (13/08)** — migração SQLite→PG concluída: `nxgest-postgres`/`staging-pg` healthy, cutover aplicado, débitos 1-3 resolvidos (TIMESTAMPTZ + snake_case + node 20). Otimização de queries/índices (PLAN-070 Fases B-I).
 - **Caixa: DRY + seções colapsáveis + movimentações sem truncate (12/08, local — aguardando commit)** — componentes reutilizáveis (`CaixaKpis`, `AjusteHistorico`/`AjusteRow`, `MovimentacoesList`/`MovimentacaoRow`, `CollapsibleSection`) eliminam a duplicação entre CaixaPage e OperadorDetail; movimentações e histórico colapsáveis (limit 8 + "Ver mais"); movimentação em 2 blocos sem truncate. 1 fonte → 2 páginas.
@@ -46,12 +47,14 @@
 | PLAN-069 (polimento UI) | 🔵 Parte 1 ✅ (08/08) | **Parte 2 — Admin** (filtro por papel `SegmentedControl` · "Recebido hoje" em destaque · "Meus dados" → Perfil) |
 | PLAN-067 (testes) | 🔵 F0+F1 parcial+F3-P022+CI (08/08) | F1 restante (financeiro/admin/operações) · F2 (AuthContext/ThemeProvider/api-client) · F3 telas críticas |
 | PLAN-066 (segurança) | 🔵 P0 ✅ · P1 parcial · P2 ⏳ | P1: timeouts Caddy (T-08) + **executar firewalld/fail2ban no VPS** · P2: JWT curto/revogação, Cloudflare WAF, 2FA, senha mín. 8 |
+| **PLAN-077 (performance)** | 🔵 F1-F4 ✅ (15/08) · em prod | ⏳ bulk insert de parcelas (após PLAN-076 estabilizar) · medir queries no dump de produção · sync docs (05-MAPEAMENTO, 04-BACKEND) |
 
 ## Pendências (verificação/ações futuras)
 
 - [ ] **Cloudflare SSL Full (strict)** — recomendado (site já funcionando); ajuste de painel
 - [ ] **E-mail no staging** — `MAIL_PROVIDER=console` (não envia de verdade; mantido por ora — decisão de ativar depois)
 - [ ] Vulns dev-only restantes (`vite`/`vitest` — major bump, fora de escopo; monitorar via dependabot)
+- [ ] **Node 20 no dev local** — ✅ migrado (15/08); usar `nvm use 20` antes de subir backend/vite
 
 ## Backlog (próximos)
 
@@ -60,7 +63,7 @@
 | P017 — Mensagens inteligentes do WhatsApp (sem plano ainda) | `docs/plans/BACKLOG.md` |
 | P021 — Pagamento a mais que o total (decisão de produto) | `docs/plans/BACKLOG.md` |
 | P023 — Validação manual fim de fluxo / empty states (T2) | `docs/plans/BACKLOG.md` |
-| P028 — Reescrita da query de cobranças (perf) | `docs/plans/BACKLOG.md` |
+| P028 — Reescrita da query de cobranças (perf) — **✅ feita no PLAN-077 (15/08)** | `docs/plans/PLAN-077-performance-escalabilidade.md` |
 | P022 → PLAN-067 (em execução) | `docs/plans/PLAN-067-testes.md` |
 
 ## Métricas de saúde

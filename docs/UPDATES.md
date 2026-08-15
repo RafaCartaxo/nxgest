@@ -2,6 +2,13 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 15/08/2026 — Contrato periódico (PLAN-076) + Performance (PLAN-077) + UI consolidada — **em produção**
+
+- **Contrato com periodicidade diária/semanal (PLAN-076)** — campo `periodicidade` (`diaria` default | `semanal`), vencimento semanal `+7 dias`, `dataInicio` em domingo bloqueado para semanal (BR-040-A), edição regenera parcelas, badge Diária/Semanal no card. Migração idempotente (`ADD COLUMN IF NOT EXISTS`); contratos existentes herdam `diaria`.
+- **Performance & escalabilidade (PLAN-077)** — pool PG com `connectionTimeoutMillis: 5000` + `idleTimeoutMillis: 30000` (envs); **auth/módulo sem re-query por request** (`req.authUsuario`/`req.authEmpresa`; rotas de módulo 3→2 queries); `listarCobrancasDoDia` reescrita com **`LATERAL`** (2 subqueries → 1, visitas por range — shape idêntico); N+1 em pagamentos → `IN (ids)`; fix de SQL latente no caixa (filtro por período); frontend com **code-splitting** (`React.lazy` 27 páginas + `manualChunks`) e **GPS throttle** (30m). **Node 20** em todos os ambientes (prod já era `node:20-slim`; dev local migrado).
+- **UI consolidada** — Perfil bento grid + banner de pendência de e-mail; OperadorDetail bento + modal "Alterar status"; OperadorForm seções + callout convite; AdminPage KPIs + `useEditarOperador`; contrato periódico no front (form/schema/service); consistência Caixa/KpiCard/Avatar/layout/i18n.
+- **Validação** — `npm test` **125/125** · tsc/build/audits/docs verdes · **smoke 267/267 ✅** · CI/CD verdes com **deploy em produção** (prod + staging `db: connected`).
+
 ## 14/08/2026 — Cards de status com tone/badge dinâmicos (Perfil, OperadorForm, OperadorDetail)
 
 - **"Dados pessoais" segue o tema** — os cards "Dados pessoais" do Perfil e do OperadorForm saíram do `tone="success"` (verde fixo) para **`tone="info"`** (cor da marca/tema — muda com a paleta escolhida, whitelabel e dark), consistente com o card "Acesso".
