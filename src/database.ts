@@ -114,6 +114,7 @@ export const contratos = pgTable("contratos", {
   quantidadeParcelas: integer("quantidade_parcelas").notNull(),
   dataInicio: date("data_inicio").notNull(),
   dataFinal: text("data_final").notNull().default(""),
+  periodicidade: text("periodicidade").notNull().default("diaria"),
   estado: text("estado").notNull().default("Ativo"),
   createdAt: ts("created_at").notNull(),
   updatedAt: ts("updated_at").notNull(),
@@ -434,6 +435,7 @@ CREATE TABLE IF NOT EXISTS "contratos" (
       "id" TEXT PRIMARY KEY, "cliente_id" TEXT NOT NULL REFERENCES "clientes"("id"), "valor_base" NUMERIC(12,2) NOT NULL,
       "percentual_juros" NUMERIC(12,2) NOT NULL, "valor_final" NUMERIC(12,2) NOT NULL,
       "quantidade_parcelas" INTEGER NOT NULL, "data_inicio" DATE NOT NULL, "data_final" TEXT NOT NULL DEFAULT '',
+      "periodicidade" TEXT NOT NULL DEFAULT 'diaria',
       "estado" TEXT NOT NULL DEFAULT 'Ativo', "created_at" TIMESTAMPTZ NOT NULL, "updated_at" TIMESTAMPTZ NOT NULL,
       "deleted_at" TIMESTAMPTZ, "user_id" TEXT
     );
@@ -561,6 +563,12 @@ CREATE TABLE IF NOT EXISTS "auth_tokens" (
     ALTER TABLE "empresas" ADD COLUMN IF NOT EXISTS "origem" TEXT;
     ALTER TABLE "empresas" ADD COLUMN IF NOT EXISTS "email_contato" TEXT;
     ALTER TABLE "empresas" ADD COLUMN IF NOT EXISTS "telefone_contato" TEXT;
+  `)
+
+  // PLAN-076 (contratos com periodicidade) — diária (default) e semanal. Idempotente:
+  // contratos existentes herdam 'diaria' sem tocar em parcelas já geradas (BR-040).
+  await pool.query(`
+    ALTER TABLE "contratos" ADD COLUMN IF NOT EXISTS "periodicidade" TEXT NOT NULL DEFAULT 'diaria';
   `)
 
   // Backfill PLAN-075 (13/08, uma vez — idempotente por `ON CONFLICT (token_hash)`):

@@ -2,6 +2,8 @@ export type EstadoContrato = "Ativo" | "Finalizado" | "Cancelado"
 
 export type EstadoParcela = "Pendente" | "Parcial" | "Paga"
 
+export type Periodicidade = "diaria" | "semanal"
+
 export type TipoMovimentacao = "entrada" | "saida"
 
 export type OrigemMovimentacao =
@@ -21,6 +23,7 @@ export interface Contrato {
   quantidadeParcelas: number
   dataInicio: string
   dataFinal: string
+  periodicidade: Periodicidade
   estado: EstadoContrato
   createdAt: string
   updatedAt: string

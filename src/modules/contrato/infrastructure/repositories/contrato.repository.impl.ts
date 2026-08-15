@@ -6,6 +6,7 @@ import type { IContratoRepository, FindAllParams, FindAllResult } from "../../ap
 import type { IPagamentoRepository } from "../../../pagamento/application/ports/pagamento.repository.js"
 import { PagamentoRepository } from "../../../pagamento/infrastructure/repositories/pagamento.repository.impl.js"
 import { getLocalDateString, parseDateLocal } from "../../../../shared/utils/parseDateLocal.js"
+import { isPeriodicidade } from "../../domain/periodicidade.js"
 
 type ContratoRow = typeof contratos.$inferSelect
 type ParcelaRow = typeof parcelas.$inferSelect
@@ -21,6 +22,7 @@ function rowToContrato(row: ContratoRow): Contrato {
     quantidadeParcelas: row.quantidadeParcelas,
     dataInicio: row.dataInicio,
     dataFinal: row.dataFinal,
+    periodicidade: isPeriodicidade(row.periodicidade) ? row.periodicidade : "diaria",
     estado: row.estado as Contrato["estado"],
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -63,6 +65,7 @@ export class ContratoRepository implements IContratoRepository {
       quantidadeParcelas: contrato.quantidadeParcelas,
       dataInicio: contrato.dataInicio,
       dataFinal: contrato.dataFinal,
+      periodicidade: contrato.periodicidade,
       estado: contrato.estado,
       createdAt: contrato.createdAt,
       updatedAt: contrato.updatedAt,
@@ -243,6 +246,7 @@ export class ContratoRepository implements IContratoRepository {
       updateData.quantidadeParcelas = input.quantidadeParcelas
     if (input.dataInicio !== undefined) updateData.dataInicio = input.dataInicio
     if (input.dataFinal !== undefined) updateData.dataFinal = input.dataFinal
+    if (input.periodicidade !== undefined) updateData.periodicidade = input.periodicidade
     if (input.estado !== undefined) updateData.estado = input.estado
     if (input.updatedAt !== undefined) updateData.updatedAt = input.updatedAt
     if (Object.keys(updateData).length === 0) return existing

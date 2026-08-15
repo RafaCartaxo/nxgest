@@ -26,7 +26,8 @@ export class CreateContratoUseCase {
       contratoId,
       valorFinal,
       input.quantidadeParcelas,
-      input.dataInicio
+      input.dataInicio,
+      input.periodicidade
     )
 
     await this.repository.transaction(userId, async (repo) => {
@@ -51,7 +52,8 @@ export class CreateContratoUseCase {
         valorFinal,
         quantidadeParcelas: input.quantidadeParcelas,
         dataInicio: input.dataInicio,
-        dataFinal: calcularDataFinal(input.dataInicio, input.quantidadeParcelas),
+        dataFinal: calcularDataFinal(input.dataInicio, input.quantidadeParcelas, input.periodicidade),
+        periodicidade: input.periodicidade,
         estado: "Ativo" as const,
         createdAt: now,
         updatedAt: now,
@@ -85,7 +87,8 @@ export class CreateContratoUseCase {
       valorFinal,
       quantidadeParcelas: input.quantidadeParcelas,
       dataInicio: input.dataInicio,
-      dataFinal: calcularDataFinal(input.dataInicio, input.quantidadeParcelas),
+      dataFinal: calcularDataFinal(input.dataInicio, input.quantidadeParcelas, input.periodicidade),
+      periodicidade: input.periodicidade,
       estado: "Ativo" as const,
       createdAt: now,
       updatedAt: now,

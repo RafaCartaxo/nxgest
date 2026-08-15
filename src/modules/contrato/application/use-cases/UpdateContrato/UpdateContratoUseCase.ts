@@ -5,6 +5,7 @@ import { gerarParcelas, calcularDataFinal } from "../../../domain/services/gerar
 import { getLocalDateString } from "../../../../../shared/utils/parseDateLocal.js"
 import { ContratoNotFoundError } from "../../../domain/errors/contrato-not-found.error.js"
 import { ContratoHasPaymentsError } from "../../../domain/errors/contrato-has-payments.error.js"
+import { ContratoSemanalDomingoError } from "../../../domain/errors/contrato-semanal-domingo.error.js"
 import { SaldoInsuficienteError } from "../../../domain/errors/saldo-insuficiente.error.js"
 import type { UpdateContratoInput } from "./UpdateContratoInput.js"
 
@@ -33,8 +34,19 @@ export class UpdateContratoUseCase {
         percentualJuros: input.percentualJuros ?? contrato.percentualJuros,
         quantidadeParcelas:
           input.quantidadeParcelas ?? contrato.quantidadeParcelas,
+        periodicidade: input.periodicidade ?? contrato.periodicidade,
         dataInicio: input.dataInicio ?? contrato.dataInicio,
         updatedAt: now,
+      }
+
+      // BR-040-A: contrato semanal não pode iniciar em domingo. Valida o valor
+      // EFETIVO pós-merge (input.dataInicio ?? contrato.dataInicio) — o schema Zod
+      // só valida quando dataInicio vem no request.
+      if (updated.periodicidade === "semanal") {
+        const dia = new Date(updated.dataInicio + "T12:00:00Z").getUTCDay()
+        if (dia === 0) {
+          throw new ContratoSemanalDomingoError()
+        }
       }
 
       const diferencaBase =
@@ -55,13 +67,14 @@ export class UpdateContratoUseCase {
           updated.valorBase * (1 + updated.percentualJuros / 100) * 100
         ) / 100
 
-      updated.dataFinal = calcularDataFinal(updated.dataInicio, updated.quantidadeParcelas)
+      updated.dataFinal = calcularDataFinal(updated.dataInicio, updated.quantidadeParcelas, updated.periodicidade)
 
       const novasParcelas = gerarParcelas(
         id,
         updated.valorFinal,
         updated.quantidadeParcelas,
-        updated.dataInicio
+        updated.dataInicio,
+        updated.periodicidade
       )
 
       await repo.update(userId, id, updated)

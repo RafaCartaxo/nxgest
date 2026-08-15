@@ -12,6 +12,7 @@ import type { IClienteExistenceQuery } from "../../application/ports/cliente-exi
 import { AdminRepository } from "../../../admin/infrastructure/repositories/admin.repository.impl.js"
 import { ContratoNotFoundError } from "../../domain/errors/contrato-not-found.error.js"
 import { ContratoHasPaymentsError } from "../../domain/errors/contrato-has-payments.error.js"
+import { ContratoSemanalDomingoError } from "../../domain/errors/contrato-semanal-domingo.error.js"
 import { SaldoInsuficienteError } from "../../domain/errors/saldo-insuficiente.error.js"
 import { ClienteNotFoundError } from "../../../../modules/cliente/domain/errors/cliente-not-found.error.js"
 import { OperadorNaoEncontradoError } from "../../../admin/domain/errors/admin.error.js"
@@ -148,6 +149,10 @@ export class ContratoController {
       }
       if (error instanceof ContratoHasPaymentsError) {
         res.status(409).json({ code: error.code, message: error.message })
+        return
+      }
+      if (error instanceof ContratoSemanalDomingoError) {
+        res.status(422).json({ code: error.code, message: error.message })
         return
       }
       if (error instanceof SaldoInsuficienteError) {
