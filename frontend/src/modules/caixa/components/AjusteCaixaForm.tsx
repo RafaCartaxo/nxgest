@@ -68,7 +68,7 @@ export function AjusteCaixaForm({ caixaBase, saldoAtual, onAjustar, onSuccess }:
   return (
     <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <KpiCard title={t("caixa.caixaBase")} value={`R$ ${formatCurrency(caixaBase)}`} variant="blue" />
+        <KpiCard title={t("caixa.caixaBase")} value={`R$ ${formatCurrency(caixaBase)}`} variant="info" />
         <KpiCard title={t("caixa.saldoAtual")} value={`R$ ${formatCurrency(saldoAtual)}`} variant="gray" />
       </div>
 

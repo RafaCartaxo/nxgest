@@ -1,5 +1,7 @@
 import { apiRequest } from "../../../api/client.js"
 
+export type Periodicidade = "diaria" | "semanal"
+
 export interface Parcela {
   id: string
   contratoId: string
@@ -24,6 +26,7 @@ export interface Contrato {
   quantidadeParcelas: number
   dataInicio: string
   dataFinal: string
+  periodicidade: Periodicidade
   estado: "Ativo" | "Finalizado"
   parcelas?: Parcela[]
   saldoPendente?: number

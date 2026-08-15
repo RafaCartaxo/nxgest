@@ -65,14 +65,20 @@ function prevBusinessDay(date) {
   return d
 }
 
-function calcularDataFinal(dataInicio, qtd) {
+// Gera a data final (diária ou semanal) — mesma lógica do sistema (PLAN-076)
+function calcularDataFinal(dataInicio, qtd, periodicidade = "diaria") {
+  const intervalo = periodicidade === "semanal" ? 7 : 1
   let d = new Date(dataInicio)
-  for (let i = 0; i < qtd; i++) d = nextBusinessDay(d)
+  for (let i = 0; i < qtd; i++) {
+    d = addDays(d, intervalo)
+    if (d.getDay() === 0) d = addDays(d, 1)
+  }
   return dateStr(d)
 }
 
-// Gera parcelas diárias (mesma lógica do sistema), a partir de dataInicio
-function gerarParcelas(contratoId, valorFinal, qtd, dataInicio) {
+// Gera parcelas (diárias ou semanais) — mesma lógica do sistema (PLAN-076)
+function gerarParcelas(contratoId, valorFinal, qtd, dataInicio, periodicidade = "diaria") {
+  const intervalo = periodicidade === "semanal" ? 7 : 1
   const parcelaBase = Math.floor((valorFinal / qtd) * 100) / 100
   const residual = Math.round((valorFinal - parcelaBase * qtd) * 100) / 100
   const now = new Date().toISOString()
@@ -81,7 +87,8 @@ function gerarParcelas(contratoId, valorFinal, qtd, dataInicio) {
   for (let i = 0; i < qtd; i++) {
     const numero = i + 1
     const valorPrevisto = numero === qtd ? Math.round((parcelaBase + residual) * 100) / 100 : parcelaBase
-    vencimento = nextBusinessDay(vencimento)
+    vencimento = addDays(vencimento, intervalo)
+    if (vencimento.getDay() === 0) vencimento = addDays(vencimento, 1)
     out.push({
       id: randomUUID(),
       contratoId,
@@ -243,8 +250,8 @@ const SQL_CLIENTE = `INSERT INTO clientes (id, nome, cpf, comercio, telefone, "t
     "created_at", "updated_at", "user_id")
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 const SQL_CONTRATO = `INSERT INTO contratos (id, "cliente_id", "valor_base", "percentual_juros", "valor_final", "quantidade_parcelas",
-    "data_inicio", "data_final", estado, "created_at", "updated_at", "user_id")
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    "data_inicio", "data_final", periodicidade, estado, "created_at", "updated_at", "user_id")
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 const SQL_PARCELA = `INSERT INTO parcelas (id, "contrato_id", numero, "valor_previsto", "valor_pago", "saldo_pendente", estado,
     "data_vencimento", "data_quitacao", "created_at", "updated_at")
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -308,7 +315,7 @@ for (const op of operadores) {
     const contratoId = randomUUID()
     await q(SQL_CONTRATO, [
       contratoId, clienteId, valorBase, 20, valorFinal, qtd,
-      dataInicioStr, calcularDataFinal(dataInicio, qtd), "Ativo",
+      dataInicioStr, calcularDataFinal(dataInicio, qtd), "diaria", "Ativo",
       nowISO, nowISO, opId,
     ])
     totalContratos++
@@ -377,6 +384,45 @@ for (const op of operadores) {
     ])
     totalGastos++
     totalMov++
+  }
+}
+
+// ---------- Contrato SEMANAL de exemplo (PLAN-076) — primeiro cliente do primeiro operador ----------
+{
+  const opId = operadorIds[operadores[0].email]
+  const row = (await pool.query(
+    `SELECT c.id, c.nome FROM clientes c WHERE c."user_id" = $1 AND c."deleted_at" IS NULL ORDER BY c."created_at" ASC LIMIT 1`,
+    [opId]
+  )).rows[0]
+  if (row) {
+    const qtdSem = 4
+    const valorBaseSem = 400
+    const valorFinalSem = Math.round(valorBaseSem * 1.2 * 100) / 100
+    // Inicia na próxima segunda-feira (evita domingo — BR semanal)
+    let dataInicioSem = new Date(TODAY)
+    while (dataInicioSem.getDay() !== 1) dataInicioSem = addDays(dataInicioSem, 1)
+    const dataInicioSemStr = dateStr(dataInicioSem)
+    const contratoSemId = randomUUID()
+    await q(SQL_CONTRATO, [
+      contratoSemId, row.id, valorBaseSem, 20, valorFinalSem, qtdSem,
+      dataInicioSemStr, calcularDataFinal(dataInicioSem, qtdSem, "semanal"), "semanal", "Ativo",
+      nowISO, nowISO, opId,
+    ])
+    totalContratos++
+    await q(SQL_MOV, [
+      randomUUID(), "saida", valorBaseSem, "Contrato", contratoSemId,
+      `Criação de contrato semanal - ${qtdSem}x R$ ${(valorFinalSem / qtdSem).toFixed(2)}`,
+      dataInicioSemStr, nowISO, opId,
+    ])
+    totalMov++
+    const parcelasSem = gerarParcelas(contratoSemId, valorFinalSem, qtdSem, dataInicioSem, "semanal")
+    for (const p of parcelasSem) {
+      await q(SQL_PARCELA, [
+        p.id, p.contratoId, p.numero, p.valorPrevisto,
+        0, p.valorPrevisto, "Pendente",
+        p.dataVencimento, null, nowISO, nowISO,
+      ])
+    }
   }
 }
 

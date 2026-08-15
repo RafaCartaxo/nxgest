@@ -1013,14 +1013,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"valorBase\": 1000,\n  \"percentualJuros\": 20,\n  \"quantidadeParcelas\": 5,\n  \"dataInicio\": \"2026-08-04\"\n}",
+              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"valorBase\": 1000,\n  \"percentualJuros\": 20,\n  \"quantidadeParcelas\": 5,\n  \"periodicidade\": \"diaria\",\n  \"dataInicio\": \"2026-08-04\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "API-UC-009 · 201 · 422 caixa insuficiente · 404 cliente · campo percentualJuros"
+            "description": "API-UC-009 · 201 · 422 caixa insuficiente · 404 cliente · campo percentualJuros · periodicidade diaria/semanal"
           }
         },
         {
@@ -1108,7 +1108,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"quantidadeParcelas\": 6\n}",
+              "raw": "{\n  \"quantidadeParcelas\": 6,\n  \"periodicidade\": \"semanal\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

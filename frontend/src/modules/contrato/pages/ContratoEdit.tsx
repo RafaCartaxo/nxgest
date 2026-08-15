@@ -51,6 +51,7 @@ export function ContratoEdit() {
             valorBase: data.valorBase,
             percentualJuros: data.percentualJuros,
             quantidadeParcelas: data.quantidadeParcelas,
+            periodicidade: data.periodicidade,
             dataInicio: data.dataInicio,
           })
           navigate(`/contratos/${updated.id}`)
@@ -96,6 +97,7 @@ export function ContratoEdit() {
               valorBase: String(Math.round(contrato.valorBase * 100)),
               percentualJuros: String(contrato.percentualJuros),
               quantidadeParcelas: String(contrato.quantidadeParcelas),
+              periodicidade: contrato.periodicidade ?? "diaria",
               dataInicio: contrato.dataInicio,
             }}
             onSubmit={handleSubmit}

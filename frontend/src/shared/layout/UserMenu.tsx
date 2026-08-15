@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { Link, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Building2, LogOut, Mail, Settings, ShieldCheck, User, type LucideIcon } from "lucide-react"
+import { LogOut, Settings, User, type LucideIcon } from "lucide-react"
 import { Avatar } from "../components/Avatar/Avatar.js"
 import { PreferenciasModal } from "../theme/PreferenciasModal.js"
 import { useAuth } from "../auth/AuthContext.js"
@@ -18,8 +18,6 @@ interface Item {
 interface UserMenuProps {
   /** desktop: exibe nome + papel ao lado do avatar (rodapé da sidebar) */
   detalhado?: boolean
-  /** mobile: inclui Painel Admin / Empresas no menu — a tab bar fica operacional */
-  mostrarAdmin?: boolean
   /** para onde o popover cresce no desktop (padrão: acima, rodapé da sidebar) */
   crescer?: "cima" | "baixo"
   className?: string
@@ -29,10 +27,10 @@ interface UserMenuProps {
  * Menu do usuário — único ponto de acesso a Perfil, Configurações e Sair
  * (config não fica mais numa engrenagem solta). Mobile: bottom-sheet;
  * desktop: popover ao lado do avatar. Abre o PreferenciasModal já existente.
+ * (Painel Admin/Empresas/Leads ficam na tab bar inferior — BottomTabBar.)
  */
 export function UserMenu({
   detalhado = false,
-  mostrarAdmin = false,
   crescer = "cima",
   className = "",
 }: UserMenuProps) {
@@ -56,15 +54,6 @@ export function UserMenu({
     { chave: "nav.perfil", icon: User, to: "/perfil" },
     { chave: "nav.configuracoes", icon: Settings, onClick: () => setPrefs(true) },
   ]
-  if (mostrarAdmin) {
-    if (role === "admin" || role === "socio") {
-      itens.push({ chave: "admin.painel", icon: ShieldCheck, to: "/admin" })
-    }
-    if (role === "super_admin") {
-      itens.push({ chave: "superAdmin.navEmpresas", icon: Building2, to: "/admin/empresas" })
-      itens.push({ chave: "lead.navLeads", icon: Mail, to: "/admin/leads" })
-    }
-  }
   itens.push({
     chave: "auth.sair",
     icon: LogOut,

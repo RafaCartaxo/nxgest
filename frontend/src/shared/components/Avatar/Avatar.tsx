@@ -104,7 +104,7 @@ interface AvatarFieldProps {
   size?: AvatarSize
 }
 
-/** Campo de foto: prévia + adicionar/trocar + remover (usa processarImagem). */
+/** Campo de foto: prévia + adicionar/alterar + remover (usa processarImagem). */
 export function AvatarField({ nome, foto, onChange, label, size = "xl" }: AvatarFieldProps) {
   const { t } = useTranslation()
   const input = useRef<HTMLInputElement>(null)
@@ -126,13 +126,13 @@ export function AvatarField({ nome, foto, onChange, label, size = "xl" }: Avatar
 
   return (
     <div>
-      <span className="mb-1.5 block text-sm font-medium text-text-secondary">{label ?? t("avatar.foto")}</span>
+      {label && <span className="mb-1.5 block text-sm font-medium text-text-secondary">{label}</span>}
       <div className="flex items-center gap-4">
         <Avatar foto={foto} nome={nome} size={size} ampliar />
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => input.current?.click()}>
             <Camera className="size-4" aria-hidden />
-            {foto ? t("avatar.trocar") : t("avatar.adicionar")}
+            {foto ? t("avatar.alterar") : t("avatar.adicionar")}
           </Button>
           {foto && (
             <Button

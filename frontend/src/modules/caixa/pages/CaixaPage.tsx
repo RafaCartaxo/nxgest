@@ -300,7 +300,7 @@ export function CaixaPage() {
               />
             )}
             <KpiCard
-              variant="gray"
+              variant={status.resultadoSemana >= 0 ? "green" : "danger"}
               title={t("caixa.resultadoSemana")}
               value={`R$ ${formatCurrency(Math.abs(status.resultadoSemana))}`}
               valueClassName={status.resultadoSemana >= 0 ? "text-success-text" : "text-danger-text"}

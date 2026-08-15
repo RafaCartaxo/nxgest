@@ -399,22 +399,31 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Endpoint:** `POST /api/contratos` · **Auth:** Bearer
 
-**Request:** `{ clienteId, valorBase, percentualJuros, quantidadeParcelas, dataInicio }`
+**Request:** `{ clienteId, valorBase, percentualJuros, quantidadeParcelas, periodicidade?, dataInicio }`
 
 > **Campo correto é `percentualJuros`** (não `juros`) — mesmo nome usado no front (`contrato.schema.ts`). Omisso → default 20.
+> **`periodicidade`** (PLAN-076): `diaria` (padrão) ou `semanal` — semanal gera vencimentos no mesmo dia da semana da `dataInicio` (a cada 7 dias).
 
 **Response 201:** contrato com parcelas geradas
 
 **Coerência:**
 - [ ] Caixa insuficiente (`saldoAtual < valorBase`) → 422 (BR-019)?
 - [ ] Parcelas pulam domingo (BR-042)?
+- [ ] `periodicidade` semanal → parcelas com vencimentos `+7*i` dias (mesmo dia da semana, BR-039)?
+- [ ] `periodicidade` semanal com `dataInicio` em domingo → 422 (BR-040-A)?
 - [ ] Gera movimentação de saída (origem Contrato) refletida no caixa?
 - [ ] `valorFinal = valorBase × (1 + juros/100)` (BR-005)?
 
-**Regras:** BR-004 a BR-007, BR-019, BR-039, BR-041, BR-042 · **Postman:** `Contratos > Criar`
+**Regras:** BR-004 a BR-007, BR-019, BR-039, BR-040, BR-040-A, BR-041, BR-042 · **Postman:** `Contratos > Criar`
 
 ### API-CT-017 — Contrato válido
 **Dado** caixa suficiente → **Quando** `POST /api/contratos` → **Então** 201; `GET /api/caixa/movimentacoes` mostra saída/Contrato e `saldoAtual` caiu `valorBase`.
+
+### API-CT-017b — Contrato semanal (PLAN-076)
+**Dado** caixa suficiente → **Quando** `POST /api/contratos` com `periodicidade: "semanal"` → **Então** 201 com `periodicidade: "semanal"` e parcelas com vencimentos `dataInicio + 7*i` (mesmo dia da semana, sem domingo); `dataFinal` = `dataInicio + quantidadeParcelas × 7` dias.
+
+### API-CT-017c — Contrato semanal não inicia em domingo (PLAN-076)
+**Dado** `dataInicio` em domingo → **Quando** `POST /api/contratos` com `periodicidade: "semanal"` → **Então** 422 (BR-040-A).
 
 ### API-CT-018 — Caixa insuficiente
 **Dado** `valorBase` maior que o saldo → **Então** 422 e **nenhuma** movimentação criada.
@@ -456,6 +465,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 **Coerência:**
 - [ ] Parcelas com estados coerentes (Pendente/Parcial/Paga) e saldos batendo com pagamentos?
 - [ ] Contrato de outro operador → 404?
+- [ ] Response inclui `periodicidade` (diaria/semanal) coerente com as parcelas (PLAN-076)?
 
 **Regras:** BR-008 a BR-012 · **Postman:** `Contratos > Detalhe`
 
@@ -471,16 +481,23 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 **Endpoint:** `PATCH /api/contratos/:id` · **Auth:** Bearer
 
-**Request:** parcial `{ valorBase?, juros?, quantidadeParcelas?, dataInicio? }`
+**Request:** parcial `{ valorBase?, juros?, quantidadeParcelas?, periodicidade?, dataInicio? }`
 
 **Coerência:**
 - [ ] Contrato **com pagamentos** → bloqueado (BR-006/BR-008)?
 - [ ] Sem pagamentos → parcelas antigas substituídas (soft delete) preservando histórico (BR-041)?
+- [ ] Mudança para `semanal` mantendo `dataInicio` em domingo → 422 (BR-040-A, valor efetivo pós-merge)?
 
-**Regras:** BR-006, BR-008, BR-041 · **Postman:** `Contratos > Editar`
+**Regras:** BR-006, BR-008, BR-040, BR-040-A, BR-041 · **Postman:** `Contratos > Editar`
 
 ### API-CT-023 — Editar sem pagamentos
 **Dado** contrato sem pagamentos → **Quando** `PATCH /api/contratos/:id` → **Então** 200 e parcelas recalculadas.
+
+### API-CT-023b — Editar para semanal regenera parcelas (PLAN-076)
+**Dado** contrato sem pagamentos → **Quando** `PATCH /api/contratos/:id` com `{ periodicidade: "semanal" }` → **Então** 200 com `periodicidade: "semanal"` e parcelas com vencimentos `+7*i` (mesmo dia da semana).
+
+### API-CT-023c — Editar para semanal com dataInicio em domingo (PLAN-076)
+**Dado** contrato sem pagamentos cuja `dataInicio` (atual ou enviada) é domingo → **Quando** `PATCH /api/contratos/:id` com `{ periodicidade: "semanal" }` → **Então** 422 (BR-040-A).
 
 ### API-CT-024 — Editar com pagamentos
 **Dado** contrato com pagamentos → **Então** 409 (condições financeiras imutáveis).

@@ -43,10 +43,10 @@
 | 12 | Detalhe do Contrato | ✅ | ParcelaList, pagamentos (Card), estorno, comprovante | ✅ Canônico |
 | 13 | Caixa (`CaixaPage`) | ✅ | KpiCard, auditoria + movimentações (Card), ajuste (input canônico + Button) | ✅ Canônico |
 | 14 | Gastos (`GastoPage`) | ✅ | GastoForm (Field) + GastoList (Card) | ✅ Canônico |
-| 15 | Administração (`AdminPage`) | ✅ | Equipe/Operação (KpiCard), EquipeModal, OperadoresList (**grid de cards** com tone por role + badges + contadores tabular-nums + **botão Acessar → detail**, sempre visível — Stitch 14/08), **OperadorForm no `Modal.footer`** + callout convite | ✅ Canônico |
-| 16 | Detalhe do Operador | ✅ | **bento 3col** (Contato&Status / **KpiCard irmãos clicáveis** Clientes+Contratos — navegam para as listas do operador, padrão do painel adm / **Status da conta** com badge + ações) + bloco caixa 2col (CaixaKpis + Ajustar modal + histórico); **modal "Alterar status"** (Suspender `danger` · Reativar `primary` — padrão do sistema) — Stitch 14/08 | ✅ Canônico |
+| 15 | Administração (`AdminPage`) | ✅ | Equipe/Operação (KpiCard), EquipeModal, OperadoresList (**grid de cards** com tone por role + badges + contadores tabular-nums + **botão Acessar → detail**, sempre visível — Stitch 14/08), **OperadorForm no `Modal.footer`** + callout convite + **seção "Status da conta"** (idêntica ao Detail — edição unificada); edição/reassign via **hook `useEditarOperador`**; **sem aba "Meus dados"** (só Equipe — KPI do caixa ficam na CaixaPage, 14/08) | ✅ Canônico |
+| 16 | Detalhe do Operador | ✅ | **bento 3col** (Contato&Status / **KpiCard irmãos clicáveis** Clientes+Contratos — navegam para as listas do operador / —) + bloco caixa 2col (CaixaKpis + Ajustar modal + histórico); **header sem role badge** (avatar + Editar; role no card "Dados do {role}") + **botão "Editar"** abre `OperadorForm` com seção **"Status da conta"** — Stitch 14/08 | ✅ Canônico |
 | 17 | Empresas (`SuperAdminPage`) | ✅ | EmpresaList, EmpresaForm (Field), ModulosModal | ✅ Canônico |
-| 18 | Perfil (`PerfilPage`) | ✅ | **bento grid** (Dados pessoais + Conta 8col · Segurança 4col) com `Card` tone (sucesso/info/**neutral**) + título dentro do card; Dados pessoais com avatar em coluna própria; Conta com **sub-cards** (E-mail/Empresa, `bg-surface-secondary`) + badges Status/Role + "Trocar e-mail" no rodapé; selo `BadgeCheck` — Stitch 14/08 | ✅ Canônico |
+| 18 | Perfil (`PerfilPage`) | ✅ | **bento grid** (Dados pessoais + Conta 8col · Segurança 4col) com `Card` tone (sucesso/info/**neutral**) + título dentro do card; Dados pessoais com avatar em coluna própria; Conta com **sub-cards** (E-mail/Empresa, `bg-surface-secondary`) + badges Status/Role + **"Alterar e-mail"** no rodapé; **Segurança = gatilho → modal "Alterar senha"**; selo `BadgeCheck` — Stitch 14/08 | ✅ Canônico |
 | 19 | Login | ✅ (redesenhado) | Field (email/senha + mostrar) · link "Esqueci minha senha" → `/recuperar-senha` (PLAN-065) | ✅ Canônico |
 | 20 | Recuperar Senha (`/recuperar-senha`) | ✅ (novo, PLAN-065) | PublicPageShell + Field email + SuccessState (resposta genérica) | ✅ Canônico |
 | 21 | Redefinir Senha (`/resetar-senha?token=`) | ✅ (novo, PLAN-065) | PublicPageShell + Field (senha+confirmar) + ErrorBanner token | ✅ Canônico |
@@ -75,8 +75,8 @@
 | `ClienteSelect` | ✅ | `ContratoForm` (novo) — seletor de cliente buscável (PLAN-056) |
 | `StatusBadge` (pill com dot) · `SectionHeader` · `EstadoTela` · `SuccessState` · `ErrorBanner` · `SearchBar` · `Carousel` | ✅ | — |
 | `Logo` | ✅ | Login, PublicPageShell, QueroConhecer, AppLayout (sidebar/topo) — geometria nova (10/08): "N" primário 64×64, malha + hub, prop `boxed` (app icon); favicon.svg/favicon.ts/PWA PNGs sync |
-| `BottomTabBar` | ✅ | `AppLayout` (mobile) — 5 abas gated por módulo, `role="navigation"`, `aria-current`, `pb-safe` (nav app-first) |
-| `UserMenu` | ✅ | `AppLayout` (topo fino mobile + rodapé da sidebar) — Perfil · Configurações (`PreferenciasModal`) · Sair; admin/super no mobile (nav app-first) |
+| `BottomTabBar` | ✅ | `AppLayout` (mobile) — abas gated por módulo; **admin/sócio: Painel Admin na bar, Rota sai** (14/08); **super admin: Empresas/Leads**; `role="navigation"`, `aria-current`, `pb-safe` (nav app-first) |
+| `UserMenu` | ✅ | `AppLayout` (topo fino mobile + rodapé da sidebar) — Perfil · Configurações (`PreferenciasModal`) · Sair (sem Painel Admin/Empresas/Leads — todos na tab bar, 14/08) |
 | `Avatar` / `AvatarField` | ✅ | ClienteCard (list-item/detail), ClienteForm, EmpresaList, AppLayout (sidebar), OperadorDetail, OperadoresList, modais — foto data URL **≤640px** + **lightbox** (`ampliar`: ClienteCard, OperadorDetail, sidebar, AvatarField) (PLAN-057/058) |
 | `AnexosSection` / `AnexoRow` | ✅ | ClienteDetail — upload foto/PDF do cliente (PLAN-042) |
 | `CapacidadesModal` | ✅ | SuperAdminPage (via ModulosModal "Recursos" ou botão do card) — toggles de capacidades por empresa, agrupado por módulo dono (modularização fina) |

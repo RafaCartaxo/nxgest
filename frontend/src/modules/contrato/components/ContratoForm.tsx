@@ -9,6 +9,7 @@ import { Field } from "../../../shared/components/Field/Field.js"
 import { ClienteSelect, type ClienteResumoSelect } from "./ClienteSelect.js"
 import { getContratoSchema, type ContratoFormData } from "../schemas/contrato.schema.js"
 import { calcularDataFinal } from "../utils/calcularDataFinal.js"
+import type { Periodicidade } from "../services/contrato.service.js"
 import { parseDateLocal } from "../../../shared/utils/parseDateLocal.js"
 import { formatCurrency, maskMonetario, unmaskMonetario } from "../../../shared/utils/masks.js"
 
@@ -17,6 +18,7 @@ export interface ContratoSubmit {
   valorBase: number
   percentualJuros: number
   quantidadeParcelas: number
+  periodicidade: Periodicidade
   dataInicio: string
 }
 
@@ -43,6 +45,7 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
       valorBase: initial?.valorBase ?? "",
       percentualJuros: initial?.percentualJuros ?? "20",
       quantidadeParcelas: initial?.quantidadeParcelas ?? "20",
+      periodicidade: initial?.periodicidade ?? "diaria",
       dataInicio: initial?.dataInicio ?? "",
     },
   })
@@ -51,6 +54,7 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
   const valorBase = form.watch("valorBase")
   const percentualJuros = form.watch("percentualJuros")
   const quantidadeParcelas = form.watch("quantidadeParcelas")
+  const periodicidade = form.watch("periodicidade")
   const dataInicio = form.watch("dataInicio")
 
   const valorBaseNum = unmaskMonetario(valorBase)
@@ -68,6 +72,7 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
       valorBase: unmaskMonetario(data.valorBase),
       percentualJuros: parseFloat(data.percentualJuros.replace(",", ".")) || 0,
       quantidadeParcelas: parseInt(data.quantidadeParcelas),
+      periodicidade: data.periodicidade,
       dataInicio: data.dataInicio,
     })
   }
@@ -143,6 +148,26 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
             />
           </div>
 
+          <div className="space-y-2">
+            <span className="text-sm font-medium text-text-primary">{t("contrato.periodicidade")}</span>
+            <div className="grid grid-cols-2 gap-2">
+              {(["diaria", "semanal"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => form.setValue("periodicidade", p)}
+                  className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                    periodicidade === p
+                      ? "border-primary bg-primary-light text-primary-text"
+                      : "border-border-strong bg-surface text-text-secondary hover:bg-surface-hover"
+                  }`}
+                >
+                  {t(`contrato.periodicidadeOpcoes.${p}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Field
             label={t("contrato.dataInicio")}
             required
@@ -163,13 +188,14 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
             <p className="text-2xl font-bold text-primary">R$ {formatCurrency(valorFinal)}</p>
             {qtd > 0 && (
               <p className="text-sm text-text-secondary">
-                {qtd}x de R$ {formatCurrency(valorFinal / qtd)}
+                {qtd}x de R$ {formatCurrency(valorFinal / qtd)}{" "}
+                {periodicidade === "semanal" ? t("contrato.porSemana") : t("contrato.porDia")}
               </p>
             )}
             {dataInicio && qtd > 0 && (
               <p className="text-sm text-text-secondary">
                 {t("contrato.termino")}:{" "}
-                {parseDateLocal(calcularDataFinal(dataInicio, qtd)).toLocaleDateString(i18n.language)}
+                {parseDateLocal(calcularDataFinal(dataInicio, qtd, periodicidade)).toLocaleDateString(i18n.language)}
               </p>
             )}
           </div>

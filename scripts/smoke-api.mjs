@@ -558,6 +558,31 @@ async function main() {
     const r = await req("POST", "/api/contratos", { token: opToken, body: { clienteId: "00000000-0000-4000-8000-000000000000", valorBase: 100, percentualJuros: 20, quantidadeParcelas: 1, dataInicio: "2026-08-04" } })
     expect(r, 404, "cliente inexistente")
   })
+  await t("CTR-017B", "POST /contratos semanal (201, mesmo dia da semana)", async () => {
+    // 2026-08-03 é segunda-feira (dataInicio válida p/ semanal)
+    const r = await req("POST", "/api/contratos", {
+      token: opToken,
+      body: { clienteId: clienteContratoId, valorBase: 400, percentualJuros: 20, quantidadeParcelas: 3, periodicidade: "semanal", dataInicio: "2026-08-03" },
+    })
+    expect(r, 201, "criar contrato semanal")
+    if (r.data.periodicidade !== "semanal") throw new Error(`periodicidade=${r.data.periodicidade} (esperava semanal)`)
+    if (r.data.quantidadeParcelas !== 3) throw new Error("qtd parcelas semanal não bate")
+    const datas = (r.data.parcelas ?? []).map((p) => p.dataVencimento)
+    if (datas.length !== 3) throw new Error("semanal deveria gerar 3 parcelas")
+    if (datas[0] !== "2026-08-10" || datas[1] !== "2026-08-17" || datas[2] !== "2026-08-24") {
+      throw new Error(`vencimentos semanais errados: ${datas.join(",")} (esperava 10/17/24/08)`)
+    }
+    const dom = (d) => new Date(d + "T12:00:00Z").getDay() === 0
+    if (datas.some(dom)) throw new Error("parcela semanal caiu num domingo (BR-042)")
+  })
+  await t("CTR-017C", "POST /contratos semanal com dataInicio domingo (422)", async () => {
+    // 2026-08-02 é domingo
+    const r = await req("POST", "/api/contratos", {
+      token: opToken,
+      body: { clienteId: clienteContratoId, valorBase: 400, percentualJuros: 20, quantidadeParcelas: 3, periodicidade: "semanal", dataInicio: "2026-08-02" },
+    })
+    expect(r, 422, "semanal em domingo deve ser 422 (BR-040-A)")
+  })
   await t("CTR-010", "GET /contratos (200 + situação de atraso)", async () => {
     const r = await req("GET", "/api/contratos", { token: opToken })
     expect(r, 200, "listar contratos")
@@ -577,6 +602,25 @@ async function main() {
   await t("CTR-023", "PATCH /contratos/:id sem pagamentos (200)", async () => {
     const r = await req("PATCH", `/api/contratos/${contratoId}`, { token: opToken, body: { quantidadeParcelas: 5 } })
     expect(r, 200, "editar contrato sem pagamentos")
+  })
+  await t("CTR-023B", "PATCH para semanal regenera parcelas (200, +7*i)", async () => {
+    // contratoId foi criado em 2026-08-04 (segunda) — válido p/ semanal
+    const r = await req("PATCH", `/api/contratos/${contratoId}`, { token: opToken, body: { periodicidade: "semanal", quantidadeParcelas: 3 } })
+    expect(r, 200, "editar para semanal")
+    if (r.data.periodicidade !== "semanal") throw new Error(`periodicidade=${r.data.periodicidade} (esperava semanal)`)
+    const datas = (r.data.parcelas ?? []).map((p) => p.dataVencimento)
+    const dom = (d) => new Date(d + "T12:00:00Z").getDay() === 0
+    if (datas.length !== 3 || datas.some(dom)) throw new Error("parcelas semanais inválidas (BR-039/042)")
+  })
+  await t("CTR-023C", "PATCH diário→semanal com dataInicio domingo (422, BR-040-A)", async () => {
+    // Contrato diário que inicia em domingo (2026-08-02) — diário permite; semanal não.
+    const c = await req("POST", "/api/contratos", {
+      token: opToken,
+      body: { clienteId: clienteContratoId, valorBase: 300, percentualJuros: 20, quantidadeParcelas: 4, periodicidade: "diaria", dataInicio: "2026-08-02" },
+    })
+    expect(c, 201, "criar contrato diário iniciando em domingo")
+    const r = await req("PATCH", `/api/contratos/${c.data.id}`, { token: opToken, body: { periodicidade: "semanal" } })
+    expect(r, 422, "editar para semanal com dataInicio domingo deve ser 422 (BR-040-A)")
   })
 
   // ---------- OPERADOR: pagamento ----------

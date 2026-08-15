@@ -46,6 +46,8 @@ function ContratoCard({ contrato: c, variant }: ContratoCardProps) {
               : t("contrato.parcelaTemplate", { num: (c.parcelasPagas ?? 0) + 1, total: c.quantidadeParcelas })
             }
             {" • "}
+            {c.periodicidade === "semanal" ? t("contrato.periodicidadeOpcoes.semanal") : t("contrato.periodicidadeOpcoes.diaria")}
+            {" • "}
             {formatarData(c.dataInicio, t)} → {formatarData(c.dataFinal, t)}
           </p>
           <StatusBadge
@@ -124,7 +126,12 @@ function ContratoCard({ contrato: c, variant }: ContratoCardProps) {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-text-secondary">{t("contrato.parcelasLabel")}</span>
-              <p className="font-semibold">{c.quantidadeParcelas}x</p>
+              <p className="font-semibold">
+                {c.quantidadeParcelas}x{" "}
+                <span className="text-sm font-medium text-text-secondary">
+                  {c.periodicidade === "semanal" ? t("contrato.periodicidadeOpcoes.semanal") : t("contrato.periodicidadeOpcoes.diaria")}
+                </span>
+              </p>
             </div>
             <div>
               <span className="text-text-secondary">{t("contrato.valorParcela")}</span>

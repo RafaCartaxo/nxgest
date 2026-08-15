@@ -140,7 +140,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               NX <span className="text-brand-gradient">Gest</span>
             </span>
           </Link>
-          <UserMenu mostrarAdmin className="shrink-0" />
+          <UserMenu className="shrink-0" />
         </header>
 
         {/* sidebar desktop — fixa, sem header superior duplicado */}

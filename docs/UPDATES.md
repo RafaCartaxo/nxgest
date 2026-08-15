@@ -2,6 +2,67 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 14/08/2026 — Cards de status com tone/badge dinâmicos (Perfil, OperadorForm, OperadorDetail)
+
+- **"Dados pessoais" segue o tema** — os cards "Dados pessoais" do Perfil e do OperadorForm saíram do `tone="success"` (verde fixo) para **`tone="info"`** (cor da marca/tema — muda com a paleta escolhida, whitelabel e dark), consistente com o card "Acesso".
+- **Perfil — card "Conta":** badge de status ("Ativo"/"Suspenso"/"Convidado") movido para a **linha do título** (à direita) e o **tone do card** agora acompanha o estado (success/danger/warning), como no card "Dados pessoais".
+- **OperadorForm — seção "Status da conta":** `tone="warning"` fixo → **dinâmico por status** (danger/warning/success), coerente com a badge.
+- **OperadorDetail — card "Contato & Status":** `tone="neutral"` fixo → **dinâmico** + **badge de status sempre visível** (antes só aparecia em estados negativos; operador ativo não tinha badge).
+
+## 14/08/2026 — KPIs: barra de cor acompanha o sinal do valor + unificação blue/info
+
+- **Barra (tone stripe) corrigida em 3 KPIs** — o texto já mudava de cor conforme o sinal (verde/vermelho) mas a barra à esquerda ficava cinza fixa: `CaixaKpis.lucro` · `CaixaPage.resultadoSemana` · `IndicadoresCards.resultadoDoDia` → barra agora `green` (positivo) / `danger` (negativo).
+- **`KpiCard` unificado** — removido o alias `variant="blue"` (idêntico ao `info`); usos padronizados para `variant="info"` (~6 locais: CaixaKpis, AjusteCaixaForm, IndicadoresCards, AdminPage, SuperAdminPage).
+
+## 14/08/2026 — Navbar mobile: "Painel Admin" na tab bar (admin/sócio) + Rota fora da bar
+
+- **Perfil: badge de role movido para o topo** — o `StatusBadge` do papel (Administrador/Sócio/Operador) saiu do card "Conta" e foi para a **linha do título "Dados pessoais"** (destaque ao abrir o Perfil). O card "Conta" fica só com o **status da conta** (Ativo/Suspenso/Convidado).
+
+- **AdminPage: tag de role removida do header** — o `StatusBadge` do papel (Administrador/Sócio/Super Admin) saiu do `PageHeader` (informação já implícita na página administrativa; o papel segue no `UserMenu`). `headerBadge` órfão removido.
+
+- **Painel Admin renomeado para "Administrativo"** — `admin.painel` = "Administrativo" (pt/es) e "Admin" (en); reflete na sidebar desktop e na tab bar mobile (ambos usam `t("admin.painel")`).
+
+- **Painel Admin movido para a tab bar** — admin/sócio passam a ver **"Painel Admin"** (`/admin`) na **tab bar inferior mobile** (como Empresas/Leads do super). **Removido do `UserMenu`** (prop `mostrarAdmin` + bloco + import `ShieldCheck` eliminados; `AppLayout` sem a prop). Operador continua sem Painel Admin.
+- **Rota fora da bar para admin/sócio** — esses perfis **delegam a rota** aos operadores; a aba **Rota sai da bar** (mobile). Eles continuam acessando a rota pela **Central** ("Minha rota"). Operador mantém a aba Rota. Sidebar desktop **mantém** Rota (decisão — não remover agora).
+- Resultado mobile admin/sócio: Central + Clientes + Contratos + Caixa + **Painel Admin** (5 abas).
+
+## 14/08/2026 — Fix: labels "E-mail"/"Telefone" não quebram com valor longo (OperadorDetail)
+
+- **Card "Contato & Status"** (OperadorDetail) — os labels "E-mail:"/"Telefone:" agora têm `shrink-0 whitespace-nowrap` e os valores `min-w-0 truncate`: o **label não quebra** e o **valor trunca** corretamente (e-mail longo não "quebra" o label).
+- **Modal "Alterar status"** (OperadorDetail + AdminPage) — a linha "Dados do {role}: {nome}" foi separada em 2 spans (label `shrink-0` + nome `min-w-0 truncate`): o label não quebra e o nome do operador trunca no modal.
+- **Fora de escopo:** nome do operador no topo (PageHeader) mantido como está.
+
+## 14/08/2026 — Admin: aba "Meus dados" removida + header do operador sem role badge
+
+- **AdminPage: aba "Meus dados" removida** — o admin/sócio da própria empresa via **sempre a Equipe** (sem Tabs). A aba "Meus dados" era redundante: repetia os 6 KPIs do caixa (já vistos na CaixaPage) + um botão "/perfil" que já existe no UserMenu. Código morto limpo (`tab`/`meuCaixa`/`fetchMeuCaixa`, imports `Tabs`/`User`/`getCaixaStatus`, chaves i18n `tabEquipe`/`tabMeusDados`).
+- **OperadorDetail: header libera espaço para o nome** — o `StatusBadge` de role saiu do `action` do PageHeader (o role já aparece no card "Contato & Status" como "Dados do {role}"). O `action` agora tem só avatar + botão Editar — o nome trunca menos. `roleVariant` (órfão) removido do import.
+
+## 14/08/2026 — Perfil: "Alterar senha" como modal + padronização "Alterar/Alteração"
+
+- **"Alterar senha" virou modal** — o card "Segurança" do Perfil não mostra mais o form inline de 3 campos; virou um **gatilho** (`outline` + ícone `Lock`) que abre o **modal "Alterar senha"** no padrão do e-mail (title + descrição + form + rodapé Cancelar/ação). Sucesso fecha o modal + limpa campos.
+- **Padronização "Alterar"/"Alteração"** — todas as cópias visíveis de "Trocar/troca" viraram **"Alterar"/"alteração"**: `perfil.trocarEmail`→`alterarEmail`, `trocarSenha`→`alterarSenha`, `cancelarTroca`→`cancelarAlteracao`, `avatar.trocar`→`avatar.alterar`, toasts ("alteração cancelada", "erro ao iniciar a alteração"). Nomes internos da API (`trocarEmail`/`cancelarTrocaEmail`) mantidos.
+- **i18n:** chaves renomeadas + novas `perfil.alterarSenhaDescricao` (pt/en/es).
+
+## 14/08/2026 — Operador: edição refinada (títulos dinâmicos, botão status, fixes)
+
+- **Títulos dinâmicos por role** — o modal de edição agora mostra **"Editar Operador/Administrador/Sócio"** (`admin.editarRole`), e o rótulo do nome (modal "Alterar status" + card "Contato & Status") virou **"Dados do operador/administrador/sócio"** (`admin.dadosRole`) no lugar de "Dados de operação".
+- **Botão "Alterar status da conta"** — no form de edição, os botões Suspender/Reativar inline foram substituídos por um **botão neutro (`outline`)** que abre o modal "Alterar status" existente (Suspender `danger`/Reativar `primary` dentro). `onAlterarStatus` decidido pelo estado atual (`suspensoEm`).
+- **Fix: status re-sincroniza sem reabrir (bug 2)** — após suspender/reativar/revogar, o `AdminPage` recria o `editingOp` via `getOperador` (e o Detail já recria via `fetch`) → o form reflete o novo status imediatamente.
+- **Fix: toast acima do modal** — `FeedbackOverlay` subiu de `z-40` para `z-[60]` (acima do Modal `z-50`); o toast de sucesso agora é visível com o modal aberto.
+- **"Foto" removido do AvatarField** — o label de texto "Foto" deixou de ser exibido (fallback removido); avatar e botões Adicionar/Trocar/Remover intactos (Perfil, Operador, Cliente).
+- **Telefone uniforme** — Perfil/Operador/Lead agora usam label **"Telefone"** + placeholder **`(11) 99999-9999`** (antes: "Opcional" como placeholder). `perfil.telefoneOpcional` → `perfil.telefonePlaceholder`.
+- **i18n novas:** `admin.editarRole` · `admin.dadosRole` · `admin.alterarStatusConta` · `perfil.telefonePlaceholder` (pt/en/es).
+
+## 14/08/2026 — Admin: edição de operador unificada + navbar super admin
+
+- **Edição de operador unificada (fim dos 2 forms diferentes)** — o `AdminPage` (lista, lápis ✏️) passava ao `OperadorForm` **sem** os callbacks de conta, então a seção "Status da conta" (Suspender/Reativar/Reenviar/Revogar convite) não aparecia; já no `OperadorDetail` (botão "Editar" no topo) aparecia. Agora o `AdminPage` passa os mesmos callbacks + ganhou `suspenderAcao`/`onSuspensao`/`onRevogarConvite` e o **Modal "Alterar status"** — o form de edição é **idêntico** na lista e no detalhe.
+- **Navbar super admin** — abas **Empresas** (`/admin/empresas`) e **Leads** (`/admin/leads`) adicionadas à **tab bar inferior mobile** (`BottomTabBar`), abaixo da Central (super admin passa a ter acesso administrativo na própria bar, como a sidebar desktop). **Removidas do `UserMenu`** (sem duplicação) — ficam só na tab bar.
+
+## 14/08/2026 — OperadorDetail: ações de conta no "Editar" + máscara de telefone
+
+- **Ações de conta movidas para o modal "Editar"** — removido o card "Status da conta" exposto na tela de detalhe do operador. Agora há um **botão "Editar"** no PageHeader do OperadorDetail que abre o `OperadorForm` (modo edição); dentro do form, uma seção **"Status da conta"** concentra Suspender/Reativar e Reenviar/Revogar convite (com `ConfirmModal`). Novo **hook `useEditarOperador`** (`hooks/useEditarOperador.ts`) compartilhado entre `AdminPage` e `OperadorDetail` — fonte única do fluxo de update + reassign guiado (`OPERATOR_HAS_SUBORDINATES`).
+- **Máscara de telefone nos campos sem máscara** — `PerfilPage` (Meus dados), `OperadorForm` (editar operador) e `QueroConhecerPage` (lead) agora usam `maskPhone` no input + `unmask` no submit, mesmo padrão do `ClienteForm`.
+
 ## 14/08/2026 — OperadorDetail: modal "Alterar status" + KPIs clicáveis
 
 - **Card "Status da conta"** — o card de ações do operador foi renomeado de "Conta —" para **"Status da conta"**: removida a linha "—" (`admin.semConta`) e adicionado **`StatusBadge` do status atual** (Ativo `success` / Suspenso `danger` / Convidado `warning`) junto ao título, antes dos botões de ação. i18n nova: `admin.statusConta` (pt/en/es).

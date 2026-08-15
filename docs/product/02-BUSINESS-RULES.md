@@ -616,15 +616,26 @@ A validação só deve ser aplicada quando o CPF for informado (campo opcional).
 
 ## BR-039
 
-As parcelas de um contrato serão geradas com vencimentos diários consecutivos.
+As parcelas de um contrato serão geradas com vencimentos conforme a periodicidade do contrato:
 
-A primeira parcela vence no dia seguinte à data de início do contrato.
+- **diária** (`diaria`, padrão): vencimentos diários consecutivos;
+- **semanal** (`semanal`): vencimentos no mesmo dia da semana da data de início do contrato (a cada 7 dias).
+
+A primeira parcela vence no dia seguinte (diária) ou 7 dias após (semanal) a data de início do contrato.
 
 ---
 
 ## BR-040
 
-A periodicidade das parcelas poderá ser alterada futuramente por meio de configuração no contrato, sem impacto retroativo nas parcelas já existentes.
+A periodicidade das parcelas poderá ser alterada por meio de configuração no contrato (campo `periodicidade`), sem impacto retroativo nas parcelas já existentes.
+
+Contratos existentes sem o campo recebem `periodicidade = diaria` (default).
+
+---
+
+## BR-040-A
+
+Contrato com periodicidade **semanal** não pode iniciar em domingo (não existe "mesmo dia da semana" quando o vencimento cai em domingo — BR-042). A validação bloqueia `dataInicio` em domingo para contratos semanais.
 
 ---
 
@@ -649,7 +660,7 @@ Contrato com início em 01/07/2026 (quarta-feira):
 
 ## BR-042-A
 
-A data final do contrato (dataFinal) será calculada automaticamente como `dataInicio + quantidadeParcelas` dias, ajustando para segunda-feira se o cálculo recair em um domingo.
+A data final do contrato (dataFinal) será calculada automaticamente como `dataInicio + quantidadeParcelas × intervalo`, onde intervalo é `1` dia (diária) ou `7` dias (semanal), ajustando para segunda-feira se o cálculo recair em um domingo (BR-042).
 
 ---
 

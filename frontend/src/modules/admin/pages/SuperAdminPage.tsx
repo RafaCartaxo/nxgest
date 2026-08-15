@@ -175,7 +175,7 @@ export function SuperAdminPage() {
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <KpiCard title={t("superAdmin.totalEmpresas")} value={empresas.length.toString()} variant="blue" />
+        <KpiCard title={t("superAdmin.totalEmpresas")} value={empresas.length.toString()} variant="info" />
         <KpiCard title={t("superAdmin.totalUsuarios")} value={totalUsuarios.toString()} variant="green" />
         <KpiCard title={t("superAdmin.totalClientes")} value={totalClientes.toString()} variant="yellow" />
       </div>

@@ -1,10 +1,9 @@
 import type { ReactNode } from "react"
 import { Card, type CardTone } from "../Card/Card.js"
 
-type KpiVariant = "blue" | "green" | "yellow" | "gray" | "danger" | "info"
+type KpiVariant = "info" | "green" | "yellow" | "gray" | "danger"
 
 const toneByVariant: Record<KpiVariant, CardTone> = {
-  blue: "info",
   info: "info",
   green: "success",
   yellow: "warning",

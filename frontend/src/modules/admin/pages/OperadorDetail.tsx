@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { User, Wallet, Mail, XCircle, Ban, RefreshCw } from "lucide-react"
+import { User, Wallet, Ban, RefreshCw, Edit3 } from "lucide-react"
 import { getOperador, reenviarConvite, revogarConvite, setSuspensao, type OperadorRow } from "../services/admin.service.js"
 import { getCaixaStatus, ajustarCaixaBase, listarAuditoriaCaixa, type CaixaStatus, type AuditoriaCaixaItem } from "../../caixa/services/caixa.service.js"
 import { AjustarCaixaModal } from "../../caixa/components/AjustarCaixaModal.js"
@@ -14,14 +14,15 @@ import { Avatar } from "../../../shared/components/Avatar/Avatar.js"
 import { PageHeader } from "../../../shared/components/PageHeader/PageHeader.js"
 import { Button } from "../../../shared/components/Button.js"
 import { Card } from "../../../shared/components/Card/Card.js"
-import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { CollapsibleSection } from "../../../shared/components/CollapsibleSection/CollapsibleSection.js"
 import { CaixaKpis } from "../../caixa/components/CaixaKpis.js"
 import { AjusteRow } from "../../caixa/components/AjusteHistorico.js"
-import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
+import { roleLabel } from "../../../shared/utils/role.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
+import { OperadorForm, type OperadorFormData, type OperadorFormHandle } from "../components/OperadorForm.js"
+import { useEditarOperador } from "../hooks/useEditarOperador.js"
 
 export function OperadorDetail() {
   const { t } = useTranslation()
@@ -39,8 +40,11 @@ export function OperadorDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ajustarModalOpen, setAjustarModalOpen] = useState(false)
-  const [revogarModalOpen, setRevogarModalOpen] = useState(false)
+  const [editarOpen, setEditarOpen] = useState(false)
   const [suspenderAcao, setSuspenderAcao] = useState<"suspender" | "reativar" | null>(null)
+  const operadorFormRef = useRef<OperadorFormHandle>(null)
+
+  const { saving: savingEdit, handleUpdate } = useEditarOperador({ empresaId, onSaved: () => { setEditarOpen(false); void fetch() } })
 
   const fetch = useCallback(async () => {
     if (!id) return
@@ -111,7 +115,6 @@ export function OperadorDetail() {
       success: t("admin.revogarSucesso"),
       error: t("admin.erroRevogar"),
     })
-    setRevogarModalOpen(false)
   }
 
   async function onSuspensao(suspender: boolean) {
@@ -128,10 +131,13 @@ export function OperadorDetail() {
     setSuspenderAcao(null)
   }
 
+  async function onEditarSubmit(data: OperadorFormData) {
+    if (!operador) return
+    await handleUpdate(operador, data)
+  }
+
   const isSelf = user?.id === operador?.id
   const isSuspenso = Boolean(operador?.suspensoEm)
-  const isConvidado = operador?.status === "convidado"
-  const temConviteValido = operador?.conviteStatus === "PENDENTE"
   const badgeConvite = operador?.status === "convidado"
     ? operador.conviteStatus === "EXPIRADO" ? { variant: "warning" as const, label: t("admin.conviteExpirado") }
       : operador.conviteStatus === "REVOGADO" ? { variant: "danger" as const, label: t("admin.conviteRevogado") }
@@ -147,11 +153,11 @@ export function OperadorDetail() {
         action={operador ? (
           <div className="flex items-center gap-2">
             <Avatar nome={operador.nome} foto={operador.foto ?? null} size="sm" ampliar />
-            <StatusBadge
-              variant={roleVariant(operador.role)}
-              size="sm"
-              label={roleLabel(operador.role, t)}
-            />
+            {!isSelf && (
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditarOpen(true)}>
+                <Edit3 className="size-4" aria-hidden /> {t("admin.editar")}
+              </Button>
+            )}
           </div>
         ) : undefined}
       />
@@ -161,20 +167,26 @@ export function OperadorDetail() {
           <>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {/* Contato & Status */}
-              <Card.Root tone="neutral" className="flex flex-col gap-3">
-                <p className="text-sm font-semibold text-text-primary">{t("admin.operadorData")}</p>
+              <Card.Root tone={isSuspenso ? "danger" : operador.status === "convidado" ? "warning" : "success"} className="flex flex-col gap-3">
+                <p className="text-sm font-semibold text-text-primary">{t("admin.dadosRole", { role: roleLabel(operador.role, t) })}</p>
                 <div className="space-y-1.5 text-sm">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-text-secondary">{t("admin.email")}:</span>
-                    <span className="truncate font-medium text-text-primary">{operador.email}</span>
+                    <span className="shrink-0 whitespace-nowrap text-text-secondary">{t("admin.email")}:</span>
+                    <span className="min-w-0 truncate font-medium text-text-primary">{operador.email}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-text-secondary">{t("admin.telefone")}:</span>
-                    <span className="truncate font-medium text-text-primary">{operador.telefone ?? t("admin.semTelefone")}</span>
+                    <span className="shrink-0 whitespace-nowrap text-text-secondary">{t("admin.telefone")}:</span>
+                    <span className="min-w-0 truncate font-medium text-text-primary">{operador.telefone ?? t("admin.semTelefone")}</span>
                   </div>
                 </div>
                 <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-border-light pt-3">
-                  {isSuspenso && <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />}
+                  {isSuspenso ? (
+                    <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />
+                  ) : operador.status === "convidado" ? (
+                    <StatusBadge variant="warning" size="sm" label={t("perfil.statusConvidado")} />
+                  ) : (
+                    <StatusBadge variant="success" size="sm" label={t("admin.statusAtivo")} />
+                  )}
                   {operador.emailPendente && <StatusBadge variant="warning" size="sm" label={t("admin.verificacaoPendente")} />}
                   {badgeConvite && <StatusBadge variant={badgeConvite.variant} size="sm" label={badgeConvite.label} />}
                 </div>
@@ -187,45 +199,6 @@ export function OperadorDetail() {
                 <KpiCard title={t("admin.contratosAtivos")} value={operador.contratosAtivos.toString()} variant="yellow"
                   onClick={() => navigate(`/contratos?usuarioId=${id}${empresaId ? `&empresaId=${empresaId}` : ""}`)} />
               </div>
-
-              {/* Status da conta (isSelf oculta — segurança) */}
-              {!isSelf && (
-                <Card.Root tone="warning" className="flex flex-col gap-3 lg:col-span-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-text-primary">{t("admin.statusConta")}</p>
-                    {isSuspenso ? (
-                      <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />
-                    ) : isConvidado ? (
-                      <StatusBadge variant="warning" size="sm" label={t("perfil.statusConvidado")} />
-                    ) : (
-                      <StatusBadge variant="success" size="sm" label={t("admin.statusAtivo")} />
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    {isConvidado && (
-                      <Button type="button" variant="soft" onClick={onReenviarConvite}>
-                        <Mail className="size-4" aria-hidden /> {t("admin.reenviarConvite")}
-                      </Button>
-                    )}
-                    {isConvidado && temConviteValido && (
-                      <Button type="button" variant="secondary" onClick={() => setRevogarModalOpen(true)}>
-                        <XCircle className="size-4" aria-hidden /> {t("admin.revogarConvite")}
-                      </Button>
-                    )}
-                    {isSuspenso ? (
-                      <Button type="button" variant="primary" onClick={() => setSuspenderAcao("reativar")}>
-                        <RefreshCw className="size-4" aria-hidden /> {t("admin.reativar")}
-                      </Button>
-                    ) : (
-                      !isConvidado && (
-                        <Button type="button" variant="danger" onClick={() => setSuspenderAcao("suspender")}>
-                          <Ban className="size-4" aria-hidden /> {t("admin.suspender")}
-                        </Button>
-                      )
-                    )}
-                  </div>
-                </Card.Root>
-              )}
             </div>
 
             {caixa && (
@@ -277,15 +250,34 @@ export function OperadorDetail() {
         />
       )}
 
-      <ConfirmModal
-        open={revogarModalOpen}
-        title={t("admin.revogarConfirmacao")}
-        message={t("admin.revogarConfirmacaoMessage")}
-        confirmLabel={t("admin.revogarConvite")}
-        danger
-        onConfirm={onRevogarConvite}
-        onCancel={() => setRevogarModalOpen(false)}
-      />
+      {operador && !isSelf && (
+        <Modal
+          open={editarOpen}
+          onClose={() => setEditarOpen(false)}
+          title={t("admin.editarRole", { role: roleLabel(operador.role, t) })}
+          maxWidth="max-w-md"
+          footer={
+            <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="ghost" onClick={() => setEditarOpen(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button type="button" disabled={savingEdit} onClick={() => void operadorFormRef.current?.submit()}>
+                {t("common.save")}
+              </Button>
+            </div>
+          }
+        >
+          <OperadorForm
+            ref={operadorFormRef}
+            editing={operador}
+            onSubmit={onEditarSubmit}
+            onCancel={() => setEditarOpen(false)}
+            onAlterarStatus={() => setSuspenderAcao(operador.suspensoEm ? "reativar" : "suspender")}
+            onReenviarConvite={onReenviarConvite}
+            onRevogarConvite={onRevogarConvite}
+          />
+        </Modal>
+      )}
 
       <Modal
         open={suspenderAcao !== null}
@@ -311,7 +303,8 @@ export function OperadorDetail() {
       >
         <div className="space-y-3 pt-2">
           <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface-secondary p-3 text-sm">
-            <span className="text-text-secondary">{t("admin.operadorData")}: {operador?.nome}</span>
+            <span className="shrink-0 whitespace-nowrap text-text-secondary">{t("admin.dadosRole", { role: roleLabel(operador?.role, t) })}:</span>
+            <span className="min-w-0 truncate font-medium text-text-primary">{operador?.nome}</span>
           </div>
           <div className="flex items-center justify-between gap-2 text-sm">
             <span className="text-text-secondary">{t("perfil.status")}</span>

@@ -1,13 +1,13 @@
 import { NavLink } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { FileText, LayoutDashboard, Route, Users, Wallet, type LucideIcon } from "lucide-react"
+import { Building2, FileText, LayoutDashboard, Mail, Route, ShieldCheck, Users, Wallet, type LucideIcon } from "lucide-react"
 import { useAuth } from "../auth/AuthContext.js"
 import { hasModule, type ModuleId } from "../modules/modules.js"
 
-type ChaveNav = "nav.central" | "nav.clientes" | "nav.contratos" | "nav.caixa" | "nav.rota"
+type ChaveNav = "nav.central" | "nav.clientes" | "nav.contratos" | "nav.caixa" | "nav.rota" | "superAdmin.navEmpresas" | "lead.navLeads" | "admin.painel"
 
 interface Aba {
-  modulo: ModuleId
+  modulo?: ModuleId
   chave: ChaveNav
   to: string
   icon: LucideIcon
@@ -23,19 +23,37 @@ const ABAS: Aba[] = [
   { modulo: "rota", chave: "nav.rota", to: "/rota", icon: Route },
 ]
 
+/** Abas do super admin (não dependem de módulo — whitelabel não se aplica). */
+const SUPER_ABAS: Aba[] = [
+  { chave: "superAdmin.navEmpresas", to: "/admin/empresas", icon: Building2 },
+  { chave: "lead.navLeads", to: "/admin/leads", icon: Mail },
+]
+
+/** Painel Admin (admin/sócio) — a rota sai da bar para esses perfis (delegam aos operadores). */
+const ADMIN_ABAS: Aba[] = [
+  { chave: "admin.painel", to: "/admin", icon: ShieldCheck },
+]
+
 const CENTRAL = { chave: "nav.central" as const, to: "/", icon: LayoutDashboard, end: true }
 
 /**
  * Tab bar inferior do mobile (app-first) — substitui hamburger + drawer.
  * Aba ativa por prefixo (NavLink): em /clientes/1/editar a aba Clientes segue acesa.
- * `central` sempre presente; super_admin vê só a Central (admin fica no menu do usuário).
+ * `central` sempre presente; operacionais gated por módulo (tenant); admin/sócio veem
+ * o Painel Admin na bar e a Rota sai (delegada); super admin vê Empresas + Leads.
  */
 export function BottomTabBar() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const isTenant = user?.role === "operator" || user?.role === "admin" || user?.role === "socio"
-  const operacionais = isTenant ? ABAS.filter((a) => hasModule(user?.modulos, a.modulo)) : []
-  const visiveis = [CENTRAL, ...operacionais]
+  const isAdminSocio = user?.role === "admin" || user?.role === "socio"
+  const isSuper = user?.role === "super_admin"
+  const operacionais = isTenant
+    ? ABAS.filter((a): a is Aba & { modulo: ModuleId } => a.modulo != null && !(isAdminSocio && a.modulo === "rota") && hasModule(user?.modulos, a.modulo))
+    : []
+  const adminAbas = isAdminSocio ? ADMIN_ABAS : []
+  const superAbas = isSuper ? SUPER_ABAS : []
+  const visiveis = [CENTRAL, ...operacionais, ...adminAbas, ...superAbas]
 
   if (visiveis.length === 0) return null
 

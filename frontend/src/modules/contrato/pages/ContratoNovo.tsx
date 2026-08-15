@@ -57,6 +57,7 @@ export function ContratoNovo() {
             valorBase: data.valorBase,
             percentualJuros: data.percentualJuros,
             quantidadeParcelas: data.quantidadeParcelas,
+            periodicidade: data.periodicidade,
             dataInicio: data.dataInicio,
           })
           navigate(`/contratos/${contrato.id}`, { replace: true })

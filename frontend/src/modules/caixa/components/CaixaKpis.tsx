@@ -22,7 +22,7 @@ export function CaixaKpis({ caixa, kpis = ALL, onKpiClick }: CaixaKpisProps) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
       {kpis.includes("caixaBase") && (
-        <KpiCard title={t("caixa.caixaBase")} value={`R$ ${formatCurrency(caixa.caixaBase)}`} variant="blue" />
+        <KpiCard title={t("caixa.caixaBase")} value={`R$ ${formatCurrency(caixa.caixaBase)}`} variant="info" />
       )}
       {kpis.includes("saldoAtual") && (
         <KpiCard title={t("caixa.saldoAtual")} value={`R$ ${formatCurrency(caixa.saldoAtual)}`} variant="gray" />
@@ -31,7 +31,7 @@ export function CaixaKpis({ caixa, kpis = ALL, onKpiClick }: CaixaKpisProps) {
         <KpiCard
           title={t("caixa.lucro")}
           value={`R$ ${formatCurrency(caixa.lucro)}`}
-          variant={caixa.lucro >= 0 ? "green" : "gray"}
+          variant={caixa.lucro >= 0 ? "green" : "danger"}
           valueClassName={caixa.lucro >= 0 ? "text-success-text" : "text-danger-text"}
         />
       )}
@@ -39,7 +39,7 @@ export function CaixaKpis({ caixa, kpis = ALL, onKpiClick }: CaixaKpisProps) {
         <KpiCard
           title={t("caixa.aReceberHoje")}
           value={`R$ ${formatCurrency(caixa.aReceberHoje)}`}
-          variant="blue"
+          variant="info"
           onClick={onKpiClick?.aReceberHoje}
         />
       )}

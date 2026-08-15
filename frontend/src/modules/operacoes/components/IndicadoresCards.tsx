@@ -41,7 +41,7 @@ export function IndicadoresCards({
   return (
     <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       <KpiCard
-        variant="blue"
+        variant="info"
         title={t("operacoes.aReceberHoje")}
         value={`R$ ${formatCurrency(aReceberHoje)}`}
         onClick={onAReceberClick}
@@ -53,7 +53,7 @@ export function IndicadoresCards({
         onClick={onRecebidoClick}
       />
       <KpiCard
-        variant="gray"
+        variant={resultadoDoDia >= 0 ? "green" : "danger"}
         title={t("operacoes.resultadoDoDia")}
         value={`R$ ${formatCurrency(Math.abs(resultadoDoDia))}`}
         valueClassName={resultadoDoDia >= 0 ? "text-success-text" : "text-danger-text"}

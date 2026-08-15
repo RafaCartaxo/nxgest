@@ -22,7 +22,7 @@ export function FeedbackOverlay({ status, message }: FeedbackOverlayProps) {
   const Icon = config.icon
 
   return (
-    <div className={`fixed top-0 left-0 right-0 z-40 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium shadow-sm ${config.bg} ${config.text} transition-all duration-300`}>
+    <div className={`fixed top-0 left-0 right-0 z-[60] flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium shadow-sm ${config.bg} ${config.text} transition-all duration-300`}>
       <Icon className={`h-4 w-4 ${status === "loading" ? "animate-spin" : ""}`} />
       <span>{message}</span>
     </div>

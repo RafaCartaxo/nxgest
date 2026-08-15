@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react"
 import { useTranslation } from "react-i18next"
-import { Mail } from "lucide-react"
+import { Mail, XCircle, ShieldCheck } from "lucide-react"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { Field } from "../../../shared/components/Field/Field.js"
 import { FieldSelect } from "../../../shared/components/Field/FieldSelect.js"
 import { AvatarField } from "../../../shared/components/Avatar/Avatar.js"
+import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
+import { Button } from "../../../shared/components/Button.js"
+import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
+import { maskPhone, unmask } from "../../../shared/utils/masks.js"
 import type { OperadorRow } from "../services/admin.service.js"
 
 interface FieldErrors {
@@ -29,6 +33,10 @@ interface Props {
   actorRole?: "admin" | "socio" | "super_admin"
   onSubmit: (data: OperadorFormData) => Promise<void>
   onCancel: () => void
+  /** Ações de conta (modo edição) — quando ausentes, a seção "Status da conta" não renderiza. */
+  onAlterarStatus?: () => void
+  onReenviarConvite?: () => void
+  onRevogarConvite?: () => void
 }
 
 export interface OperadorFormHandle {
@@ -36,21 +44,25 @@ export interface OperadorFormHandle {
 }
 
 export const OperadorForm = forwardRef<OperadorFormHandle, Props>(function OperadorForm(
-  { editing, chefes = [], actorRole, onSubmit }: Props,
+  { editing, chefes = [], actorRole, onSubmit, onAlterarStatus, onReenviarConvite, onRevogarConvite }: Props,
   ref,
 ) {
   const { t } = useTranslation()
   const [nome, setNome] = useState(editing?.nome ?? "")
   const [email, setEmail] = useState(editing?.email ?? "")
-  const [telefone, setTelefone] = useState(editing?.telefone ?? "")
+  const [telefone, setTelefone] = useState(editing?.telefone ? maskPhone(editing.telefone) : "")
   const [role, setRole] = useState<"admin" | "socio" | "operator">(editing && editing.role !== "super_admin" ? editing.role : "operator")
   const [chefeId, setChefeId] = useState<string>(editing?.chefeId ?? "")
   const [foto, setFoto] = useState<string | null>(editing?.foto ?? null)
   const [errors, setErrors] = useState<FieldErrors>({})
+  const [revogarOpen, setRevogarOpen] = useState(false)
   const nomeRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
 
   const isActorSocio = actorRole === "socio"
+  const isSuspenso = Boolean(editing?.suspensoEm)
+  const isConvidado = editing?.status === "convidado"
+  const temConviteValido = editing?.conviteStatus === "PENDENTE"
 
   useEffect(() => {
     const firstKey = (Object.keys(errors) as (keyof FieldErrors)[]).find((k) => errors[k])
@@ -73,7 +85,7 @@ export const OperadorForm = forwardRef<OperadorFormHandle, Props>(function Opera
     await onSubmit({
       nome: nome.trim(),
       email: email.trim(),
-      telefone: telefone.trim() === "" ? null : telefone.trim(),
+      telefone: telefone.trim() === "" ? null : unmask(telefone),
       role,
       foto: editing ? foto : undefined,
       // Sócio: chefe é ele mesmo; admin/super: chefe selecionado (ou null = sob o admin)
@@ -81,7 +93,7 @@ export const OperadorForm = forwardRef<OperadorFormHandle, Props>(function Opera
     })
   }
 
-  // Botões de ação ficam no `Modal.footer` (AdminPage) — expomos submit() via ref.
+  // Botões de ação ficam no `Modal.footer` (AdminPage/OperadorDetail) — expomos submit() via ref.
   useImperativeHandle(ref, () => ({ submit }))
 
   async function handleFormSubmit(e: React.FormEvent) {
@@ -90,17 +102,17 @@ export const OperadorForm = forwardRef<OperadorFormHandle, Props>(function Opera
   }
 
   const showChefe = !isActorSocio && (role === "operator" || role === "socio")
+  const temAcoesConta = Boolean(onAlterarStatus || onReenviarConvite || onRevogarConvite)
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-4">
-      <Card.Root tone="success" className="p-4">
+      <Card.Root tone="info" className="p-4">
         <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("admin.secaoDadosPessoais")}</h2>
         <div className="flex flex-col gap-6 md:flex-row md:items-start">
           <div className="flex shrink-0 flex-col items-center gap-3 md:pt-1">
             <AvatarField
               nome={nome}
               foto={foto}
-              label={t("avatar.foto")}
               size="lg"
               onChange={(f) => setFoto(f)}
             />
@@ -117,8 +129,8 @@ export const OperadorForm = forwardRef<OperadorFormHandle, Props>(function Opera
               label={t("admin.telefone")}
               type="tel"
               value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
-              placeholder={t("perfil.telefoneOpcional")}
+              onChange={(e) => setTelefone(maskPhone(e.target.value))}
+              placeholder={t("perfil.telefonePlaceholder")}
             />
           </div>
         </div>
@@ -177,6 +189,50 @@ export const OperadorForm = forwardRef<OperadorFormHandle, Props>(function Opera
           )}
         </div>
       </Card.Root>
+
+      {editing && temAcoesConta && (
+        <Card.Root tone={isSuspenso ? "danger" : isConvidado ? "warning" : "success"} className="p-4">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 pl-2">
+            <h2 className="font-display text-[20px] font-semibold text-text-primary">{t("admin.statusConta")}</h2>
+            {isSuspenso ? (
+              <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />
+            ) : isConvidado ? (
+              <StatusBadge variant="warning" size="sm" label={t("perfil.statusConvidado")} />
+            ) : (
+              <StatusBadge variant="success" size="sm" label={t("admin.statusAtivo")} />
+            )}
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {isConvidado && onReenviarConvite && (
+              <Button type="button" variant="soft" onClick={onReenviarConvite}>
+                <Mail className="size-4" aria-hidden /> {t("admin.reenviarConvite")}
+              </Button>
+            )}
+            {isConvidado && temConviteValido && onRevogarConvite && (
+              <Button type="button" variant="secondary" onClick={() => setRevogarOpen(true)}>
+                <XCircle className="size-4" aria-hidden /> {t("admin.revogarConvite")}
+              </Button>
+            )}
+            {onAlterarStatus && (
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onAlterarStatus}>
+                <ShieldCheck className="size-4" aria-hidden /> {t("admin.alterarStatusConta")}
+              </Button>
+            )}
+          </div>
+        </Card.Root>
+      )}
+
+      {editing && temAcoesConta && onRevogarConvite && (
+        <ConfirmModal
+          open={revogarOpen}
+          title={t("admin.revogarConfirmacao")}
+          message={t("admin.revogarConfirmacaoMessage")}
+          confirmLabel={t("admin.revogarConvite")}
+          danger
+          onConfirm={() => { onRevogarConvite(); setRevogarOpen(false) }}
+          onCancel={() => setRevogarOpen(false)}
+        />
+      )}
     </form>
   )
 })

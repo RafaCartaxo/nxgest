@@ -10,6 +10,7 @@ import { SuccessState } from "../../../shared/components/SuccessState/SuccessSta
 import { Logo } from "../../../shared/components/Logo.js"
 import { criarLead, reenviarConfirmacao } from "../services/leads.service.js"
 import { ApiError } from "../../../api/client.js"
+import { maskPhone, unmask } from "../../../shared/utils/masks.js"
 
 const schema = z.object({
   nomeResponsavel: z.string().min(2, "lead.validacaoNome"),
@@ -53,7 +54,7 @@ export function QueroConhecerPage() {
         nomeResponsavel: nomeResponsavel.trim(),
         empresa: empresa.trim(),
         email: email.trim(),
-        telefone: telefone.trim() || undefined,
+        telefone: telefone.trim() ? unmask(telefone) : undefined,
         origem: "Site",
       })
       if (result.jaExistia) {
@@ -133,8 +134,10 @@ export function QueroConhecerPage() {
               />
               <Field
                 label={t("lead.telefone")}
+                type="tel"
                 value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
+                onChange={(e) => setTelefone(maskPhone(e.target.value))}
+                placeholder={t("perfil.telefonePlaceholder")}
                 error={erros.telefone}
                 autoComplete="tel"
               />

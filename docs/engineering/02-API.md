@@ -504,6 +504,7 @@ Cria um novo contrato com geração automática de parcelas e débito do Caixa B
     "valorBase": 500.00,
     "percentualJuros": 20,
     "quantidadeParcelas": 10,
+    "periodicidade": "diaria",
     "dataInicio": "2026-06-28"
 }
 ```
@@ -516,7 +517,8 @@ Cria um novo contrato com geração automática de parcelas e débito do Caixa B
 | valorBase | Sim | Positivo |
 | percentualJuros | Sim | Mínimo 0, padrão 20 |
 | quantidadeParcelas | Sim | Inteiro positivo |
-| dataInicio | Sim | Formato AAAA-MM-DD |
+| periodicidade | Não | `diaria` (padrão) \| `semanal` |
+| dataInicio | Sim | Formato AAAA-MM-DD; contrato semanal não pode iniciar em domingo |
 
 ## Response 201
 
@@ -530,6 +532,7 @@ Cria um novo contrato com geração automática de parcelas e débito do Caixa B
     "quantidadeParcelas": 10,
     "dataInicio": "2026-06-28",
     "dataFinal": "2026-07-08",
+    "periodicidade": "diaria",
     "estado": "Ativo",
     "parcelas": [
         {
@@ -576,6 +579,7 @@ Lista contratos com paginação.
             "quantidadeParcelas": 10,
             "dataInicio": "2026-06-28",
             "dataFinal": "2026-07-08",
+            "periodicidade": "diaria",
             "estado": "Ativo",
             "saldoPendente": 600.00,
             "parcelasPagas": 0,
@@ -615,6 +619,7 @@ Obtém um contrato com sua lista de parcelas.
     "quantidadeParcelas": 10,
     "dataInicio": "2026-06-28",
     "dataFinal": "2026-07-08",
+    "periodicidade": "diaria",
     "estado": "Ativo",
     "parcelas": [
         {

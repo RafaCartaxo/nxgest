@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Check, Save, User, Mail, Undo2, BadgeCheck, Info } from "lucide-react"
+import { Check, Save, User, Mail, Undo2, BadgeCheck, Info, Lock } from "lucide-react"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
 import { Button } from "../../../shared/components/Button.js"
@@ -12,12 +12,13 @@ import { Card } from "../../../shared/components/Card/Card.js"
 import { Modal } from "../../../shared/components/Modal/Modal.js"
 import { AvatarField } from "../../../shared/components/Avatar/Avatar.js"
 import { roleLabel, roleVariant } from "../../../shared/utils/role.js"
+import { maskPhone, unmask } from "../../../shared/utils/masks.js"
 import { alterarSenha, alterarFoto, atualizarPerfil, trocarEmail, cancelarTrocaEmail } from "../services/auth.service.js"
 import { ApiError } from "../../../api/client.js"
 
 interface PerfilErros {
   novoEmail?: string
-  senhaTroca?: string
+  senhaAlteracao?: string
 }
 
 export function PerfilPage() {
@@ -27,7 +28,7 @@ export function PerfilPage() {
   const { user, refreshUser } = useAuth()
 
   const [nome, setNome] = useState(user?.nome ?? "")
-  const [telefone, setTelefone] = useState(user?.telefone ?? "")
+  const [telefone, setTelefone] = useState(user?.telefone ? maskPhone(user.telefone) : "")
   const [savingDados, setSavingDados] = useState(false)
 
   const [foto, setFoto] = useState<string | null>(user?.foto ?? null)
@@ -38,11 +39,13 @@ export function PerfilPage() {
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [erros, setErros] = useState<{ senhaAtual?: string; novaSenha?: string; confirmarSenha?: string }>({})
 
-  const [trocarModalOpen, setTrocarModalOpen] = useState(false)
+  const [alterarEmailModalOpen, setAlterarEmailModalOpen] = useState(false)
   const [novoEmail, setNovoEmail] = useState("")
-  const [senhaTroca, setSenhaTroca] = useState("")
-  const [trocarErros, setTrocarErros] = useState<PerfilErros>({})
-  const [savingTroca, setSavingTroca] = useState(false)
+  const [senhaAlteracao, setSenhaAlteracao] = useState("")
+  const [alterarEmailErros, setAlterarEmailErros] = useState<PerfilErros>({})
+  const [savingAlterarEmail, setSavingAlterarEmail] = useState(false)
+
+  const [alterarSenhaModalOpen, setAlterarSenhaModalOpen] = useState(false)
 
   const [cancelarModalOpen, setCancelarModalOpen] = useState(false)
   const [senhaCancelar, setSenhaCancelar] = useState("")
@@ -70,7 +73,7 @@ export function PerfilPage() {
     }
     setSavingDados(true)
     try {
-      await atualizarPerfil({ nome: nome.trim(), telefone: telefone.trim() === "" ? null : telefone.trim() })
+      await atualizarPerfil({ nome: nome.trim(), telefone: telefone.trim() === "" ? null : unmask(telefone) })
       await refreshUser()
       feedback.show({ status: "success", message: t("perfil.dadosSalvos") })
     } catch {
@@ -80,34 +83,34 @@ export function PerfilPage() {
     }
   }
 
-  async function handleTrocarEmail(e: React.FormEvent) {
+  async function handleAlterarEmail(e: React.FormEvent) {
     e.preventDefault()
     const errs: PerfilErros = {}
     if (!novoEmail.trim()) errs.novoEmail = t("perfil.novoEmailObrigatorio")
     else if (!novoEmail.includes("@")) errs.novoEmail = t("perfil.emailInvalido")
-    if (!senhaTroca) errs.senhaTroca = t("perfil.erroTrocarRequerSenha")
-    setTrocarErros(errs)
+    if (!senhaAlteracao) errs.senhaAlteracao = t("perfil.erroAlterarRequerSenha")
+    setAlterarEmailErros(errs)
     if (Object.keys(errs).length > 0) return
-    setSavingTroca(true)
+    setSavingAlterarEmail(true)
     try {
-      await trocarEmail(novoEmail.trim(), senhaTroca)
+      await trocarEmail(novoEmail.trim(), senhaAlteracao)
       await refreshUser()
-      setTrocarModalOpen(false)
+      setAlterarEmailModalOpen(false)
       setNovoEmail("")
-      setSenhaTroca("")
-      feedback.show({ status: "success", message: t("perfil.trocarEmailEnviado") })
+      setSenhaAlteracao("")
+      feedback.show({ status: "success", message: t("perfil.alterarEmailEnviado") })
     } catch (err) {
       // ApiError traz a mensagem traduzida (ex.: EMAIL_DUPLICATED, VALIDATION_ERROR).
-      feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("perfil.erroTrocarEmail") })
+      feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("perfil.erroAlterarEmail") })
     } finally {
-      setSavingTroca(false)
+      setSavingAlterarEmail(false)
     }
   }
 
-  async function handleCancelarTroca(e: React.FormEvent) {
+  async function handleCancelarAlteracao(e: React.FormEvent) {
     e.preventDefault()
     if (!senhaCancelar) {
-      feedback.show({ status: "error", message: t("perfil.erroTrocarRequerSenha") })
+      feedback.show({ status: "error", message: t("perfil.erroAlterarRequerSenha") })
       return
     }
     setSavingCancelar(true)
@@ -116,10 +119,10 @@ export function PerfilPage() {
       await refreshUser()
       setCancelarModalOpen(false)
       setSenhaCancelar("")
-      feedback.show({ status: "success", message: t("perfil.trocaCancelada") })
+      feedback.show({ status: "success", message: t("perfil.alteracaoCancelada") })
     } catch (err) {
       // ApiError traz a mensagem traduzida (ex.: INVALID_CURRENT_PASSWORD).
-      feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("perfil.erroCancelarTroca") })
+      feedback.show({ status: "error", message: err instanceof ApiError ? err.message : t("perfil.erroCancelarAlteracao") })
     } finally {
       setSavingCancelar(false)
     }
@@ -145,6 +148,7 @@ export function PerfilPage() {
       success: t("perfil.senhaAlteradaSucesso"),
       error: t("perfil.erroAlterarSenha"),
     })
+    setAlterarSenhaModalOpen(false)
   }
 
   const statusBadge =
@@ -174,7 +178,7 @@ export function PerfilPage() {
             </div>
           </div>
           <Button type="button" variant="soft" size="sm" className="self-start md:self-center" onClick={() => setCancelarModalOpen(true)}>
-            <Undo2 className="size-4" aria-hidden /> {t("perfil.cancelarTroca")}
+            <Undo2 className="size-4" aria-hidden /> {t("perfil.cancelarAlteracao")}
           </Button>
         </div>
       )}
@@ -183,8 +187,11 @@ export function PerfilPage() {
         {/* Coluna principal: Dados pessoais + Conta */}
         <div className="flex flex-col gap-6 lg:col-span-8">
           {/* Dados pessoais */}
-          <Card.Root tone="success" className="p-4">
-            <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("perfil.secaoDadosPessoais")}</h2>
+          <Card.Root tone="info" className="p-4">
+            <div className="mb-4 flex items-center justify-between gap-2 pl-2">
+              <h2 className="font-display text-[20px] font-semibold text-text-primary">{t("perfil.secaoDadosPessoais")}</h2>
+              <StatusBadge variant={roleVariant(user?.role)} size="sm" label={roleLabel(user?.role, t)} />
+            </div>
             <form onSubmit={handleSalvarDados} className="space-y-4">
               <div className="flex flex-col gap-6 md:flex-row md:items-start">
                 <div className="flex shrink-0 flex-col items-center gap-3 md:pt-1">
@@ -204,8 +211,8 @@ export function PerfilPage() {
                     label={t("perfil.telefone")}
                     type="tel"
                     value={telefone}
-                    onChange={(e) => setTelefone(e.target.value)}
-                    placeholder={t("perfil.telefoneOpcional")}
+                    onChange={(e) => setTelefone(maskPhone(e.target.value))}
+                    placeholder={t("perfil.telefonePlaceholder")}
                   />
                 </div>
               </div>
@@ -218,8 +225,11 @@ export function PerfilPage() {
           </Card.Root>
 
           {/* Conta */}
-          <Card.Root tone="info" className="p-4">
-            <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("perfil.secaoConta")}</h2>
+          <Card.Root tone={statusBadge.variant} className="p-4">
+            <div className="mb-4 flex items-center justify-between gap-2 pl-2">
+              <h2 className="font-display text-[20px] font-semibold text-text-primary">{t("perfil.secaoConta")}</h2>
+              <StatusBadge variant={statusBadge.variant} size="sm" label={statusBadge.label} />
+            </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="rounded-lg border border-border bg-surface-secondary p-3">
                 <p className="text-xs font-medium text-text-secondary">{t("perfil.email")}</p>
@@ -237,13 +247,9 @@ export function PerfilPage() {
                 <p className="mt-1 truncate font-medium text-text-primary">{user?.empresaNome ?? t("perfil.semEmpresa")}</p>
               </div>
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <StatusBadge variant={statusBadge.variant} size="sm" label={statusBadge.label} />
-              <StatusBadge variant={roleVariant(user?.role)} size="sm" label={roleLabel(user?.role, t)} />
-            </div>
             <div className="mt-4 flex gap-2 border-t border-border-light pt-3">
-              <Button type="button" variant="outline" className="w-full" onClick={() => setTrocarModalOpen(true)}>
-                <Mail className="size-4" /> {t("perfil.trocarEmail")}
+              <Button type="button" variant="outline" className="w-full" onClick={() => setAlterarEmailModalOpen(true)}>
+                <Mail className="size-4" /> {t("perfil.alterarEmail")}
               </Button>
             </div>
           </Card.Root>
@@ -253,72 +259,87 @@ export function PerfilPage() {
         <div className="flex flex-col gap-6 lg:col-span-4">
           <Card.Root tone="neutral" className="p-4">
             <h2 className="mb-4 pl-2 font-display text-[20px] font-semibold text-text-primary">{t("perfil.secaoSeguranca")}</h2>
-            <form onSubmit={handleSenha} className="space-y-4">
-              <Field
-                label={t("perfil.senhaAtual")}
-                type="password"
-                value={senhaAtual}
-                onChange={(e) => setSenhaAtual(e.target.value)}
-                autoComplete="current-password"
-                error={erros.senhaAtual}
-              />
-
-              <Field
-                label={t("perfil.novaSenha")}
-                type="password"
-                value={novaSenha}
-                onChange={(e) => setNovaSenha(e.target.value)}
-                autoComplete="new-password"
-                error={erros.novaSenha}
-              />
-
-              <Field
-                label={t("perfil.confirmarSenha")}
-                type="password"
-                value={confirmarSenha}
-                onChange={(e) => setConfirmarSenha(e.target.value)}
-                autoComplete="new-password"
-                error={erros.confirmarSenha}
-              />
-
-              <div className="flex gap-2 justify-end pt-2">
-                <Button type="submit"><Check className="size-4" /> {t("perfil.trocarSenha")}</Button>
-              </div>
-            </form>
+            <Button type="button" variant="outline" className="w-full" onClick={() => setAlterarSenhaModalOpen(true)}>
+              <Lock className="size-4" /> {t("perfil.alterarSenha")}
+            </Button>
           </Card.Root>
         </div>
       </div>
 
       <Modal
-        open={trocarModalOpen}
-        onClose={() => setTrocarModalOpen(false)}
-        title={t("perfil.trocarEmailTitle")}
-        descricao={t("perfil.trocarEmailSubtitle")}
+        open={alterarEmailModalOpen}
+        onClose={() => setAlterarEmailModalOpen(false)}
+        title={t("perfil.alterarEmailTitle")}
+        descricao={t("perfil.alterarEmailSubtitle")}
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleTrocarEmail} className="mt-4 space-y-4">
+        <form onSubmit={handleAlterarEmail} className="mt-4 space-y-4">
           <Field
             label={t("perfil.novoEmail")}
             type="email"
             value={novoEmail}
             onChange={(e) => setNovoEmail(e.target.value)}
-            error={trocarErros.novoEmail}
+            error={alterarEmailErros.novoEmail}
           />
           <Field
             label={t("perfil.senhaAtual")}
             type="password"
-            value={senhaTroca}
-            onChange={(e) => setSenhaTroca(e.target.value)}
+            value={senhaAlteracao}
+            onChange={(e) => setSenhaAlteracao(e.target.value)}
             autoComplete="current-password"
-            error={trocarErros.senhaTroca}
+            error={alterarEmailErros.senhaAlteracao}
           />
           <div className="flex gap-2 justify-end pt-2">
-            <Button type="button" variant="ghost" onClick={() => setTrocarModalOpen(false)}>
+            <Button type="button" variant="ghost" onClick={() => setAlterarEmailModalOpen(false)}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={savingTroca}>
-              {savingTroca ? t("common.saving") : t("perfil.trocarEmail")}
+            <Button type="submit" disabled={savingAlterarEmail}>
+              {savingAlterarEmail ? t("common.saving") : t("perfil.alterarEmail")}
             </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={alterarSenhaModalOpen}
+        onClose={() => setAlterarSenhaModalOpen(false)}
+        title={t("perfil.alterarSenha")}
+        descricao={t("perfil.alterarSenhaDescricao")}
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleSenha} className="mt-4 space-y-4">
+          <Field
+            label={t("perfil.senhaAtual")}
+            type="password"
+            value={senhaAtual}
+            onChange={(e) => setSenhaAtual(e.target.value)}
+            autoComplete="current-password"
+            error={erros.senhaAtual}
+          />
+
+          <Field
+            label={t("perfil.novaSenha")}
+            type="password"
+            value={novaSenha}
+            onChange={(e) => setNovaSenha(e.target.value)}
+            autoComplete="new-password"
+            error={erros.novaSenha}
+          />
+
+          <Field
+            label={t("perfil.confirmarSenha")}
+            type="password"
+            value={confirmarSenha}
+            onChange={(e) => setConfirmarSenha(e.target.value)}
+            autoComplete="new-password"
+            error={erros.confirmarSenha}
+          />
+
+          <div className="flex gap-2 justify-end pt-2">
+            <Button type="button" variant="ghost" onClick={() => setAlterarSenhaModalOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit"><Check className="size-4" /> {t("perfil.alterarSenha")}</Button>
           </div>
         </form>
       </Modal>
@@ -326,11 +347,11 @@ export function PerfilPage() {
       <Modal
         open={cancelarModalOpen}
         onClose={() => setCancelarModalOpen(false)}
-        title={t("perfil.cancelarTrocaConfirmacao")}
-        descricao={t("perfil.cancelarTrocaConfirmacaoMessage")}
+        title={t("perfil.cancelarAlteracaoConfirmacao")}
+        descricao={t("perfil.cancelarAlteracaoConfirmacaoMessage")}
         maxWidth="max-w-md"
       >
-        <form onSubmit={handleCancelarTroca} className="mt-4 space-y-4">
+        <form onSubmit={handleCancelarAlteracao} className="mt-4 space-y-4">
           <Field
             label={t("perfil.senhaAtual")}
             type="password"
@@ -343,7 +364,7 @@ export function PerfilPage() {
               {t("common.cancel")}
             </Button>
             <Button type="submit" variant="danger" disabled={savingCancelar}>
-              {savingCancelar ? t("common.saving") : t("perfil.cancelarTroca")}
+              {savingCancelar ? t("common.saving") : t("perfil.cancelarAlteracao")}
             </Button>
           </div>
         </form>
