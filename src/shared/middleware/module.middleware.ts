@@ -15,6 +15,9 @@ import { parseModulos, type ModuleId } from "../../modules/admin/domain/modules.
  * - super_admin sem `?empresaId=` → sem empresa-alvo → segue (gestão global);
  *   com `?empresaId=` → valida os módulos da empresa-alvo (mesma regra do
  *   `resolveUsuarioAlvo`).
+ *
+ * PLAN-077 (performance): o authMiddleware já resolve a empresa do usuário
+ * (`req.authEmpresa`, incluindo `modulos`) — reutiliza em vez de re-consultar.
  */
 export function requireModule(moduleId: ModuleId) {
   return async function moduleMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -29,21 +32,26 @@ export function requireModule(moduleId: ModuleId) {
     }
 
     let modulos: string[] | null
-    try {
-      const [empresa] = await db
-        .select({ modulos: empresas.modulos })
-        .from(empresas)
-        .where(eq(empresas.id, empresaId))
-        .limit(1)
+    const cached = req.authEmpresa
+    if (cached && cached.id === empresaId) {
+      modulos = parseModulos(cached.modulos)
+    } else {
+      try {
+        const [empresa] = await db
+          .select({ modulos: empresas.modulos })
+          .from(empresas)
+          .where(eq(empresas.id, empresaId))
+          .limit(1)
 
-      if (!empresa) {
-        res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
+        if (!empresa) {
+          res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
+          return
+        }
+        modulos = parseModulos(empresa.modulos)
+      } catch (err) {
+        next(err as Error)
         return
       }
-      modulos = parseModulos(empresa.modulos)
-    } catch (err) {
-      next(err as Error)
-      return
     }
 
     if (modulos !== null && !modulos.includes(moduleId)) {

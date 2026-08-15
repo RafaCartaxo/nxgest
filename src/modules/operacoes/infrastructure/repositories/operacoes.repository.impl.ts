@@ -82,24 +82,8 @@ export class OperacoesRepository implements IOperacoesRepository {
         END AS situacao,
         v."visitado_em",
         v."resultado_operacional",
-        COALESCE((
-          SELECT p2.numero
-          FROM parcelas p2
-          WHERE p2."contrato_id" = ct.id
-            AND p2."saldo_pendente" > 0
-            AND p2."deleted_at" IS NULL
-          ORDER BY p2."data_vencimento" ASC, p2.numero ASC
-          LIMIT 1
-        ), 0) AS "proximo_numero_parcela",
-        COALESCE((
-          SELECT p2."saldo_pendente"
-          FROM parcelas p2
-          WHERE p2."contrato_id" = ct.id
-            AND p2."saldo_pendente" > 0
-            AND p2."deleted_at" IS NULL
-          ORDER BY p2."data_vencimento" ASC, p2.numero ASC
-          LIMIT 1
-        ), 0) AS "proxima_parcela",
+        COALESCE(prox.numero, 0) AS "proximo_numero_parcela",
+        COALESCE(prox."saldo_pendente", 0) AS "proxima_parcela",
         COALESCE(
           ?::date - (MIN(p."data_vencimento") FILTER (WHERE p."data_vencimento" < ?))::date,
           0
@@ -107,34 +91,38 @@ export class OperacoesRepository implements IOperacoesRepository {
       FROM parcelas p
       JOIN contratos ct ON ct.id = p."contrato_id"
       JOIN clientes c ON c.id = ct."cliente_id"
-      LEFT JOIN (
-        SELECT h."cliente_id", h."contrato_id",
-          MAX(h."created_at") AS "visitado_em",
-          (SELECT h2."tipo" FROM historico_operacional h2
-           WHERE h2."cliente_id" = h."cliente_id"
-             AND h2."contrato_id" = h."contrato_id"
-             AND h2."created_at" >= ?
-             AND h2."created_at" < ?
-             AND h2."user_id" = ?
-           ORDER BY h2."created_at" DESC LIMIT 1) AS "resultado_operacional"
+      LEFT JOIN LATERAL (
+        SELECT p2.numero, p2."saldo_pendente"
+        FROM parcelas p2
+        WHERE p2."contrato_id" = ct.id
+          AND p2."saldo_pendente" > 0
+          AND p2."deleted_at" IS NULL
+        ORDER BY p2."data_vencimento" ASC, p2.numero ASC
+        LIMIT 1
+      ) prox ON true
+      LEFT JOIN LATERAL (
+        SELECT h."created_at" AS "visitado_em", h."tipo" AS "resultado_operacional"
         FROM historico_operacional h
-        WHERE h."created_at" >= ?
+        WHERE h."cliente_id" = c.id
+          AND h."contrato_id" = ct.id
+          AND h."created_at" >= ?
           AND h."created_at" < ?
           AND h."user_id" = ?
-        GROUP BY h."cliente_id", h."contrato_id"
-      ) v ON v."cliente_id" = c.id AND v."contrato_id" = ct.id
+        ORDER BY h."created_at" DESC
+        LIMIT 1
+      ) v ON true
       WHERE p."saldo_pendente" > 0
         AND p."data_vencimento" <= ?
         AND p."deleted_at" IS NULL
         AND ct."deleted_at" IS NULL
         AND c."deleted_at" IS NULL
         AND ct."user_id" = ?
-      GROUP BY c.id, ct.id, v."visitado_em", v."resultado_operacional"
+      GROUP BY c.id, ct.id, v."visitado_em", v."resultado_operacional", prox.numero, prox."saldo_pendente"
       ORDER BY
         situacao DESC,
         MIN(p."data_vencimento") ASC,
         ct."created_at" ASC
-    `, [hoje, hoje, hoje, inicio, fim, userId, inicio, fim, userId, hoje, userId]) as { rows: CobrancaRow[] }
+    `, [hoje, hoje, hoje, inicio, fim, userId, hoje, userId]) as { rows: CobrancaRow[] }
 
     const { rows: aReceberHojeRows } = await rawQuery<{ total: number }>(`
       SELECT COALESCE(SUM(p."saldo_pendente"), 0) AS total

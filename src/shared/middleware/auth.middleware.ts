@@ -30,14 +30,34 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     req.userRole = usuario.role as JwtPayload["role"]
     req.empresaId = usuario.empresaId
 
+    // PLAN-077: grava o usuário resolvido no request — o requireModule e outros
+    // middlewares reutilizam em vez de re-consultar (antes: +1 query por request).
+    req.authUsuario = {
+      id: usuario.id,
+      role: usuario.role as JwtPayload["role"],
+      empresaId: usuario.empresaId,
+      senhaHash: usuario.senhaHash,
+      suspensoEm: usuario.suspensoEm,
+    }
+
     // Empresa suspensa (ativa = 0) bloqueia todas as rotas operacionais (BR-106).
     // super_admin (empresaId null) nunca é bloqueado — gestão global.
+    // PLAN-077: já resolve `modulos` aqui (uma única query) para o requireModule.
     if (usuario.empresaId) {
-      const [empresa] = await db.select({ ativa: empresas.ativa }).from(empresas).where(eq(empresas.id, usuario.empresaId)).limit(1)
+      const [empresa] = await db
+        .select({ id: empresas.id, ativa: empresas.ativa, modulos: empresas.modulos })
+        .from(empresas)
+        .where(eq(empresas.id, usuario.empresaId))
+        .limit(1)
+      if (empresa) {
+        req.authEmpresa = { id: empresa.id, ativa: empresa.ativa, modulos: empresa.modulos }
+      }
       if (empresa && empresa.ativa === 0) {
         res.status(403).json({ code: "EMPRESA_INATIVA", message: "A empresa está inativa." })
         return
       }
+    } else {
+      req.authEmpresa = null
     }
 
     // Conta suspensa (N3 — PLAN-075): bloqueia TODAS as rotas, inclusive sessões com

@@ -77,6 +77,8 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-073-ia-produto.md](PLAN-073-ia-produto.md) | **IA no produto (plano mestre F1-F5):** WhatsApp inteligente · resumo do dia · priorização de rota · OCR de anexos · FAQ (P029) | ⏳ Planejado — F1 detalhada |
 | [PLAN-074-ia-whatsapp.md](PLAN-074-ia-whatsapp.md) | **IA F1 — WhatsApp inteligente (P017):** endpoint `sugerir` (Gemini Flash-Lite, free tier) + fallback ao template | ⏳ Planejado |
 | [PLAN-075-dados-cadastrais-acesso-seguranca-email.md](PLAN-075-dados-cadastrais-acesso-seguranca-email.md) | **Cadastro, perfil, convites e segurança de usuários** — ciclo de vida de usuário (convidado/ativo/suspenso), convite com tabela `convites` (status/email_alvo/criado_por), troca de e-mail com verificação, admin nunca define senha, seed de contato na conversão, dedup global | ⏳ Planejado (canônico v1.0 + notas de implementação, 13/08) |
+| [PLAN-076-contrato-periodicidade.md](PLAN-076-contrato-periodicidade.md) | **Contratos com periodicidade diária e semanal** — campo `periodicidade` (default `diaria`), vencimento semanal +7 dias, domingo bloqueado para semanal (BR-040-A), badge no card | ✅ Implementado (15/08) |
+| [PLAN-077-performance-escalabilidade.md](PLAN-077-performance-escalabilidade.md) | **Performance & escalabilidade (whitelabel)** — pool PG com timeout, cache por request no auth/módulo, reescrita da query de cobranças (LATERAL), N+1 em pagamentos, fix SQL latente no caixa, code-splitting frontend + GPS throttle, node 20 | 🔵 Implementado (15/08) · smoke 267/267 · reinício dev ⏳ |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |
 
 ## Backlog e briefings auxiliares

@@ -1,3 +1,4 @@
+import { lazy, Suspense, type ComponentType } from "react"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { AppLayout } from "./shared/layout/AppLayout.js"
 import { ErrorBoundary } from "./shared/components/ErrorBoundary.js"
@@ -7,32 +8,53 @@ import { ProtectedRoute } from "./shared/auth/ProtectedRoute.js"
 import { AdminRoute } from "./shared/auth/AdminRoute.js"
 import { SuperAdminRoute } from "./shared/auth/SuperAdminRoute.js"
 import { RequireModule } from "./shared/auth/RequireModule.js"
-import { LoginPage } from "./modules/auth/pages/LoginPage.js"
-import { PerfilPage } from "./modules/auth/pages/PerfilPage.js"
-import { RecuperarSenhaPage } from "./modules/auth/pages/RecuperarSenhaPage.js"
-import { ResetarSenhaPage } from "./modules/auth/pages/ResetarSenhaPage.js"
-import { AtivarPage } from "./modules/auth/pages/AtivarPage.js"
-import { VerificarEmailPage } from "./modules/auth/pages/VerificarEmailPage.js"
-import { QueroConhecerPage } from "./modules/leads/pages/QueroConhecerPage.js"
-import { ConfirmarLeadPage } from "./modules/leads/pages/ConfirmarLeadPage.js"
-import { LeadsAdminPage } from "./modules/leads/pages/LeadsAdminPage.js"
-import { OperacoesDashboard } from "./modules/operacoes/pages/OperacoesDashboard.js"
-import { CobrancaListPage } from "./modules/operacoes/pages/CobrancaListPage.js"
-import { AtendidosPage } from "./modules/operacoes/pages/AtendidosPage.js"
-import { RotaPage } from "./modules/operacoes/pages/RotaPage.js"
-import { ClienteList } from "./modules/cliente/pages/ClienteList.js"
-import { ClienteDetail } from "./modules/cliente/pages/ClienteDetail.js"
-import { ClienteNovo } from "./modules/cliente/pages/ClienteNovo.js"
-import { ClienteEdit } from "./modules/cliente/pages/ClienteEdit.js"
-import { ContratoList } from "./modules/contrato/pages/ContratoList.js"
-import { ContratoDetail } from "./modules/contrato/pages/ContratoDetail.js"
-import { ContratoNovo } from "./modules/contrato/pages/ContratoNovo.js"
-import { ContratoEdit } from "./modules/contrato/pages/ContratoEdit.js"
-import { CaixaPage } from "./modules/caixa/pages/CaixaPage.js"
-import { GastoPage } from "./modules/gasto/pages/GastoPage.js"
-import { AdminPage } from "./modules/admin/pages/AdminPage.js"
-import { SuperAdminPage } from "./modules/admin/pages/SuperAdminPage.js"
-import { OperadorDetail } from "./modules/admin/pages/OperadorDetail.js"
+
+// PLAN-077 (performance): code-splitting por rota — cada página vira um chunk próprio.
+// Antes, 28 páginas eram import estático no topo (bundle único; HMR recompilava tudo).
+// As páginas do projeto exportam por NOME (`export function X`), então o loader resolve
+// o componente pelo nome informado.
+const lazyPage = (name: string, loader: () => Promise<Record<string, unknown>>) => {
+  const Lazy = lazy(async () => {
+    const mod = await loader()
+    const Component = mod[name]
+    if (typeof Component !== "function") {
+      throw new Error(`Página "${name}" não encontrada no módulo lazy`)
+    }
+    return { default: Component as ComponentType }
+  })
+  return (
+    <Suspense fallback={<div className="flex min-h-40 items-center justify-center"><div className="size-6 animate-spin rounded-full border-b-2 border-primary" /></div>}>
+      <Lazy />
+    </Suspense>
+  )
+}
+
+const LoginPage = () => lazyPage("LoginPage", () => import("./modules/auth/pages/LoginPage.js"))
+const PerfilPage = () => lazyPage("PerfilPage", () => import("./modules/auth/pages/PerfilPage.js"))
+const RecuperarSenhaPage = () => lazyPage("RecuperarSenhaPage", () => import("./modules/auth/pages/RecuperarSenhaPage.js"))
+const ResetarSenhaPage = () => lazyPage("ResetarSenhaPage", () => import("./modules/auth/pages/ResetarSenhaPage.js"))
+const AtivarPage = () => lazyPage("AtivarPage", () => import("./modules/auth/pages/AtivarPage.js"))
+const VerificarEmailPage = () => lazyPage("VerificarEmailPage", () => import("./modules/auth/pages/VerificarEmailPage.js"))
+const QueroConhecerPage = () => lazyPage("QueroConhecerPage", () => import("./modules/leads/pages/QueroConhecerPage.js"))
+const ConfirmarLeadPage = () => lazyPage("ConfirmarLeadPage", () => import("./modules/leads/pages/ConfirmarLeadPage.js"))
+const LeadsAdminPage = () => lazyPage("LeadsAdminPage", () => import("./modules/leads/pages/LeadsAdminPage.js"))
+const OperacoesDashboard = () => lazyPage("OperacoesDashboard", () => import("./modules/operacoes/pages/OperacoesDashboard.js"))
+const CobrancaListPage = () => lazyPage("CobrancaListPage", () => import("./modules/operacoes/pages/CobrancaListPage.js"))
+const AtendidosPage = () => lazyPage("AtendidosPage", () => import("./modules/operacoes/pages/AtendidosPage.js"))
+const RotaPage = () => lazyPage("RotaPage", () => import("./modules/operacoes/pages/RotaPage.js"))
+const ClienteList = () => lazyPage("ClienteList", () => import("./modules/cliente/pages/ClienteList.js"))
+const ClienteDetail = () => lazyPage("ClienteDetail", () => import("./modules/cliente/pages/ClienteDetail.js"))
+const ClienteNovo = () => lazyPage("ClienteNovo", () => import("./modules/cliente/pages/ClienteNovo.js"))
+const ClienteEdit = () => lazyPage("ClienteEdit", () => import("./modules/cliente/pages/ClienteEdit.js"))
+const ContratoList = () => lazyPage("ContratoList", () => import("./modules/contrato/pages/ContratoList.js"))
+const ContratoDetail = () => lazyPage("ContratoDetail", () => import("./modules/contrato/pages/ContratoDetail.js"))
+const ContratoNovo = () => lazyPage("ContratoNovo", () => import("./modules/contrato/pages/ContratoNovo.js"))
+const ContratoEdit = () => lazyPage("ContratoEdit", () => import("./modules/contrato/pages/ContratoEdit.js"))
+const CaixaPage = () => lazyPage("CaixaPage", () => import("./modules/caixa/pages/CaixaPage.js"))
+const GastoPage = () => lazyPage("GastoPage", () => import("./modules/gasto/pages/GastoPage.js"))
+const AdminPage = () => lazyPage("AdminPage", () => import("./modules/admin/pages/AdminPage.js"))
+const SuperAdminPage = () => lazyPage("SuperAdminPage", () => import("./modules/admin/pages/SuperAdminPage.js"))
+const OperadorDetail = () => lazyPage("OperadorDetail", () => import("./modules/admin/pages/OperadorDetail.js"))
 
 export function App() {
   return (

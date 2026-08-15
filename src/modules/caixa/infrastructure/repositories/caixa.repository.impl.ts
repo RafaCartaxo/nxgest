@@ -119,7 +119,7 @@ export class CaixaRepository implements ICaixaRepository {
     bindings.push(userId)
 
     if (params.dataInicio) {
-      conditions.push("m.'data' >= ?")
+      conditions.push('m."data" >= ?')
       bindings.push(params.dataInicio)
     }
     if (params.dataFim) {

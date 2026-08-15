@@ -31,6 +31,12 @@ types.setTypeParser(1082, (v) => (v === null ? null : v))
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL ?? "postgres://nxgest:nxgest-dev@localhost:5433/nxgest",
   max: Number(process.env.PG_POOL_MAX ?? 10),
+  // PLAN-077 (performance): sem timeout, rajadas de queries (dashboard/caixa ~13 por mount)
+  // saturam o pool e a query seguinte espera indefinidamente por uma conexão — sintoma
+  // "sistema travado" no local. Com timeout, a espera falha rápido (erro claro) em vez de
+  // pendurar o request; idleTimeout libera conexões ociosas.
+  connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS ?? 5000),
+  idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS ?? 30000),
 })
 
 export const db = drizzle(pool)

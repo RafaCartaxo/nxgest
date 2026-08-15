@@ -71,14 +71,27 @@ export function useWatchPosition() {
   const [lng, setLng] = useState<number | null>(null)
   const [gpsAtivo, setGpsAtivo] = useState(false)
   const watchIdRef = useRef<number | null>(null)
+  const lastPosRef = useRef<{ lat: number; lng: number } | null>(null)
 
   useEffect(() => {
     if (!navigator.geolocation) return
 
+    // PLAN-077 (performance): throttling por distância mínima (30m). O watchPosition
+    // com enableHighAccuracy dispara continuamente em movimento; sem filtro, cada tick
+    // atualizava estado → re-render + re-sort de todas as cobranças a cada tick.
+    const MIN_MOVE_KM = 0.03
+
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        setLat(pos.coords.latitude)
-        setLng(pos.coords.longitude)
+        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        const last = lastPosRef.current
+        if (last) {
+          const moved = calcularDistancia(last.lat, last.lng, next.lat, next.lng)
+          if (moved < MIN_MOVE_KM) return
+        }
+        lastPosRef.current = next
+        setLat(next.lat)
+        setLng(next.lng)
         setGpsAtivo(true)
       },
       () => {

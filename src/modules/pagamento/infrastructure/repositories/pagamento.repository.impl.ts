@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm"
+import { eq, and, inArray } from "drizzle-orm"
 import type { PgDatabase } from "drizzle-orm/pg-core"
 import { db, pagamentos, pagamentoParcelas, auditoriaEstornos } from "../../../../database.js"
 import type { Pagamento, PagamentoParcela, PagamentoComDetalhes } from "../../domain/pagamento.entity.js"
@@ -41,33 +41,38 @@ export class PagamentoRepository implements IPagamentoRepository {
       .where(and(eq(pagamentos.contratoId, contratoId), eq(pagamentos.userId, userId)))
       .orderBy(pagamentos.createdAt)
 
-    const result: PagamentoComDetalhes[] = []
+    if (rows.length === 0) return []
 
-    for (const row of rows) {
-      const parcelasRows = await this.drizzle
-        .select()
-        .from(pagamentoParcelas)
-        .where(eq(pagamentoParcelas.pagamentoId, row.id))
+    // PLAN-077: 1 query com IN em vez de 1 query por pagamento (N+1).
+    const pagamentoIds = rows.map((r) => r.id)
+    const parcelasRows = await this.drizzle
+      .select()
+      .from(pagamentoParcelas)
+      .where(inArray(pagamentoParcelas.pagamentoId, pagamentoIds))
 
-      result.push({
-        id: row.id,
-        contratoId: row.contratoId,
-        valor: row.valor,
-        data: row.data,
-        createdAt: row.createdAt,
-        estornadoEm: row.estornadoEm,
-        estornadoPor: row.estornadoPor,
-        estornoMotivo: row.estornoMotivo,
-        parcelas: parcelasRows.map((pr) => ({
-          id: pr.id,
-          pagamentoId: pr.pagamentoId,
-          parcelaId: pr.parcelaId,
-          valor: pr.valor,
-        })),
-      })
+    const parcelasPorPagamento = new Map<string, PagamentoParcelaRow[]>()
+    for (const pr of parcelasRows) {
+      const lista = parcelasPorPagamento.get(pr.pagamentoId)
+      if (lista) lista.push(pr)
+      else parcelasPorPagamento.set(pr.pagamentoId, [pr])
     }
 
-    return result
+    return rows.map((row) => ({
+      id: row.id,
+      contratoId: row.contratoId,
+      valor: row.valor,
+      data: row.data,
+      createdAt: row.createdAt,
+      estornadoEm: row.estornadoEm,
+      estornadoPor: row.estornadoPor,
+      estornoMotivo: row.estornoMotivo,
+      parcelas: (parcelasPorPagamento.get(row.id) ?? []).map((pr) => ({
+        id: pr.id,
+        pagamentoId: pr.pagamentoId,
+        parcelaId: pr.parcelaId,
+        valor: pr.valor,
+      })),
+    }))
   }
 
   private async carregarParcelas(pagamentoId: string): Promise<PagamentoParcela[]> {

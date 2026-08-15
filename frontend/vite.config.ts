@@ -19,4 +19,16 @@ export default defineConfig({
       "/api": apiTarget,
     },
   },
+  build: {
+    // PLAN-077 (performance): isola o vendor (react/react-router/i18n) do app —
+    // primeiro load menor e cache do vendor estável entre deploys.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ["react", "react-dom", "react-router-dom"],
+          vendor: ["react-i18next", "i18next", "lucide-react"],
+        },
+      },
+    },
+  },
 })
