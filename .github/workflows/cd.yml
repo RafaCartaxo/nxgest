@@ -38,7 +38,7 @@ jobs:
           }
           echo "==> CI verde no commit ${{ github.event.workflow_run.head_sha }}"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}
 
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}
       - name: Deploy no VPS (SSH)
