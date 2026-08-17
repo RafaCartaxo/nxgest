@@ -12,12 +12,27 @@ interface ContratoCardProps {
   variant: "list-item" | "detail"
 }
 
+/** Badge de periodicidade (diária/semanal — PLAN-076) no canto superior direito do card. */
+function BadgePeriodicidade({ c }: { c: Contrato }) {
+  const { t } = useTranslation()
+  return (
+    <StatusBadge
+      variant={c.periodicidade === "semanal" ? "warning" : "info"}
+      size="sm"
+      label={c.periodicidade === "semanal" ? t("contrato.periodicidadeOpcoes.semanal") : t("contrato.periodicidadeOpcoes.diaria")}
+    />
+  )
+}
+
 function ContratoCard({ contrato: c, variant }: ContratoCardProps) {
   const { t, i18n } = useTranslation()
 
   if (variant === "list-item") {
     return (
       <Card.Root variant="list-item">
+        <div className="absolute right-4 top-4">
+          <BadgePeriodicidade c={c} />
+        </div>
         <Card.Title className="mb-1 truncate">{c.clienteNome || "..."}</Card.Title>
         <Card.Body>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
@@ -45,8 +60,6 @@ function ContratoCard({ contrato: c, variant }: ContratoCardProps) {
               ? t("contrato.parcelasTemplate", { atual: c.quantidadeParcelas, total: c.quantidadeParcelas })
               : t("contrato.parcelaTemplate", { num: (c.parcelasPagas ?? 0) + 1, total: c.quantidadeParcelas })
             }
-            {" • "}
-            {c.periodicidade === "semanal" ? t("contrato.periodicidadeOpcoes.semanal") : t("contrato.periodicidadeOpcoes.diaria")}
             {" • "}
             {formatarData(c.dataInicio, t)} → {formatarData(c.dataFinal, t)}
           </p>
@@ -84,6 +97,9 @@ function ContratoCard({ contrato: c, variant }: ContratoCardProps) {
     <Card.Root variant="detail">
       <Card.Header>
         <Card.Title className="text-lg font-semibold">{t("contrato.resumo")}</Card.Title>
+        <div className="ml-auto">
+          <BadgePeriodicidade c={c} />
+        </div>
       </Card.Header>
       <Card.Body>
         <div className="space-y-3">
@@ -129,7 +145,7 @@ function ContratoCard({ contrato: c, variant }: ContratoCardProps) {
               <p className="font-semibold">
                 {c.quantidadeParcelas}x{" "}
                 <span className="text-sm font-medium text-text-secondary">
-                  {c.periodicidade === "semanal" ? t("contrato.periodicidadeOpcoes.semanal") : t("contrato.periodicidadeOpcoes.diaria")}
+                  {t("contrato.parcelas")}
                 </span>
               </p>
             </div>
