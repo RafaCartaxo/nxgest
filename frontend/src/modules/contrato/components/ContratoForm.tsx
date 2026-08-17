@@ -38,16 +38,19 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
   const [clienteId, setClienteId] = useState<string | null>(clienteFixado?.id ?? null)
   const [clienteErro, setClienteErro] = useState<string | null>(null)
 
+  // Periodicidade inicial (criação: diária pré-selecionada; edição: a do contrato).
+  const periodicidadeInicial = initial?.periodicidade ?? "diaria"
+
   const form = useForm<ContratoFormData>({
     shouldFocusError: true,
     resolver: zodResolver(getContratoSchema(t)),
     defaultValues: {
       valorBase: initial?.valorBase ?? "",
       percentualJuros: initial?.percentualJuros ?? "20",
-      // Zerado na criação; na edição vem o valor do contrato. Ao trocar a
-      // periodicidade, o seletor aplica o default do tipo (diária=20, semanal=3).
-      quantidadeParcelas: initial?.quantidadeParcelas ?? "",
-      periodicidade: initial?.periodicidade ?? "diaria",
+      // Default de parcelas deriva da periodicidade inicial (diária=20, semanal=3);
+      // na edição mantém o valor salvo do contrato. O seletor também aplica 20/3 ao clicar.
+      quantidadeParcelas: initial?.quantidadeParcelas ?? (periodicidadeInicial === "semanal" ? "3" : "20"),
+      periodicidade: periodicidadeInicial,
       dataInicio: initial?.dataInicio ?? "",
     },
   })
