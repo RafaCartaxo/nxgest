@@ -12,10 +12,11 @@ type ContratoRow = typeof contratos.$inferSelect
 type ParcelaRow = typeof parcelas.$inferSelect
 type CaixaRow = typeof caixaConfig.$inferSelect
 
-function rowToContrato(row: ContratoRow): Contrato {
+function rowToContrato(row: ContratoRow & { clienteNome?: string | null }): Contrato {
   return {
     id: row.id,
     clienteId: row.clienteId,
+    clienteNome: row.clienteNome ?? undefined,
     valorBase: row.valorBase,
     percentualJuros: row.percentualJuros,
     valorFinal: row.valorFinal,
@@ -102,22 +103,30 @@ export class ContratoRepository implements IContratoRepository {
 
   async findById(userId: string, id: string): Promise<Contrato | null> {
     const rows = await this.drizzle
-      .select()
+      .select({
+        contrato: contratos,
+        clienteNome: clientes.nome,
+      })
       .from(contratos)
+      .leftJoin(clientes, eq(contratos.clienteId, clientes.id))
       .where(and(eq(contratos.id, id), isNull(contratos.deletedAt), eq(contratos.userId, userId)))
       .limit(1)
     if (rows.length === 0) return null
-    return rowToContrato(rows[0])
+    return rowToContrato({ ...rows[0].contrato, clienteNome: rows[0].clienteNome })
   }
 
   async findByIdWithParcelas(userId: string, id: string): Promise<ContratoComParcelas | null> {
     const rows = await this.drizzle
-      .select()
+      .select({
+        contrato: contratos,
+        clienteNome: clientes.nome,
+      })
       .from(contratos)
+      .leftJoin(clientes, eq(contratos.clienteId, clientes.id))
       .where(and(eq(contratos.id, id), isNull(contratos.deletedAt), eq(contratos.userId, userId)))
       .limit(1)
     if (rows.length === 0) return null
-    const contrato = rowToContrato(rows[0])
+    const contrato = rowToContrato({ ...rows[0].contrato, clienteNome: rows[0].clienteNome })
     const parcelasList = await this.findParcelasByContratoId(userId, id)
     return { ...contrato, parcelas: parcelasList }
   }
