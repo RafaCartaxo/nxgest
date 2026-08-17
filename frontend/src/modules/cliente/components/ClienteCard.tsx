@@ -100,10 +100,12 @@ function ClienteCard({ cliente, variant }: ClienteCardProps) {
                 </span>
               </p>
             )}
-            <p className="flex items-start gap-1.5 text-sm text-text-secondary">
-              <MapPin className="mt-0.5 size-3.5 shrink-0 text-text-muted" aria-hidden />
-              <span className="min-w-0">{montarEndereco(cliente.endereco)}</span>
-            </p>
+            {montarEndereco(cliente.endereco) && (
+              <p className="flex items-start gap-1.5 text-sm text-text-secondary">
+                <MapPin className="mt-0.5 size-3.5 shrink-0 text-text-muted" aria-hidden />
+                <span className="min-w-0">{montarEndereco(cliente.endereco)}</span>
+              </p>
+            )}
           </div>
         </div>
       </Card.Body>
