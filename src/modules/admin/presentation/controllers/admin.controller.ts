@@ -1,4 +1,5 @@
 import type { Request, Response } from "express"
+import { getParam } from "../../../../shared/utils/routeParam.js"
 import { eq } from "drizzle-orm"
 import { db, empresas } from "../../../../database.js"
 import type { IAdminRepository } from "../../application/ports/admin.repository.js"
@@ -101,7 +102,7 @@ export class AdminController {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req)
       const scope = await this.resolveScope(req)
-      const operador = await this.dashboardGetter.findById(req.params.id, targetEmpresaId, scope)
+      const operador = await this.dashboardGetter.findById(getParam(req, "id"), targetEmpresaId, scope)
       if (!operador) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
         return
@@ -184,7 +185,7 @@ export class AdminController {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req)
       const scope = await this.resolveScope(req)
-      const operador = await this.repository.findById(req.params.id, targetEmpresaId, scope)
+      const operador = await this.repository.findById(getParam(req, "id"), targetEmpresaId, scope)
       if (!operador) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
         return
@@ -220,7 +221,7 @@ export class AdminController {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req)
       const scope = await this.resolveScope(req)
-      const operador = await this.repository.findById(req.params.id, targetEmpresaId, scope)
+      const operador = await this.repository.findById(getParam(req, "id"), targetEmpresaId, scope)
       if (!operador) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
         return
@@ -244,11 +245,11 @@ export class AdminController {
     try {
       const targetEmpresaId = this.resolveEmpresaId(req)
       const scope = await this.resolveScope(req)
-      if (req.params.id === req.userId) {
+      if (getParam(req, "id") === req.userId) {
         res.status(403).json({ code: "FORBIDDEN", message: "Você não pode suspender ou reativar a própria conta." })
         return
       }
-      const existing = await this.repository.findById(req.params.id, targetEmpresaId, scope)
+      const existing = await this.repository.findById(getParam(req, "id"), targetEmpresaId, scope)
       if (!existing) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
         return
@@ -259,7 +260,7 @@ export class AdminController {
       }
       const data = status ? { suspensoEm: new Date().toISOString() } : { suspensoEm: null as string | null }
       const operador = await this.editarUseCase.execute(
-        req.params.id, data, req.userId!, targetEmpresaId, scope,
+        getParam(req, "id"), data, req.userId!, targetEmpresaId, scope,
       )
       res.json(operador)
     } catch (err) {
@@ -285,7 +286,7 @@ export class AdminController {
       // Normaliza o e-mail alvo ANTES da comparação/dedup — P-06/P-07 (PLAN-075).
       const emailNormalizado = email !== undefined && email !== null && typeof email === "string" ? String(email).trim().toLowerCase() : email
 
-      const existing = await this.repository.findById(req.params.id, targetEmpresaId, scope)
+      const existing = await this.repository.findById(getParam(req, "id"), targetEmpresaId, scope)
       if (!existing) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
         return
@@ -316,7 +317,7 @@ export class AdminController {
       }
       const targetRole = role ?? existing.role
       if (chefeId !== undefined) {
-        const chefeOk = await this.validarChefe(chefeId, targetEmpresaId, targetRole, req.params.id)
+        const chefeOk = await this.validarChefe(chefeId, targetEmpresaId, targetRole, getParam(req, "id"))
         if (!chefeOk.ok) {
           res.status(422).json({ code: "VALIDATION_ERROR", message: chefeOk.message })
           return
@@ -325,7 +326,7 @@ export class AdminController {
       // Reassign atômico (PLAN-061): o novo chefe dos subordinados deve ser um ADMIN
       // da mesma empresa (vale para operadores e sócios reatribuídos).
       if (reatribuirParaChefeId !== undefined && reatribuirParaChefeId !== null) {
-        const chefeOk = await this.validarChefe(reatribuirParaChefeId, targetEmpresaId, "socio", req.params.id)
+        const chefeOk = await this.validarChefe(reatribuirParaChefeId, targetEmpresaId, "socio", getParam(req, "id"))
         if (!chefeOk.ok) {
           res.status(422).json({ code: "VALIDATION_ERROR", message: chefeOk.message })
           return
@@ -357,7 +358,7 @@ export class AdminController {
         }
       }
 
-      const operador = await this.editarUseCase.execute(req.params.id, data, userId, targetEmpresaId, scope)
+      const operador = await this.editarUseCase.execute(getParam(req, "id"), data, userId, targetEmpresaId, scope)
 
       if (vaiTrocarEmail && existing.status === "convidado") {
         await this.convidarUseCase.execute({
@@ -418,7 +419,7 @@ export class AdminController {
       const targetEmpresaId = this.resolveEmpresaId(req)
       const scope = await this.resolveScope(req)
       const userId = req.userId!
-      await this.removerUseCase.execute(req.params.id, userId, targetEmpresaId, scope)
+      await this.removerUseCase.execute(getParam(req, "id"), userId, targetEmpresaId, scope)
       res.status(204).send()
     } catch (err) {
       if (err instanceof OperadorNaoEncontradoError) {

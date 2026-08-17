@@ -1,4 +1,5 @@
 import type { Request, Response } from "express"
+import { getParam } from "../../../../shared/utils/routeParam.js"
 import { CreatePagamentoUseCase } from "../../application/use-cases/CreatePagamento/CreatePagamentoUseCase.js"
 import { createPagamentoSchema } from "../../application/use-cases/CreatePagamento/CreatePagamentoInput.js"
 import { PreviewPagamentoUseCase } from "../../application/use-cases/PreviewPagamento/PreviewPagamentoUseCase.js"
@@ -94,7 +95,7 @@ export class PagamentoController {
   async listByContrato(req: Request, res: Response) {
     try {
       const userId = await resolveUsuarioAlvo(req, this.adminRepository)
-      const pagamentos = await this.listPagamentos.execute(req.params.contratoId, userId)
+      const pagamentos = await this.listPagamentos.execute(getParam(req, "contratoId"), userId)
       res.status(200).json(pagamentos)
     } catch (error) {
       if (error instanceof OperadorNaoEncontradoError) {
@@ -123,7 +124,7 @@ export class PagamentoController {
     try {
       const operadorId = await resolveUsuarioAlvo(req, this.adminRepository)
       const adminId = req.userId!
-      const result = await this.estornarPagamento.execute(adminId, operadorId, req.params.id, parsed.data)
+      const result = await this.estornarPagamento.execute(adminId, operadorId, getParam(req, "id"), parsed.data)
       res.status(201).json(result)
     } catch (error) {
       if (error instanceof PagamentoNotFoundError) {

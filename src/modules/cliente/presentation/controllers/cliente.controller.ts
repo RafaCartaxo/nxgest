@@ -1,4 +1,5 @@
 import type { Request, Response } from "express"
+import { getParam } from "../../../../shared/utils/routeParam.js"
 import { CreateClienteUseCase } from "../../application/use-cases/CreateCliente/CreateClienteUseCase.js"
 import { createClienteSchema } from "../../application/use-cases/CreateCliente/CreateClienteInput.js"
 import { FindClienteUseCase } from "../../application/use-cases/FindCliente/FindClienteUseCase.js"
@@ -107,7 +108,7 @@ export class ClienteController {
   async getById(req: Request, res: Response) {
     try {
       const userId = await resolveUsuarioAlvo(req, this.adminRepository)
-      const cliente = await this.findCliente.execute(userId, req.params.id)
+      const cliente = await this.findCliente.execute(userId, getParam(req, "id"))
 
       res.status(200).json(cliente)
     } catch (error) {
@@ -144,7 +145,7 @@ export class ClienteController {
     }
 
     try {
-      const cliente = await this.updateCliente.execute(req.userId!, req.params.id, parsed.data)
+      const cliente = await this.updateCliente.execute(req.userId!, getParam(req, "id"), parsed.data)
 
       res.status(200).json(cliente)
     } catch (error) {
@@ -168,7 +169,7 @@ export class ClienteController {
 
   async remove(req: Request, res: Response) {
     try {
-      await this.deleteCliente.execute(req.userId!, req.params.id)
+      await this.deleteCliente.execute(req.userId!, getParam(req, "id"))
 
       res.status(204).send()
     } catch (error) {

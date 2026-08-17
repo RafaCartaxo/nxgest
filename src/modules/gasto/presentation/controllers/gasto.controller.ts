@@ -1,4 +1,5 @@
 import type { Request, Response } from "express"
+import { getParam } from "../../../../shared/utils/routeParam.js"
 import { GastoRepository } from "../../infrastructure/repositories/gasto.repository.impl.js"
 import { CaixaRepository } from "../../../caixa/infrastructure/repositories/caixa.repository.impl.js"
 import { CreateGastoUseCase } from "../../application/use-cases/CreateGasto/CreateGastoUseCase.js"
@@ -59,7 +60,7 @@ export class GastoController {
 
   async remove(req: Request, res: Response) {
     try {
-      await this.deleteUseCase.execute(req.userId!, req.params.id)
+      await this.deleteUseCase.execute(req.userId!, getParam(req, "id"))
       res.status(204).send()
     } catch (error) {
       if (error instanceof GastoNotFoundError) {

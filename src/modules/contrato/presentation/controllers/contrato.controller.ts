@@ -1,4 +1,5 @@
 import type { Request, Response } from "express"
+import { getParam } from "../../../../shared/utils/routeParam.js"
 import { CreateContratoUseCase } from "../../application/use-cases/CreateContrato/CreateContratoUseCase.js"
 import { createContratoSchema } from "../../application/use-cases/CreateContrato/CreateContratoInput.js"
 import { FindContratoUseCase } from "../../application/use-cases/FindContrato/FindContratoUseCase.js"
@@ -104,7 +105,7 @@ export class ContratoController {
   async getById(req: Request, res: Response) {
     try {
       const userId = await resolveUsuarioAlvo(req, this.adminRepository)
-      const contrato = await this.findContrato.execute(userId, req.params.id)
+      const contrato = await this.findContrato.execute(userId, getParam(req, "id"))
       res.status(200).json(contrato)
     } catch (error) {
       if (error instanceof OperadorNaoEncontradoError) {
@@ -138,7 +139,7 @@ export class ContratoController {
       const userId = req.userId!
       const contrato = await this.updateContrato.execute(
         userId,
-        req.params.id,
+        getParam(req, "id"),
         parsed.data
       )
       res.status(200).json(contrato)
@@ -167,7 +168,7 @@ export class ContratoController {
   async remove(req: Request, res: Response) {
     try {
       const userId = req.userId!
-      await this.deleteContrato.execute(userId, req.params.id)
+      await this.deleteContrato.execute(userId, getParam(req, "id"))
       res.status(204).send()
     } catch (error) {
       if (error instanceof ContratoNotFoundError) {

@@ -1,4 +1,5 @@
 import type { Request, Response } from "express"
+import { getParam } from "../../../../shared/utils/routeParam.js"
 import fs from "node:fs"
 import path from "node:path"
 import { v4 as uuid } from "uuid"
@@ -44,7 +45,7 @@ export class AnexoController {
         return
       }
 
-      const { id: clienteId } = req.params
+      const clienteId = getParam(req, "id")
       const okAcesso = await this.verificarAcesso(req, clienteId)
       if (!okAcesso) {
         res.status(404).json({ code: "CLIENT_NOT_FOUND", message: "Cliente não encontrado." })
@@ -103,12 +104,12 @@ export class AnexoController {
 
   list = async (req: Request, res: Response) => {
     try {
-      const okAcesso = await this.verificarAcesso(req, req.params.id)
+      const okAcesso = await this.verificarAcesso(req, getParam(req, "id"))
       if (!okAcesso) {
         res.status(404).json({ code: "CLIENT_NOT_FOUND", message: "Cliente não encontrado." })
         return
       }
-      const itens = await this.repo.listByCliente(req.params.id)
+      const itens = await this.repo.listByCliente(getParam(req, "id"))
       res.json(itens)
     } catch (err) {
       console.error("Erro ao listar anexos:", err)
@@ -118,12 +119,12 @@ export class AnexoController {
 
   getFile = async (req: Request, res: Response) => {
     try {
-      const okAcesso = await this.verificarAcesso(req, req.params.id)
+      const okAcesso = await this.verificarAcesso(req, getParam(req, "id"))
       if (!okAcesso) {
         res.status(404).json({ code: "CLIENT_NOT_FOUND", message: "Cliente não encontrado." })
         return
       }
-      const anexo = await this.repo.findById(req.params.anexoId)
+      const anexo = await this.repo.findById(getParam(req, "anexoId"))
       if (!anexo) {
         res.status(404).json({ code: "ANEXO_NOT_FOUND", message: "Anexo não encontrado." })
         return
@@ -145,12 +146,12 @@ export class AnexoController {
 
   remove = async (req: Request, res: Response) => {
     try {
-      const okAcesso = await this.verificarAcesso(req, req.params.id)
+      const okAcesso = await this.verificarAcesso(req, getParam(req, "id"))
       if (!okAcesso) {
         res.status(404).json({ code: "CLIENT_NOT_FOUND", message: "Cliente não encontrado." })
         return
       }
-      const anexo = await this.repo.findById(req.params.anexoId)
+      const anexo = await this.repo.findById(getParam(req, "anexoId"))
       if (!anexo) {
         res.status(404).json({ code: "ANEXO_NOT_FOUND", message: "Anexo não encontrado." })
         return
