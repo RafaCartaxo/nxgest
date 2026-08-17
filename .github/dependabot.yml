@@ -10,6 +10,20 @@ updates:
     versioning-strategy: "auto"
     # Só minor/patch automático (majors exigem migração — Express 4→5, React 19, TS7,
     # Vite 8, Tailwind 4 quebraram o CI em 15/08). Migrações são tratadas por plano próprio.
+    # update-types abaixo é a rede de segurança principal: majors nem criam PR.
+    # O ignore é redundante (defensivo) — mantido para casos específicos.
+    open-pull-requests-limit: 5
+    groups:
+      production-deps:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      dev-deps:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
     ignore:
       - dependency-name: "express"
         versions: [">=6"]
@@ -33,27 +47,6 @@ updates:
         versions: [">=5"]
       - dependency-name: "@vitejs/plugin-basic-ssl"
         versions: [">=2.2"]
-      - dependency-name: "vitest"
-        versions: [">=2"]
-      - dependency-name: "@vitest/coverage-v8"
-        versions: [">=2"]
-      - dependency-name: "jsdom"
-        versions: [">=27"]
-      - dependency-name: "better-sqlite3"
-        versions: [">=12"]
-      - dependency-name: "drizzle-kit"
-        versions: [">=1"]
-      - dependency-name: "concurrently"
-        versions: [">=10"]
-      - dependency-name: "@testing-library/jest-dom"
-        versions: [">=7"]
-      - dependency-name: "@types/bcryptjs"
-        versions: [">=3"]
-    groups:
-      production-deps:
-        dependency-type: "production"
-      dev-deps:
-        dependency-type: "development"
     labels:
       - "dependencies"
     commit-message:

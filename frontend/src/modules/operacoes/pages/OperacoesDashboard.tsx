@@ -180,7 +180,7 @@ export function OperacoesDashboard() {
   }
 
   function handleCardClick(item: CobrancaItem) {
-    navigate("/rota", { state: { focusKey: `${item.clienteId}-${item.contratoId}` } })
+    navigate(`/contratos/${item.contratoId}`)
   }
 
   return (

@@ -38,14 +38,19 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
   const [clienteId, setClienteId] = useState<string | null>(clienteFixado?.id ?? null)
   const [clienteErro, setClienteErro] = useState<string | null>(null)
 
+  // Periodicidade inicial (criação: diária pré-selecionada; edição: a do contrato).
+  const periodicidadeInicial = initial?.periodicidade ?? "diaria"
+
   const form = useForm<ContratoFormData>({
     shouldFocusError: true,
     resolver: zodResolver(getContratoSchema(t)),
     defaultValues: {
       valorBase: initial?.valorBase ?? "",
       percentualJuros: initial?.percentualJuros ?? "20",
-      quantidadeParcelas: initial?.quantidadeParcelas ?? "20",
-      periodicidade: initial?.periodicidade ?? "diaria",
+      // Default de parcelas deriva da periodicidade inicial (diária=20, semanal=3);
+      // na edição mantém o valor salvo do contrato. O seletor também aplica 20/3 ao clicar.
+      quantidadeParcelas: initial?.quantidadeParcelas ?? (periodicidadeInicial === "semanal" ? "3" : "20"),
+      periodicidade: periodicidadeInicial,
       dataInicio: initial?.dataInicio ?? "",
     },
   })
@@ -104,6 +109,30 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
           <Card.Title className="text-base font-semibold">{t("contrato.condicoes")}</Card.Title>
         </Card.Header>
         <Card.Body className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <span className="text-sm font-medium text-text-primary">{t("contrato.periodicidade")}</span>
+            <div className="grid grid-cols-2 gap-2">
+              {(["diaria", "semanal"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => {
+                    form.setValue("periodicidade", p)
+                    // Default de parcelas do tipo (diária=20, semanal=3) — pode editar depois.
+                    form.setValue("quantidadeParcelas", p === "semanal" ? "3" : "20")
+                  }}
+                  className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
+                    periodicidade === p
+                      ? "border-primary bg-primary-light text-primary-text"
+                      : "border-border-strong bg-surface text-text-secondary hover:bg-surface-hover"
+                  }`}
+                >
+                  {t(`contrato.periodicidadeOpcoes.${p}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Field
             label={t("contrato.valorEmprestado")}
             required
@@ -146,26 +175,6 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
               }}
               error={errors.quantidadeParcelas?.message}
             />
-          </div>
-
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-text-primary">{t("contrato.periodicidade")}</span>
-            <div className="grid grid-cols-2 gap-2">
-              {(["diaria", "semanal"] as const).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => form.setValue("periodicidade", p)}
-                  className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
-                    periodicidade === p
-                      ? "border-primary bg-primary-light text-primary-text"
-                      : "border-border-strong bg-surface text-text-secondary hover:bg-surface-hover"
-                  }`}
-                >
-                  {t(`contrato.periodicidadeOpcoes.${p}`)}
-                </button>
-              ))}
-            </div>
           </div>
 
           <Field

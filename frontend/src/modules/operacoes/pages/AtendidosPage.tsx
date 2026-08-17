@@ -110,6 +110,10 @@ export function AtendidosPage() {
     [data, pagamentosHoje],
   )
 
+  function navegarContrato(contratoId: string) {
+    navigate(`/contratos/${contratoId}`)
+  }
+
   const countFor = (key: Filtro): number =>
     key === "all" ? resumo.total
       : key === "VISITADO" ? resumo.visitado
@@ -132,6 +136,7 @@ export function AtendidosPage() {
         {[...porCliente.values()].map((grupo) => (
           <PagamentoCard
             key={grupo.pagamento.clienteId}
+            onClick={() => navegarContrato(grupo.pagamento.contratoId)}
             item={{
               ...grupo.pagamento,
               valor: grupo.valor,
@@ -194,6 +199,7 @@ export function AtendidosPage() {
               <CobrancaList
                 items={completosSemPagos}
                 emptyMessageKey="operacoes.nenhumAtendimento"
+                onCardClick={(item) => navegarContrato(item.contratoId)}
               />
             )}
             {renderPagamentos()}
@@ -203,6 +209,7 @@ export function AtendidosPage() {
         <CobrancaList
           items={filteredItems}
           emptyMessageKey="operacoes.nenhumAtendimento"
+          onCardClick={(item) => navegarContrato(item.contratoId)}
         />
       )}
     </div>

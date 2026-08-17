@@ -177,7 +177,16 @@ export function OperadorDetail() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {/* Contato & Status */}
               <Card.Root tone={isSuspenso ? "danger" : operador.status === "convidado" ? "warning" : "success"} className="flex flex-col gap-3">
-                <p className="text-sm font-semibold text-text-primary">{t("admin.dadosRole", { role: roleLabel(operador.role, t) })}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-text-primary">{t("admin.dadosRole", { role: roleLabel(operador.role, t) })}</p>
+                  {isSuspenso ? (
+                    <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />
+                  ) : operador.status === "convidado" ? (
+                    <StatusBadge variant="warning" size="sm" label={t("perfil.statusConvidado")} />
+                  ) : (
+                    <StatusBadge variant="success" size="sm" label={t("admin.statusAtivo")} />
+                  )}
+                </div>
                 <div className="space-y-1.5 text-sm">
                   <div className="flex items-center justify-between gap-2">
                     <span className="shrink-0 whitespace-nowrap text-text-secondary">{t("admin.email")}:</span>
@@ -188,17 +197,12 @@ export function OperadorDetail() {
                     <span className="min-w-0 truncate font-medium text-text-primary">{operador.telefone ?? t("admin.semTelefone")}</span>
                   </div>
                 </div>
-                <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-border-light pt-3">
-                  {isSuspenso ? (
-                    <StatusBadge variant="danger" size="sm" label={t("admin.statusSuspenso")} />
-                  ) : operador.status === "convidado" ? (
-                    <StatusBadge variant="warning" size="sm" label={t("perfil.statusConvidado")} />
-                  ) : (
-                    <StatusBadge variant="success" size="sm" label={t("admin.statusAtivo")} />
-                  )}
-                  {operador.emailPendente && <StatusBadge variant="warning" size="sm" label={t("admin.verificacaoPendente")} />}
-                  {badgeConvite && <StatusBadge variant={badgeConvite.variant} size="sm" label={badgeConvite.label} />}
-                </div>
+                {(operador.emailPendente || badgeConvite) && (
+                  <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-border-light pt-3">
+                    {operador.emailPendente && <StatusBadge variant="warning" size="sm" label={t("admin.verificacaoPendente")} />}
+                    {badgeConvite && <StatusBadge variant={badgeConvite.variant} size="sm" label={badgeConvite.label} />}
+                  </div>
+                )}
               </Card.Root>
 
               {/* Desempenho (KpiCard irmãos clicáveis — mesmo padrão do painel admin) */}
