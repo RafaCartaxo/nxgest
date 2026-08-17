@@ -302,6 +302,8 @@
     "confirmar": "Confirm",
     "parcelaQuitada": "Installment {{num}} paid",
     "parcelasQuitadas": "Installments {{inicio}} to {{fim}} paid",
+    "parcelaSingular": "Installment {{num}}",
+    "parcelaPlural": "Installments {{nums}}",
     "parcelaParcial": "Installment {{num}} → ${{saldo}}",
     "saldoExcedente": "Excess balance: ${{valor}}",
     "erroRegistrar": "Error registering payment.",

@@ -302,6 +302,8 @@
     "confirmar": "Confirmar",
     "parcelaQuitada": "Cuota {{num}} pagada",
     "parcelasQuitadas": "Cuotas {{inicio}} a {{fim}} pagadas",
+    "parcelaSingular": "Cuota {{num}}",
+    "parcelaPlural": "Cuotas {{nums}}",
     "parcelaParcial": "Cuota {{num}} → R$ {{saldo}}",
     "saldoExcedente": "Saldo excedente: R$ {{valor}}",
     "erroRegistrar": "Error al registrar pago.",

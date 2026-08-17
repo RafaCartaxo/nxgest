@@ -1,6 +1,6 @@
 import { eq, and, inArray } from "drizzle-orm"
 import type { PgDatabase } from "drizzle-orm/pg-core"
-import { db, pagamentos, pagamentoParcelas, auditoriaEstornos } from "../../../../database.js"
+import { db, pagamentos, pagamentoParcelas, auditoriaEstornos, parcelas } from "../../../../database.js"
 import type { Pagamento, PagamentoParcela, PagamentoComDetalhes } from "../../domain/pagamento.entity.js"
 import type { IPagamentoRepository, AuditoriaEstorno } from "../../application/ports/pagamento.repository.js"
 
@@ -44,17 +44,23 @@ export class PagamentoRepository implements IPagamentoRepository {
     if (rows.length === 0) return []
 
     // PLAN-077: 1 query com IN em vez de 1 query por pagamento (N+1).
+    // PLAN: join com parcelas p/ expor o número da parcela no histórico de pagamentos.
     const pagamentoIds = rows.map((r) => r.id)
     const parcelasRows = await this.drizzle
-      .select()
+      .select({
+        relacao: pagamentoParcelas,
+        numero: parcelas.numero,
+      })
       .from(pagamentoParcelas)
+      .innerJoin(parcelas, eq(pagamentoParcelas.parcelaId, parcelas.id))
       .where(inArray(pagamentoParcelas.pagamentoId, pagamentoIds))
 
-    const parcelasPorPagamento = new Map<string, PagamentoParcelaRow[]>()
+    const parcelasPorPagamento = new Map<string, Array<{ relacao: PagamentoParcelaRow; numero: number }>>()
     for (const pr of parcelasRows) {
-      const lista = parcelasPorPagamento.get(pr.pagamentoId)
-      if (lista) lista.push(pr)
-      else parcelasPorPagamento.set(pr.pagamentoId, [pr])
+      const lista = parcelasPorPagamento.get(pr.relacao.pagamentoId)
+      const item = { relacao: pr.relacao, numero: pr.numero }
+      if (lista) lista.push(item)
+      else parcelasPorPagamento.set(pr.relacao.pagamentoId, [item])
     }
 
     return rows.map((row) => ({
@@ -66,25 +72,31 @@ export class PagamentoRepository implements IPagamentoRepository {
       estornadoEm: row.estornadoEm,
       estornadoPor: row.estornadoPor,
       estornoMotivo: row.estornoMotivo,
-      parcelas: (parcelasPorPagamento.get(row.id) ?? []).map((pr) => ({
-        id: pr.id,
-        pagamentoId: pr.pagamentoId,
-        parcelaId: pr.parcelaId,
-        valor: pr.valor,
+      parcelas: (parcelasPorPagamento.get(row.id) ?? []).map(({ relacao, numero }) => ({
+        id: relacao.id,
+        pagamentoId: relacao.pagamentoId,
+        parcelaId: relacao.parcelaId,
+        valor: relacao.valor,
+        numero,
       })),
     }))
   }
 
   private async carregarParcelas(pagamentoId: string): Promise<PagamentoParcela[]> {
-    const parcelasRows = await this.drizzle
-      .select()
+    const rows = await this.drizzle
+      .select({
+        relacao: pagamentoParcelas,
+        numero: parcelas.numero,
+      })
       .from(pagamentoParcelas)
+      .innerJoin(parcelas, eq(pagamentoParcelas.parcelaId, parcelas.id))
       .where(eq(pagamentoParcelas.pagamentoId, pagamentoId))
-    return parcelasRows.map((pr) => ({
-      id: pr.id,
-      pagamentoId: pr.pagamentoId,
-      parcelaId: pr.parcelaId,
-      valor: pr.valor,
+    return rows.map(({ relacao, numero }) => ({
+      id: relacao.id,
+      pagamentoId: relacao.pagamentoId,
+      parcelaId: relacao.parcelaId,
+      valor: relacao.valor,
+      numero,
     }))
   }
 

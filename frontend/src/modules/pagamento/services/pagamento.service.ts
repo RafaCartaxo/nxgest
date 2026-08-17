@@ -13,6 +13,8 @@ export interface PagamentoParcela {
   pagamentoId: string
   parcelaId: string
   valor: number
+  /** Número da parcela quitada (ex.: 3). */
+  numero?: number
 }
 
 export interface PagamentoComDetalhes extends Pagamento {

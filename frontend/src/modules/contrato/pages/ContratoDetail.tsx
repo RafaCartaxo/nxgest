@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 import { useParams, useNavigate, useSearchParams } from "react-router-dom"
 import { getContrato, deleteContrato } from "../services/contrato.service.js"
 import type { Contrato, Parcela } from "../services/contrato.service.js"
@@ -64,6 +65,17 @@ function canvasToFile(canvas: HTMLCanvasElement): File {
     array[i] = byteString.charCodeAt(i)
   }
   return new File([new Blob([array], { type: "image/png" })], "comprovante.png", { type: "image/png" })
+}
+
+/** Texto das parcelas quitadas num pagamento (ex.: "Parcela 3" / "Parcelas 3 e 4"). */
+function textoParcelasPagas(parcelas: { numero?: number }[], t: TFunction): string {
+  const nums = parcelas
+    .map((p) => p.numero)
+    .filter((n): n is number => typeof n === "number")
+    .sort((a, b) => a - b)
+  if (nums.length === 0) return ""
+  if (nums.length === 1) return t("pagamento.parcelaSingular", { num: nums[0] })
+  return t("pagamento.parcelaPlural", { nums: nums.join(", ") })
 }
 
 export function ContratoDetail() {
@@ -321,7 +333,7 @@ export function ContratoDetail() {
                           </>
                         ) : (
                           <>
-                            <span className="text-xs text-text-muted">{t("cliente.parcelasCount", { count: p.parcelas.length })}</span>
+                            <span className="text-xs text-text-muted">{textoParcelasPagas(p.parcelas, t)}</span>
                             {isAdminContext && (
                               <button
                                 type="button"
