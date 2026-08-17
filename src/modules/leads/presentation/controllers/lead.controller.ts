@@ -1,4 +1,5 @@
 import type { Request, Response } from "express"
+import { getParam } from "../../../../shared/utils/routeParam.js"
 import { LeadRepository } from "../../infrastructure/repositories/lead.repository.impl.js"
 import { AuthRepository } from "../../../auth/infrastructure/repositories/auth.repository.impl.js"
 import { AuthTokenRepository } from "../../../auth/infrastructure/repositories/auth-token.repository.impl.js"
@@ -152,7 +153,7 @@ export class LeadController {
   onboarding = async (req: Request, res: Response) => {
     if (!this.soSuper(req, res)) return
     try {
-      const lead = await this.iniciarOnboarding.execute(req.params.id)
+      const lead = await this.iniciarOnboarding.execute(getParam(req, "id"))
       res.json(lead)
     } catch (err) {
       if (err instanceof LeadNaoEncontradoError) {
@@ -172,7 +173,7 @@ export class LeadController {
     if (!this.soSuper(req, res)) return
     try {
       const result = await this.converterLead.execute({
-        id: req.params.id,
+        id: getParam(req, "id"),
         por: req.userId!,
         lang: resolverLang(req.headers["accept-language"]),
       })
@@ -209,7 +210,7 @@ export class LeadController {
       return
     }
     try {
-      const lead = await this.descartarLead.execute({ id: req.params.id, por: req.userId!, motivo: motivo.trim() })
+      const lead = await this.descartarLead.execute({ id: getParam(req, "id"), por: req.userId!, motivo: motivo.trim() })
       res.json(lead)
     } catch (err) {
       if (err instanceof LeadNaoEncontradoError) {

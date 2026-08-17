@@ -1,4 +1,5 @@
 import type { Request, Response } from "express"
+import { getParam } from "../../../../shared/utils/routeParam.js"
 import type { IEmpresaRepository } from "../../application/ports/empresa.repository.js"
 import type { IImpactoDesativacaoQuery } from "../../application/ports/impacto-desativacao.port.js"
 import type { IAuditoriaModulosWriter } from "../../application/ports/auditoria-modulos.port.js"
@@ -65,7 +66,7 @@ export class EmpresaController {
 
   getById = async (req: Request, res: Response) => {
     try {
-      const empresa = await this.repository.findById(req.params.id)
+      const empresa = await this.repository.findById(getParam(req, "id"))
       if (!empresa) {
         res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
         return
@@ -144,11 +145,11 @@ export class EmpresaController {
       // Auditoria da suspensão/reativação (BR-106): lê o estado ANTES, aplica e registra só se mudou.
       let antesAtiva: boolean | null = null
       if (data.ativa !== undefined) {
-        const existente = await this.repository.findById(req.params.id)
+        const existente = await this.repository.findById(getParam(req, "id"))
         antesAtiva = existente ? existente.ativa !== false : null
       }
 
-      const result = await this.repository.update(req.params.id, data)
+      const result = await this.repository.update(getParam(req, "id"), data)
       if (!result) {
         res.status(404).json({ code: "EMPRESA_NOT_FOUND", message: "Empresa não encontrada." })
         return
@@ -156,7 +157,7 @@ export class EmpresaController {
 
       if (data.ativa !== undefined && antesAtiva !== null && antesAtiva !== data.ativa) {
         await this.auditoria.registrar({
-          empresaId: req.params.id,
+          empresaId: getParam(req, "id"),
           adminId: req.userId ?? "unknown",
           tipo: "empresa",
           antes: JSON.stringify({ ativa: antesAtiva }),
@@ -176,7 +177,7 @@ export class EmpresaController {
   updateModulos = async (req: Request, res: Response) => {
     try {
       const result = await this.atualizarModulosUseCase.execute({
-        empresaId: req.params.id,
+        empresaId: getParam(req, "id"),
         modulos: req.body?.modulos,
         force: req.body?.force === true,
         motivo: req.body?.motivo,
@@ -208,7 +209,7 @@ export class EmpresaController {
   updateCapacidades = async (req: Request, res: Response) => {
     try {
       const result = await this.atualizarCapacidadesUseCase.execute({
-        empresaId: req.params.id,
+        empresaId: getParam(req, "id"),
         capacidades: req.body?.capacidades,
         adminId: req.userId ?? "unknown",
       })
@@ -241,7 +242,7 @@ export class EmpresaController {
       return
     }
     try {
-      const impacto = await this.calcularImpactoUseCase.execute({ empresaId: req.params.id, modulos: parsed })
+      const impacto = await this.calcularImpactoUseCase.execute({ empresaId: getParam(req, "id"), modulos: parsed })
       res.json(impacto)
     } catch (err) {
       if (err instanceof EmpresaNaoEncontradaError) {

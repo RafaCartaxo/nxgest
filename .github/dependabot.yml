@@ -13,6 +13,10 @@ updates:
     ignore:
       - dependency-name: "express"
         versions: [">=6"]
+      - dependency-name: "@types/express"
+        versions: [">=6"]
+      - dependency-name: "uuid"
+        versions: [">=15"]
       - dependency-name: "react"
         versions: [">=19"]
       - dependency-name: "react-dom"
@@ -29,6 +33,22 @@ updates:
         versions: [">=5"]
       - dependency-name: "@vitejs/plugin-basic-ssl"
         versions: [">=2.2"]
+      - dependency-name: "vitest"
+        versions: [">=2"]
+      - dependency-name: "@vitest/coverage-v8"
+        versions: [">=2"]
+      - dependency-name: "jsdom"
+        versions: [">=27"]
+      - dependency-name: "better-sqlite3"
+        versions: [">=12"]
+      - dependency-name: "drizzle-kit"
+        versions: [">=1"]
+      - dependency-name: "concurrently"
+        versions: [">=10"]
+      - dependency-name: "@testing-library/jest-dom"
+        versions: [">=7"]
+      - dependency-name: "@types/bcryptjs"
+        versions: [">=3"]
     groups:
       production-deps:
         dependency-type: "production"
