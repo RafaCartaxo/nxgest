@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next"
+import { ChevronRight } from "lucide-react"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { StatusBadge } from "../../../shared/components/StatusBadge/StatusBadge.js"
 import { formatCurrency } from "../../../shared/utils/masks.js"
@@ -6,6 +7,7 @@ import type { PagamentoDoDiaItem } from "../services/operacoes.service.js"
 
 interface PagamentoCardProps {
   item: PagamentoDoDiaItem
+  onClick?: () => void
   className?: string
 }
 
@@ -18,9 +20,9 @@ interface PagamentoCardProps {
  *   3. "Parcela X de Y" ou "X parcelas" (secundário, truncate)
  *   4. StatusBadge "Pago" (success)
  *
- * Sem `onClick`: é um registro de pagamento, não uma cobrança a agir.
+ * `onClick` opcional — quando presente, o card vira botão e navega ao contrato.
  */
-export function PagamentoCard({ item, className = "" }: PagamentoCardProps) {
+export function PagamentoCard({ item, onClick, className = "" }: PagamentoCardProps) {
   const { t } = useTranslation()
 
   const bairro = item.clienteBairro?.trim() ?? ""
@@ -32,13 +34,21 @@ export function PagamentoCard({ item, className = "" }: PagamentoCardProps) {
     : ""
 
   return (
-    <Card.Root variant="collection" tone="success" className={`w-full p-4 pl-5 ${className}`}>
+    <Card.Root
+      variant="collection"
+      tone="success"
+      interactive={!!onClick}
+      as={onClick ? "button" : "div"}
+      onClick={onClick}
+      className={`w-full p-4 pl-5 ${className}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <p className="min-w-0 flex-1 truncate font-semibold text-text-primary">{item.clienteNome}</p>
         <div className="flex shrink-0 items-center gap-1 text-right">
           <span className="value-lg whitespace-nowrap text-success-text">
             R$ {formatCurrency(item.valor)}
           </span>
+          {onClick && <ChevronRight className="size-4 shrink-0 text-text-muted" aria-hidden />}
         </div>
       </div>
       {bairro && <p className="mt-0.5 truncate text-sm text-text-secondary">{bairro}</p>}
