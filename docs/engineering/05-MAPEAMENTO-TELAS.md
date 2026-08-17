@@ -2,9 +2,9 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.27
+**Versão:** 1.28
 
-**Última atualização:** 07/08/2026
+**Última atualização:** 15/08/2026
 
 ---
 
@@ -45,8 +45,9 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 16 | Caixa | `/caixa` | caixa | Dashboard |
 | 17 | Gastos | `/gastos` | gasto | Formulário |
 | 18 | Perfil (Meus dados) | `/perfil` | auth | Formulário |
+| 19 | Conta Suspensa (bloqueio no `ProtectedRoute`) | — (tela cheia) | auth | Estado (bloqueio) |
 
-**Total:** 26 telas (páginas) · 27 rotas | 8 módulos | 45 componentes (15 shared + 2 feedback + 3 auth + 25 módulo)
+**Total:** 28 superfícies (27 telas + Conta Suspensa) · 28 rotas (27 + `*` catch-all) | 8 módulos | 65 componentes (24 shared + 2 feedback + 1 auth + 38 módulo)
 
 > **Nota de navegação:** esta tabela é o espelho das rotas de `frontend/src/App.tsx`. Qualquer rota nova (ou removida) exige atualizar esta tabela + a seção correspondente — ver `SKILL-009-documentation-sync.md`.
 
@@ -865,18 +866,25 @@ Modal ContribuicaoModal (clique num KPI de Operação):
 
 Modal OperadorForm (criação/edição):
 ┌──────────────────────────────────┐
-│ Novo Operador / Editar Operador  │
+│ Novo Operador / Editar Operador  │  ← título dinâmico por role (Editar Administrador/Sócio/Operador)
 ├──────────────────────────────────┤
-│ Nome *        [_____________]    │
-│ E-mail *      [_____________]    │
-│ Senha         [_____________]    │  ← Opcional: sem senha = convite por e-mail (PLAN-065)
-│ Papel *       [admin ▾]          │  ← Select admin/operator
+│ DADOS PESSOAIS  (Card tone info) │
+│ (avatar)  Nome *                 │
+│           Telefone               │
+│ ACESSO      (Card tone info)     │
+│ E-mail *    [_____________]      │
+│ PERMISSÕES  (Card tone neutral)  │
+│ Papel *     [admin ▾]            │  ← admin/operator/socio (sócio: travado)
+│ Chefe       [selecione ▾]        │  ← só p/ operator/socio
+│ ℹ convite por e-mail (se novo)   │  ← callout convite (P-04)
+│ STATUS DA CONTA (Card tone por status, se edição)
+│ [status] [Alterar status da conta] · Reenviar/Revogar convite
 │                                  │
-│ [Cancelar]        [Salvar]       │
+│ [Cancelar]        [Salvar]       │  ← Modal.footer
 └──────────────────────────────────┘
 ```
 
-> **PLAN-065:** operador `convidado` (sem senha) ganha badge **"Convite pendente"** (`StatusBadge warning`) + ação **reenviar convite** (`Mail`) no `OperadoresList`; `EmpresaForm` também permite `adminSenha` em branco → convite pro admin.
+> **PLAN-075:** operador `convidado` (sem senha) ganha badge **"Convite pendente"** + ações **reenviar/revogar convite**; **senha nunca é definida por admin** (P-04) — cadastro nasce convidado. Ações de conta (Suspender/Reativar/convite) ficam na seção **"Status da conta"** (idêntica no Perfil de edição da lista e do Detalhe — edição unificada).
 
 **Aderência ao Design System:**
 
@@ -886,20 +894,20 @@ Modal OperadorForm (criação/edição):
 | Contexto | ✅ Badge "Empresa" (`StatusBadge info`) quando em contexto | |
 | Redirect | ✅ super_admin em `/admin` → `/admin/empresas` | BR-081 |
 | KPIs | ✅ Reusa `KpiCard` em blocos com `SectionHeader` (Equipe / Operação) | PLAN-021 |
-| Contagem | ✅ Admins (role admin) × Operadores (role operator) separados | BR-082 |
-| KPIs clicáveis | ✅ Equipe abre `EquipeModal` (com stats + navegação ao operador); KPIs de Operação abrem `ContribuicaoModal` (por operador) | PLAN-024 / PLAN-030 |
-| Escopo KPIs Operação | ✅ **Total da equipe** (admins + operadores + próprio), subtítulo "da equipe · N"; dados via `GET /api/admin/equipe` | PLAN-030 / BR-091 |
-| Abas | ✅ Equipe (default) / Meus dados (admin) | PLAN-020 |
-| Busca | ✅ `SearchBar` com placeholder i18n | |
-| Cards | ✅ `Card.Root list-item` com Header (`flex-wrap`)/Body/Actions; admins no topo (role rank + nome) | PLAN-024 |
-| Usuário corrente | ✅ Card do próprio usuário com tag "Eu" (`StatusBadge success`), sem Editar/Remover | PLAN-024 |
-| Status | ✅ `StatusBadge`: admin=info, operator=neutral, Eu=success | |
-| Formulário | ✅ `react-hook-form` + `zod` + `useFeedback().run()` | |
-| Modal | ✅ `ConfirmModal` para remoção de operador; `EquipeModal`/`ContribuicaoModal` no padrão `Modal` base | PLAN-026 / PLAN-030 |
-| QuickActions | ✅ Variantes `blue`/`green`/`gray`/`warning`/`danger` (vermelho no remover) | PLAN-024 |
+| Contagem | ✅ Admins × Sócios × Operadores separados | BR-082 |
+| KPIs clicáveis | ✅ Equipe abre `EquipeModal`; KPIs de Operação abrem `ContribuicaoModal` | PLAN-024 / PLAN-030 |
+| Escopo KPIs Operação | ✅ **Total da equipe** (admins + sócios + operadores + próprio), subtítulo "da equipe · N" | PLAN-030 / BR-091 |
+| Navegação | ✅ **Sem abas** (antes "Equipe/Meus dados"); admin/sócio veem **sempre a Equipe** — "Meus dados" era redundante (KPIs do caixa já na CaixaPage), removida 14/08 | |
+| Busca | ✅ `SearchBar` com placeholder i18n (nome + e-mail) | |
+| Cards | ✅ `Card.Root` grid de cards (1/2/3 col) com tone por role + contadores tabular-nums; admins no topo | PLAN-024 |
+| Usuário corrente | ✅ Card do próprio usuário com tag "Eu", sem Editar/Remover | PLAN-024 |
+| Status | ✅ `StatusBadge`: admin=info, sócio=success, operator=neutral, Eu=success | |
+| Formulário | ✅ `OperadorForm` em `Card` tone + `Modal.footer`; botões Cancelar/Salvar no footer do Modal | |
+| Modal | ✅ `ConfirmModal` remoção; `Modal` com `footer` p/ form; `ReassignModal` p/ rebaixar com subordinados | PLAN-026 / PLAN-030 |
 | Estados | ✅ `EstadoTela` (loading/empty/error) na lista | |
 | Restrições | ✅ Admin não remove a si mesmo; não rebaixa o próprio role | BR-069, BR-070 |
 | i18n | ✅ `admin.*` (pt-BR, en, es) | |
+
 
 ---
 
@@ -963,46 +971,40 @@ Modal ModulosModal (ação "Configurar"):
 
 **Arquivo:** `frontend/src/modules/admin/pages/OperadorDetail.tsx` · Rota `/admin/operadores/:id`
 
-**Estrutura Visual:**
+**Estrutura Visual (bento 3col — Stitch 14/08):**
 ```
-┌──────────────────────────────────┐
-│ ← Nome do Operador      [Role]   │  ← Header + StatusBadge (admin=info, operator=neutral)
-├──────────────────────────────────┤
-│ E-mail: op@empresa.com           │
-│                                  │
-│ Dados do operador (h2)           │
-│ ┌──────────┬──────────┐         │
-│ │ Clientes │ Contr.Atv│         │  ← KpiCard totalClientes / contratosAtivos
-│ └──────────┴──────────┘         │
-│                                  │
-│ Caixa do operador (h2)           │
-│ ┌──────┬──────┬──────┬──────┐   │
-│ │Caixa │Saldo │Lucro │...   │   │  ← KpiCard caixa (via ?usuarioId=)
-│ └──────┴──────┴──────┴──────┘   │
-│                                  │
-│ Ajustar caixa base (h2)          │
-│ [R$ valor] [Ajustar]  [motivo]   │  ← grava no operador-alvo (BR-078/088)
-│                                  │
-│ Histórico de ajustes (h2)         │
-│                                  │
-│ Contratos do operador (h2)        │
-│ Cliente · N/N parcelas  [→]      │  ← Card.Root list-item → /contratos/:id?usuarioId=
-└──────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│ ← Nome do Operador        [avatar] [Editar]           │  ← Header (sem badge de role — vai no card)
+├──────────────┬──────────────┬─────────────────────────┤
+│ Contato &    │ Clientes     │ Contratos ativos        │  ← tone/badge por status
+│ Status (tone)│ (KPI clicável)│ (KPI clicável)          │     (Dados do {role} · E-mail · Telefone)
+├──────────────┴──────────────┴─────────────────────────┤
+│ Caixa do operador                                     │
+│ ┌──────┬──────┬──────┬──────┐  [Ajustar caixa]        │  ← CaixaKpis + AjustarCaixaModal
+│ └──────┴──────┴──────┴──────┘                         │
+│ Histórico de ajustes (colapsável)                     │
+└──────────────────────────────────────────────────────┘
 ```
+- **Contato & Status** (`Card` tone sucesso/suspenso/convidado): título "Dados do {role}", E-mail/Telefone (truncate), badge de status sempre visível + complementos (verificação pendente/convite).
+- **KPIs** Clientes/Contratos **clicáveis** → `/clientes?usuarioId=` / `/contratos?usuarioId=`.
+- **Editar** (PageHeader) → abre `OperadorForm` em modal com seção **"Status da conta"** (Alterar status · Reenviar/Revogar convite) + `Modal.footer` (Salvar). Ações de conta não aparecem para o próprio usuário (`isSelf`).
+- **Modal "Alterar status"** — Suspender (danger) / Reativar (primary) com confirmação; edição/reassign via hook `useEditarOperador`.
 
 **Aderência ao Design System:**
 
 | Regra | Status | Observação |
 |-------|--------|------------|
-| Header | ✅ `< Back Nome [badge]` | |
-| KPI cards | ✅ `KpiCard` | |
-| Contratos | ✅ `Card.Root` list-item com `Card.Actions` | |
+| Header | ✅ `< Back Nome [avatar] [Editar]` | sem badge de role |
+| KPI cards | ✅ `KpiCard` clicáveis | |
+| Cards | ✅ `Card.Root` tone + título | |
+| Modais | ✅ `Modal` com `footer` + `ConfirmModal` | |
 | EstadoTela | ✅ Loading/Error/Empty | |
-| Feedback | ✅ `useFeedback()` no ajuste | |
+| Feedback | ✅ `useFeedback()` | |
 
 **Comportamento:**
+- KPIs Clientes/Contratos navegam para as listas do operador (`?usuarioId=`).
 - Ajuste de caixa grava no operador-alvo via `?usuarioId=` (BR-078), com `motivo` obrigatório e auditoria (BR-088).
-- Contratos abrem em **modo admin somente leitura** (`/contratos/:id?usuarioId=&empresaId=`) — sem editar/excluir/pagar; única ação é **Estornar** pagamento (P013 fatia 1, PLAN-028).
+- Editar reabre com `getOperador` (re-sincroniza status após suspender/reativar — fix bug).
 
 ---
 
@@ -1112,39 +1114,40 @@ Modal ModulosModal (ação "Configurar"):
 
 **Arquivo:** `frontend/src/modules/auth/pages/PerfilPage.tsx` · Rota `/perfil` · Acessível a **todos os perfis** (PLAN-029)
 
-**Estrutura Visual:**
+**Estrutura Visual (bento grid — Stitch 14/08):**
 ```
-┌──────────────────────────────────┐
-│ ← Meus dados                     │  ← Header
-├──────────────────────────────────┤
-│ ┌──────────────────────────────┐ │
-│ │ Nome do Usuário    [Operador]│ │  ← Card + StatusBadge de role
-│ │ usuario@empresa.com          │ │
-│ └──────────────────────────────┘ │
-│                                  │
-│ Trocar senha (h2)                │
-│ Senha atual *     [___________]  │
-│ Nova senha *      [___________]  │
-│ Confirmar senha*  [___________]  │
-│                                  │
-│ [Salvar]                         │
-└──────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│ ← Meus dados                                 │  ← Header
+├──────────────────────┬───────────────────────┤
+│ Dados pessoais  [Role]│ Segurança             │  ← coluna principal (8) × lateral (4)
+│ (avatar)  Nome        │ [🔒 Alterar senha]    │     (Segurança = gatilho → Modal)
+│          Telefone     │                       │
+│ [Salvar]              │                       │
+│                       │                       │
+│ Conta            [Ativo]│                     │  ← Conta: tone/badge dinâmico por status
+│ (sub-cards: E-mail ✓ · Empresa)               │
+│ [✉ Alterar e-mail]     │                      │  ← rodapé do card Conta
+└──────────────────────┴───────────────────────┘
 ```
+- **Dados pessoais** (`Card` tone info/tema): `AvatarField` em coluna + Nome + Telefone (máscara `(11) 99999-9999`).
+- **Conta** (`Card` tone sucesso/suspenso/convidado): sub-cards E-mail (com selo `✓ verificado`/`⚠ pendente`) e Empresa; badge de **status** na linha do título (Ativo verde / Suspenso vermelho / Convidado amarelo).
+- **Segurança** (`Card` tone neutral): botão gatilho **"Alterar senha"** (`outline` + `Lock`) → abre **Modal** (senha atual/nova/confirmar + rodapé Cancelar/Alterar).
 
 **Aderência ao Design System:**
 
 | Regra | Status | Observação |
 |-------|--------|------------|
 | Header | ✅ `< Back Título` | |
-| Cards | ✅ `border p-4` sem sombra | |
+| Cards | ✅ `Card.Root` tone + título dentro do card | |
 | Inputs | ✅ Padrão com focus ring + erro `text-red-500` | |
 | Feedback | ✅ `useFeedback().run()` no salvamento | |
 | Acessibilidade | ✅ `autoComplete` (current/new-password) | |
 | i18n | ✅ `perfil.*` (pt-BR, en, es) | |
 
 **Comportamento:**
-- Troca de senha via `PATCH /api/auth/senha` (BR-089/090): valida a senha atual (422 se incorreta, sem deslogar), exige nova ≥ 6 caracteres e diferente da atual; sessão atual permanece válida após a troca.
-- Acesso pela sidebar (item "Meus dados"); para o admin, também a partir da aba "Meus dados" do painel (`/admin`).
+- Alterar senha via Modal → `PATCH /api/auth/senha` (BR-089/090): valida a senha atual (422 se incorreta, sem deslogar), exige nova ≥ 6 caracteres e diferente da atual; sessão atual permanece válida após a troca.
+- Alterar e-mail via Modal → `POST /api/auth/me/email` (PLAN-075 F4): novo e-mail + senha atual → `email_pendente` + link de verificação; banner de pendência no topo com "Cancelar alteração".
+- Acesso pela sidebar (item "Meus dados") e pelo `UserMenu` (Perfil).
 
 ---
 

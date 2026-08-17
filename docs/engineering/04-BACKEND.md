@@ -23,7 +23,7 @@ O backend será desenvolvido utilizando:
 - TypeScript
 - Node.js
 - Express
-- SQLite
+- PostgreSQL (migrado de SQLite — PLAN-070)
 - Drizzle ORM (ou tecnologia equivalente)
 - Zod para validações
 - Vitest para testes
@@ -70,7 +70,7 @@ cp .env.example .env
 |----------|--------|-----------|
 | `NODE_ENV` | `development` | Ambiente (development ou production) |
 | `PORT` | `3000` | Porta do servidor |
-| `DB_PATH` | `gestao.db` | Caminho do banco SQLite |
+| `DATABASE_URL` | `postgres://...` | String de conexão do PostgreSQL |
 
 ## Execução
 

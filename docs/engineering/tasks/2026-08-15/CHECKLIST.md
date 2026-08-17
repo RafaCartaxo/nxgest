@@ -27,10 +27,15 @@
 
 ## Pendências
 
-- [ ] ⏳ **Reiniciar processos dev com node 20** (backend `tsx watch` + vite) — o outro chat está usando o ambiente; reiniciar quando liberar.
+- [x] ⏳ **Reiniciar processos dev com node 20** — **confirmado 15/08**: vite (5173) e backend (3000) rodam com node `v20.20.2` (nvm); shell default é v18 mas os processos usam v20.
 - [ ] ⏳ **Bulk insert de parcelas** (`CreateContrato`/`UpdateContrato`) — adiado: arquivos de contrato em edição por outra sessão (PLAN-076).
 - [ ] ⏳ Medir queries/request no **dump de produção** (`EXPLAIN ANALYZE` com volume real) — registrar números antes/depois.
-- [ ] 📌 Sync de docs desatualizadas pós-Stitch: `05-MAPEAMENTO-TELAS.md` (OperadorDetail/PerfilPage/AdminPage, tela 27 Conta Suspensa, contagem 45→62) · `04-BACKEND.md` ("SQLite" → PostgreSQL).
+- [x] 📌 Sync de docs desatualizadas pós-Stitch — **feito 15/08**: `05-MAPEAMENTO-TELAS.md` (contagem 28 superfícies, Perfil §18, OperadorDetail §15, AdminPage §12, tela 19 Conta Suspensa, versão 1.28) · `04-BACKEND.md` ("SQLite" → PostgreSQL).
+
+## Pendências de Dependabot (15/08 — não mergear ainda)
+
+- [ ] PRs de **major** quebram CI (`tsc TS2345` com Express 5 em `admin.controller.ts`; smoke `GST-052` 500; TS7/Vite8/Tailwind4 no dev-deps) — exigem migração, não bump trivial.
+- [ ] Avaliar `dependabot.yml` para limitar a **minor/patch** (evita PRs de major quebrados).
 
 ## Observações
 

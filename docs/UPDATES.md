@@ -8,6 +8,12 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 - **Cenários smoke combinados (`SUSP-USR-6..12`)** — suspensão × ações coerentes: rebaixar suspenso com subordinados (422 + count; reassign atômico 200 com `suspensoEm` preservado) · editar dados de suspenso (200, login segue 403) · reativar → rebaixar (fluxo completo) · trocar e-mail de suspenso ativo (`email_pendente` + verificação) · sócio suspenso reassign via super · token de suspenso bloqueado em rotas de admin (403 `CONTA_SUSPENSA`).
 - **Docs:** API-CT-P-17..21 (07) · smoke **274/274** (era 267) · este registro.
 
+## 15/08/2026 — Manutenção: docs sync + checklists + dependabot (minor/patch)
+
+- **Docs sincronizadas pós-Stitch/PLAN-075** — `05-MAPEAMENTO-TELAS.md` (versão 1.28): contagem **28 superfícies · 28 rotas · 65 componentes**; Perfil §18 (bento grid + Segurança→Modal), OperadorDetail §15 (bento 3col + Status da conta + edição), AdminPage §12 (sem aba "Meus dados", OperadorForm em Card+Modal.footer), tela 19 Conta Suspensa. `04-BACKEND.md`: "SQLite" → **PostgreSQL** (`DATABASE_URL` no lugar de `DB_PATH`).
+- **Checklists marcados** — 14/08: instância smoke 3002 parada. 15/08: **node 20 confirmado** (vite 5173 + backend 3000 rodam `v20.20.2`); sync de docs feito.
+- **Dependabot** — `dependabot.yml` agora **ignora majors** (Express ≥6, React 19, Zod 4, TS ≥6, Vite ≥6, Tailwind ≥4, plugins) que quebravam o CI (TS2345 Express 5, smoke GST-052). PRs de major abertos ficam registrados (migração = plano próprio).
+
 ## 15/08/2026 — Card "Pago" no padrão CobrancaCard (Atendidos hoje)
 
 - **Fix seed (fuso local)** — `seed-demo.mjs`: `nowISO` agora usa `TODAY.toISOString()` (meio-dia local) em vez de `new Date().toISOString()`. Antes, execução na madrugada UTC gerava `created_at` fora do range do dia local → históricos/visitas "de hoje" não apareciam no endpoint `cobrancas` (resultadoOperacional ficava `PENDENTE` → "Todos" sem visitados/promessas/não-encontrados). O fix alinha todos os timestamps ao dia local de `TODAY` — robusto em qualquer TZ.

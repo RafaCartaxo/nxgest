@@ -59,7 +59,7 @@
 
 - [x] Commitar (Rafael confirma escopo/PR) — commit `552f7b9` (77 arquivos, sem push)
 - [x] Commitar port Stitch + ajustes — commit `02f4e7a` (15 arquivos: Perfil, OperadorForm/List/Detail, Ativar, Suspensa, i18n, docs)
-- [ ] Parar a instância smoke (porta 3002) que ficou no ar após a validação
+- [x] Parar a instância smoke (porta 3002) — parada (porta livre, verificado 15/08)
 
 ## Observações
 
