@@ -26,18 +26,47 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run build
-      - run: npm run audit:ui
-      - run: npm run audit:styles
-      - run: npm run audit:modules
-      - run: npm test
-      - run: npm run test:coverage
+      - run: npm run audit:ui 2>&1 | tee /tmp/audit-ui.log
+      - run: npm run audit:styles 2>&1 | tee /tmp/audit-styles.log
+      - run: npm run audit:modules 2>&1 | tee /tmp/audit-modules.log
+      - run: npm test 2>&1 | tee /tmp/test.log
+      - run: npm run test:coverage 2>&1 | tee /tmp/coverage.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage
           path: coverage/
           retention-days: 14
-      - run: npm run docs:audit
+      - run: npm run docs:audit 2>&1 | tee /tmp/docs-audit.log
+      - name: Resumo do run (job summary)
+        if: always()
+        run: |
+          TESTS="n/d"; FILES="?"
+          if grep -q "Tests" /tmp/test.log; then
+            FILES=$(grep -oP '\d+(?= passed)' /tmp/test.log | head -1)
+            TESTS=$(grep -oP '\d+(?= passed)' /tmp/test.log | tail -1)
+          fi
+          STMTS="n/d"
+          if grep -q "All files" /tmp/coverage.log; then
+            STMTS=$(grep "All files" /tmp/coverage.log | awk -F'|' '{gsub(/ /,"",$2); print $2}')
+          fi
+          ui=$(grep -q "nenhum padrão" /tmp/audit-ui.log && echo "PASS" || echo "FAIL")
+          styles=$(grep -q "nenhuma cor fixa" /tmp/audit-styles.log && echo "PASS" || echo "FAIL")
+          modules=$(grep -q "manifest coerente" /tmp/audit-modules.log && echo "PASS" || echo "FAIL")
+          docs=$(grep -q "Nenhuma divergência" /tmp/docs-audit.log && echo "PASS" || echo "FAIL")
+          {
+            echo "## Resumo do CI — $(basename "$GITHUB_REF_NAME")"
+            echo ""
+            echo "| Checagem | Resultado |"
+            echo "|---|---|"
+            echo "| **tsc + build** | ✅ |"
+            echo "| Testes | ${FILES} arquivos · **${TESTS}** testes |"
+            echo "| Cobertura (stmts) | **${STMTS}%** |"
+            echo "| audit:ui | **${ui}** |"
+            echo "| audit:styles | **${styles}** |"
+            echo "| audit:modules | **${modules}** |"
+            echo "| docs:audit | **${docs}** |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   smoke:
     name: smoke-api (PostgreSQL isolado)

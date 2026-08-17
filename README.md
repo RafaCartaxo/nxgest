@@ -2,6 +2,9 @@
 
 Sistema de gestão de cobranças em campo.
 
+![CI](https://img.shields.io/github/actions/workflow/status/RafaCartaxo/nxgest/ci.yml?branch=main&label=CI&logo=github)
+![CD](https://img.shields.io/github/actions/workflow/status/RafaCartaxo/nxgest/cd.yml?branch=main&label=CD&logo=github)
+
 ## Stack
 
 **Backend:** Node.js + TypeScript + Express + SQLite (better-sqlite3 + Drizzle ORM)
