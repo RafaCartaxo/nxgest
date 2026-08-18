@@ -30,7 +30,7 @@ const pool = new Pool({
 
 const PASSWORD = "teste123!"
 const TODAY = new Date()
-TODAY.setHours(12, 0, 0, 0)
+TODAY.setHours(0, 0, 0, 0)
 
 const q = async (sql, params = []) => {
   let i = 0
@@ -205,10 +205,12 @@ const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
 // ---------- Reset total ----------
-// Timestamps no MEIO-DIA LOCAL do dia base (TODAY) — `TODAY.toISOString()` cai sempre
+// Timestamps no INÍCIO do dia local (TODAY 00:00) — `TODAY.toISOString()` cai sempre
 // dentro do range do dia local (rangeDoDiaLocal usa as fronteiras do relógio local).
-// `new Date().toISOString()` quebraria em execução na madrugada UTC (created_at fora
-// do range local → históricos/visitas "de hoje" não apareciam no endpoint cobrancas).
+// Antes usava MEIO-DIA local, o que gerava created_at "no futuro" relativo a execuções
+// de madrugada UTC (00:00–12:00Z) — cenários que criam entidades com `now` e consultam
+// listas `ORDER BY created_at DESC LIMIT N` perdiam a entidade recém-criada (fora da
+// página 1). Com 00:00 local, todo `now` de runtime fica > seed (determinístico).
 const nowISO = TODAY.toISOString()
 // Ordem filho→pai (respeita as FKs — PLAN-070 modelo).
 const RESET_TABLES = [
