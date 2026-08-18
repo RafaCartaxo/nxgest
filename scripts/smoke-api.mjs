@@ -235,7 +235,10 @@ async function main() {
   await t("OPS-035", "Pega 1ª cobrança pendente (p/ visitar)", async () => {
     const r = await req("GET", "/api/operacoes/cobrancas", { token: opToken })
     expect(r, 200, "cobrancas")
-    cobranca = r.data.cobrancas[0]
+    // Escolhe uma cobrança SEM visita do dia (PENDENTE): se pegar uma que o seed já
+    // visitou com created_at = meio-dia local (futuro relativo ao smoke de madrugada),
+    // a subquery `ORDER BY created_at DESC LIMIT 1` prefere a do seed → OPS-040 falharia.
+    cobranca = r.data.cobrancas.find((c) => c.resultadoOperacional === "PENDENTE") ?? r.data.cobrancas[0]
     if (!cobranca) throw new Error("nenhuma cobrança pendente no seed")
   })
   await t("OPS-040", "Registrar visita visitado (201) e marca VISITADO na lista", async () => {
@@ -835,7 +838,10 @@ async function main() {
     expect(r, 201, "estornar pagamento")
   })
   await t("PAG-COH2", "Coerência: movimentação reversa (Cancelamento) existe", async () => {
-    const r = await req("GET", "/api/caixa/movimentacoes", { token: adminToken, query: { usuarioId: gabrielId } })
+    // Filtra por origem=Cancelamento — independe de paginação/horário (o estorno grava
+    // created_at = now; o seed grava meio-dia local, o que empurrava o Cancelamento
+    // pra fora da página 1 quando o CI rodava antes das 12:00Z).
+    const r = await req("GET", "/api/caixa/movimentacoes", { token: adminToken, query: { usuarioId: gabrielId, origem: "Cancelamento" } })
     expect(r, 200, "movimentações pós estorno")
     if (!r.data.data.some((m) => m.origem === "Cancelamento")) throw new Error("sem movimentação de Cancelamento após estorno")
   })
