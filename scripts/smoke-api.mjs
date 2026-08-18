@@ -21,17 +21,6 @@ const SMOKE_POOL = new Pool({
   max: 2,
 })
 
-/** Re-tenta `fn` até resolver `true` (com intervalos), p/ absorver atraso de escrita
- *  no runner do CI (ex.: movimentação/visita recém-gravada não refletida de imediato).
- *  Retorna `false` após `attempts` tentativas. */
-async function retryAte(fn, { intervalMs = 400, attempts = 8 } = {}) {
-  for (let i = 0; i < attempts; i++) {
-    if (await fn()) return true
-    if (i < attempts - 1) await new Promise((r) => setTimeout(r, intervalMs))
-  }
-  return false
-}
-
 /** Leituras diretas no banco isolado (auditoria). Retorna -1 se indisponível. */
 async function auditoriaCount(tipo, empresaId) {
   try {
@@ -252,13 +241,11 @@ async function main() {
   await t("OPS-040", "Registrar visita visitado (201) e marca VISITADO na lista", async () => {
     const r = await req("POST", "/api/operacoes/visitas", { token: opToken, body: { clienteId: cobranca.clienteId, contratoId: cobranca.contratoId, tipo: "visitado" } })
     expect(r, 201, "visita visitado")
-    const ok = await retryAte(async () => {
-      const after = await req("GET", "/api/operacoes/cobrancas", { token: opToken })
-      if (after.status !== 200) return false
-      const item = after.data.cobrancas.find((c) => c.clienteId === cobranca.clienteId && c.contratoId === cobranca.contratoId)
-      return item?.resultadoOperacional === "VISITADO"
-    })
-    if (!ok) throw new Error("visita não refletiu como VISITADO na lista")
+    const after = await req("GET", "/api/operacoes/cobrancas", { token: opToken })
+    expect(after, 200, "cobrancas pós-visita")
+    const item = after.data.cobrancas.find((c) => c.clienteId === cobranca.clienteId && c.contratoId === cobranca.contratoId)
+    if (!item) throw new Error("cobrança sumiu da lista (API devolve marcadas; front filtra PENDENTE)")
+    if (item.resultadoOperacional !== "VISITADO") throw new Error(`resultadoOperacional=${item.resultadoOperacional} (esperava VISITADO)`)
   })
   await t("OPS-N1", "Promessa sem dataPromessa (422, gap 9)", async () => {
     const r = await req("POST", "/api/operacoes/visitas", { token: opToken, body: { clienteId: cobranca.clienteId, contratoId: cobranca.contratoId, tipo: "promessa" } })
@@ -848,11 +835,9 @@ async function main() {
     expect(r, 201, "estornar pagamento")
   })
   await t("PAG-COH2", "Coerência: movimentação reversa (Cancelamento) existe", async () => {
-    const ok = await retryAte(async () => {
-      const r = await req("GET", "/api/caixa/movimentacoes", { token: adminToken, query: { usuarioId: gabrielId } })
-      return r.status === 200 && r.data?.data?.some((m) => m.origem === "Cancelamento")
-    })
-    if (!ok) throw new Error("sem movimentação de Cancelamento após estorno")
+    const r = await req("GET", "/api/caixa/movimentacoes", { token: adminToken, query: { usuarioId: gabrielId } })
+    expect(r, 200, "movimentações pós estorno")
+    if (!r.data.data.some((m) => m.origem === "Cancelamento")) throw new Error("sem movimentação de Cancelamento após estorno")
   })
   await t("EST-C1", "Estornado: GET /pagamentos/contrato retorna estornadoEm + motivo", async () => {
     const r = await req("GET", `/api/pagamentos/contrato/${contratoId}`, { token: opToken })
