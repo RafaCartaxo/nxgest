@@ -525,7 +525,7 @@
   },
   "admin": {
     "title": "Administration",
-"painel": "Admin",
+    "painel": "Admin",
     "subtitle": "Team, operators and company indicators",
     "operadores": "Operators",
     "novoOperador": "New Operator",
@@ -822,6 +822,28 @@
     "hint": "Image up to 1MB (reduced to 1600px before upload) · PDF up to 5MB. Files are served only through an authenticated endpoint.",
     "baixarPdf": "Download PDF",
     "previewMobile": "Your browser can't display PDFs here. Download to view."
+  },
+  "devboard": {
+    "titulo": "Dev Board",
+    "subtitulo": "CI, PR and dependabot visibility",
+    "eyebrow": "GitHub · RafaCartaxo/nxgest",
+    "nav": "Board",
+    "kpiRuns": "Runs (last 10)",
+    "kpiOk": "Green",
+    "kpiFalhas": "Failures",
+    "kpiPRs": "Open PRs",
+    "runsTitulo": "CI/CD runs",
+    "prsTitulo": "Open pull requests",
+    "dependabotTitulo": "Dependabot",
+    "semRuns": "No runs found.",
+    "semPRs": "No open PRs.",
+    "semDependabot": "No dependabot PRs.",
+    "rodando": "running",
+    "rascunho": "draft",
+    "agora": "now",
+    "minAtras": "{{n}}m ago",
+    "horaAtras": "{{n}}h ago",
+    "diaAtras": "{{n}}d ago"
   },
   "lead": {
     "navLeads": "Leads",

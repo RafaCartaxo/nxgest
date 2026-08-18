@@ -20,6 +20,8 @@ import { empresaRoutes } from "./modules/admin/presentation/routes/empresa.route
 import { gastoRoutes } from "./modules/gasto/presentation/routes/gasto.routes.js"
 import { leadPublicRoutes } from "./modules/leads/presentation/routes/lead.routes.js"
 import { leadAdminRoutes } from "./modules/leads/presentation/routes/lead.admin.routes.js"
+import { devboardRoutes } from "./modules/devboard/presentation/routes/devboard.routes.js"
+import { superAdminMiddleware } from "./shared/middleware/super-admin.middleware.js"
 import { garantirUploadsDir } from "./shared/utils/uploads.js"
 
 await runMigrations()
@@ -72,6 +74,9 @@ app.use("/api/pagamentos", authMiddleware, userRateLimit, requireModule("contrat
 app.use("/api/operacoes", authMiddleware, userRateLimit, operacoesRoutes)
 app.use("/api/caixa", authMiddleware, userRateLimit, requireModule("caixa"), caixaRoutes)
 app.use("/api/gastos", authMiddleware, userRateLimit, requireModule("gastos"), gastoRoutes)
+
+// Devboard: visibilidade de git/CI (exclusivo do super_admin — proxy da GitHub API, token no servidor).
+app.use("/api/devboard", authMiddleware, superAdminMiddleware, devboardRoutes)
 
 if (process.env.NODE_ENV === "production") {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))

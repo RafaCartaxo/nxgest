@@ -525,7 +525,7 @@
   },
   "admin": {
     "title": "Administración",
-"painel": "Administrativo",
+    "painel": "Administrativo",
     "subtitle": "Equipo, operadores e indicadores de la empresa",
     "operadores": "Operadores",
     "novoOperador": "Nuevo Operador",
@@ -822,6 +822,28 @@
     "hint": "Imagen hasta 1MB (reducida a 1600px antes del envío) · PDF hasta 5MB. Los archivos se sirven solo por endpoint autenticado.",
     "baixarPdf": "Descargar PDF",
     "previewMobile": "El navegador no muestra PDF aquí. Descárgalo para verlo."
+  },
+  "devboard": {
+    "titulo": "Tablero Dev",
+    "subtitulo": "Visibilidad de CI, PRs y dependabot",
+    "eyebrow": "GitHub · RafaCartaxo/nxgest",
+    "nav": "Tablero",
+    "kpiRuns": "Runs (últimos 10)",
+    "kpiOk": "Verdes",
+    "kpiFalhas": "Fallos",
+    "kpiPRs": "PRs abiertos",
+    "runsTitulo": "Runs de CI/CD",
+    "prsTitulo": "Pull requests abiertos",
+    "dependabotTitulo": "Dependabot",
+    "semRuns": "No se encontraron runs.",
+    "semPRs": "No hay PRs abiertos.",
+    "semDependabot": "No hay PRs de dependabot.",
+    "rodando": "ejecutando",
+    "rascunho": "borrador",
+    "agora": "ahora",
+    "minAtras": "hace {{n}} min",
+    "horaAtras": "hace {{n}} h",
+    "diaAtras": "hace {{n}} d"
   },
   "lead": {
     "navLeads": "Leads",

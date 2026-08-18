@@ -55,6 +55,7 @@ const GastoPage = () => lazyPage("GastoPage", () => import("./modules/gasto/page
 const AdminPage = () => lazyPage("AdminPage", () => import("./modules/admin/pages/AdminPage.js"))
 const SuperAdminPage = () => lazyPage("SuperAdminPage", () => import("./modules/admin/pages/SuperAdminPage.js"))
 const OperadorDetail = () => lazyPage("OperadorDetail", () => import("./modules/admin/pages/OperadorDetail.js"))
+const DevBoardPage = () => lazyPage("DevBoardPage", () => import("./modules/devboard/pages/DevBoardPage.js"))
 
 export function App() {
   return (
@@ -89,6 +90,7 @@ export function App() {
                   <Route path="/caixa" element={<RequireModule mod="caixa"><CaixaPage /></RequireModule>} />
                   <Route path="/gastos" element={<RequireModule mod="gastos"><GastoPage /></RequireModule>} />
                    <Route path="/perfil" element={<PerfilPage />} />
+                   <Route path="/devboard" element={<SuperAdminRoute><DevBoardPage /></SuperAdminRoute>} />
                    <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
                    <Route path="/admin/operadores/:id" element={<AdminRoute><OperadorDetail /></AdminRoute>} />
                    <Route path="/admin/empresas" element={<SuperAdminRoute><SuperAdminPage /></SuperAdminRoute>} />

@@ -1,10 +1,10 @@
 import { NavLink } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { Building2, FileText, LayoutDashboard, Mail, Route, ShieldCheck, Users, Wallet, type LucideIcon } from "lucide-react"
+import { Activity, Building2, FileText, LayoutDashboard, Mail, Route, ShieldCheck, Users, Wallet, type LucideIcon } from "lucide-react"
 import { useAuth } from "../auth/AuthContext.js"
 import { hasModule, type ModuleId } from "../modules/modules.js"
 
-type ChaveNav = "nav.central" | "nav.clientes" | "nav.contratos" | "nav.caixa" | "nav.rota" | "superAdmin.navEmpresas" | "lead.navLeads" | "admin.painel"
+type ChaveNav = "nav.central" | "nav.clientes" | "nav.contratos" | "nav.caixa" | "nav.rota" | "superAdmin.navEmpresas" | "lead.navLeads" | "admin.painel" | "devboard.nav"
 
 interface Aba {
   modulo?: ModuleId
@@ -25,6 +25,7 @@ const ABAS: Aba[] = [
 
 /** Abas do super admin (não dependem de módulo — whitelabel não se aplica). */
 const SUPER_ABAS: Aba[] = [
+  { chave: "devboard.nav", to: "/devboard", icon: Activity },
   { chave: "superAdmin.navEmpresas", to: "/admin/empresas", icon: Building2 },
   { chave: "lead.navLeads", to: "/admin/leads", icon: Mail },
 ]

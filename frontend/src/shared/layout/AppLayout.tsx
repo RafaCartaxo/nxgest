@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { Link, NavLink } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import {
+  Activity,
   Building2,
   FileText,
   LayoutDashboard,
@@ -51,6 +52,7 @@ function useAdminNavItems(): NavItem[] {
     items.push({ to: "/admin", label: t("admin.painel"), icon: ShieldCheck })
   }
   if (user?.role === "super_admin") {
+    items.push({ to: "/devboard", label: t("devboard.titulo"), icon: Activity })
     items.push({ to: "/admin/empresas", label: t("superAdmin.navEmpresas"), icon: Building2 })
     items.push({ to: "/admin/leads", label: t("lead.navLeads"), icon: Mail })
   }
