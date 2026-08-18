@@ -21,6 +21,7 @@ services:
       - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
       - LOGIN_RATE_LIMIT_MAX=${LOGIN_RATE_LIMIT_MAX}
       - USER_RATE_LIMIT_MAX=${USER_RATE_LIMIT_MAX}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
       - nxgestao_data:/data
     expose:
