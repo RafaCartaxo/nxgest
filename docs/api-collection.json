@@ -2433,6 +2433,105 @@
           }
         }
       ]
+    },
+    {
+      "name": "Devboard",
+      "description": "Visibilidade de git/CI (PLAN-078) — exclusivo super_admin, proxy GitHub API",
+      "item": [
+        {
+          "name": "Listar runs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devboard/runs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devboard",
+                "runs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "DB-CT-01 · 200 {runs} · 503 GITHUB_TOKEN_AUSENTE · 504 GITHUB_TIMEOUT · 502 GITHUB_API_ERROR"
+          }
+        },
+        {
+          "name": "Listar PRs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devboard/prs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devboard",
+                "prs"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "DB-CT-02 · 200 {prs} com isDraft/isDependabot"
+          }
+        },
+        {
+          "name": "Listar dependabot",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/devboard/dependabot",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "devboard",
+                "dependabot"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "DB-CT-03 · 200 {dependabot} apenas PRs do dependabot"
+          }
+        }
+      ]
     }
   ]
 }

@@ -1800,3 +1800,32 @@ Matriz de transições via `PATCH /api/admin/operadores/:id` (papel-alvo). Ator 
 
 ### EM-503-03 — Convite (operador/empresa/reenviar) com envio falho → 503
 **Dado** criação de convidado + envio do convite falha | **Então** **503** `EMAIL_UNAVAILABLE`; a entidade permanece e o admin usa "Reenviar convite".
+
+---
+
+# DEVBOARD (PLAN-078) — visibilidade de git/CI
+
+**Endpoint:** `GET /api/devboard/runs` — exclusivo super_admin (auth + superAdminMiddleware)
+**Endpoint:** `GET /api/devboard/prs` — exclusivo super_admin
+**Endpoint:** `GET /api/devboard/dependabot` — exclusivo super_admin
+
+### DB-CT-01 — Runs listados com parâmetros corretos
+**Dado** token de super_admin válido | **Quando** `GET /api/devboard/runs?limit=10` | **Então** **200** com `{ runs: [...] }`, cada run com `workflowName`, `branch`, `status`, `conclusion`, `createdAt`, `durationSec`. `limit` fora de 1..50 é clampeado.
+
+### DB-CT-02 — PRs abertos listados
+**Dado** token de super_admin válido | **Quando** `GET /api/devboard/prs` | **Então** **200** com `{ prs: [...] }`, marcando `isDraft` e `isDependabot`.
+
+### DB-CT-03 — Dependabot separado
+**Dado** token de super_admin válido | **Quando** `GET /api/devboard/dependabot` | **Então** **200** com `{ dependabot: [...] }` contendo apenas PRs do dependabot.
+
+### DB-CT-04 — Token ausente → 503
+**Dado** servidor sem `GITHUB_TOKEN` | **Quando** `GET /api/devboard/runs` | **Então** **503** `GITHUB_TOKEN_AUSENTE`.
+
+### DB-CT-05 — API do GitHub com erro → 502
+**Dado** a GitHub API retorna 401/403/429/5xx | **Quando** `GET /api/devboard/runs` | **Então** **502** `GITHUB_API_ERROR` (429 → 429) sem vazar detalhes.
+
+### DB-CT-06 — Timeout → 504
+**Dado** a GitHub API demora mais que o limite | **Quando** `GET /api/devboard/runs` | **Então** **504** `GITHUB_TIMEOUT`.
+
+### DB-CT-07 — Não-super bloqueado (exclusividade)
+**Dado** token de admin, sócio ou operator | **Quando** `GET /api/devboard/runs` | **Então** **403** `FORBIDDEN` (apenas super_admin acessa); sem token → **401**. *Coberto também por teste unitário do `superAdminMiddleware`.*

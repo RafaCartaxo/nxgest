@@ -46,6 +46,7 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 17 | Gastos | `/gastos` | gasto | Formulário |
 | 18 | Perfil (Meus dados) | `/perfil` | auth | Formulário |
 | 19 | Conta Suspensa (bloqueio no `ProtectedRoute`) | — (tela cheia) | auth | Estado (bloqueio) |
+| 20 | Board Dev (visibilidade git/CI) | `/devboard` | devboard | Dashboard |
 
 **Total:** 28 superfícies (27 telas + Conta Suspensa) · 28 rotas (27 + `*` catch-all) | 8 módulos | 65 componentes (24 shared + 2 feedback + 1 auth + 38 módulo)
 
@@ -1148,6 +1149,45 @@ Modal ModulosModal (ação "Configurar"):
 - Alterar senha via Modal → `PATCH /api/auth/senha` (BR-089/090): valida a senha atual (422 se incorreta, sem deslogar), exige nova ≥ 6 caracteres e diferente da atual; sessão atual permanece válida após a troca.
 - Alterar e-mail via Modal → `POST /api/auth/me/email` (PLAN-075 F4): novo e-mail + senha atual → `email_pendente` + link de verificação; banner de pendência no topo com "Cancelar alteração".
 - Acesso pela sidebar (item "Meus dados") e pelo `UserMenu` (Perfil).
+
+---
+## 20. Board Dev (visibilidade de git/CI)
+
+**Arquivo:** `frontend/src/modules/devboard/pages/DevBoardPage.tsx` · Rota `/devboard` · Acessível a **super_admin** (`SuperAdminRoute` + `superAdminMiddleware` no backend) · PLAN-078
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────────────────┐
+│  Board Dev  · visibilidade git/CI (PLAN-078) │  ← PageHeader
+├───────┬───────┬───────┬───────┤
+│ Runs  │ Verdes│ Falhas│  PRs  │              ← KpiCard (4)
+├──────────────────────────────────────────────┤
+│ Runs de CI/CD                                │  ← SectionHeader + RunsList
+│   [CI · main · success · 2m0s · há 1h]       │
+├──────────────────────────────────────────────┤
+│ Pull requests abertos                        │  ← SectionHeader + PRsList
+│   [#11 · Feat/contrato ... · feat/xxx]       │
+├──────────────────────────────────────────────┤
+│ Dependabot                                   │  ← SectionHeader + DependabotList
+│   [#12 · deps: bump ... · dependabot]        │
+└──────────────────────────────────────────────┘
+```
+
+**Componentes:**
+| Área | Componente |
+|------|-----------|
+| Header | `PageHeader` (icon Activity) |
+| KPIs | `KpiCard` (runs, verdes, falhas, PRs) |
+| Blocos | `SectionHeader` + `RunsList` / `PRsList` / `DependabotList` |
+| Listas | `Card.Root` (list-item) + `StatusBadge` |
+| Estados | `EstadoTela` (Loading/Error/Empty) |
+
+**Comportamento:**
+- Dados via proxy `GET /api/devboard/{runs,prs,dependabot}` (React Query, refetch 60s, staleTime 30s).
+- Status do run: verde (success), vermelho (failure), azul (rodando), âmbar (cancelled/timed_out).
+- PRs com badge "rascunho"; dependabot separado com badge próprio.
+- Erros da GitHub API (503/504/502) viram mensagem amigável com "Tentar novamente".
+- Navegação: sidebar (desktop) + aba "Board" na tab bar (mobile), ícone `Activity` — exclusivo do super_admin.
 
 ---
 

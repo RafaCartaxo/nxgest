@@ -2660,3 +2660,81 @@ Descarta o lead (PLAN-064, LD-12): status **DESCARTADO** + **LGPD** (dados pesso
 | LEAD_STATUS_INVALIDO | 422 (convertido) |
 | VALIDATION_ERROR | 422 (sem motivo) |
 | FORBIDDEN | 403 |
+
+---
+
+# Módulo Devboard (PLAN-078)
+
+Board de visibilidade de git/CI do repositório `RafaCartaxo/nxgest`. Todos os endpoints exigem autenticação **e** papel **exclusivo de super_admin** (`superAdminMiddleware`). O backend proxy a GitHub API usando `GITHUB_TOKEN` (env var do servidor).
+
+# GET /api/devboard/runs
+
+Retorna os últimos runs de workflow (CI/CD) do repo.
+
+### Query Parameters
+
+| Parâmetro | Tipo | Default | Descrição |
+|-----------|------|---------|-----------|
+| `limit` | int | 10 | Quantidade de runs (clampeado entre 1 e 50) |
+
+### Response 200
+
+```json
+{
+  "runs": [
+    {
+      "id": "32079971284",
+      "workflowName": "CI",
+      "branch": "main",
+      "status": "completed",
+      "conclusion": "success",
+      "createdAt": "2026-08-17T23:19:58Z",
+      "durationSec": 91
+    }
+  ]
+}
+```
+
+# GET /api/devboard/prs
+
+Retorna os pull requests abertos do repo.
+
+### Response 200
+
+```json
+{
+  "prs": [
+    {
+      "number": 11,
+      "title": "Feat/contrato periodicidade form",
+      "branch": "feat/contrato-periodicidade-form",
+      "isDraft": false,
+      "isDependabot": false
+    }
+  ]
+}
+```
+
+# GET /api/devboard/dependabot
+
+Retorna apenas os PRs do dependabot abertos.
+
+### Response 200
+
+```json
+{
+  "dependabot": [
+    { "number": 12, "title": "deps: bump ...", "branch": "dependabot/npm_and_yarn/..." }
+  ]
+}
+```
+
+## Possíveis Erros (comum aos 3 endpoints)
+
+| Código | HTTP | Significado |
+|--------|------|-------------|
+| `GITHUB_TOKEN_AUSENTE` | 503 | `GITHUB_TOKEN` não configurado no servidor |
+| `GITHUB_TIMEOUT` | 504 | A API do GitHub demorou demais |
+| `GITHUB_API_ERROR` | 502 | Erro da API do GitHub (401/403/429/5xx) |
+| `FORBIDDEN` | 403 | Usuário não-super admin tentou acessar |
+| `UNAUTHORIZED` | 401 | Sem token de sessão |

@@ -269,6 +269,19 @@ const endpoints = [
       description: "IMP-UC · 200 {desligados, impacto, bloqueado} · prévia sem persistir (BR-105)",
     }),
   ]),
+
+  mod("Devboard", "Visibilidade de git/CI (PLAN-078) — exclusivo super_admin, proxy GitHub API", [
+    req("Listar runs", "GET", "/api/devboard/runs", {
+      query: [{ key: "limit", value: "10" }],
+      description: "DB-CT-01 · 200 {runs} · 503 GITHUB_TOKEN_AUSENTE · 504 GITHUB_TIMEOUT · 502 GITHUB_API_ERROR",
+    }),
+    req("Listar PRs", "GET", "/api/devboard/prs", {
+      description: "DB-CT-02 · 200 {prs} com isDraft/isDependabot",
+    }),
+    req("Listar dependabot", "GET", "/api/devboard/dependabot", {
+      description: "DB-CT-03 · 200 {dependabot} apenas PRs do dependabot",
+    }),
+  ]),
 ]
 
 const collection = {
