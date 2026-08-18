@@ -81,8 +81,25 @@ app.use("/api/devboard", authMiddleware, superAdminMiddleware, devboardRoutes)
 if (process.env.NODE_ENV === "production") {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
   const frontendDist = path.resolve(__dirname, "../frontend/dist")
-  app.use(express.static(frontendDist))
-  app.get("/{*splat}", (_req, res) => {
+  // PLAN-079 (F3): assets com hash são imutáveis → cache longo. index.html nunca é
+  // cacheado aqui (index:false + fallback); o SW é network-first p/ navegação.
+  app.use(
+    express.static(frontendDist, {
+      maxAge: "1y",
+      immutable: true,
+      etag: true,
+      index: false,
+    }),
+  )
+  // PLAN-079 (F2): assets inexistentes respondem 404 (não index.html) — evita o
+  // confuso "text/html is not a valid JavaScript MIME type" em chunk desatualizado.
+  app.use("/assets", (_req, res) => {
+    res.status(404).json({ code: "NOT_FOUND", message: "Recurso não encontrado." })
+  })
+  // Fallback SPA: apenas navegação (sem extensão de arquivo). Arquivos que não
+  // existem no dist (ícones, manifest, sw.js) caem no 404 via next().
+  app.get("/{*splat}", (req, res, next) => {
+    if (/\.[a-zA-Z0-9]{2,5}$/.test(req.path)) return next()
     res.sendFile(path.join(frontendDist, "index.html"))
   })
 }

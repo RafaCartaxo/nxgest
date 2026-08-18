@@ -2,7 +2,7 @@
 
 > **Regra:** atualizar a cada sessão de trabalho, junto com o `CHECKLIST` do dia (e o `UPDATES.md` quando houver entrega relevante). Fonte de verdade dos detalhes: planos e docs linkados.
 
-**Última atualização:** 15/08/2026
+**Última atualização:** 18/08/2026
 
 ---
 
@@ -48,6 +48,7 @@
 | PLAN-067 (testes) | 🔵 F0+F1 parcial+F3-P022+CI (08/08) | F1 restante (financeiro/admin/operações) · F2 (AuthContext/ThemeProvider/api-client) · F3 telas críticas |
 | PLAN-066 (segurança) | 🔵 P0 ✅ · P1 parcial · P2 ⏳ | P1: timeouts Caddy (T-08) + **executar firewalld/fail2ban no VPS** · P2: JWT curto/revogação, Cloudflare WAF, 2FA, senha mín. 8 |
 | **PLAN-077 (performance)** | 🔵 F1-F4 ✅ (15/08) · em prod | ⏳ bulk insert de parcelas (após PLAN-076 estabilizar) · medir queries no dump de produção · sync docs (05-MAPEAMENTO, 04-BACKEND) |
+| **PLAN-079 (estabilidade deploy)** | ⏳ Planejado (18/08) | Fix erro "text/html MIME" pós-code-splitting: cache-busting do SW · fallback assets→404 · static imutável · check-dist no CI |
 
 ## Pendências (verificação/ações futuras)
 
@@ -68,7 +69,7 @@
 
 ## Métricas de saúde
 
-- **Testes:** 80 verdes (19 arquivos) · smoke API **250/250** · `docs:audit` 0 divergências (62 rotas = 62 telas)
-- **Pipeline:** CI verde no push/PR · staging automático no merge à main · CD prod com gate de promoção (staging saudável)
+- **Testes:** 154 verdes (33 arquivos) · smoke API **274/274** · `docs:audit` 0 divergências (62 rotas = 62 telas)
+- **Pipeline:** CI verde no push/PR · staging automático no merge à main · CD prod com gate de promoção (staging saudável) · `check-dist` (PLAN-079) garante consistência index.html ↔ chunks
 - **QA:** pacote `docs/qa/` (visão geral, arquitetura, engenharia, testes, pipeline, operação, segurança, glossário, checklists + trilha de estudo) · validações manuais de produção **concluídas (12/08)**
 - **Docs:** planos (incl. PLAN-070, PLAN-071) · 6 ADRs · 5 templates · skills SKILL-001..009

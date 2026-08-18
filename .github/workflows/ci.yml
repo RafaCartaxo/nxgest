@@ -26,6 +26,7 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run build
+      - run: node scripts/check-dist.mjs
       - run: npm run audit:ui 2>&1 | tee /tmp/audit-ui.log
       - run: npm run audit:styles 2>&1 | tee /tmp/audit-styles.log
       - run: npm run audit:modules 2>&1 | tee /tmp/audit-modules.log

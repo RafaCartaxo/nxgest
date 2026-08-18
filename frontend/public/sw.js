@@ -3,9 +3,11 @@
  * em vez do favicon). Estratégia leve: network-first p/ navegação (sempre atual),
  * cache-first p/ assets estáticos e ícones. Sem cache de API (dados sensíveis).
  *
- * IMPORTANTE: bump do CACHE a cada deploy de assets estáticos (invalida o cache
- * antigo do browser). Registro ocorre só em produção (main.tsx: import.meta.env.PROD). */
-const CACHE = "nxgest-v2"
+ * IMPORTANTE: o valor do CACHE é injetado pelo Vite no build (PLAN-079) — um hash
+ * do index.html, que muda a cada deploy de frontend (cache-busting automático).
+ * No fonte fica o placeholder; o vite.config.ts substitui em dist/sw.js.
+ * Registro ocorre só em produção (main.tsx: import.meta.env.PROD). */
+const CACHE = "__NXGEST_CACHE_VERSION__"
 
 self.addEventListener("install", () => {
   self.skipWaiting()
