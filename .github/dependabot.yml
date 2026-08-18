@@ -8,10 +8,16 @@ updates:
       time: "09:00"
       timezone: "America/Sao_Paulo"
     versioning-strategy: "auto"
-    # Só minor/patch automático (majors exigem migração — Express 4→5, React 19, TS7,
-    # Vite 8, Tailwind 4 quebraram o CI em 15/08). Migrações são tratadas por plano próprio.
-    # update-types abaixo é a rede de segurança principal: majors nem criam PR.
-    # O ignore é redundante (defensivo) — mantido para casos específicos.
+    # Só minor/patch automáticos. Majors exigem migração (Express 4→5, React 19,
+    # Vite 8, Tailwind 4 quebraram o CI em 15/08) e são tratados por plano próprio.
+    #
+    # NOTA (18/08): update-types dentro de `groups` NÃO bloqueia PR — só decide o que
+    # entra no grupo (majors viram PRs separados). O que de fato bloqueia majors é o
+    # `ignore.update-types: semver-major` abaixo (uma linha, cobre todos, presente e futuro).
+    #
+    # Exceções que o semver-major NÃO pega (limitações documentadas do Dependabot):
+    #  - `@types/*`: isentas de update-types (allow E ignore) → versões por pacote.
+    #  - 0.x: major=0 faz 0.24→0.31 ser classificado como "minor" → versões por pacote.
     open-pull-requests-limit: 5
     groups:
       production-deps:
@@ -25,31 +31,31 @@ updates:
           - "minor"
           - "patch"
     ignore:
-      - dependency-name: "express"
-        versions: [">=6"]
+      # Bloqueia TODOS os majors de uma vez (definitivo — não lista por pacote).
+      - update-types: ["version-update:semver-major"]
+      # @types/* (isentas de update-types) — major exige migração deliberada:
+      - dependency-name: "@types/bcryptjs"
+        versions: [">=3"]
+      - dependency-name: "@types/better-sqlite3"
+        versions: [">=8"]
+      - dependency-name: "@types/cors"
+        versions: [">=3"]
       - dependency-name: "@types/express"
         versions: [">=6"]
-      - dependency-name: "uuid"
-        versions: [">=15"]
-      - dependency-name: "react"
-        versions: [">=19"]
-      - dependency-name: "react-dom"
-        versions: [">=19"]
-      - dependency-name: "zod"
-        versions: [">=4"]
-      - dependency-name: "typescript"
-        versions: [">=6"]
-      - dependency-name: "vite"
-        versions: [">=6"]
-      - dependency-name: "tailwindcss"
-        versions: [">=4"]
-      - dependency-name: "@vitejs/plugin-react"
-        versions: [">=5"]
-      - dependency-name: "@vitejs/plugin-basic-ssl"
-        versions: [">=2.2"]
-      # drizzle-kit é 0.x — para 0.x, o gate minor/patch trata 0.24→0.31 como "minor"
-      # (mas 0.x minor = breaking). Não usado no projeto (sem drizzle.config.ts,
-      # migrações via raw SQL). Congelado em 0.24.x até haver migração deliberada.
+      - dependency-name: "@types/jsonwebtoken"
+        versions: [">=10"]
+      - dependency-name: "@types/multer"
+        versions: [">=3"]
+      - dependency-name: "@types/pg"
+        versions: [">=9"]
+      - dependency-name: "@types/uuid"
+        versions: [">=11"]
+      - dependency-name: "@types/react"
+        versions: [">=20"]
+      - dependency-name: "@types/react-dom"
+        versions: [">=20"]
+      # 0.x — major=0 é "minor" pro Dependabot (mas 0.x minor = breaking).
+      # drizzle-kit não é usado no projeto (sem drizzle.config.ts, migrações via raw SQL).
       - dependency-name: "drizzle-kit"
         versions: [">=0.25"]
     labels:

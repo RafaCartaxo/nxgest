@@ -11,6 +11,7 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 - **Validação em prod** — `nxgest.com.br`: asset inexistente → **404** (era `text/html`), asset real → `text/javascript`, SW versionado, SPA fallback ok. Smoke **274/274**, testes **154/154**, audits/docs limpos.
 - **Branch protection corrigida** — check obrigatório `smoke-api (DB isolado)` → `smoke-api (PostgreSQL isolado)` (nome desatualizado bloqueava merge de qualquer PR).
 - **Dependabot** — PR #12 (`@hookform/resolvers`) **merged** após rebase (pegou fix do flake); PR #14 **fechado** (drizzle-kit 0.24→0.31 é breaking em 0.x e não usado no projeto) + `drizzle-kit >=0.25` no ignore. PLAN-075 corrigido para **✅ Implementado** no README/STATUS.
+- **Dependabot — correção definitiva de majors** — `ignore.update-types: semver-major` bloqueia **todos** os majors de uma vez (antes, `update-types` dentro de `groups` não bloqueava PR — só desagrupava, por isso `jsdom`, `@types/bcryptjs`, `@vitejs/plugin-basic-ssl` geravam PRs de major). Exceções documentadas mantidas: `@types/*` (isentas de `update-types` — limites por pacote) e `0.x` (`drizzle-kit`). Removidos ignores de major redundantes. PRs #17/#18/#19 fechados; #15/#16 merged.
 
 ## 15/08/2026 — Fix reassign no OperadorDetail + cenários de suspensão × ações
 
