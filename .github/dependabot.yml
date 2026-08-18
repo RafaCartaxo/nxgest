@@ -47,6 +47,11 @@ updates:
         versions: [">=5"]
       - dependency-name: "@vitejs/plugin-basic-ssl"
         versions: [">=2.2"]
+      # drizzle-kit é 0.x — para 0.x, o gate minor/patch trata 0.24→0.31 como "minor"
+      # (mas 0.x minor = breaking). Não usado no projeto (sem drizzle.config.ts,
+      # migrações via raw SQL). Congelado em 0.24.x até haver migração deliberada.
+      - dependency-name: "drizzle-kit"
+        versions: [">=0.25"]
     labels:
       - "dependencies"
     commit-message:

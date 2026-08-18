@@ -2,6 +2,16 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 18/08/2026 — PLAN-079: estabilidade de deploy + fix "text/html MIME" — **em produção**
+
+- **Cache-busting automático do service worker (F1)** — `sw.js` usa placeholder `__NXGEST_CACHE_VERSION__`; plugin inline no `vite.config.ts` injeta hash sha1 do `index.html` no `closeBundle`. A cada deploy o `activate` limpa caches antigos → fim da mistura de hashes de chunks. Prod: `CACHE = "nxgest-a979e1c4d9fa"`.
+- **Fallback SPA não captura assets (F2)** — `src/main.ts`: `/assets` inexistentes → **404** (não `index.html`); fallback `/{*splat}` só para navegação (extensão → `next()`). Elimina o `text/html is not a valid JavaScript MIME type`.
+- **`express.static` imutável (F3)** — `maxAge: "1y"`, `immutable`, `index: false` para assets com hash.
+- **`check-dist` no CI (F4)** — novo `scripts/check-dist.mjs` valida que todo asset do `index.html` existe em `dist/`.
+- **Validação em prod** — `nxgest.com.br`: asset inexistente → **404** (era `text/html`), asset real → `text/javascript`, SW versionado, SPA fallback ok. Smoke **274/274**, testes **154/154**, audits/docs limpos.
+- **Branch protection corrigida** — check obrigatório `smoke-api (DB isolado)` → `smoke-api (PostgreSQL isolado)` (nome desatualizado bloqueava merge de qualquer PR).
+- **Dependabot** — PR #12 (`@hookform/resolvers`) **merged** após rebase (pegou fix do flake); PR #14 **fechado** (drizzle-kit 0.24→0.31 é breaking em 0.x e não usado no projeto) + `drizzle-kit >=0.25` no ignore. PLAN-075 corrigido para **✅ Implementado** no README/STATUS.
+
 ## 15/08/2026 — Fix reassign no OperadorDetail + cenários de suspensão × ações
 
 - **Fix `OperadorDetail` (beco sem saída silencioso)** — rebaixar um operador **com subordinados** pela página de detalhe (`/admin/operadores/:id` → Editar → mudar role) retornava `OPERATOR_HAS_SUBORDINATES` no backend, o hook gravava `reassignState`, mas a página **não renderizava o `ReassignModal`** → nada acontecia (sem modal, sem erro). Agora espelha o `AdminPage`: destrutura `reassignState`/`handleReassignConfirm`/`closeReassign` + renderiza o `<ReassignModal>` (chefes = admins da empresa, carregados no fetch). Sem mudança no comportamento de fechamento dos modais (mantém `onSaved` como padrão).
