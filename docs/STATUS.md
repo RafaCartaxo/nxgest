@@ -15,7 +15,7 @@
 | VPS | `172.245.152.223` · repo `/opt/nxgestao` · vol prod `nxgestao_nxgestao_data` · vol staging `nxgestao_nxgestao_staging_data` |
 | E-mail | Resend ativo (`no-reply@nxgest.com.br`) — fail-closed (503 se indisponível) |
 | Deploy mais recente | **Automático via pipeline** — último commit da `main` (prod após staging saudável) |
-| CI/CD | **CI** (`.github/workflows/ci.yml`): tsc · build · audits · test (80) · coverage · docs:audit + smoke isolado (250) + **deploy-staging** · **CD** (`.github/workflows/cd.yml`): validate (CI verde + staging) → **deploy-prod** automático/manual |
+| CI/CD | **CI** (`.github/workflows/ci.yml`): tsc · build · check-dist · audits · test (154) · coverage · docs:audit + smoke isolado (274) + **deploy-staging** · **CD** (`.github/workflows/cd.yml`): validate (CI verde + staging) → **deploy-prod** automático/manual |
 
 ## Entregas recentes
 
@@ -49,7 +49,7 @@
 | PLAN-067 (testes) | 🔵 F0+F1 parcial+F3-P022+CI (08/08) | F1 restante (financeiro/admin/operações) · F2 (AuthContext/ThemeProvider/api-client) · F3 telas críticas |
 | PLAN-066 (segurança) | 🔵 P0 ✅ · P1 parcial · P2 ⏳ | P1: timeouts Caddy (T-08) + **executar firewalld/fail2ban no VPS** · P2: JWT curto/revogação, Cloudflare WAF, 2FA, senha mín. 8 |
 | **PLAN-077 (performance)** | 🔵 F1-F4 ✅ (15/08) · em prod | ⏳ bulk insert de parcelas (após PLAN-076 estabilizar) · medir queries no dump de produção · sync docs (05-MAPEAMENTO, 04-BACKEND) |
-| **PLAN-079 (estabilidade deploy)** | ⏳ Planejado (18/08) | Fix erro "text/html MIME" pós-code-splitting: cache-busting do SW · fallback assets→404 · static imutável · check-dist no CI |
+| **PLAN-079 (estabilidade deploy)** | ✅ Implementado (18/08) · **em produção** | Fix erro "text/html MIME" pós-code-splitting: cache-busting do SW · fallback assets→404 · static imutável · check-dist no CI |
 
 ## Pendências (verificação/ações futuras)
 

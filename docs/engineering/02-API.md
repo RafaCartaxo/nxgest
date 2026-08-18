@@ -1,10 +1,10 @@
 # API
 
-**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa, Gasto, Auth e Admin documentados; Multi-Tenant (Empresas, PLAN-019) + drill-down Admin → Operador (PLAN-020) implementados; **fluxo de conta (PLAN-065: convite/ativação + forgot/reset + Resend)** e **Leads comerciais (PLAN-064)** documentados
+**Status:** Em construção — módulos Cliente, Contrato, Pagamento, Operações, Caixa, Gasto, Auth e Admin documentados; Multi-Tenant (Empresas, PLAN-019) + drill-down Admin → Operador (PLAN-020) implementados; **fluxo de conta (PLAN-065: convite/ativação + forgot/reset + Resend)** e **Leads comerciais (PLAN-064)** documentados; cadastro/perfil/convites/segurança (PLAN-075), contrato periódico (PLAN-076) e devboard (PLAN-078) documentados
 
 **Versão:** 1.4
 
-**Última atualização:** 07/08/2026
+**Última atualização:** 18/08/2026
 
 ---
 

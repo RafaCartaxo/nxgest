@@ -87,7 +87,7 @@ Env: `AI_PROVIDER` + `GEMINI_API_KEY` em `.env*` + compose prod/staging.
 
 - IA não executa transação (só gera/sugere) · fallback ao comportamento atual sempre presente.
 - Escopo multi-tenant respeitado (403/404 nas gates) · prompt sem PII desnecessária.
-- `tsc` · build · audits · `npm test` · `docs:audit` · smoke 250/250 mantido.
+- `tsc` · build · audits · `npm test` · `docs:audit` · smoke 274/274 mantido.
 - Chave `GEMINI_API_KEY` só no `.env` do VPS.
 
 # Fora de escopo

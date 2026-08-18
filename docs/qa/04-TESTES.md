@@ -11,7 +11,7 @@
                Unit lógica frontend
             Unit shared/segurança
          Unit use-case (backend)
-      Smoke API (integração, 250 cenários)
+      Smoke API (integração, 274 cenários)
     CI/CD (gates automáticos) · Cobertura
 ```
 
@@ -21,7 +21,7 @@
 | Unit shared/segurança | `src/shared/utils/*.test.ts` | `scope`, `foto`, `jwt`, `clientIp`, `env` | Helpers críticos e segurança |
 | Unit lógica front | `frontend/src/shared/**/*.test.ts` | `geo/alvo`, `modules`, `capacidades`, `estadoGps` | Lógica pura do frontend |
 | Component/UI | `frontend/src/**/*.test.tsx` (jsdom) | `LoginPage` | Interação de UI (renders, submit, toggle) |
-| Integração API | `scripts/smoke-api.mjs` | 250 cenários (DB isolado + seed) | Endpoints + coerência de retornos |
+| Integração API | `scripts/smoke-api.mjs` | 274 cenários (DB isolado + seed) | Endpoints + coerência de retornos |
 
 ---
 
@@ -33,7 +33,7 @@ npm run test:watch     # watch
 npm run test:coverage  # cobertura v8 (report-only, meta sobe gradual)
 ```
 
-### Smoke API (integração — 250 cenários)
+### Smoke API (integração — 274 cenários)
 
 ```bash
 # instância isolada (nunca usar o dev/3000)
@@ -70,12 +70,12 @@ node scripts/smoke-api.mjs --baseUrl http://127.0.0.1:3002
 
 ---
 
-## Estado atual (11/08)
+## Estado atual (18/08)
 
-- **78 testes** verdes (18 arquivos) — unit + UI.
-- **Smoke 250/250** — integração API.
+- **154 testes** verdes (33 arquivos) — unit + UI.
+- **Smoke 274/274** — integração API.
 - **Cobertura:** report-only (threshold 0) — meta sobe gradual com a rotina (PLAN-067 F4).
-- `docs:audit` 0 divergências (62 rotas = 62 endpoints = 62 telas mapeadas).
+- `docs:audit` 0 divergências (72 rotas = 72 endpoints = 72 UCs/CTs; 28 telas mapeadas).
 
 ---
 

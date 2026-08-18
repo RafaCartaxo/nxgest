@@ -12,7 +12,7 @@
 
 > **Validação executada (03/08/2026):** 104 cenários executados via `scripts/smoke-api.mjs` — todos PASS contra instância isolada, incluindo as variações V1–V8 (pagamento que atravessa parcelas, quitar→Finalizado, estorno reverte, 2 contratos, ajuste absoluto, cross-tenant, super admin, token inválido), o **PLAN-030** (`GET /api/admin/equipe`, coerência Σ operadores = totais), o **PLAN-031** (módulos/whitelabel — MOD-091..096) e o **PLAN-032** (hierarquia/sócio — SC-001..006, subárvore). Corrigidos no PLAN-029: `dataPromessa` obrigatória para promessa e senha mín. 6 no backend admin.
 >
-> **Smoke atual (11/08/2026):** **250/250 PASS** no CI (job `smoke-api`, DB isolado) — inclui `SC-006b` (sócio ajusta caixa da subárvore → 201) e `SC-006c` (sócio fora da subárvore → 404). Contagem viva em `docs/engineering/TESTES.md` · `docs/STATUS.md`.
+> **Smoke atual (18/08/2026):** **274/274 PASS** no CI (job `smoke-api`, DB isolado) — inclui `SC-006b` (sócio ajusta caixa da subárvore → 201) e `SC-006c` (sócio fora da subárvore → 404), além dos fluxos de conta/convite/suspensão (PLAN-075). Contagem viva em `docs/engineering/TESTES.md` · `docs/STATUS.md`.
 >
 > **Smoke (15/08/2026):** **274/274 PASS** — instância isolada (PG `localhost:5433`), seed reaplicado, node 20. Inclui `SUSP-USR-1..12` (suspensão de usuário + **combinações suspensão × edição/reassign/email/reativar** — CT-P-17..21), `ADM-TROC-CONV/ATIVO/DUP/REUSE`, `SOC-TROC-SUB/FORA`. O `ADM-TROC-REUSE` expôs e fechou um bug real (unique hard `usuarios_email_key` → único parcial `idx_usuarios_email WHERE deleted_at IS NULL`, ver CT-P-16).
 

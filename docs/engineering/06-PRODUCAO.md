@@ -35,8 +35,8 @@
 | Etapa | Onde | Gatilho |
 |-------|------|---------|
 | **CI** (`.github/workflows/ci.yml`) | GitHub Actions | push/PR/manual |
-| — job `test` | tsc · build · audit:ui/styles/modules · vitest (78) · coverage · docs:audit | — |
-| — job `smoke` | schema isolado → seed → smoke-api (250 cenários, DB/rate limits isolados) | — |
+| — job `test` | tsc · build · check-dist · audit:ui/styles/modules · vitest (154) · coverage · docs:audit | — |
+| — job `smoke` | schema isolado → seed → smoke-api (274 cenários, DB/rate limits isolados) | — |
 | — job `deploy-staging` | SSH → VPS → `scripts/deploy-staging.sh` → **staging no ar** | merge/push à `main`, após test+smoke |
 | **CD** (`.github/workflows/cd.yml`) | GitHub Actions | `workflow_run` (CI concluído em main) + manual (`workflow_dispatch` com input `ref`) |
 | — job `validate` | CI verde do push + health do staging (gate de promoção) | — |

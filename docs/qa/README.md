@@ -1,6 +1,6 @@
 # QA — Material de Qualidade e Fonte de Estudo
 
-**Status:** Ativo (11/08/2026)
+**Status:** Ativo (18/08/2026)
 
 ---
 

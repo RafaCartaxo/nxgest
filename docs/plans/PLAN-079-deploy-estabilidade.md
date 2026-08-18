@@ -1,6 +1,6 @@
 # PLAN-079 — Estabilidade de deploy & prevenção do erro "text/html MIME" (PWA/cache)
 
-**Status:** 🔵 Implementado (fases 1–4, 18/08) — aguardando deploy e validação manual em prod
+**Status:** ✅ Implementado (fases 1–4, 18/08) · **em produção e validado** (asset inexistente → 404; SW versionado; SPA fallback ok)
 
 **Versão:** 1.0
 

@@ -73,7 +73,7 @@ Segurança é **by design**: fail-closed, mínima superfície, segredos fora do 
 
 ## Dependências
 
-- `npm audit --omit=dev` → **0 vulnerabilidades** (11/08) · dependabot semanal (npm + actions) · react-router 7.18.2 (fix GHSA-337j/CVE-2025-68470).
+- `npm audit --omit=dev` → **0 vulnerabilidades** (18/08) · dependabot semanal (npm + actions) · react-router 7.18.2 (fix GHSA-337j/CVE-2025-68470).
 - Vulns dev-only restantes (vite/vitest) — major bump, fora de escopo (monitorar).
 
 ---

@@ -80,7 +80,7 @@ Após aprovado, o Plano serve como entrada oficial para a **SKILL-004 — Vertic
 | [PLAN-076-contrato-periodicidade.md](PLAN-076-contrato-periodicidade.md) | **Contratos com periodicidade diária e semanal** — campo `periodicidade` (default `diaria`), vencimento semanal +7 dias, domingo bloqueado para semanal (BR-040-A), badge no card | ✅ Implementado (15/08) |
 | [PLAN-077-performance-escalabilidade.md](PLAN-077-performance-escalabilidade.md) | **Performance & escalabilidade (whitelabel)** — pool PG com timeout, cache por request no auth/módulo, reescrita da query de cobranças (LATERAL), N+1 em pagamentos, fix SQL latente no caixa, code-splitting frontend + GPS throttle, node 20 | 🔵 Implementado (15/08) · smoke 267/267 · reinício dev ⏳ |
 | [PLAN-078-devboard.md](PLAN-078-devboard.md) | **Board Dev (visibilidade git/CI)** — rota `/devboard` (só admin/sócio) consumindo GitHub API via proxy backend (token no servidor): CI/CD + PRs + dependabot | ✅ Implementado (17/08) |
-| [PLAN-079-deploy-estabilidade.md](PLAN-079-deploy-estabilidade.md) | **Estabilidade de deploy & prevenção do erro "text/html MIME"** — cache-busting automático do service worker, fallback SPA sem capturar assets, `express.static` imutável, verificação de consistência do build no CI | ⏳ Planejado (18/08) |
+| [PLAN-079-deploy-estabilidade.md](PLAN-079-deploy-estabilidade.md) | **Estabilidade de deploy & prevenção do erro "text/html MIME"** — cache-busting automático do service worker, fallback SPA sem capturar assets, `express.static` imutável, verificação de consistência do build no CI | ✅ Implementado (18/08) · em produção |
 | [FEATURE-temp.md](FEATURE-temp.md) | Prévia do Pagamento (rascunho → implementado no `PagamentoModal`) | Concluído |
 
 ## Backlog e briefings auxiliares

@@ -50,7 +50,7 @@
 | **UC** | Caso de uso (de produto ou de API — `API-UC-###`) |
 | **CT** | Cenário de teste (Dado/Quando/Então — `API-CT-###`) |
 | **BR** | Regra de negócio (`BR-###` em `02-BUSINESS-RULES.md`) |
-| **Smoke** | Teste de integração da API (`scripts/smoke-api.mjs`, 250 cenários) |
+| **Smoke** | Teste de integração da API (`scripts/smoke-api.mjs`, 274 cenários) |
 | **Gate** | Checagem que bloqueia avanço (ex.: CI verde, staging saudável) |
 | **Pipeline** | Sequência CI → staging → produção |
 | **Promoção** | Movimento de uma mudança para o próximo ambiente |

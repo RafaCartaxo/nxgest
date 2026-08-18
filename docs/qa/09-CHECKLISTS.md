@@ -10,9 +10,9 @@
 
 - [ ] `npx tsc --noEmit` limpo (raiz + frontend)
 - [ ] `npm run build` verde
-- [ ] `npm test` verde (80 testes)
+- [ ] `npm test` verde (154 testes)
 - [ ] Audits: `audit:ui` · `audit:styles` · `audit:modules` · `docs:audit`
-- [ ] Smoke (se tocou backend/API): 250/250 em instância isolada
+- [ ] Smoke (se tocou backend/API): 274/274 em instância isolada
 - [ ] CI verde no push/PR
 - [ ] (se merge à main) staging no ar + prod sem regressão
 
@@ -31,7 +31,7 @@
 - [ ] Admin: operadores CRUD, auto-rebaixar/remover (403), equipe (Σ = totais), empresas (super), módulos/capacidades
 - [ ] Leads: criar público, duplicado, confirmar token (single-use), converter, descartar (LGPD)
 - [ ] Anexos: upload imagem/PDF, MIME real, limite, download autenticado, escopo (404 p/ outro operador)
-- [ ] Smoke 250/250
+- [ ] Smoke 274/274
 
 ---
 
@@ -48,7 +48,7 @@
 
 ---
 
-## D. Validação manual (última execução: 12/08/2026, produção)
+## D. Validação manual (última execução: 18/08/2026, produção)
 
 - [x] CT-ANX-02 — upload de anexo imagem e abrir no modal
 - [x] CT-ROT-02 — rota concluída/parcial: contadores e empty state

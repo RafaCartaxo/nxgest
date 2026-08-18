@@ -94,7 +94,7 @@ Arquivos a tocar: `.env.example` · `.env.production.example` · `docker-compose
 - Mensagem personalizada com contexto real quando a IA responde.
 - Fallback idêntico ao comportamento atual quando a IA está off.
 - Nenhuma transação executada pela IA · escopo respeitado · 403 nas gates.
-- `tsc` · build · audits · `npm test` · `docs:audit` · smoke 250/250 mantido.
+- `tsc` · build · audits · `npm test` · `docs:audit` · smoke 274/274 mantido.
 - Chave `GEMINI_API_KEY` só no `.env` do VPS (nunca no repo).
 
 ## Fora de escopo (F1)

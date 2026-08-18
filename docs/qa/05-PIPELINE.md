@@ -1,13 +1,13 @@
 # 05 — Pipeline (CI/CD)
 
-**Status:** Ativo (11/08/2026) · **Fonte:** `.github/workflows/ci.yml` · `.github/workflows/cd.yml` · `docs/engineering/06-PRODUCAO.md §1.1`
+**Status:** Ativo (18/08/2026) · **Fonte:** `.github/workflows/ci.yml` · `.github/workflows/cd.yml` · `docs/engineering/06-PRODUCAO.md §1.1`
 
 ---
 
 ## Visão de alto nível
 
 ```text
-push/PR → [CI] tsc+build+audits+unit → smoke (250) → merge main
+push/PR → [CI] tsc+build+audits+unit → smoke (274) → merge main
                                                         ↓
                       CI no push à main → deploy-staging (automático)
                                                         ↓
@@ -26,7 +26,7 @@ push/PR → [CI] tsc+build+audits+unit → smoke (250) → merge main
 `npm ci` (workspaces) → `tsc --noEmit` → `npm run build` → `audit:ui` → `audit:styles` → `audit:modules` → `npm test` (78) → `test:coverage` (+ artifact 14 dias) → `docs:audit`.
 
 ### Job `smoke`
-`schema isolado` → `seed-demo` → **uma** instância (`JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000`) → `smoke-api` (250/250).
+`schema isolado` → `seed-demo` → **uma** instância (`JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000`) → `smoke-api` (274/274).
 
 ### Job `deploy-staging` (push→main, `needs: [test, smoke]`)
 SSH (secrets `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY`) → `scripts/deploy-staging.sh` → staging em `nxgestao.duckdns.org`.
