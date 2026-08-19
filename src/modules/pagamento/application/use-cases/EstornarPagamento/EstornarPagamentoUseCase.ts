@@ -30,6 +30,8 @@ export class EstornarPagamentoUseCase {
 
       let temSaldoPendente = false
 
+      const parcelasUpdate: Array<{ id: string; valorPago: number; saldoPendente: number; estado: "Pendente" | "Parcial" | "Paga"; dataQuitacao: string | null; updatedAt: string }> = []
+
       for (const rel of pagamento.parcelas) {
         const parcela = contrato.parcelas.find((p) => p.id === rel.parcelaId)
         if (!parcela) continue
@@ -40,14 +42,17 @@ export class EstornarPagamentoUseCase {
 
         if (novoSaldo > 0) temSaldoPendente = true
 
-        await repo.updateParcela(operadorId, parcela.id, {
+        parcelasUpdate.push({
+          id: parcela.id,
           valorPago: novoValorPago,
           saldoPendente: novoSaldo,
           estado: novoEstado,
-          dataQuitacao: novoEstado === "Paga" ? parcela.dataQuitacao : null,
+          dataQuitacao: novoEstado === "Paga" ? parcela.dataQuitacao ?? null : null,
           updatedAt: createdAt,
         })
       }
+
+      await repo.updateParcelasEmLote(operadorId, parcelasUpdate)
 
       // Se o contrato foi finalizado por este pagamento e agora tem saldo pendente, volta a Ativo
       if (contrato.estado === "Finalizado" && temSaldoPendente) {

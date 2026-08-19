@@ -5,14 +5,16 @@ import type {
 } from "../../application/ports/cliente-financeiro.query.js"
 import { getLocalDateString, parseDateLocal } from "../../../../shared/utils/parseDateLocal.js"
 
-interface AtrasoRow {
+interface AtrasoVenceRow {
   valor_em_atraso: number
   parcelas_em_atraso: number
   mais_antiga: string | null
+  valor_vence_hoje: number
 }
 
-interface ValorRow {
-  valor_vence_hoje: number
+interface LucroRow {
+  lucro_previsto: number
+  lucro_realizado: number
 }
 
 interface PagamentoRow {
@@ -20,57 +22,39 @@ interface PagamentoRow {
   valor: number
 }
 
-interface LucroRow {
-  lucro_por_estado: number
-}
-
 export class ClienteFinanceiroQuery implements IClienteFinanceiroQuery {
-  /** Soma do lucro (valorFinal − valorBase) dos contratos do cliente num estado ('Ativo' = previsto · 'Finalizado' = realizado). */
-  private async sumLucroPorEstado(userId: string, clienteId: string, estado: string): Promise<number> {
-    const { rows } = await rawQuery<LucroRow>(`
-        SELECT COALESCE(SUM(ct."valor_final" - ct."valor_base"), 0) AS "lucro_por_estado"
-        FROM contratos ct
-        WHERE ct."cliente_id" = ?
-          AND ct."user_id" = ?
-          AND ct."estado" = ?
-          AND ct."deleted_at" IS NULL
-      `, [clienteId, userId, estado])
-    return rows[0]?.lucro_por_estado ?? 0
-  }
-
   async resumoByClienteId(userId: string, clienteId: string): Promise<ClienteFinanceiroResumo> {
     const hoje = getLocalDateString(new Date())
 
-    const { rows: atrasoRows } = await rawQuery<AtrasoRow>(`
+    // PLAN-083 Fase 1.5: lucro previsto/realizado → 1 query FILTER (era sumLucroPorEstado ×2).
+    const { rows: lucroRows } = await rawQuery<LucroRow>(`
         SELECT
-          COALESCE(SUM(p."saldo_pendente"), 0) AS "valor_em_atraso",
-          COUNT(p.id) AS "parcelas_em_atraso",
-          MIN(p."data_vencimento") AS "mais_antiga"
-        FROM parcelas p
-        JOIN contratos ct ON ct.id = p."contrato_id"
+          COALESCE(SUM(ct."valor_final" - ct."valor_base") FILTER (WHERE ct."estado" = 'Ativo'), 0) AS "lucro_previsto",
+          COALESCE(SUM(ct."valor_final" - ct."valor_base") FILTER (WHERE ct."estado" = 'Finalizado'), 0) AS "lucro_realizado"
+        FROM contratos ct
         WHERE ct."cliente_id" = ?
           AND ct."user_id" = ?
-          AND p."data_vencimento" < ?
-          AND p."saldo_pendente" > 0
-          AND p."deleted_at" IS NULL
           AND ct."deleted_at" IS NULL
-          AND ct."estado" = 'Ativo'
-      `, [clienteId, userId, hoje])
-    const atraso = atrasoRows[0]
+      `, [clienteId, userId])
+    const lucro = lucroRows[0]
 
-    const { rows: venceHojeRows } = await rawQuery<ValorRow>(`
-        SELECT COALESCE(SUM(p."saldo_pendente"), 0) AS "valor_vence_hoje"
+    // PLAN-083 Fase 1.5: atraso + venceHoje → 1 scan de parcelas com FILTERs (eram 2 queries).
+    const { rows: atrasoVenceRows } = await rawQuery<AtrasoVenceRow>(`
+        SELECT
+          COALESCE(SUM(p."saldo_pendente") FILTER (WHERE p."data_vencimento" < ?), 0) AS "valor_em_atraso",
+          COUNT(p.id) FILTER (WHERE p."data_vencimento" < ?) AS "parcelas_em_atraso",
+          MIN(p."data_vencimento") FILTER (WHERE p."data_vencimento" < ?) AS "mais_antiga",
+          COALESCE(SUM(p."saldo_pendente") FILTER (WHERE p."data_vencimento" = ?), 0) AS "valor_vence_hoje"
         FROM parcelas p
         JOIN contratos ct ON ct.id = p."contrato_id"
         WHERE ct."cliente_id" = ?
           AND ct."user_id" = ?
-          AND p."data_vencimento" = ?
           AND p."saldo_pendente" > 0
           AND p."deleted_at" IS NULL
           AND ct."deleted_at" IS NULL
           AND ct."estado" = 'Ativo'
-      `, [clienteId, userId, hoje])
-    const venceHoje = venceHojeRows[0]
+      `, [hoje, hoje, hoje, hoje, clienteId, userId])
+    const atraso = atrasoVenceRows[0]
 
     const { rows: ultimoRows } = await rawQuery<PagamentoRow>(`
         SELECT p.data, p.valor
@@ -85,11 +69,6 @@ export class ClienteFinanceiroQuery implements IClienteFinanceiroQuery {
       `, [clienteId, userId])
     const ultimoPagamento = ultimoRows[0]
 
-    const [lucroPrevisto, lucroRealizado] = await Promise.all([
-      this.sumLucroPorEstado(userId, clienteId, "Ativo"),
-      this.sumLucroPorEstado(userId, clienteId, "Finalizado"),
-    ])
-
     const diasEmAtraso =
       atraso?.mais_antiga != null
         ? Math.round(
@@ -102,12 +81,12 @@ export class ClienteFinanceiroQuery implements IClienteFinanceiroQuery {
       valorEmAtraso: Math.round((atraso?.valor_em_atraso ?? 0) * 100) / 100,
       parcelasEmAtraso: atraso?.parcelas_em_atraso ?? 0,
       diasEmAtraso,
-      valorVenceHoje: Math.round((venceHoje?.valor_vence_hoje ?? 0) * 100) / 100,
+      valorVenceHoje: Math.round((atraso?.valor_vence_hoje ?? 0) * 100) / 100,
       ultimoPagamento: ultimoPagamento
         ? { data: ultimoPagamento.data, valor: Math.round(ultimoPagamento.valor * 100) / 100 }
         : null,
-      lucroPrevisto: Math.round(lucroPrevisto * 100) / 100,
-      lucroRealizado: Math.round(lucroRealizado * 100) / 100,
+      lucroPrevisto: Math.round((lucro?.lucro_previsto ?? 0) * 100) / 100,
+      lucroRealizado: Math.round((lucro?.lucro_realizado ?? 0) * 100) / 100,
     }
   }
 }

@@ -4,12 +4,8 @@ export class ListarCobrancasDoDiaUseCase {
   constructor(private repo: IOperacoesRepository) {}
 
   async execute(userId: string, operadorLat?: number, operadorLng?: number): Promise<CobrancaDoDiaResult> {
-    const result = await this.repo.listarCobrancasDoDia(userId, operadorLat, operadorLng)
-    try {
-      await this.repo.registrarSnapshotAtraso(userId)
-    } catch {
-      // snapshot é efeito colateral — falha não deve quebrar a listagem
-    }
-    return result
+    // PLAN-083 Fase 1.4: snapshot de atraso saiu do GET (escrita em leitura) — passa a ser
+    // registrado sob demanda em ListarHistoricoAtrasosUseCase.
+    return this.repo.listarCobrancasDoDia(userId, operadorLat, operadorLng)
   }
 }

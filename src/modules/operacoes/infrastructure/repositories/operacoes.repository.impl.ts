@@ -46,8 +46,16 @@ interface CobrancaRow {
   proxima_parcela: number
   proximo_numero_parcela: number
   total_parcelas_contrato: number
-  saldo_total: number
   distancia?: number
+}
+
+type ConsolidadoCobrancaRow = {
+  contrato_id: string
+  saldo_total: number
+  a_receber_hoje: number
+  atrasado: number
+  a_vencer: number
+  recebido_hoje: number
 }
 
 export class OperacoesRepository implements IOperacoesRepository {
@@ -70,11 +78,6 @@ export class OperacoesRepository implements IOperacoesRepository {
         ct.id AS "contrato_id",
         ct."quantidade_parcelas" AS "total_parcelas_contrato",
         SUM(p."saldo_pendente") AS "total_pendente",
-        (SELECT COALESCE(SUM(p3."saldo_pendente"), 0)
-         FROM parcelas p3
-         WHERE p3."contrato_id" = ct.id
-           AND p3."saldo_pendente" > 0
-           AND p3."deleted_at" IS NULL) AS "saldo_total",
         COUNT(p.id) AS "quantidade_parcelas",
         CASE
           WHEN MIN(p."data_vencimento") < ? THEN 'atrasado'
@@ -124,45 +127,37 @@ export class OperacoesRepository implements IOperacoesRepository {
         ct."created_at" ASC
     `, [hoje, hoje, hoje, inicio, fim, userId, hoje, userId]) as { rows: CobrancaRow[] }
 
-    const { rows: aReceberHojeRows } = await rawQuery<{ total: number }>(`
-      SELECT COALESCE(SUM(p."saldo_pendente"), 0) AS total
+    // PLAN-083 Fase 1: 1 scan agrupado substitui aReceberHoje + atrasado + aVencer + recebidoHoje
+    // (4 queries) e ainda entrega o saldo_total por contrato que antes era um SubPlan correlacionado
+    // por linha (1 scan de parcelas extra por contrato na query principal).
+    const { rows: consolidadoRows } = await rawQuery<ConsolidadoCobrancaRow>(`
+      SELECT
+        ct.id AS "contrato_id",
+        COALESCE(SUM(p."saldo_pendente"), 0) AS "saldo_total",
+        COALESCE(SUM(p."saldo_pendente") FILTER (WHERE p."data_vencimento" = ?), 0) AS "a_receber_hoje",
+        COALESCE(SUM(p."saldo_pendente") FILTER (WHERE p."data_vencimento" < ?), 0) AS "atrasado",
+        COALESCE(SUM(p."saldo_pendente") FILTER (WHERE p."data_vencimento" > ? AND p."data_vencimento" <= (?::date + INTERVAL '7 days')), 0) AS "a_vencer",
+        (SELECT COALESCE(SUM(valor), 0) FROM pagamentos WHERE data = ? AND "user_id" = ?) AS "recebido_hoje"
       FROM parcelas p
       JOIN contratos ct ON ct.id = p."contrato_id"
-      WHERE p."data_vencimento" = ?
-        AND p."saldo_pendente" > 0
+      WHERE p."saldo_pendente" > 0
         AND p."deleted_at" IS NULL
         AND ct."deleted_at" IS NULL
         AND ct."user_id" = ?
-    `, [hoje, userId])
+      GROUP BY ct.id
+    `, [hoje, hoje, hoje, hoje, hoje, userId, userId])
 
-    const { rows: atrasadoRows } = await rawQuery<{ total: number }>(`
-      SELECT COALESCE(SUM(p."saldo_pendente"), 0) AS total
-      FROM parcelas p
-      JOIN contratos ct ON ct.id = p."contrato_id"
-      WHERE p."data_vencimento" < ?
-        AND p."saldo_pendente" > 0
-        AND p."deleted_at" IS NULL
-        AND ct."deleted_at" IS NULL
-        AND ct."user_id" = ?
-    `, [hoje, userId])
-
-    const { rows: aVencerRows } = await rawQuery<{ total: number }>(`
-      SELECT COALESCE(SUM(p."saldo_pendente"), 0) AS total
-      FROM parcelas p
-      JOIN contratos ct ON ct.id = p."contrato_id"
-      WHERE p."data_vencimento" > ? AND p."data_vencimento" <= (?::date + INTERVAL '7 days')
-        AND p."saldo_pendente" > 0
-        AND p."deleted_at" IS NULL
-        AND ct."deleted_at" IS NULL
-        AND ct."user_id" = ?
-    `, [hoje, hoje, userId])
-
-    const { rows: recebidoHojeRows } = await rawQuery<{ total: number }>(`
-      SELECT COALESCE(SUM(valor), 0) AS total
-      FROM pagamentos
-      WHERE data = ?
-        AND "user_id" = ?
-    `, [hoje, userId])
+    const saldoPorContrato = new Map<string, number>()
+    let aReceberHoje = 0
+    let atrasado = 0
+    let aVencer = 0
+    for (const row of consolidadoRows) {
+      saldoPorContrato.set(row.contrato_id, Number(row.saldo_total) || 0)
+      aReceberHoje += Number(row.a_receber_hoje) || 0
+      atrasado += Number(row.atrasado) || 0
+      aVencer += Number(row.a_vencer) || 0
+    }
+    const recebidoHoje = Number(consolidadoRows[0]?.recebido_hoje) || 0
 
     const hasGPS = typeof operadorLat === "number" && typeof operadorLng === "number"
 
@@ -230,7 +225,7 @@ export class OperacoesRepository implements IOperacoesRepository {
       proximaParcela: r.proxima_parcela,
       proximoNumeroParcela: r.proximo_numero_parcela,
       totalParcelasContrato: r.total_parcelas_contrato,
-      saldoTotal: r.saldo_total,
+      saldoTotal: saldoPorContrato.get(r.contrato_id) ?? 0,
     }))
 
     const clientesMap = new Set<string>()
@@ -242,11 +237,11 @@ export class OperacoesRepository implements IOperacoesRepository {
 
     return {
       indicadores: {
-        aReceberHoje: Number(aReceberHojeRows[0]?.total ?? 0),
-        recebidoHoje: Number(recebidoHojeRows[0]?.total ?? 0),
+        aReceberHoje,
+        recebidoHoje,
         clientesParaCobrar: clientesMap.size,
-        atrasado: Number(atrasadoRows[0]?.total ?? 0),
-        aVencer: Number(aVencerRows[0]?.total ?? 0),
+        atrasado,
+        aVencer,
       },
       cobrancas: items,
     }
@@ -277,20 +272,18 @@ export class OperacoesRepository implements IOperacoesRepository {
         cli.nome AS "cliente_nome",
         COALESCE(cli."comercio_bairro", cli.bairro) AS "cliente_bairro",
         ct.id AS "contrato_id",
-        COALESCE((
-          SELECT array_agg(par.numero ORDER BY par.numero)
-          FROM pagamento_parcelas pp
-          JOIN parcelas par ON par.id = pp."parcela_id"
-          WHERE pp."pagamento_id" = p.id
-        ), '{}') AS "parcelas_pagas",
+        COALESCE(array_agg(par.numero ORDER BY par.numero) FILTER (WHERE par.id IS NOT NULL), '{}') AS "parcelas_pagas",
         ct."quantidade_parcelas" AS "total_parcelas_contrato"
       FROM pagamentos p
       JOIN contratos ct ON ct.id = p."contrato_id"
       JOIN clientes cli ON cli.id = ct."cliente_id"
+      LEFT JOIN pagamento_parcelas pp ON pp."pagamento_id" = p.id
+      LEFT JOIN parcelas par ON par.id = pp."parcela_id"
       WHERE p.data >= ? AND p.data <= ?
         AND ct."deleted_at" IS NULL
         AND cli."deleted_at" IS NULL
         AND ct."user_id" = ?
+      GROUP BY p.id, cli.id, cli.nome, cli."comercio_bairro", cli.bairro, ct.id, ct."quantidade_parcelas"
       ORDER BY p."created_at" DESC
     `, [inicio, fim, userId])
 

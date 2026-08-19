@@ -79,9 +79,7 @@ export class UpdateContratoUseCase {
 
       await repo.update(userId, id, updated)
       await repo.softDeleteParcelasByContratoId(userId, id)
-      for (const parcela of novasParcelas) {
-        await repo.saveParcela(userId, parcela)
-      }
+      await repo.saveParcelas(userId, novasParcelas)
       if (diferencaBase !== 0) {
         const tipo: TipoMovimentacao = diferencaBase > 0 ? "saida" : "entrada"
         const mov = {

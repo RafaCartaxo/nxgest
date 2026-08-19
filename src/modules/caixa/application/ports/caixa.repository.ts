@@ -43,6 +43,22 @@ export interface ListMovimentacoesResult {
   }
 }
 
+/** Agregados de caixa numa única query (PLAN-083 Fase 1 — reduz round trips de `/caixa/status`). */
+export interface FluxoConsolidado {
+  /** Somatório de movimentações `tipo='entrada'` (histórico total). */
+  entradas: number
+  /** Somatório de movimentações `tipo='saida'` (histórico total). */
+  saidas: number
+  /** Entradas a partir de `dataInicio` (ou total, se sem filtro). */
+  entradasDesde: number
+  /** Saídas a partir de `dataInicio` (ou total, se sem filtro). */
+  saidasDesde: number
+  /** Soma das movimentações `origem='Pagamento'` no período. */
+  recebidoSemana: number
+  /** Soma das movimentações `origem='Gasto'` no período. */
+  gastoSemana: number
+}
+
 export interface ICaixaRepository {
   getCaixaConfig(userId: string): Promise<CaixaConfig | null>
   getOrCreateCaixaConfig(userId: string): Promise<CaixaConfig>
@@ -51,6 +67,8 @@ export interface ICaixaRepository {
   listMovimentacoes(userId: string, params: ListMovimentacoesParams): Promise<ListMovimentacoesResult>
   getRecebidoSemana(userId: string, dataInicio: string, dataFim: string): Promise<number>
   getGastoSemana(userId: string, dataInicio: string, dataFim: string): Promise<number>
+  /** Agregados de caixa em 1 query (PLAN-083) — entradas/saídas + semana num único scan. */
+  getFluxoConsolidado(userId: string, dataInicio?: string, dataFim?: string): Promise<FluxoConsolidado>
   getSaldoAtual(userId: string, dataInicio?: string): Promise<number>
   getAReceberHoje(userId: string): Promise<number>
   getRecebidoHoje(userId: string): Promise<number>

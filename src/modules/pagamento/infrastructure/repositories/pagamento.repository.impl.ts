@@ -25,13 +25,16 @@ export class PagamentoRepository implements IPagamentoRepository {
     })
   }
 
-  async savePagamentoParcela(relacao: PagamentoParcela, _userId: string): Promise<void> {
-    await this.drizzle.insert(pagamentoParcelas).values({
-      id: relacao.id,
-      pagamentoId: relacao.pagamentoId,
-      parcelaId: relacao.parcelaId,
-      valor: relacao.valor,
-    })
+  async savePagamentoParcelas(relacoes: PagamentoParcela[], _userId: string): Promise<void> {
+    if (relacoes.length === 0) return
+    await this.drizzle.insert(pagamentoParcelas).values(
+      relacoes.map((relacao) => ({
+        id: relacao.id,
+        pagamentoId: relacao.pagamentoId,
+        parcelaId: relacao.parcelaId,
+        valor: relacao.valor,
+      }))
+    )
   }
 
   async findByContratoId(contratoId: string, userId: string): Promise<PagamentoComDetalhes[]> {

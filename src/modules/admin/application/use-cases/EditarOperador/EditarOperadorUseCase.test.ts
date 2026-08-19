@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { EditarOperadorUseCase } from "./EditarOperadorUseCase.js"
-import type { IAdminRepository, OperadorRow } from "../../ports/admin.repository.js"
+import type { IAdminRepository, OperadorContexto, OperadorRow } from "../../ports/admin.repository.js"
 import { NaoPodeAutoModificarError } from "../../../domain/errors/admin.error.js"
 import { EmailDuplicadoError } from "../../../../auth/domain/errors/auth.error.js"
 
@@ -23,9 +23,18 @@ const operador: OperadorRow = {
   chefeId: null,
 }
 
+const contexto: OperadorContexto = {
+  id: "u-1",
+  email: "ana@x.com",
+  role: "operator",
+  emailPendente: null,
+  status: "ativo",
+}
+
 function setup(repoOverrides: Partial<IAdminRepository> = {}) {
   const repo: IAdminRepository = {
     findById: vi.fn().mockResolvedValue(operador),
+    getOperadorContexto: vi.fn().mockResolvedValue(contexto),
     emailEmUso: vi.fn().mockResolvedValue(false),
     update: vi.fn().mockResolvedValue(operador),
     ...repoOverrides,
@@ -47,7 +56,7 @@ describe("EditarOperadorUseCase (PLAN-075 · R4)", () => {
   it("suspender OUTRO usuário → passa update com suspensoEm (não bloqueia admin)", async () => {
     const { uc, repo } = setup()
     await uc.execute("u-1", { suspensoEm: "2026-08-01T00:00:00Z" }, "u-admin")
-    expect(repo.update).toHaveBeenCalledWith("u-1", { suspensoEm: "2026-08-01T00:00:00Z" }, "u-admin", undefined, undefined)
+    expect(repo.update).toHaveBeenCalledWith("u-1", { suspensoEm: "2026-08-01T00:00:00Z" }, "u-admin", undefined, undefined, contexto)
   })
 
   it("e-mail duplicado → EmailDuplicadoError antes de escrever", async () => {
@@ -58,7 +67,7 @@ describe("EditarOperadorUseCase (PLAN-075 · R4)", () => {
   })
 
   it("operador inexistente → descarta com erro (não chega ao update)", async () => {
-    const { uc, repo } = setup({ findById: vi.fn().mockResolvedValue(null) })
+    const { uc, repo } = setup({ getOperadorContexto: vi.fn().mockResolvedValue(null) })
     await expect(uc.execute("u-x", { nome: "Zé" }, "u-admin")).rejects.toThrow()
     expect(repo.update).not.toHaveBeenCalled()
   })

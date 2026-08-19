@@ -52,14 +52,25 @@ export interface EquipeResult {
   }
 }
 
+export interface OperadorContexto {
+  id: string
+  email: string
+  role: OperadorRow["role"]
+  emailPendente: string | null
+  /** PLAN-065: conta sem senha definida (aguardando convite). */
+  status: "convidado" | "ativo"
+}
+
 export interface IAdminRepository {
   findAllOperadores(empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow[]>
   findById(id: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null>
+  /** Contexto enxuto do operador (só a linha de `usuarios`, sem counts/convite) — 1 query. PLAN-083 Fase 2.3. */
+  getOperadorContexto(id: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorContexto | null>
   findByEmail(email: string): Promise<OperadorRow | null>
   /** Dedup global (N1.6): `email` ou `email_pendente` de outro usuário. */
   emailEmUso(email: string, ignoreId?: string | null): Promise<boolean>
   create(input: { nome: string; email: string; role: "super_admin" | "admin" | "socio" | "operator"; empresaId: string | null; chefeId?: string | null; telefone?: string | null }): Promise<OperadorRow>
-  update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; chefeId?: string | null; foto?: string | null; telefone?: string | null; emailPendente?: string | null; suspensoEm?: string | null; reatribuirParaChefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null>
+  update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; chefeId?: string | null; foto?: string | null; telefone?: string | null; emailPendente?: string | null; suspensoEm?: string | null; reatribuirParaChefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[], existing?: OperadorContexto | null): Promise<OperadorRow | null>
   softDelete(id: string, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<void>
   getDashboardStats(empresaId?: string | null, userId?: string | null, scopeUserIds?: string[]): Promise<AdminDashboardStats>
   listEquipe(empresaId: string | null, scopeUserIds?: string[]): Promise<EquipeItem[]>

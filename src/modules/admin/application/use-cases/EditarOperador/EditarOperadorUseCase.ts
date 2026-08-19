@@ -22,7 +22,9 @@ export class EditarOperadorUseCase {
     empresaId?: string | null,
     scopeUserIds?: string[]
   ) {
-    const existing = await this.repo.findById(id, empresaId, scopeUserIds)
+    // PLAN-083 Fase 2.3: contexto enxuto (1 query) — o update repassa este existing e não
+    // recarrega; antes o findById de 4 queries rodava 3-4x no mesmo request.
+    const existing = await this.repo.getOperadorContexto(id, empresaId, scopeUserIds)
     if (!existing) throw new Error("Operador não encontrado.")
     // R4: ninguém suspende/reativa a própria conta (defesa em profundidade — o
     // controller também bloqueia; aqui valida no use case independente de rota).
@@ -39,6 +41,6 @@ export class EditarOperadorUseCase {
       const emUso = await this.repo.emailEmUso(data.emailPendente, id)
       if (emUso) throw new EmailDuplicadoError()
     }
-    return this.repo.update(id, data, currentUserId, empresaId, scopeUserIds)
+    return this.repo.update(id, data, currentUserId, empresaId, scopeUserIds, existing)
   }
 }

@@ -36,6 +36,9 @@ export class CreatePagamentoUseCase {
         createdAt,
       }, userId)
 
+      const parcelasUpdate: Array<{ id: string; valorPago: number; saldoPendente: number; estado: "Paga" | "Parcial"; dataQuitacao: string | null; updatedAt: string }> = []
+      const relacoes: Array<{ id: string; pagamentoId: string; parcelaId: string; valor: number }> = []
+
       for (const item of preview.parcelas) {
         if (item.valorAplicado <= 0) continue
 
@@ -43,7 +46,8 @@ export class CreatePagamentoUseCase {
         const novoEstado = item.estadoPrevisto === "Paga" ? "Paga" as const : "Parcial" as const
         const dataQuitacao = item.estadoPrevisto === "Paga" ? data : null
 
-        await repo.updateParcela(userId, parcela.id, {
+        parcelasUpdate.push({
+          id: parcela.id,
           valorPago: Math.round((parcela.valorPago + item.valorAplicado) * 100) / 100,
           saldoPendente: item.saldoRestante,
           estado: novoEstado,
@@ -51,13 +55,16 @@ export class CreatePagamentoUseCase {
           updatedAt: createdAt,
         })
 
-        await pagamentoRepo.savePagamentoParcela({
+        relacoes.push({
           id: uuid(),
           pagamentoId,
           parcelaId: parcela.id,
           valor: item.valorAplicado,
-        }, userId)
+        })
       }
+
+      await repo.updateParcelasEmLote(userId, parcelasUpdate)
+      await pagamentoRepo.savePagamentoParcelas(relacoes, userId)
 
       if (preview.todasPagas) {
         await repo.update(userId, contrato.id, {

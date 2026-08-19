@@ -13,7 +13,7 @@ export interface AuditoriaEstorno {
 
 export interface IPagamentoRepository {
   save(pagamento: Pagamento, userId: string): Promise<void>
-  savePagamentoParcela(relacao: PagamentoParcela, userId: string): Promise<void>
+  savePagamentoParcelas(relacoes: PagamentoParcela[], userId: string): Promise<void>
   findByContratoId(contratoId: string, userId: string): Promise<PagamentoComDetalhes[]>
   findByIdWithParcelas(pagamentoId: string, userId: string): Promise<PagamentoComDetalhes | null>
   marcarEstornado(pagamentoId: string, adminId: string, motivo: string): Promise<void>

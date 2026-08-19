@@ -73,9 +73,7 @@ export class CreateContratoUseCase {
       }
 
       await repo.save(userId, contrato)
-      for (const parcela of parcelas) {
-        await repo.saveParcela(userId, parcela)
-      }
+      await repo.saveParcelas(userId, parcelas)
       await repo.saveMovimentacaoFinanceira(userId, movimentacao)
     })
 

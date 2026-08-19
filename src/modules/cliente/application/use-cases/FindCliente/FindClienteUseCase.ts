@@ -19,9 +19,12 @@ export class FindClienteUseCase {
       throw new ClienteNotFoundError(id)
     }
 
-    const totalContratos = await this.contratoCountQuery?.countByClienteId(userId, id) ?? 0
-    const saldoDevedor = await this.clienteSaldoQuery?.sumByClienteId(userId, id) ?? 0
-    const financeiro = await this.clienteFinanceiroQuery?.resumoByClienteId(userId, id)
+    // PLAN-083 Fase 1.5: agregados independentes em paralelo (antes em série).
+    const [totalContratos, saldoDevedor, financeiro] = await Promise.all([
+      this.contratoCountQuery?.countByClienteId(userId, id) ?? Promise.resolve(0),
+      this.clienteSaldoQuery?.sumByClienteId(userId, id) ?? Promise.resolve(0),
+      this.clienteFinanceiroQuery?.resumoByClienteId(userId, id),
+    ])
 
     return { ...cliente, totalContratos, saldoDevedor, ...financeiro }
   }

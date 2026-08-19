@@ -2,7 +2,7 @@ import { eq, and, isNull, sql, count, inArray } from "drizzle-orm"
 import type { PgDatabase } from "drizzle-orm/pg-core"
 import { db, rawQuery, contratos, parcelas, movimentacoesFinanceiras, caixaConfig, pagamentos, clientes } from "../../../../database.js"
 import type { Contrato, Parcela, ContratoComParcelas, MovimentacaoFinanceira, CaixaConfig } from "../../domain/contrato.entity.js"
-import type { IContratoRepository, FindAllParams, FindAllResult } from "../../application/ports/contrato.repository.js"
+import type { IContratoRepository, FindAllParams, FindAllResult, ParcelaUpdateLote } from "../../application/ports/contrato.repository.js"
 import type { IPagamentoRepository } from "../../../pagamento/application/ports/pagamento.repository.js"
 import { PagamentoRepository } from "../../../pagamento/infrastructure/repositories/pagamento.repository.impl.js"
 import { getLocalDateString, parseDateLocal } from "../../../../shared/utils/parseDateLocal.js"
@@ -74,31 +74,45 @@ export class ContratoRepository implements IContratoRepository {
     })
   }
 
-  async saveParcela(_userId: string, parcela: Parcela): Promise<void> {
-    await this.drizzle.insert(parcelas).values({
-      id: parcela.id,
-      contratoId: parcela.contratoId,
-      numero: parcela.numero,
-      valorPrevisto: parcela.valorPrevisto,
-      valorPago: parcela.valorPago,
-      saldoPendente: parcela.saldoPendente,
-      estado: parcela.estado,
-      dataVencimento: parcela.dataVencimento,
-      dataQuitacao: parcela.dataQuitacao,
-      createdAt: parcela.createdAt,
-      updatedAt: parcela.updatedAt,
-      deletedAt: null,
-    })
+  async saveParcelas(_userId: string, parcelasList: Parcela[]): Promise<void> {
+    if (parcelasList.length === 0) return
+    await this.drizzle.insert(parcelas).values(
+      parcelasList.map((parcela) => ({
+        id: parcela.id,
+        contratoId: parcela.contratoId,
+        numero: parcela.numero,
+        valorPrevisto: parcela.valorPrevisto,
+        valorPago: parcela.valorPago,
+        saldoPendente: parcela.saldoPendente,
+        estado: parcela.estado,
+        dataVencimento: parcela.dataVencimento,
+        dataQuitacao: parcela.dataQuitacao,
+        createdAt: parcela.createdAt,
+        updatedAt: parcela.updatedAt,
+        deletedAt: null,
+      }))
+    )
   }
 
-  async updateParcela(_userId: string, id: string, data: Partial<Parcela>): Promise<void> {
-    await this.drizzle
-      .update(parcelas)
-      .set({
-        ...data,
-        updatedAt: data.updatedAt ?? new Date().toISOString(),
-      })
-      .where(eq(parcelas.id, id))
+  async updateParcelasEmLote(_userId: string, updates: ParcelaUpdateLote[]): Promise<void> {
+    if (updates.length === 0) return
+    await this.drizzle.execute(sql`
+      UPDATE ${parcelas} AS p SET
+        valor_pago = v.valor_pago,
+        saldo_pendente = v.saldo_pendente,
+        estado = v.estado,
+        data_quitacao = v.data_quitacao,
+        updated_at = v.updated_at
+      FROM (VALUES
+        ${sql.join(
+          updates.map((u) =>
+            sql`(${u.id}, ${u.valorPago}::numeric, ${u.saldoPendente}::numeric, ${u.estado}, ${u.dataQuitacao}::date, ${u.updatedAt}::timestamptz)`
+          ),
+          sql`, `
+        )}
+      ) AS v(id, valor_pago, saldo_pendente, estado, data_quitacao, updated_at)
+      WHERE p.id = v.id
+    `)
   }
 
   async findById(userId: string, id: string): Promise<Contrato | null> {

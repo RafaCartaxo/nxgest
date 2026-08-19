@@ -27,10 +27,19 @@ export interface FindAllResult {
   }
 }
 
+export interface ParcelaUpdateLote {
+  id: string
+  valorPago: number
+  saldoPendente: number
+  estado: Parcela["estado"]
+  dataQuitacao: string | null
+  updatedAt: string
+}
+
 export interface IContratoRepository {
   save(userId: string, contrato: Contrato): Promise<void>
-  saveParcela(userId: string, parcela: Parcela): Promise<void>
-  updateParcela(userId: string, id: string, data: Partial<Parcela>): Promise<void>
+  saveParcelas(userId: string, parcelas: Parcela[]): Promise<void>
+  updateParcelasEmLote(userId: string, updates: ParcelaUpdateLote[]): Promise<void>
   findById(userId: string, id: string): Promise<Contrato | null>
   findByIdWithParcelas(userId: string, id: string): Promise<ContratoComParcelas | null>
   findAll(userId: string, params: FindAllParams): Promise<FindAllResult>

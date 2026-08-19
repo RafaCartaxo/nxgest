@@ -1,6 +1,6 @@
 import { eq, and, count, isNull, ne, sum, inArray, sql } from "drizzle-orm"
 import { db, rawQuery, usuarios, clientes, contratos, pagamentos, movimentacoesFinanceiras } from "../../../../database.js"
-import type { IAdminRepository, OperadorRow, AdminDashboardStats, EquipeItem } from "../../application/ports/admin.repository.js"
+import type { IAdminRepository, OperadorRow, AdminDashboardStats, EquipeItem, OperadorContexto } from "../../application/ports/admin.repository.js"
 import type { ConviteStatus } from "../../../../modules/auth/domain/convite.entity.js"
 import { ConviteRepository } from "../../../../modules/auth/infrastructure/repositories/convite.repository.impl.js"
 import type { IConviteRepository } from "../../../../modules/auth/application/ports/convite.repository.js"
@@ -128,6 +128,28 @@ export class AdminRepository implements IAdminRepository {
     return toOperadorRow(row as LinhaUsuario, clientesCount[0].total, contratosCount[0].total, conviteStatus)
   }
 
+  /** PLAN-083 Fase 2.3: contexto enxuto (1 query) para lógica de validação — evita o findById
+   *  de 4 queries repetido 3-4x no mesmo request (PUT operadores ~20 → ~8). */
+  async getOperadorContexto(id: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorContexto | null> {
+    const conditions = [eq(usuarios.id, id), isNull(usuarios.deletedAt)]
+    if (empresaId) {
+      conditions.push(eq(usuarios.empresaId, empresaId))
+    }
+    if (scopeUserIds && scopeUserIds.length > 0) {
+      conditions.push(inArray(usuarios.id, scopeUserIds))
+    }
+    const rows = await db.select().from(usuarios).where(and(...conditions))
+    if (rows.length === 0) return null
+    const row = rows[0]
+    return {
+      id: row.id,
+      email: row.email,
+      role: row.role as OperadorRow["role"],
+      emailPendente: row.emailPendente ?? null,
+      status: row.senhaHash ? "ativo" : "convidado",
+    }
+  }
+
   async findByEmail(email: string): Promise<OperadorRow | null> {
     const rows = await db.select().from(usuarios).where(sql`lower("email") = lower(${email})`)
     if (rows.length === 0) return null
@@ -158,20 +180,22 @@ export class AdminRepository implements IAdminRepository {
     }
   }
 
-  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; chefeId?: string | null; foto?: string | null; telefone?: string | null; emailPendente?: string | null; suspensoEm?: string | null; reatribuirParaChefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[]): Promise<OperadorRow | null> {
+  async update(id: string, data: { nome?: string; email?: string; role?: "admin" | "socio" | "operator"; chefeId?: string | null; foto?: string | null; telefone?: string | null; emailPendente?: string | null; suspensoEm?: string | null; reatribuirParaChefeId?: string | null }, currentUserId: string, empresaId?: string | null, scopeUserIds?: string[], existing?: OperadorContexto | null): Promise<OperadorRow | null> {
     if (id === currentUserId && data.role !== undefined) {
       throw new NaoPodeAutoModificarError("Você não pode alterar seu próprio papel.")
     }
 
-    const existing = await this.findById(id, empresaId, scopeUserIds)
-    if (!existing) throw new OperadorNaoEncontradoError()
-    if (existing.role === "super_admin") {
+    // PLAN-083 Fase 2.3: o use case já carrega o contexto (1 query) e repassa — evita o findById
+    // de 4 queries repetido dentro do update. Sem `existing`, carrega o contexto enxuto.
+    const operador = existing ?? (await this.getOperadorContexto(id, empresaId, scopeUserIds))
+    if (!operador) throw new OperadorNaoEncontradoError()
+    if (operador.role === "super_admin") {
       throw new NaoPodeAlterarSuperAdminError()
     }
 
     // Dedup global de e-mail (N1.6 — PLAN-075): email a novo precisa ser único entre
     // `email` e `email_pendente` de terceiros, ANTES de escrever (nunca depender do unique).
-    if (data.email !== undefined && data.email !== existing.email) {
+    if (data.email !== undefined && data.email !== operador.email) {
       const emUso = await this.emailEmUso(data.email, id)
       if (emUso) throw new EmailDuplicadoError()
     }
@@ -179,8 +203,8 @@ export class AdminRepository implements IAdminRepository {
     // Bloqueio de "chefe órfão" (WS7): rebaixar pode deixar subordinados com chefe inválido.
     // Com `reatribuirParaChefeId`, os subordinados são movidos para o novo chefe no MESMO
     // ato (reassign atômico — PLAN-061).
-    const demoteToOperator = data.role === "operator" && existing.role !== "operator"
-    const demoteToSocio = data.role === "socio" && existing.role === "admin"
+    const demoteToOperator = data.role === "operator" && operador.role !== "operator"
+    const demoteToSocio = data.role === "socio" && operador.role === "admin"
     const reassign = data.reatribuirParaChefeId ?? null
 
     await db.transaction(async (tx) => {
@@ -238,57 +262,73 @@ export class AdminRepository implements IAdminRepository {
   async getDashboardStats(empresaId?: string | null, userId?: string | null, scopeUserIds?: string[]): Promise<AdminDashboardStats> {
     const hoje = getLocalDateString(new Date())
 
-    // Escopo de usuários nas queries com JOIN (subárvore p/ sócio, empresa p/ admin/super)
-    const usuarioScope = () => {
-      if (scopeUserIds && scopeUserIds.length > 0) return [inArray(usuarios.id, scopeUserIds)]
-      if (empresaId) return [eq(usuarios.empresaId, empresaId)]
-      return []
+    // PLAN-083 Fase 1: todas as tabelas de dados (clientes/contratos/pagamentos/movimentacoes)
+    // escopam pela mesma coluna `user_id` — 5 queries viram 1 com subselects não-correlacionados.
+    let escopo: string
+    let escopoParams: unknown[]
+    if (userId) {
+      escopo = `"user_id" = ?`
+      escopoParams = [userId]
+    } else if (scopeUserIds && scopeUserIds.length > 0) {
+      escopo = `"user_id" = ANY(?::text[])`
+      escopoParams = [scopeUserIds]
+    } else if (empresaId) {
+      escopo = `"user_id" IN (SELECT id FROM usuarios WHERE "empresa_id" = ?)`
+      escopoParams = [empresaId]
+    } else {
+      escopo = `TRUE`
+      escopoParams = []
     }
 
-    const countRole = (role: string) =>
-      db.select({ total: count() }).from(usuarios).where(and(isNull(usuarios.deletedAt), eq(usuarios.role, role), ...usuarioScope()))
+    const { rows: dados } = await rawQuery<{
+      clientes: number
+      contratos: number
+      entradas: number
+      saidas: number
+      recebido: number
+    }>(`
+      SELECT
+        (SELECT COUNT(*) FROM clientes WHERE "deleted_at" IS NULL AND ${escopo}) AS clientes,
+        (SELECT COUNT(*) FROM contratos WHERE "deleted_at" IS NULL AND estado = 'Ativo' AND ${escopo}) AS contratos,
+        (SELECT COALESCE(SUM(valor), 0) FROM "movimentacoes_financeiras" WHERE tipo = 'entrada' AND data = ? AND ${escopo}) AS entradas,
+        (SELECT COALESCE(SUM(valor), 0) FROM "movimentacoes_financeiras" WHERE tipo = 'saida' AND data = ? AND ${escopo}) AS saidas,
+        (SELECT COALESCE(SUM(valor), 0) FROM pagamentos WHERE data = ? AND ${escopo}) AS recebido
+    `, [...escopoParams, ...escopoParams, hoje, ...escopoParams, hoje, ...escopoParams, hoje, ...escopoParams])
+    const d = dados[0]
 
-    const countClientes = userId
-      ? db.select({ total: count() }).from(clientes).where(and(isNull(clientes.deletedAt), eq(clientes.userId, userId)))
-      : db.select({ total: count() }).from(clientes).innerJoin(usuarios, eq(clientes.userId, usuarios.id)).where(and(isNull(clientes.deletedAt), ...usuarioScope()))
+    // Papéis (admin/socio/operator) — 1 COUNT FILTER no lugar de 3 COUNTs separados.
+    let escopoUsuarios: string
+    let escopoUsuariosParams: unknown[]
+    if (scopeUserIds && scopeUserIds.length > 0) {
+      escopoUsuarios = `id = ANY(?::text[])`
+      escopoUsuariosParams = [scopeUserIds]
+    } else if (empresaId) {
+      escopoUsuarios = `"empresa_id" = ?`
+      escopoUsuariosParams = [empresaId]
+    } else {
+      escopoUsuarios = `TRUE`
+      escopoUsuariosParams = []
+    }
+    const { rows: roles } = await rawQuery<{ admins: number; socios: number; operadores: number }>(`
+      SELECT
+        COUNT(*) FILTER (WHERE role = 'admin') AS admins,
+        COUNT(*) FILTER (WHERE role = 'socio') AS socios,
+        COUNT(*) FILTER (WHERE role = 'operator') AS operadores
+      FROM usuarios
+      WHERE "deleted_at" IS NULL AND ${escopoUsuarios}
+    `, escopoUsuariosParams)
+    const r = roles[0]
 
-    const countContratos = userId
-      ? db.select({ total: count() }).from(contratos).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), eq(contratos.userId, userId)))
-      : db.select({ total: count() }).from(contratos).innerJoin(usuarios, eq(contratos.userId, usuarios.id)).where(and(isNull(contratos.deletedAt), eq(contratos.estado, "Ativo"), ...usuarioScope()))
-
-    const recebidoHoje = userId
-      ? db.select({ total: sum(pagamentos.valor) }).from(pagamentos).where(and(eq(pagamentos.data, hoje), eq(pagamentos.userId, userId)))
-      : db.select({ total: sum(pagamentos.valor) }).from(pagamentos).innerJoin(usuarios, eq(pagamentos.userId, usuarios.id)).where(and(eq(pagamentos.data, hoje), ...usuarioScope()))
-
-    const entradasHoje = userId
-      ? db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje), eq(movimentacoesFinanceiras.userId, userId)))
-      : db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).innerJoin(usuarios, eq(movimentacoesFinanceiras.userId, usuarios.id)).where(and(eq(movimentacoesFinanceiras.tipo, "entrada"), eq(movimentacoesFinanceiras.data, hoje), ...usuarioScope()))
-
-    const saidasHoje = userId
-      ? db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje), eq(movimentacoesFinanceiras.userId, userId)))
-      : db.select({ total: sum(movimentacoesFinanceiras.valor) }).from(movimentacoesFinanceiras).innerJoin(usuarios, eq(movimentacoesFinanceiras.userId, usuarios.id)).where(and(eq(movimentacoesFinanceiras.tipo, "saida"), eq(movimentacoesFinanceiras.data, hoje), ...usuarioScope()))
-
-    const [totalAdminsResult, totalSociosResult, totalOps, totalClientesResult, contratosResult, recebidoResult, entradasResult, saidasResult] = await Promise.all([
-      countRole("admin"),
-      countRole("socio"),
-      countRole("operator"),
-      countClientes,
-      countContratos,
-      recebidoHoje,
-      entradasHoje,
-      saidasHoje,
-    ])
-
-    const entradasValor = Number(entradasResult[0].total) || 0
-    const saidasValor = Number(saidasResult[0].total) || 0
+    const entradasValor = Number(d?.entradas) || 0
+    const saidasValor = Number(d?.saidas) || 0
 
     return {
-      totalAdmins: totalAdminsResult[0].total,
-      totalSocios: totalSociosResult[0].total,
-      totalOperadores: totalOps[0].total,
-      totalClientes: totalClientesResult[0].total,
-      contratosAtivos: contratosResult[0].total,
-      recebidoHoje: Number(recebidoResult[0].total) || 0,
+      totalAdmins: r?.admins ?? 0,
+      totalSocios: r?.socios ?? 0,
+      totalOperadores: r?.operadores ?? 0,
+      totalClientes: d?.clientes ?? 0,
+      contratosAtivos: d?.contratos ?? 0,
+      recebidoHoje: Number(d?.recebido) || 0,
       resultadoDoDia: entradasValor - saidasValor,
     }
   }

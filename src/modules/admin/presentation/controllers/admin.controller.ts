@@ -79,7 +79,8 @@ export class AdminController {
   ): Promise<{ ok: true } | { ok: false; message: string }> {
     if (!chefeId) return { ok: true } // null = sob o admin
     if (targetUserId && chefeId === targetUserId) return { ok: false, message: "O usuário não pode ser chefe de si mesmo." }
-    const chefe = await this.repository.findById(chefeId, empresaId)
+    // PLAN-083 Fase 2.3: contexto enxuto (1 query) — só precisa do role.
+    const chefe = await this.repository.getOperadorContexto(chefeId, empresaId)
     if (!chefe) return { ok: false, message: "Chefe não encontrado ou de outra empresa." }
     if (targetRole === "socio" && chefe.role !== "admin") return { ok: false, message: "O chefe de um sócio deve ser um administrador." }
     if (targetRole === "operator" && chefe.role !== "admin" && chefe.role !== "socio") return { ok: false, message: "O chefe de um operador deve ser um administrador ou sócio." }
@@ -249,7 +250,7 @@ export class AdminController {
         res.status(403).json({ code: "FORBIDDEN", message: "Você não pode suspender ou reativar a própria conta." })
         return
       }
-      const existing = await this.repository.findById(getParam(req, "id"), targetEmpresaId, scope)
+      const existing = await this.repository.getOperadorContexto(getParam(req, "id"), targetEmpresaId, scope)
       if (!existing) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
         return
@@ -286,7 +287,7 @@ export class AdminController {
       // Normaliza o e-mail alvo ANTES da comparação/dedup — P-06/P-07 (PLAN-075).
       const emailNormalizado = email !== undefined && email !== null && typeof email === "string" ? String(email).trim().toLowerCase() : email
 
-      const existing = await this.repository.findById(getParam(req, "id"), targetEmpresaId, scope)
+      const existing = await this.repository.getOperadorContexto(getParam(req, "id"), targetEmpresaId, scope)
       if (!existing) {
         res.status(404).json({ code: "OPERATOR_NOT_FOUND", message: "Operador não encontrado." })
         return

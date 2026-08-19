@@ -64,18 +64,23 @@ export class CaixaController {
         dataFim = getLocalDateString(domingo)
       }
 
-      const [recebidoSemana, gastosSemana, saldoAtual, aReceberHoje, recebidoHoje, vendasSemana, lucro] = await Promise.all([
-        repository.getRecebidoSemana(userId, dataInicio, dataFim),
-        repository.getGastoSemana(userId, dataInicio, dataFim),
-        repository.getSaldoAtual(userId, ultimaLiquidacao ? dataInicio : undefined),
+      // PLAN-083 Fase 1: getFluxoConsolidado (1 query) substitui getSaldoAtual(2) + getLucro(2) +
+      // getRecebidoSemana(1) + getGastoSemana(1). Shape da resposta inalterado.
+      const [fluxo, aReceberHoje, recebidoHoje, vendasSemana] = await Promise.all([
+        repository.getFluxoConsolidado(userId, ultimaLiquidacao ? dataInicio : undefined, dataFim),
         repository.getAReceberHoje(userId),
         repository.getRecebidoHoje(userId),
         repository.getVendasSemana(userId, dataInicio, dataFim),
-        repository.getLucro(userId),
       ])
 
+      const caixaBase = caixa?.caixaBase ?? 0
+      const saldoAtual = caixaBase + fluxo.entradasDesde - fluxo.saidasDesde
+      const lucro = fluxo.entradas - fluxo.saidas
+      const recebidoSemana = fluxo.recebidoSemana
+      const gastosSemana = fluxo.gastoSemana
+
       res.json({
-        caixaBase: caixa?.caixaBase ?? 0,
+        caixaBase,
         saldoAtual,
         lucro,
         aReceberHoje,

@@ -1,7 +1,7 @@
 import { eq, and, gte, lte, sql, count, sum, desc, isNull } from "drizzle-orm"
 import { db, rawQuery, movimentacoesFinanceiras, caixaConfig, fechamentosSemanais, auditoriaCaixa, contratos, pagamentos, usuarios } from "../../../../database.js"
 import type { CaixaConfig, MovimentacaoFinanceira, FechamentoSemanal } from "../../domain/caixa.entity.js"
-import type { ICaixaRepository, ListMovimentacoesParams, ListMovimentacoesResult, AuditoriaCaixa, ListarAuditoriaCaixaResult } from "../../application/ports/caixa.repository.js"
+import type { ICaixaRepository, ListMovimentacoesParams, ListMovimentacoesResult, AuditoriaCaixa, ListarAuditoriaCaixaResult, FluxoConsolidado } from "../../application/ports/caixa.repository.js"
 import { getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
 export class CaixaRepository implements ICaixaRepository {
@@ -133,38 +133,22 @@ export class CaixaRepository implements ICaixaRepository {
 
     const where = conditions.join(" AND ")
 
+    // PLAN-083 Fase 2.1: resolução de cliente_nome/categoria via LEFT JOINs (antes eram 5
+    // subqueries correlacionadas por linha — ~80 scans/página). COALESCE(cl_pg.nome, cl.nome)
+    // reproduz o fallback pagamento→contrato da origem 'Cancelamento'. Sem filtro de
+    // deleted_at nos JOINs, espelhando as subqueries originais.
     const { rows: data } = await rawQuery<{ id: string; tipo: string; valor: number; origem: string; origem_id: string; descricao: string | null; data: string; created_at: string; cliente_nome: string | null; categoria: string | null }>(`
       SELECT
         m.id, m.tipo, m.valor, m.origem, m."origem_id", m.descricao, m.data, m."created_at",
-        CASE
-          WHEN m.origem = 'Cancelamento' THEN
-            COALESCE(
-              (SELECT cl.nome FROM clientes cl
-               JOIN contratos ct ON ct."cliente_id" = cl.id
-               JOIN pagamentos pg ON pg."contrato_id" = ct.id
-               WHERE pg.id = m."origem_id"),
-              (SELECT cl.nome FROM clientes cl
-               JOIN contratos ct ON ct."cliente_id" = cl.id
-               WHERE ct.id = m."origem_id")
-            )
-          WHEN m.origem IN ('Contrato', 'Ajuste') THEN
-            (SELECT cl.nome FROM clientes cl
-             JOIN contratos ct ON ct."cliente_id" = cl.id
-             WHERE ct.id = m."origem_id")
-          WHEN m.origem = 'Pagamento' THEN
-            (SELECT cl.nome FROM clientes cl
-             JOIN contratos ct ON ct."cliente_id" = cl.id
-             JOIN pagamentos pg ON pg."contrato_id" = ct.id
-             WHERE pg.id = m."origem_id")
-          WHEN m.origem = 'Gasto' THEN NULL
-          ELSE NULL
-        END AS "cliente_nome",
-        CASE
-          WHEN m.origem = 'Gasto' THEN
-            (SELECT g."categoria" FROM gastos g WHERE g.id = m."origem_id" AND g."deleted_at" IS NULL)
-          ELSE NULL
-        END AS "categoria"
+        COALESCE(cl_pg.nome, cl.nome) AS "cliente_nome",
+        g.categoria AS "categoria"
       FROM "movimentacoes_financeiras" m
+      LEFT JOIN pagamentos pg ON pg.id = m."origem_id" AND m.origem IN ('Pagamento', 'Cancelamento')
+      LEFT JOIN contratos ct_pg ON ct_pg.id = pg."contrato_id"
+      LEFT JOIN clientes cl_pg ON cl_pg.id = ct_pg."cliente_id"
+      LEFT JOIN contratos ct ON ct.id = m."origem_id" AND m.origem IN ('Cancelamento', 'Contrato', 'Ajuste')
+      LEFT JOIN clientes cl ON cl.id = ct."cliente_id"
+      LEFT JOIN gastos g ON g.id = m."origem_id" AND m.origem = 'Gasto' AND g."deleted_at" IS NULL
       WHERE ${where}
       ORDER BY m."created_at" DESC
       LIMIT ? OFFSET ?
@@ -226,6 +210,45 @@ export class CaixaRepository implements ICaixaRepository {
         ),
       )
     return Number(result[0]?.total) || 0
+  }
+
+  async getFluxoConsolidado(userId: string, dataInicio?: string, dataFim?: string): Promise<FluxoConsolidado> {
+    // PLAN-083 Fase 1: substitui getSaldoAtual(2) + getLucro(2) + getRecebidoSemana(1) + getGastoSemana(1)
+    // por um único scan de movimentacoes_financeiras com FILTERs por linha. `dataInicio` NULL =
+    // fluxo desde o início (mesma semântica do getSaldoAtual sem filtro / getLucro).
+    const { rows } = await rawQuery<{
+      entradas: number
+      saidas: number
+      entradas_desde: number
+      saidas_desde: number
+      recebido_semana: number
+      gasto_semana: number
+    }>(`
+      SELECT
+        COALESCE(SUM(valor) FILTER (WHERE tipo = 'entrada'), 0) AS entradas,
+        COALESCE(SUM(valor) FILTER (WHERE tipo = 'saida'), 0) AS saidas,
+        COALESCE(SUM(valor) FILTER (WHERE tipo = 'entrada' AND (data >= ?::date OR ?::date IS NULL)), 0) AS "entradas_desde",
+        COALESCE(SUM(valor) FILTER (WHERE tipo = 'saida' AND (data >= ?::date OR ?::date IS NULL)), 0) AS "saidas_desde",
+        COALESCE(SUM(valor) FILTER (WHERE origem = 'Pagamento' AND data BETWEEN ?::date AND ?::date), 0) AS "recebido_semana",
+        COALESCE(SUM(valor) FILTER (WHERE origem = 'Gasto' AND data BETWEEN ?::date AND ?::date), 0) AS "gasto_semana"
+      FROM "movimentacoes_financeiras"
+      WHERE "user_id" = ?
+    `, [
+      dataInicio ?? null, dataInicio ?? null,
+      dataInicio ?? null, dataInicio ?? null,
+      dataFim, dataFim,
+      dataFim, dataFim,
+      userId,
+    ])
+    const r = rows[0]
+    return {
+      entradas: Number(r?.entradas) || 0,
+      saidas: Number(r?.saidas) || 0,
+      entradasDesde: Number(r?.entradas_desde) || 0,
+      saidasDesde: Number(r?.saidas_desde) || 0,
+      recebidoSemana: Number(r?.recebido_semana) || 0,
+      gastoSemana: Number(r?.gasto_semana) || 0,
+    }
   }
 
   async getSaldoAtual(userId: string, dataInicio?: string): Promise<number> {
