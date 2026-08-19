@@ -26,7 +26,7 @@
 - [x] **Fase 2 — Eliminar N+1 / subqueries correlacionadas** ✅ — `listMovimentacoes` (5 subqueries correlacionadas → LEFT JOINs + COALESCE, 0 SubPlan no EXPLAIN) · `listarPagamentosDoDia` (`array_agg` correlacionado → LEFT JOIN + GROUP BY, 0 SubPlan) · `PATCH operadores/:id` **~20→~8** (`getOperadorContexto` 1 query + `existing` reuso; `findById` só na resposta final). Runtime validado + contador no pool (~17→~6, excl. tx) + tsc + 154 testes + `docs:audit` limpo + **smoke 274/274** (DB limpo).
 - [x] **Fase 3 — Bulk operations** ✅ — `CreateContrato`/`UpdateContrato` (loop de INSERT de parcelas → 1 bulk insert, fecha débito do PLAN-077) · `CreatePagamento` (2N → 1 `UPDATE ... FROM (VALUES)` + 1 bulk INSERT) · `EstornarPagamento` (N UPDATEs → 1 `UPDATE ... FROM (VALUES)`). Gotcha resolvido: alias do VALUES não aceita tipos no PG — cast por valor (`::numeric`/`::date`/`::timestamptz`). tsc + 154 testes + **smoke 274/274** (DB limpo).
 - [x] **Fase 4 — Dados retornados** ✅ — **4.1** `usuarios` sem `senha_hash` (projeção `colunasUsuarioPublicas` + `ativo` derivado no PG em findAllOperadores/findById/findByEmail/getOperadorContexto/listEquipe — o hash nunca trafega; auth.login preserva) · **4.2** `anexos.listByCliente` sem `caminho`/`criadoPor` · **4.3** `leads.list` paginado `{ data, pagination }` com `COUNT(*) OVER()` + LIMIT/OFFSET (controller page/limit 50 máx 100; frontend com paginação UI + i18n pt/en/es; smoke LD-09 e 02-API atualizados) · **4.4** `COUNT(*)` → `COUNT(*) OVER()` em `listMovimentacoes` e `listAuditoriaCaixa` (1 round trip a menos por listagem). Validação: tsc + 154 testes + `npm run build` + `docs:audit` + **smoke 274/274** (DB recriado via orquestrador).
-- [ ] **Fase 5 — Índice funcional `lower(email)` + validação de cobertura**
+- [x] **Fase 5 — Índice funcional `lower(email)` + validação de cobertura** ✅ — **5.1** `idx_usuarios_email_lower` + `idx_usuarios_email_pendente_lower` (não-parciais — o login não filtra `deleted_at`) no `runMigrations`; EXPLAIN com `enable_seqscan=off`: login → `Index Scan`, dedup OR → `BitmapOr` (no volume atual o planner prefere Seq Scan em 29 linhas — o índice vale quando a tabela cresce). **5.2** `idx_parcelas_venc_partial` confirmado via `Index Only Scan` no financeiro/atraso; `idx_clientes_nome_trgm` confirmado via `Bitmap Index Scan` (seqscan off). Validação: tsc + 154 testes + `docs:audit` + **smoke 274/274**.
 - [ ] **Fase 6 — Busca sem acento + CPF/telefone/comércio + leads + multi-campo**
 - [ ] **Fase 7 — rawQuery transacional** (getSaldoAtual no CreateContrato)
 - [ ] **Fase 8 — Frontend** (React Query telas operacionais, cooldown visibilitychange, requests inúteis)
@@ -38,7 +38,7 @@
 - [x] `npm run build` verde
 - [ ] `npm run audit:ui` · `npm run audit:styles` · `npm run audit:modules` verdes (se UI mudou)
 - [x] `npm test` verde (154 testes)
-- [x] `npm run smoke:api` (instância isolada, node 20) — **274/274** (DB recriado do zero em 19/08 via `scripts/smoke.mjs`)
+- [x] `npm run smoke:api` (instância isolada, node 20) — **274/274** (DB recriado do zero em 19/08 via `scripts/smoke.mjs`) — revalidado após Fase 5
 - [x] `npm run docs:audit` sem divergência (SKILL-009)
 - [x] EXPLAIN antes/depois + contagem queries/request (tabela do plano)
 

@@ -547,6 +547,11 @@ CREATE TABLE IF NOT EXISTS "auth_tokens" (
     -- inline "usuarios_email_key"), o constraint antigo é descartado.
     ALTER TABLE "usuarios" DROP CONSTRAINT IF EXISTS "usuarios_email_key";
     CREATE UNIQUE INDEX IF NOT EXISTS "idx_usuarios_email" ON "usuarios"("email") WHERE "deleted_at" IS NULL;
+    -- PLAN-083 Fase 5.1: login/dedup usam lower(email)/lower(email_pendente) — coluna não-sargável
+    -- sem o índice funcional (Seq Scan). Não-parcial de propósito: o login NÃO filtra deleted_at
+    -- (a validação de soft-delete é feita depois no fluxo), então um índice parcial não seria usado.
+    CREATE INDEX IF NOT EXISTS "idx_usuarios_email_lower" ON "usuarios"(lower("email"));
+    CREATE INDEX IF NOT EXISTS "idx_usuarios_email_pendente_lower" ON "usuarios"(lower("email_pendente"));
     CREATE INDEX IF NOT EXISTS "idx_anexos_cliente" ON "anexos"("cliente_id");
     CREATE INDEX IF NOT EXISTS "idx_leads_status" ON "leads"("status");
     CREATE INDEX IF NOT EXISTS "idx_leads_email" ON "leads"("email");

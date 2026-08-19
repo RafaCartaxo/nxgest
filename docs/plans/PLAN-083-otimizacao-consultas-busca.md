@@ -1,6 +1,6 @@
 # PLAN-083 — Otimização de consultas, round trips e busca
 
-**Status:** 🔵 Em execução (19/08) — Fases 1–4 concluídas e validadas (smoke 274/274); Fases 5–9 pendentes
+**Status:** 🔵 Em execução (19/08) — Fases 1–5 concluídas e validadas (smoke 274/274); Fases 6–9 pendentes
 
 **Versão:** 1.0
 
@@ -120,8 +120,16 @@ Detalhe de implementação: o `UPDATE ... FROM (VALUES)` roda via `this.drizzle.
 
 ## Fase 5 — Índices
 
-- **5.1 Índice funcional `lower(email)`** em `usuarios` (+ `email_pendente` quando aplicável) — elimina o `Seq Scan` do login e do dedup. Medir antes/depois (baseline: 0,07 ms seq scan).
-- **5.2 Validar cobertura:** `idx_parcelas_venc_partial` já cobre os LATERALs e o financeiro (confirmado na Fase 0) · `idx_clientes_nome_trgm` cobre a busca ILIKE.
+### Executado em 19/08 (validado em runtime + EXPLAIN + smoke 274/274)
+
+| Item | Antes | Depois | Como |
+|---|---|---|---|
+| **5.1 Índice funcional `lower(email)`/`lower(email_pendente)`** | `Seq Scan` no login e no dedup (`lower()` na coluna impede o uso do btree comum) | índice funcional disponível | 2 `CREATE INDEX` não-parciais no `runMigrations` (`idx_usuarios_email_lower` + `idx_usuarios_email_pendente_lower`). **Não-parciais de propósito**: o login NÃO filtra `deleted_at` (a validação de soft-delete é posterior no fluxo), então um índice parcial não seria usado. EXPLAIN com `enable_seqscan=off` confirma: login → `Index Scan using idx_usuarios_email_lower`; dedup OR → `BitmapOr` (ambos os índices). No volume atual (29 usuários) o planner segue preferindo Seq Scan (custo menor em tabela minúscula) — o índice entra em ação quando a tabela cresce. |
+| **5.2 Cobertura validada** | — | confirmado | `idx_parcelas_venc_partial`: **`Index Only Scan`** confirmado no financeiro/atraso (cobre os LATERALs) · `idx_clientes_nome_trgm`: existe e é usado com `enable_seqscan=off` (`Bitmap Index Scan` na busca ILIKE) — em 201 clientes o planner prefere Seq Scan; muda em volume e a Fase 6 substituirá por índice funcional `unaccent`. |
+
+### Restante da Fase 5 (pendente)
+
+- Nada — Fase 5 concluída.
 
 ## Fase 6 — Busca com acentuação e cenários
 
