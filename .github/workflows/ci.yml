@@ -14,63 +14,103 @@ concurrency:
 
 jobs:
   test:
-    name: tsc · build · audits · unit/UI
+    name: Qualidade
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Prepara o código do repositório
+        uses: actions/checkout@v7
+      - name: Configura Node.js (v20) com cache de dependências
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npm run build
-      - run: node scripts/check-dist.mjs
-      - run: npm run audit:ui 2>&1 | tee /tmp/audit-ui.log
-      - run: npm run audit:styles 2>&1 | tee /tmp/audit-styles.log
-      - run: npm run audit:modules 2>&1 | tee /tmp/audit-modules.log
-      - run: npm test 2>&1 | tee /tmp/test.log
-      - run: npm run test:coverage 2>&1 | tee /tmp/coverage.log
-      - uses: actions/upload-artifact@v7
+      - name: Instala dependências (lockfile)
+        run: npm ci
+      - name: Confere tipos do backend (tsc)
+        run: npx tsc --noEmit
+      - name: Compila backend + build do frontend
+        run: npm run build
+      - name: Consistência do build (assets do frontend)
+        run: node scripts/check-dist.mjs
+      - name: Auditoria de UI — padrões Nexus (anti-drift)
+        run: npm run audit:ui 2>&1 | tee /tmp/audit-ui.log
+        shell: bash
+      - name: Auditoria de estilos — tokens da paleta
+        run: npm run audit:styles 2>&1 | tee /tmp/audit-styles.log
+        shell: bash
+      - name: Auditoria de módulos — whitelabel coerente
+        run: npm run audit:modules 2>&1 | tee /tmp/audit-modules.log
+        shell: bash
+      - name: Testes unitários + UI (vitest)
+        run: npm test 2>&1 | tee /tmp/test.log
+        shell: bash
+      - name: Cobertura de testes
+        run: npm run test:coverage 2>&1 | tee /tmp/coverage.log
+        shell: bash
+      - name: Guarda relatório de cobertura (14 dias)
         if: always()
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage/
           retention-days: 14
-      - run: npm run docs:audit 2>&1 | tee /tmp/docs-audit.log
-      - name: Resumo do run (job summary)
+      - name: Auditoria de documentação (SKILL-009)
+        run: npm run docs:audit 2>&1 | tee /tmp/docs-audit.log
+        shell: bash
+      - name: Resumo do CI (job summary)
         if: always()
+        shell: bash
         run: |
+          # Determina o resultado de cada checagem a partir dos logs
+          UI_PASS="✅";   grep -q "nenhum padrão" /tmp/audit-ui.log 2>/dev/null || UI_PASS="❌"
+          STY_PASS="✅";  grep -q "nenhuma cor fixa" /tmp/audit-styles.log 2>/dev/null || STY_PASS="❌"
+          MOD_PASS="✅";  grep -q "manifest coerente" /tmp/audit-modules.log 2>/dev/null || MOD_PASS="❌"
+          DOC_PASS="✅";  grep -q "Nenhuma divergência" /tmp/docs-audit.log 2>/dev/null || DOC_PASS="❌"
           TESTS="n/d"; FILES="?"
-          if grep -q "Tests" /tmp/test.log; then
+          if grep -q "Tests" /tmp/test.log 2>/dev/null; then
             FILES=$(grep -oP '\d+(?= passed)' /tmp/test.log | head -1)
             TESTS=$(grep -oP '\d+(?= passed)' /tmp/test.log | tail -1)
           fi
           STMTS="n/d"
-          if grep -q "All files" /tmp/coverage.log; then
+          if grep -q "All files" /tmp/coverage.log 2>/dev/null; then
             STMTS=$(grep "All files" /tmp/coverage.log | awk -F'|' '{gsub(/ /,"",$2); print $2}')
           fi
-          ui=$(grep -q "nenhum padrão" /tmp/audit-ui.log && echo "PASS" || echo "FAIL")
-          styles=$(grep -q "nenhuma cor fixa" /tmp/audit-styles.log && echo "PASS" || echo "FAIL")
-          modules=$(grep -q "manifest coerente" /tmp/audit-modules.log && echo "PASS" || echo "FAIL")
-          docs=$(grep -q "Nenhuma divergência" /tmp/docs-audit.log && echo "PASS" || echo "FAIL")
+          # Se alguma auditoria falhou, o veredito geral é de falha
+          if [ "$UI_PASS" = "❌" ] || [ "$STY_PASS" = "❌" ] || [ "$MOD_PASS" = "❌" ] || [ "$DOC_PASS" = "❌" ]; then
+            STATE="❌ falhou"
+          else
+            STATE="✅ aprovado"
+          fi
           {
-            echo "## Resumo do CI — $(basename "$GITHUB_REF_NAME")"
+            echo "## CI em $(basename "$GITHUB_REF_NAME") — $STATE"
             echo ""
-            echo "| Checagem | Resultado |"
-            echo "|---|---|"
-            echo "| **tsc + build** | ✅ |"
-            echo "| Testes | ${FILES} arquivos · **${TESTS}** testes |"
-            echo "| Cobertura (stmts) | **${STMTS}%** |"
-            echo "| audit:ui | **${ui}** |"
-            echo "| audit:styles | **${styles}** |"
-            echo "| audit:modules | **${modules}** |"
-            echo "| docs:audit | **${docs}** |"
+            echo "**Pipeline:** tipagem → build → auditorias → testes → smoke → migração de schema."
+            echo ""
+            echo "| Checagem | O que valida | Resultado |"
+            echo "|---|---|---|"
+            echo "| **Tipos (tsc)** | Erros de tipo no backend | ✅ (falha encerra o job) |"
+            echo "| **Build** | Backend + frontend compilam | ✅ (falha encerra o job) |"
+            echo "| **Consistência do build** | Assets referenciados existem | ✅ (falha encerra o job) |"
+            echo "| **audit:ui** | Padrões Nexus (sem padrão legado) | **$UI_PASS** |"
+            echo "| **audit:styles** | Tokens da paleta (sem cor fixa) | **$STY_PASS** |"
+            echo "| **audit:modules** | Whitelabel (manifest coerente) | **$MOD_PASS** |"
+            echo "| **Testes** | Unitários + UI | ${FILES} arquivos · **${TESTS}** testes |"
+            echo "| **Cobertura** | Statements | **${STMTS}%** |"
+            echo "| **docs:audit** | Doc ↔ código consistente (SKILL-009) | **$DOC_PASS** |"
+            echo ""
+            echo "### Se algo falhou"
+            echo "- **audit:ui:** o log aponta a ocorrência de padrão legado/fora-do-canônico. Migre para Card/Field/FieldSelect/Modal title/Tabs/Switch (ver docs/engineering/design/UI-COVERAGE.md)."
+            echo "- **audit:styles:** classe fixa da paleta encontrada. Corrija ou o tema não refletirá nesses componentes."
+            echo "- **audit:modules:** IDs ou dependsOn divergem entre backend e frontend (whitelabel)."
+            echo "- **docs:audit:** alguma rota/CT/collection fora de sincronia. Rode \`npm run docs:audit\` e alinhe."
+            echo "- **Testes/cobertura:** abra o step de testes e a mensagem do vitest para o caso que falhou."
+            echo ""
+            echo "_Logs dos passos ficam colapsados — expanda o passo para ver o detalhe._"
           } >> "$GITHUB_STEP_SUMMARY"
 
   smoke:
-    name: smoke-api (PostgreSQL isolado)
+    name: Smoke da API
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -88,26 +128,37 @@ jobs:
           --health-timeout 3s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Prepara o código do repositório
+        uses: actions/checkout@v7
+      - name: Configura Node.js (v20) com cache de dependências
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: |
+      - name: Instala dependências (lockfile)
+        run: npm ci
+      - name: Cria schema + seed + sobe instância e roda o smoke (PG isolado)
+        shell: bash
+        run: |
           set -euo pipefail
           export DATABASE_URL=postgres://nxgest:nxgest@localhost:5432/nxgest
           # 1) schema isolado; 2) seed; 3) sobe UMA instância (rate limit ampliado) e roda o smoke
+          echo "::group::Criar schema isolado"
           npx tsx scripts/create-schema.mjs
+          echo "::endgroup::"
+          echo "::group::Seed de demonstração"
           node scripts/seed-demo.mjs
+          echo "::endgroup::"
+          echo "::group::Subir instância (porta 3002)"
           PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 PUBLICO_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
           SERVER_PID=$!
           trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
           sleep 6
+          echo "::endgroup::"
           node scripts/smoke-api.mjs --baseUrl http://127.0.0.1:3002
 
   migracao:
-    name: migrate-modelo (schema + idempotência)
+    name: Migração de schema
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -125,30 +176,38 @@ jobs:
           --health-timeout 3s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Prepara o código do repositório
+        uses: actions/checkout@v7
+      - name: Configura Node.js (v20) com cache de dependências
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: |
+      - name: Instala dependências (lockfile)
+        run: npm ci
+      - name: Roda migração de schema + valida invariantes (idempotente)
+        shell: bash
+        run: |
           set -euo pipefail
           export DATABASE_URL=postgres://nxgest:nxgest@localhost:5432/nxgest
           # cria o schema do modelo atual e roda a migração idempotente sobre ele;
           # valida as invariantes do modelo (0 camelCase, timestamptz, numeric, FKs, índice parcial)
+          echo "::group::Criar schema do modelo atual"
           npx tsx scripts/create-schema.mjs
+          echo "::endgroup::"
           node scripts/migrate-modelo.mjs
           node scripts/valida-modelo.mjs
 
   deploy-staging:
-    name: deploy-staging (homologação duckdns)
+    name: Deploy em homologação
     runs-on: ubuntu-latest
     needs: [test, smoke]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - name: Deploy no VPS (SSH)
+      - name: Prepara o código do repositório
+        uses: actions/checkout@v7
+      - name: Deploy no VPS (SSH) — staging
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}

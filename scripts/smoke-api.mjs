@@ -2401,6 +2401,27 @@ async function main() {
 main().then(() => {
   console.log("\n=== SMOKE API — RESULTADO ===")
   console.log(`Total: ${pass + fail} · PASS: ${pass} · FAIL: ${fail}\n`)
+
+  // Agrupa por seção (prefixo do id — parte antes do primeiro "-").
+  // Ex.: ADM-060 → ADM · MOD-G-1 → MOD · GEO-001 → GEO.
+  const grupos = new Map()
+  for (const r of results) {
+    const secao = r.id.includes("-") ? r.id.split("-")[0] : "OUTROS"
+    if (!grupos.has(secao)) grupos.set(secao, [])
+    grupos.get(secao).push(r)
+  }
+
+  // Resumo por seção (uma linha cada), na ordem em que os ids aparecem.
+  const ordem = [...grupos.keys()]
+  for (const secao of ordem) {
+    const itens = grupos.get(secao)
+    const falhas = itens.filter((r) => !r.ok).length
+    const mark = falhas === 0 ? "✅" : "❌"
+    console.log(`${mark} ${secao.padEnd(12)} ${itens.length} cenário(s)${falhas > 0 ? ` · ${falhas} falha(s)` : ""}`)
+  }
+
+  // Detalhe por cenário (mantém o formato atual, apenas após o resumo por seção).
+  console.log("")
   for (const r of results) {
     const mark = r.ok ? "✅" : "❌"
     console.log(`${mark} ${r.id.padEnd(12)} ${r.name.padEnd(62)} ${r.ok ? `${r.ms}ms` : r.err}`)
