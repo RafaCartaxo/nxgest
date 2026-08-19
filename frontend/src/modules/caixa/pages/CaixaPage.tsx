@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { ChevronLeft, ChevronRight, Receipt, Wallet } from "lucide-react"
@@ -41,12 +42,28 @@ export function CaixaPage() {
   const gastosAtivo = hasModule(user?.modulos, "gastos")
 
   const [status, setStatus] = useState<CaixaStatus | null>(null)
-  const [movimentacoes, setMovimentacoes] = useState<MovimentacaoItem[]>([])
-  const [auditoria, setAuditoria] = useState<AuditoriaCaixaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ajustarModalOpen, setAjustarModalOpen] = useState(false)
   const [liquidarModalOpen, setLiquidarModalOpen] = useState(false)
+
+  // PLAN-083 Fase 8.3: movimentações/auditoria só são buscadas quando a seção está expandida
+  // (lazy com `enabled`) — antes rodavam no mount mesmo com as seções `defaultCollapsed`.
+  const queryClient = useQueryClient()
+  const [movOpen, setMovOpen] = useState(false)
+  const [audOpen, setAudOpen] = useState(false)
+  const movQuery = useQuery({
+    queryKey: ["caixa", "movimentacoes", { limit: 20 }],
+    queryFn: () => listarMovimentacoes({ limit: 20 }),
+    enabled: movOpen,
+  })
+  const audQuery = useQuery({
+    queryKey: ["caixa", "auditoria", { limit: 20 }],
+    queryFn: () => listarAuditoriaCaixa({ limit: 20 }),
+    enabled: audOpen,
+  })
+  const movimentacoes = movQuery.data?.data ?? []
+  const auditoria = audQuery.data?.data ?? []
 
   const [parcelasHoje, setParcelasHoje] = useState<ParcelaHojeCliente[]>([])
   const [parcelasModalOpen, setParcelasModalOpen] = useState(false)
@@ -96,14 +113,8 @@ export function CaixaPage() {
     setError(null)
     try {
       const { dataInicio, dataFim } = calcularSemana(offset ?? 0)
-      const [s, m, aud] = await Promise.all([
-        getCaixaStatus(dataInicio, dataFim),
-        listarMovimentacoes({ limit: 20 }),
-        listarAuditoriaCaixa({ limit: 20 }),
-      ])
+      const s = await getCaixaStatus(dataInicio, dataFim)
       setStatus(s)
-      setMovimentacoes(m.data)
-      setAuditoria(aud.data)
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)
@@ -179,6 +190,8 @@ export function CaixaPage() {
       action: async () => {
         await ajustarCaixaBase(valor, motivo)
         setAjustarModalOpen(false)
+        queryClient.invalidateQueries({ queryKey: ["caixa", "movimentacoes"] })
+        queryClient.invalidateQueries({ queryKey: ["caixa", "auditoria"] })
         await fetch()
       },
     })
@@ -192,6 +205,8 @@ export function CaixaPage() {
       action: async () => {
         await liquidarSemana()
         setLiquidarModalOpen(false)
+        queryClient.invalidateQueries({ queryKey: ["caixa", "movimentacoes"] })
+        queryClient.invalidateQueries({ queryKey: ["caixa", "auditoria"] })
         await fetch()
       },
     })
@@ -351,7 +366,8 @@ export function CaixaPage() {
             items={movimentacoes}
             renderItem={(m) => <MovimentacaoRow key={m.id} movimentacao={m} />}
             limit={8}
-            defaultCollapsed
+            open={movOpen}
+            onToggle={setMovOpen}
           />
 
           {canAdjust && (
@@ -369,7 +385,8 @@ export function CaixaPage() {
               items={auditoria}
               renderItem={(a) => <AjusteRow key={a.id} ajuste={a} />}
               limit={8}
-              defaultCollapsed
+              open={audOpen}
+              onToggle={setAudOpen}
             />
           </div>
 

@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
-import { listarCobrancasDoDia, listarPagamentosHoje, listarParcelasHoje, listarParcelasSemana, ResultadoOperacional, type CobrancaDoDiaResult, type PagamentoDoDiaItem, type CobrancaItem, type ParcelaHojeCliente } from "../services/operacoes.service.js"
+import { listarParcelasHoje, listarParcelasSemana, ResultadoOperacional, type CobrancaDoDiaResult, type PagamentoDoDiaItem, type CobrancaItem, type ParcelaHojeCliente } from "../services/operacoes.service.js"
 import { listGastos, type GastoItem } from "../../gasto/services/gasto.service.js"
 import { useAuth } from "../../../shared/auth/AuthContext.js"
 import { isWidgetActive } from "../../../shared/modules/modules.js"
-import { eventBus } from "../../../shared/events/eventBus.js"
 import { ApiError } from "../../../api/client.js"
+import { useCobrancas, usePagamentosHoje, useGastosHoje } from "../hooks/useOperacoes.js"
 import { sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
 import { IndicadoresCards } from "../components/IndicadoresCards.js"
 import { CobrancaCard } from "../components/CobrancaCard.js"
@@ -31,11 +31,7 @@ export function OperacoesDashboard() {
   const rotaAtivo = isWidgetActive(modulos, "minhaRota")
   const cobrancasAtivo = isWidgetActive(modulos, "pendentesDia")
   const atendidosAtivo = isWidgetActive(modulos, "atendidosHoje")
-  const [data, setData] = useState<CobrancaDoDiaResult | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  const [pagamentosHoje, setPagamentosHoje] = useState<PagamentoDoDiaItem[]>([])
   const [pagamentosModalOpen, setPagamentosModalOpen] = useState(false)
 
   const [parcelasHoje, setParcelasHoje] = useState<ParcelaHojeCliente[]>([])
@@ -47,7 +43,6 @@ export function OperacoesDashboard() {
   const [parcelasSemanaModalOpen, setParcelasSemanaModalOpen] = useState(false)
   const [parcelasSemanaLoading, setParcelasSemanaLoading] = useState(false)
 
-  const [gastosHoje, setGastosHoje] = useState(0)
   const [gastosHojeItems, setGastosHojeItems] = useState<GastoItem[]>([])
   const [gastosHojeModalOpen, setGastosHojeModalOpen] = useState(false)
   const [gastosHojeLoading, setGastosHojeLoading] = useState(false)
@@ -56,75 +51,20 @@ export function OperacoesDashboard() {
   const coordsRef = useRef({ lat, lng, gpsAtivo })
   coordsRef.current = { lat, lng, gpsAtivo }
 
-  const fetch = useCallback(async () => {
-    if (!contratosAtivo) {
-      setData(null)
-      setLoading(false)
-      return
-    }
-    const { lat: refLat, lng: refLng, gpsAtivo: refGps } = coordsRef.current
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await listarCobrancasDoDia(
-        refGps && typeof refLat === "number" ? refLat : undefined,
-        refGps && typeof refLng === "number" ? refLng : undefined,
-      )
-      setData(result)
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message)
-      } else {
-        setError(t("operacoes.error"))
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [t, contratosAtivo])
+  // PLAN-083 Fase 8.1: queries compartilhadas (cache + dedupe + refetchOnWindowFocus).
+  // `refetchOnWindowFocus` + staleTime substituem os handlers de visibilitychange.
+  const cobrancasQuery = useCobrancas(contratosAtivo, () => coordsRef.current)
+  const pagamentosQuery = usePagamentosHoje(contratosAtivo)
+  const gastosQuery = useGastosHoje(gastosAtivo)
 
-  const fetchPagamentos = useCallback(async () => {
-    if (!contratosAtivo) return
-    try {
-      const result = await listarPagamentosHoje()
-      setPagamentosHoje(result)
-    } catch {
-      setPagamentosHoje([])
-    }
-  }, [contratosAtivo])
+  const data: CobrancaDoDiaResult | undefined = cobrancasQuery.data
+  const loading = cobrancasQuery.isLoading
+  const error = cobrancasQuery.isError
+    ? (cobrancasQuery.error instanceof ApiError ? cobrancasQuery.error.message : t("operacoes.error"))
+    : null
 
-  const fetchGastos = useCallback(async () => {
-    if (!gastosAtivo) return
-    try {
-      const hoje = getLocalDateString(new Date())
-      const result = await listGastos({ dataInicio: hoje, dataFim: hoje, limit: 1 })
-      setGastosHoje(result.totalPeriodo)
-    } catch {
-      setGastosHoje(0)
-    }
-  }, [gastosAtivo])
-
-  useEffect(() => {
-    fetch()
-    fetchPagamentos()
-    fetchGastos()
-  }, [fetch, fetchPagamentos, fetchGastos])
-
-  useEffect(() => {
-    function handleVisibility() {
-      if (document.visibilityState === "visible") {
-        fetch()
-        fetchPagamentos()
-        fetchGastos()
-      }
-    }
-    document.addEventListener("visibilitychange", handleVisibility)
-    return () => document.removeEventListener("visibilitychange", handleVisibility)
-  }, [fetch, fetchPagamentos, fetchGastos])
-
-  useEffect(() => {
-    const off = eventBus.on("operacao:atualizada", () => { fetch(); fetchPagamentos(); fetchGastos() })
-    return () => off()
-  }, [fetch, fetchPagamentos, fetchGastos])
+  const pagamentosHoje: PagamentoDoDiaItem[] = pagamentosQuery.data ?? []
+  const gastosHoje = gastosQuery.data ?? 0
 
   const resultadoDoDia = data
     ? data.indicadores.recebidoHoje - data.indicadores.aReceberHoje
@@ -199,7 +139,7 @@ export function OperacoesDashboard() {
       />
 
       {error && (
-        <ErrorBanner message={error} onRetry={fetch} className="mb-4" />
+        <ErrorBanner message={error} onRetry={() => cobrancasQuery.refetch()} className="mb-4" />
       )}
 
       {loading ? (
@@ -226,7 +166,7 @@ export function OperacoesDashboard() {
             onRecebidoClick={() => {
               setPagamentosHojeLoading(true)
               setPagamentosModalOpen(true)
-              fetchPagamentos().finally(() => setPagamentosHojeLoading(false))
+              pagamentosQuery.refetch().finally(() => setPagamentosHojeLoading(false))
             }}
             onAReceberClick={handleAReceberClick}
             onPendentesClick={cobrancasAtivo ? () => navigate("/cobrancas") : undefined}

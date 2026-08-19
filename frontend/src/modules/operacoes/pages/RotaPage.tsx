@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { eventBus } from "../../../shared/events/eventBus.js"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Navigation, MessageCircle, Phone, FileText, Share2, UserCheck, MapPinOff, CalendarClock, Route, Loader2 } from "lucide-react"
-import { listarCobrancasDoDia, listarPagamentosHoje, registrarVisita, ResultadoOperacional, type CobrancaItem, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
+import { ResultadoOperacional, type CobrancaItem, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
 import { ApiError } from "../../../api/client.js"
+import { useCobrancas, usePagamentosHoje, useRegistrarVisita, invalidateOperacoes } from "../hooks/useOperacoes.js"
 import { sortByDistance, sortByDistanceOnly, useWatchPosition } from "../../../shared/utils/distance.js"
 import { CobrancaCard } from "../components/CobrancaCard.js"
 import { unmask, formatCurrency } from "../../../shared/utils/masks.js"
@@ -65,20 +66,30 @@ export function RotaPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [items, setItems] = useState<CobrancaItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
   const [indiceAtual, setIndiceAtual] = useState(0)
   const [pagamentoOpen, setPagamentoOpen] = useState(false)
   const feedback = useFeedback()
   const [promessaOpen, setPromessaOpen] = useState(false)
   const [dataPromessa, setDataPromessa] = useState("")
   const [operando, setOperando] = useState(false)
-  const [pagamentosHoje, setPagamentosHoje] = useState<PagamentoDoDiaItem[]>([])
 
   const { lat: operadorLat, lng: operadorLng, gpsAtivo } = useWatchPosition()
   const coordsRef = useRef({ lat: operadorLat, lng: operadorLng, gpsAtivo })
   coordsRef.current = { lat: operadorLat, lng: operadorLng, gpsAtivo }
+
+  // PLAN-083 Fase 8.1: queries compartilhadas (cache + dedupe). A invalidação pós-mutação
+  // (useRegistrarVisita / handlePagamentoClose) refaz a rota e as telas irmãs — substitui o eventBus.
+  const cobrancasQuery = useCobrancas(true, () => coordsRef.current)
+  const pagamentosQuery = usePagamentosHoje(true)
+  const registrarVisitaMutation = useRegistrarVisita()
+
+  const items: CobrancaItem[] = cobrancasQuery.data?.cobrancas ?? []
+  const loading = cobrancasQuery.isLoading
+  const error = cobrancasQuery.isError
+    ? (cobrancasQuery.error instanceof ApiError ? cobrancasQuery.error.message : t("operacoes.error"))
+    : null
+  const pagamentosHoje: PagamentoDoDiaItem[] = pagamentosQuery.data ?? []
 
   const idsAntesFetchRef = useRef<Set<string>>(new Set())
   const itemKeyAntesFetchRef = useRef<string | null>(null)
@@ -99,52 +110,6 @@ export function RotaPage() {
 
   const comprovanteRef = useRef(comprovante)
   comprovanteRef.current = comprovante
-
-  const fetch = useCallback(async () => {
-    const { lat, lng } = coordsRef.current
-    idsAntesFetchRef.current = new Set(itemsRef.current.map((i) => itemKey(i)))
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await listarCobrancasDoDia(
-        typeof lat === "number" ? lat : undefined,
-        typeof lng === "number" ? lng : undefined,
-      )
-      setItems(result.cobrancas)
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message)
-      } else {
-        setError(t("operacoes.error"))
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [t])
-
-  const fetchPagamentos = useCallback(async () => {
-    try {
-      const result = await listarPagamentosHoje()
-      setPagamentosHoje(result)
-    } catch {
-      // pagamentos são exibição adicional, falha não quebra a página
-    }
-  }, [])
-
-  useEffect(() => {
-    fetch()
-    fetchPagamentos()
-  }, [fetch, fetchPagamentos])
-
-  useEffect(() => {
-    function handleVisibility() {
-      if (document.visibilityState === "visible" && !comprovanteRef.current) {
-        fetch()
-      }
-    }
-    document.addEventListener("visibilitychange", handleVisibility)
-    return () => document.removeEventListener("visibilitychange", handleVisibility)
-  }, [fetch])
 
   const pendentes = useMemo(
     () => items.filter((i) => i.resultadoOperacional === ResultadoOperacional.PENDENTE),
@@ -228,23 +193,12 @@ export function RotaPage() {
 
   async function handleVisitado(i: CobrancaItem) {
     setOperando(true)
+    idsAntesFetchRef.current = new Set(itemsRef.current.map((x) => itemKey(x)))
     try {
-      await registrarVisita({ clienteId: i.clienteId, contratoId: i.contratoId, tipo: "visitado" })
+      await registrarVisitaMutation.mutateAsync({ clienteId: i.clienteId, contratoId: i.contratoId, tipo: "visitado" })
+      feedback.show({ status: "success", message: t("operacoes.visitadoSucesso") })
     } catch {
       feedback.show({ status: "error", message: t("operacoes.erroRegistrarVisita") })
-      setOperando(false)
-      return
-    }
-    try {
-      const result = await listarCobrancasDoDia(
-        typeof operadorLat === "number" ? operadorLat : undefined,
-        typeof operadorLng === "number" ? operadorLng : undefined,
-      )
-      setItems(result.cobrancas)
-      feedback.show({ status: "success", message: t("operacoes.visitadoSucesso") })
-      eventBus.emit("operacao:atualizada")
-    } catch {
-      feedback.show({ status: "error", message: t("operacoes.erroAtualizarLista") })
     } finally {
       setOperando(false)
     }
@@ -252,23 +206,12 @@ export function RotaPage() {
 
   async function handleNaoEncontrado(i: CobrancaItem) {
     setOperando(true)
+    idsAntesFetchRef.current = new Set(itemsRef.current.map((x) => itemKey(x)))
     try {
-      await registrarVisita({ clienteId: i.clienteId, contratoId: i.contratoId, tipo: "nao_localizado" })
+      await registrarVisitaMutation.mutateAsync({ clienteId: i.clienteId, contratoId: i.contratoId, tipo: "nao_localizado" })
+      feedback.show({ status: "success", message: t("operacoes.naoEncontradoSucesso") })
     } catch {
       feedback.show({ status: "error", message: t("operacoes.erroRegistrarVisita") })
-      setOperando(false)
-      return
-    }
-    try {
-      const result = await listarCobrancasDoDia(
-        typeof operadorLat === "number" ? operadorLat : undefined,
-        typeof operadorLng === "number" ? operadorLng : undefined,
-      )
-      setItems(result.cobrancas)
-      feedback.show({ status: "success", message: t("operacoes.naoEncontradoSucesso") })
-      eventBus.emit("operacao:atualizada")
-    } catch {
-      feedback.show({ status: "error", message: t("operacoes.erroAtualizarLista") })
     } finally {
       setOperando(false)
     }
@@ -284,28 +227,17 @@ export function RotaPage() {
     if (!item) return
     setPromessaOpen(false)
     setOperando(true)
+    idsAntesFetchRef.current = new Set(itemsRef.current.map((x) => itemKey(x)))
     try {
-      await registrarVisita({
+      await registrarVisitaMutation.mutateAsync({
         clienteId: item.clienteId,
         contratoId: item.contratoId,
         tipo: "promessa",
         dataPromessa,
       })
+      feedback.show({ status: "success", message: t("operacoes.promessaSucesso") })
     } catch {
       feedback.show({ status: "error", message: t("operacoes.erroRegistrarVisita") })
-      setOperando(false)
-      return
-    }
-    try {
-      const result = await listarCobrancasDoDia(
-        typeof operadorLat === "number" ? operadorLat : undefined,
-        typeof operadorLng === "number" ? operadorLng : undefined,
-      )
-      setItems(result.cobrancas)
-      feedback.show({ status: "success", message: t("operacoes.promessaSucesso") })
-      eventBus.emit("operacao:atualizada")
-    } catch {
-      feedback.show({ status: "error", message: t("operacoes.erroAtualizarLista") })
     } finally {
       setOperando(false)
     }
@@ -389,9 +321,8 @@ export function RotaPage() {
     setComprovante(null)
     if (pagamentoFeitoRef.current) {
       pagamentoFeitoRef.current = false
-      fetch()
-      fetchPagamentos()
-      eventBus.emit("operacao:atualizada")
+      idsAntesFetchRef.current = new Set(itemsRef.current.map((x) => itemKey(x)))
+      invalidateOperacoes(queryClient)
     }
   }
 
@@ -437,7 +368,7 @@ export function RotaPage() {
         </div>
       )}
 
-      <EstadoTela loading={loading} error={error} onRetry={fetch} empty={false}>
+      <EstadoTela loading={loading} error={error} onRetry={() => cobrancasQuery.refetch()} empty={false}>
         {sortedItems.length === 0 && (items.length > 0 || routePagos > 0) ? (
           <SuccessState
             title={t("operacoes.todosAtendidos", { total: totalClientesAtendidosHoje })}

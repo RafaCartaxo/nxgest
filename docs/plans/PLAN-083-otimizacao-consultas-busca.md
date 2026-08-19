@@ -1,6 +1,6 @@
 # PLAN-083 — Otimização de consultas, round trips e busca
 
-**Status:** 🔵 Em execução (19/08) — **backend concluído (Fases 1–7)** validadas (smoke 278/278); restam Fases 8 (frontend) e 9 (verificação/re-medição)
+**Status:** ✅ **Concluído (19/08)** — Fases 0–9 entregues e validadas (smoke 278/278) · backend (1–7) + frontend (8) + verificação (9)
 
 **Versão:** 1.0
 
@@ -162,17 +162,34 @@ Detalhe de implementação: o `UPDATE ... FROM (VALUES)` roda via `this.drizzle.
 
 - Nada — Fase 7 concluída. **Com a Fase 7, toda a parte de backend do plano está fechada (Fases 1–7).**
 
-## Fase 8 — Frontend (parceria — não re-golpear o backend otimizado)
+## Fase 8 — Frontend (React Query — não re-golpear o backend otimizado)
 
-- **8.1 React Query nas telas operacionais** (Dashboard/Cobranças/Atendidos/Rota): cache + dedup + staleTime curto + invalidação direcionada pós-mutação. Hoje o React Query só existe no devboard; o resto é fetch manual em `useEffect` com zero cache.
-- **8.2 Cooldown no `visibilitychange`** (4 páginas re-disparam 2–3 requests a cada volta à aba).
-- **8.3 Remover requests inúteis:** `GastoPage` (request descartado) · `CaixaPage` seções colapsadas · `ContratoDetail.getCliente` (redundante — `contrato.clienteNome` já vem) · `OperadorDetail.listOperadores` no mount (só para modal sob demanda) · dropdown de clientes sob demanda no `ContratoList`/`ContratoNovo`.
+### Executado em 19/08 (validado em tsc ×2 + 154 testes + build + audits + smoke 278/278)
+
+> **Premissa:** React Query = **cache em memória no cliente** (não cookies). Freshness garantida por `staleTime` + `refetchOnWindowFocus` + **invalidação em toda escrita** — é o que evita dado velho.
+
+| Item | Antes | Depois | Como |
+|---|---|---|---|
+| **8.0 Defaults do QueryClient** | sem defaults (`staleTime: 0` → refetch a cada mount/focus) | `staleTime: 30s` · `refetchOnWindowFocus: true` · `retry: 1` | `main.tsx` — já reduz o refetch excessivo e deduplica. |
+| **8.1 React Query nas telas operacionais** | `fetch` manual em `useEffect` + sincronização via `eventBus` (`operacao:atualizada`) + refetch manual pós-mutação | `useQuery`/`useMutation` com **query keys compartilhadas** (`useOperacoes.ts`) | `Dashboard`/`Cobranças`/`Atendidos`/`Rota` usam os mesmos `['operacoes','cobrancas']`/`['operacoes','pagamentos','hoje']` → **deduplicam**; `useRegistrarVisita` + `invalidateOperacoes` refazem a rota e as telas irmãs após visita/pagamento. **`eventBus` removido** (arquivo `shared/events/eventBus.ts` apagado). |
+| **8.2 Focus/cooldown** | 4 handlers `visibilitychange` re-disparavam 1–3 requests por volta à aba | removidos — `refetchOnWindowFocus` + `staleTime` cuidam (refaz só se velho) | Fase 8.1 e 8.2 migradas juntas (sem dualidade). |
+| **8.3 Requests inúteis** | GastoPage fetch descartado · CaixaPage buscava movimentações/auditoria mesmo colapsadas · OperadorDetail listOperadores no mount · ContratoList dropdown com 100 clientes no mount | removidos/lazy | `GastoPage` sem fetch morto · `CaixaPage` movimentações/auditoria via `useQuery` com `enabled: seção expandida` (CollapsibleSection ganhou props controladas) · `OperadorDetail` chefes via `useQuery` só quando o ReassignModal abre · `ContratoList` busca clientes ao abrir o filtro. **ContratoDetail.getCliente mantido** (validado: comprovante usa `cliente.telefone`, ausente em `contrato.clienteNome`) · **ContratoNovo mantido** (lista é ação primária; lazy exigiria combobox com risco de UX). |
+
+### Restante da Fase 8 (pendente)
+
+- Nada — Fase 8 concluída. QP-10 (dedupe no network tab) fica como validação manual complementar.
 
 ## Fase 9 — Verificação final
 
-- `npx tsc --noEmit` · `npm run build` · `npm test` · `npm run smoke:api` (PG isolado, node 20) · `audit:styles`/`audit:ui`/`audit:modules` (se UI mudou) · `npm run docs:audit` (SKILL-009, matriz de propagação).
-- Re-medir: contagem de queries/request por endpoint (tabela da Fase 0) + `EXPLAIN` da cobrança do dia sem `SubPlan`.
-- CHECKLIST diário (`docs/engineering/tasks/2026-08-18/CHECKLIST-PLAN083.md`) + docs propagadas (02-API se houver mudança de rota; 07 CASOS DE USO se comportamento).
+### Executado em 19/08 (tudo verde)
+
+- `tsc --noEmit` ×2 · `npm run build` · `npm test` (154) · `npm run smoke:api` (PG isolado, node 20) — **278/278** · `audit:styles`/`audit:ui`/`audit:modules` verdes · `docs:audit` 0 divergências.
+- **Re-medição:** `EXPLAIN` da cobrança do dia **sem `SubPlan`** (LATERALs indexados via `idx_parcelas_venc_partial`; contratos via `idx_contratos_user`; clientes via PK) — QP-03 satisfeito. Contagens de queries/request por endpoint já medidas nas Fases 1–3 (tabela da Fase 0) e mantidas.
+- CHECKLIST do dia preenchido + docs propagadas (02-API — leads `q`; smoke 278).
+
+### Conclusão do plano
+
+- **PLAN-083 concluído** — Fases 0–9 entregues, validadas e commitadas. Nenhum endpoint mudou de shape; smoke 278/278 é o guarda-corpo.
 
 ---
 
@@ -185,7 +202,7 @@ Detalhe de implementação: o `UPDATE ... FROM (VALUES)` roda via `this.drizzle.
 - **QP-05** `listMovimentacoes` — Então `EXPLAIN` sem subquery correlacionada por linha; paginação e shape idênticos.
 - **QP-06** `GET /api/leads` — Então retorna paginado (LIMIT) com shape do payload preservado.
 - **QP-07** Login — Então `EXPLAIN` usa o índice funcional `lower(email)` (`Index Scan`, sem `Seq Scan`) e o fluxo de login/dedup segue idêntico.
-- **QP-08** Shape — Dado `smoke:api` (274 cenários) + comparação de payloads dos endpoints alterados | Então 0 divergências.
+- **QP-08** Shape — Dado `smoke:api` (278 cenários) + comparação de payloads dos endpoints alterados | Então 0 divergências.
 - **QP-09** Snapshot de atraso — Dado GET de cobranças sem disparar snapshot | Então o histórico de atrasos continua sendo registrado no fluxo correto (fechamento/sob demanda), sem regressão do dado exibido.
 - **QP-10** Frontend — Dado navegação Dashboard→Cobranças→Rota | Então `/operacoes/cobrancas` e `/operacoes/pagamentos-hoje` não são re-buscados em duplicidade (cache React Query; network tab).
 - **QP-11** Busca sem acento — Dado cliente "João Gomes" | Quando busca `joao` | Então retorna o cliente (e `João` busca `joao` também).

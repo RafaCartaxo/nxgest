@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { CheckCircle2 } from "lucide-react"
-import { listarCobrancasDoDia, listarPagamentosHoje, ResultadoOperacional, type CobrancaDoDiaResult, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
-import { eventBus } from "../../../shared/events/eventBus.js"
+import { ResultadoOperacional, type PagamentoDoDiaItem } from "../services/operacoes.service.js"
+import { useCobrancas, usePagamentosHoje } from "../hooks/useOperacoes.js"
 import { ApiError } from "../../../api/client.js"
 import { sortByDistance, useWatchPosition } from "../../../shared/utils/distance.js"
 import { resumoAtendidos } from "../utils/atendimento.js"
@@ -30,59 +30,18 @@ export function AtendidosPage() {
   const coordsRef = useRef({ lat, lng, gpsAtivo })
   coordsRef.current = { lat, lng, gpsAtivo }
 
-  const [data, setData] = useState<CobrancaDoDiaResult | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // PLAN-083 Fase 8.1: queries compartilhadas (cache + dedupe); invalidação pós-mutação
+  // e refetchOnWindowFocus substituem o eventBus e o visibilitychange.
+  const cobrancasQuery = useCobrancas(true, () => coordsRef.current)
+  const pagamentosQuery = usePagamentosHoje(true)
+  const data = cobrancasQuery.data
+  const loading = cobrancasQuery.isLoading
+  const error = cobrancasQuery.isError
+    ? (cobrancasQuery.error instanceof ApiError ? cobrancasQuery.error.message : t("operacoes.error"))
+    : null
+  const pagamentosHoje = pagamentosQuery.data ?? []
   const [filtro, setFiltro] = useState<Filtro>("all")
-  const [pagamentosHoje, setPagamentosHoje] = useState<PagamentoDoDiaItem[]>([])
 
-  const fetch = useCallback(async () => {
-    const { lat: refLat, lng: refLng, gpsAtivo: refGps } = coordsRef.current
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await listarCobrancasDoDia(
-        refGps && typeof refLat === "number" ? refLat : undefined,
-        refGps && typeof refLng === "number" ? refLng : undefined,
-      )
-      setData(result)
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message)
-      } else {
-        setError(t("operacoes.error"))
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [t])
-
-  const fetchPagamentos = useCallback(async () => {
-    try {
-      const result = await listarPagamentosHoje()
-      setPagamentosHoje(result)
-    } catch {
-      setPagamentosHoje([])
-    }
-  }, [])
-
-  useEffect(() => {
-    fetch()
-    fetchPagamentos()
-  }, [fetch, fetchPagamentos])
-
-  useEffect(() => {
-    const off = eventBus.on("operacao:atualizada", () => { fetch(); fetchPagamentos() })
-    return () => off()
-  }, [fetch, fetchPagamentos])
-
-  useEffect(() => {
-    function handleVisibility() {
-      if (document.visibilityState === "visible") { fetch(); fetchPagamentos() }
-    }
-    document.addEventListener("visibilitychange", handleVisibility)
-    return () => document.removeEventListener("visibilitychange", handleVisibility)
-  }, [fetch, fetchPagamentos])
 
   const completos = useMemo(
     () => data ? sortByDistance(
@@ -175,7 +134,7 @@ export function AtendidosPage() {
       </div>
 
       {error && (
-        <ErrorBanner message={error} onRetry={fetch} className="mb-4" />
+        <ErrorBanner message={error} onRetry={() => cobrancasQuery.refetch()} className="mb-4" />
       )}
 
       {loading ? (

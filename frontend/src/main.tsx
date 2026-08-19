@@ -7,7 +7,20 @@ import { App } from "./App.js"
 import i18n from "./i18n/config.js"
 import "./index.css"
 
-const queryClient = new QueryClient()
+// PLAN-083 Fase 8.0: defaults globais do React Query.
+// - staleTime 30s: cache server-state em memória; telas operacionais são quase-em-tempo-real,
+//   então 30s equilibra frescor x quantidade de requests.
+// - refetchOnWindowFocus + staleTime: ao voltar à aba só refaz se o dado estiver velho
+//   (substitui os handlers manuais de visibilitychange — Fase 8.2).
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      refetchOnWindowFocus: true,
+      retry: 1,
+    },
+  },
+})
 
 // SW registrado SÓ em produção: em dev (cert auto-assinado / IP local) o SW
 // cachearia assets e atrapalharia o teste — e o Chrome Android não instala PWA

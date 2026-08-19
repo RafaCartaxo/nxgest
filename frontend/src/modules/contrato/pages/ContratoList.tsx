@@ -63,9 +63,11 @@ export function ContratoList() {
     }
   }, [usuarioId])
 
+  // PLAN-083 Fase 8.3: clientes só são buscados quando o filtro abre (sob demanda),
+  // não em todo mount.
   useEffect(() => {
-    fetchClientes()
-  }, [fetchClientes])
+    if (filterOpen) fetchClientes()
+  }, [filterOpen, fetchClientes])
 
   useEffect(() => {
     fetch()

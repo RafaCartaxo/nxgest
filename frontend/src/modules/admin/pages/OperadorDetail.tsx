@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { User, Wallet, Ban, RefreshCw, Edit3 } from "lucide-react"
@@ -35,7 +36,6 @@ export function OperadorDetail() {
   const empresaId = searchParams.get("empresaId") || undefined
 
   const [operador, setOperador] = useState<OperadorRow | null>(null)
-  const [operadores, setOperadores] = useState<OperadorRow[]>([])
   const [caixa, setCaixa] = useState<CaixaStatus | null>(null)
   const [erroCaixa, setErroCaixa] = useState<string | null>(null)
   const [auditoria, setAuditoria] = useState<AuditoriaCaixaItem[]>([])
@@ -47,6 +47,15 @@ export function OperadorDetail() {
   const operadorFormRef = useRef<OperadorFormHandle>(null)
 
   const { saving: savingEdit, reassignState, handleUpdate, handleReassignConfirm, closeReassign } = useEditarOperador({ empresaId, onSaved: () => { setEditarOpen(false); void fetch() } })
+
+  // PLAN-083 Fase 8.3: chefes só são buscados quando o ReassignModal abre (lazy com `enabled`)
+  // — antes listOperadores rodava em todo mount só pra alimentar o modal sob demanda.
+  const operadoresQuery = useQuery({
+    queryKey: ["admin", "operadores", { empresaId }],
+    queryFn: () => listOperadores(empresaId),
+    enabled: reassignState !== null,
+  })
+  const operadores = operadoresQuery.data ?? []
 
   const fetch = useCallback(async () => {
     if (!id) return
@@ -65,15 +74,13 @@ export function OperadorDetail() {
     // derruba a página (as ações de conta continuam acessíveis).
     // Chefes (admins) carregados de forma independente para o ReassignModal.
     try {
-      const [cx, aud, ops] = await Promise.all([
+      const [cx, aud] = await Promise.all([
         getCaixaStatus(undefined, undefined, id),
         listarAuditoriaCaixa({ limit: 20 }, id),
-        listOperadores(empresaId),
       ])
       setCaixa(cx)
       setErroCaixa(null)
       setAuditoria(aud.data)
-      setOperadores(ops)
     } catch (err) {
       setErroCaixa(err instanceof ApiError ? err.message : t("admin.erroCarregar"))
     } finally {

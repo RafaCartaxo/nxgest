@@ -14,6 +14,10 @@ interface CollapsibleSectionProps<T = unknown> {
   limit?: number
   /** Começa colapsada (default: false). */
   defaultCollapsed?: boolean
+  /** Modo controlado (opcional): estado externo da expansão. Sem isso, o estado é interno. */
+  open?: boolean
+  /** Callback quando o usuário alterna (só usado no modo controlado). */
+  onToggle?: (open: boolean) => void
   /** Conteúdo direto (quando não usa items/renderItem). */
   children?: ReactNode
   className?: string
@@ -31,12 +35,24 @@ export function CollapsibleSection<T = unknown>({
   renderItem,
   limit,
   defaultCollapsed = false,
+  open,
+  onToggle,
   children,
   className = "",
 }: CollapsibleSectionProps<T>) {
   const { t } = useTranslation()
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const [expandido, setExpandido] = useState(false)
+
+  // Modo controlado: `open` externo; senão, estado interno.
+  const aberto = open !== undefined ? open : !collapsed
+  const alternar = () => {
+    if (onToggle && open !== undefined) {
+      onToggle(!open)
+    } else {
+      setCollapsed((c) => !c)
+    }
+  }
 
   const total = items?.length ?? 0
   const temLimite = items != null && limit != null && total > limit
@@ -48,18 +64,18 @@ export function CollapsibleSection<T = unknown>({
         <SectionHeader title={count != null ? `${title} (${count})` : title} />
         <button
           type="button"
-          onClick={() => setCollapsed((c) => !c)}
-          aria-expanded={!collapsed}
+          onClick={alternar}
+          aria-expanded={aberto}
           className="pb-1"
         >
           <ChevronDown
-            className={`h-5 w-5 text-text-secondary transition-transform ${collapsed ? "" : "rotate-180"}`}
+            className={`h-5 w-5 text-text-secondary transition-transform ${aberto ? "rotate-180" : ""}`}
             aria-hidden
           />
         </button>
       </div>
 
-      {!collapsed && (
+      {aberto && (
         <>
           {items && renderItem
             ? items.slice(0, visiveis).map(renderItem)
