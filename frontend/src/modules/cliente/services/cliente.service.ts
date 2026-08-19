@@ -40,6 +40,8 @@ export interface Cliente {
 
 export interface ListClientesParams {
   nome?: string
+  /** Busca multi-campo (nome/CPF/telefone/comércio) — PLAN-083 Fase 6. */
+  q?: string
   page?: number
   limit?: number
   sort?: string
@@ -70,6 +72,7 @@ export async function listClientes(
   const searchParams = new URLSearchParams()
 
   if (params?.nome) searchParams.set("nome", params.nome)
+  if (params?.q) searchParams.set("q", params.q)
   if (params?.page) searchParams.set("page", String(params.page))
   if (params?.limit) searchParams.set("limit", String(params.limit))
   if (params?.sort) searchParams.set("sort", params.sort)

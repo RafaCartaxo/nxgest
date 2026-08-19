@@ -42,8 +42,9 @@ export interface ListarLeadsResult {
   pagination: { page: number; limit: number; total: number; pages: number }
 }
 
-export async function listarLeads(status?: string, page = 1, limit = 50): Promise<ListarLeadsResult> {
+export async function listarLeads(q?: string, status?: string, page = 1, limit = 50): Promise<ListarLeadsResult> {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (q) params.set("q", q)
   if (status) params.set("status", status)
   return apiRequest<ListarLeadsResult>("GET", `/admin/leads?${params}`)
 }

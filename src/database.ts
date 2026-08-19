@@ -558,6 +558,14 @@ CREATE TABLE IF NOT EXISTS "auth_tokens" (
     CREATE UNIQUE INDEX IF NOT EXISTS "idx_convites_token" ON "convites"("token_hash");
     CREATE INDEX IF NOT EXISTS "idx_convites_usuario_status" ON "convites"("usuario_id", "status");
     CREATE INDEX IF NOT EXISTS "idx_convites_expirados" ON "convites"("status", "expira_em");
+    -- PLAN-083 Fase 6.1: busca sem acento — extensão unaccent + wrapper IMMUTABLE (requisito
+    -- pro índice funcional ser usado; sem IMMUTABLE o PG ignora o índice) + GIN funcional.
+    CREATE EXTENSION IF NOT EXISTS unaccent;
+    CREATE OR REPLACE FUNCTION f_unaccent(text) RETURNS text
+      LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE
+      AS $$ SELECT unaccent('unaccent', $1) $$;
+    CREATE INDEX IF NOT EXISTS "idx_clientes_nome_unaccent_trgm"
+      ON "clientes" USING GIN (f_unaccent("nome") gin_trgm_ops);
   `
   await pool.query(ddl)
 

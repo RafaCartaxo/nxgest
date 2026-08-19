@@ -27,12 +27,12 @@ export function ClienteList() {
   const [searchTerm, setSearchTerm] = useState("")
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  const fetch = useCallback(async (nome?: string) => {
+  const fetch = useCallback(async (q?: string) => {
     setLoading(true)
     setError(null)
 
     try {
-      const result = await listClientes(nome ? { nome, usuarioId: usuarioId || undefined } : { usuarioId: usuarioId || undefined })
+      const result = await listClientes(q ? { q, usuarioId: usuarioId || undefined } : { usuarioId: usuarioId || undefined })
       setClientes(result.data)
     } catch (err) {
       if (err instanceof ApiError) {

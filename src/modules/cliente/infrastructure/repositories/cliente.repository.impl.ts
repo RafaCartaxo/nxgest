@@ -104,8 +104,17 @@ export class ClienteRepository implements IClienteRepository {
   async findAll(userId: string, params: FindAllParams): Promise<FindAllResult> {
     const conditions = [sql`${clientes.deletedAt} IS NULL`, eq(clientes.userId, userId)]
 
-    if (params.nome) {
-      conditions.push(sql`${clientes.nome} ILIKE ${`%${params.nome}%`}`)
+    // PLAN-083 Fase 6: busca sem acento via f_unaccent (índice GIN funcional) e multi-campo `q`.
+    if (params.q) {
+      conditions.push(sql`(
+        f_unaccent(${clientes.nome}) ILIKE '%' || f_unaccent(${params.q}) || '%'
+        OR f_unaccent(${clientes.comercio}) ILIKE '%' || f_unaccent(${params.q}) || '%'
+        OR f_unaccent(${clientes.cpf}) ILIKE '%' || f_unaccent(${params.q}) || '%'
+        OR f_unaccent(${clientes.telefone}) ILIKE '%' || f_unaccent(${params.q}) || '%'
+        OR f_unaccent(${clientes.telefoneComercio}) ILIKE '%' || f_unaccent(${params.q}) || '%'
+      )`)
+    } else if (params.nome) {
+      conditions.push(sql`f_unaccent(${clientes.nome}) ILIKE '%' || f_unaccent(${params.nome}) || '%'`)
     }
 
     const where = sql.join(conditions, sql` AND `)

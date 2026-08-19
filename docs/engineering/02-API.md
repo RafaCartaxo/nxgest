@@ -264,7 +264,8 @@ Lista clientes.
 
 | Parâmetro | Tipo | Obrigatório | Padrão | Descrição |
 |-----------|------|-------------|---------|-----------|
-| nome | string | Não | — | Busca parcial |
+| nome | string | Não | — | Busca parcial sem acento (nome) — compat. |
+| q | string | Não | — | Busca multi-campo sem acento (nome/CPF/telefone/comércio) — PLAN-083 Fase 6. |
 | page | number | Não | 1 | Página |
 | limit | number | Não | 20 | Quantidade por página |
 | sort | string | Não | nome | Campo para ordenação |
@@ -2573,13 +2574,13 @@ Reenvia o e-mail de confirmação (PLAN-064, LD-07). **Resposta sempre 200 gené
 
 # GET /api/admin/leads
 
-Lista leads comerciais com filtro por status e paginação (PLAN-064, Fase 4.3 do PLAN-083).
+Lista leads comerciais com filtro por status, busca e paginação (PLAN-064, Fases 4.3 e 6.3 do PLAN-083).
 
 **Auth:** Super Admin (não-super → 403)
 
 ## Query
 
-`?status=NOVO` (opcional: `NOVO | EMAIL_CONFIRMADO | EM_ONBOARDING | CONVERTIDO | DESCARTADO`) · `?page=1` (default 1) · `?limit=50` (default 50, máx 100)
+`?status=NOVO` (opcional: `NOVO | EMAIL_CONFIRMADO | EM_ONBOARDING | CONVERTIDO | DESCARTADO`) · `?q=<termo>` (busca sem acento em nome/empresa/email/telefone) · `?page=1` (default 1) · `?limit=50` (default 50, máx 100)
 
 ## Response 200
 

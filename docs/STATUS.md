@@ -15,7 +15,7 @@
 | VPS | `172.245.152.223` · repo `/opt/nxgestao` · vol prod `nxgestao_nxgestao_data` · vol staging `nxgestao_nxgestao_staging_data` |
 | E-mail | Resend ativo (`no-reply@nxgest.com.br`) — fail-closed (503 se indisponível) |
 | Deploy mais recente | **Automático via pipeline** — último commit da `main` (prod após staging saudável) |
-| CI/CD | **CI** (`.github/workflows/ci.yml`): tsc · build · check-dist · audits · test (154) · coverage · docs:audit + smoke isolado (274) + **deploy-staging** · **CD** (`.github/workflows/cd.yml`): validate (CI verde + staging) → **deploy-prod** automático/manual |
+| CI/CD | **CI** (`.github/workflows/ci.yml`): tsc · build · check-dist · audits · test (154) · coverage · docs:audit + smoke isolado (278) + **deploy-staging** · **CD** (`.github/workflows/cd.yml`): validate (CI verde + staging) → **deploy-prod** automático/manual |
 
 ## Entregas recentes
 
@@ -70,7 +70,7 @@
 
 ## Métricas de saúde
 
-- **Testes:** 154 verdes (33 arquivos) · smoke API **274/274** · `docs:audit` 0 divergências (62 rotas = 62 telas)
+- **Testes:** 154 verdes (33 arquivos) · smoke API **278/278** · `docs:audit` 0 divergências (62 rotas = 62 telas)
 - **Pipeline:** CI verde no push/PR · staging automático no merge à main · CD prod com gate de promoção (staging saudável) · `check-dist` (PLAN-079) garante consistência index.html ↔ chunks
 - **QA:** pacote `docs/qa/` (visão geral, arquitetura, engenharia, testes, pipeline, operação, segurança, glossário, checklists + trilha de estudo) · validações manuais de produção **concluídas (12/08)**
 - **Docs:** planos (incl. PLAN-070, PLAN-071) · 6 ADRs · 5 templates · skills SKILL-001..009

@@ -58,7 +58,18 @@ export class LeadRepository implements ILeadRepository {
 
   async list(params: ListLeadsParams): Promise<ListLeadsResult> {
     const offset = (params.page - 1) * params.limit
-    const where = params.status ? and(eq(leads.status, params.status as LeadStatus)) : undefined
+    const conds = []
+    if (params.status) conds.push(eq(leads.status, params.status as LeadStatus))
+    // PLAN-083 Fase 6.3: busca sem acento por nome/empresa/email/telefone (mesmo padrão de clientes).
+    if (params.q) {
+      conds.push(sql`(
+        f_unaccent(${leads.nomeResponsavel}) ILIKE '%' || f_unaccent(${params.q}) || '%'
+        OR f_unaccent(${leads.empresa}) ILIKE '%' || f_unaccent(${params.q}) || '%'
+        OR f_unaccent(${leads.email}) ILIKE '%' || f_unaccent(${params.q}) || '%'
+        OR f_unaccent(${leads.telefone}) ILIKE '%' || f_unaccent(${params.q}) || '%'
+      )`)
+    }
+    const where = conds.length > 0 ? and(...conds) : undefined
     const rows = await db
       .select({
         lead: leads,

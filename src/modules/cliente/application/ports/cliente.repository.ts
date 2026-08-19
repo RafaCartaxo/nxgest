@@ -2,6 +2,8 @@ import type { Cliente } from "../../domain/cliente.entity.js"
 
 export interface FindAllParams {
   nome?: string
+  /** Busca multi-campo sem acento (nome/CPF/telefone/comércio) — PLAN-083 Fase 6. */
+  q?: string
   page: number
   limit: number
   sort: string

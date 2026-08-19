@@ -1,6 +1,6 @@
 # PLAN-083 — Otimização de consultas, round trips e busca
 
-**Status:** 🔵 Em execução (19/08) — Fases 1–5 concluídas e validadas (smoke 274/274); Fases 6–9 pendentes
+**Status:** 🔵 Em execução (19/08) — Fases 1–6 concluídas e validadas (smoke 274/274 + CTs novos); Fases 7–9 pendentes
 
 **Versão:** 1.0
 
@@ -133,12 +133,22 @@ Detalhe de implementação: o `UPDATE ... FROM (VALUES)` roda via `this.drizzle.
 
 ## Fase 6 — Busca com acentuação e cenários
 
-Escopo aprovado: **baixa / baixa-média** dificuldade. **Fuzzy (média-alta) fica de fora** (backlog documentado).
+### Executado em 19/08 (validado em runtime + EXPLAIN + smoke 274/274 + CTs novos)
 
-- **6.1 Busca sem acento em `clientes.nome`:** extensão `unaccent` (já disponível) + função wrapper `f_unaccent()` `IMMUTABLE` (requisito para índice) + **índice GIN funcional** `f_unaccent(nome)` no `runMigrations` + WHERE com `f_unaccent(nome) ILIKE`. Validar com `EXPLAIN` que o índice é usado (wrapper sem `IMMUTABLE` faz o PG ignorar).
-- **6.2 Busca por CPF / telefone / comércio:** `ILIKE` de substring no volume atual; normalização de dígitos (máscara) documentada como evolução.
-- **6.3 Busca em leads** (nome/empresa/email/telefone): mesmo padrão; aproveita a paginação da Fase 4.
-- **6.4 Caixa multi-campo** no `ListClientes`: um `q` único fazendo OR entre os campos acima.
+| Item | Antes | Depois | Como |
+|---|---|---|---|
+| **6.1 Busca sem acento em `clientes.nome`** | `nome ILIKE %x%` — não achava "joao" em "João", sem índice | `f_unaccent(nome) ILIKE '%' \|\| f_unaccent(termo) \|\| '%'` | `CREATE EXTENSION unaccent` + wrapper `f_unaccent(text)` `IMMUTABLE STRICT PARALLEL SAFE` + `idx_clientes_nome_unaccent_trgm` (GIN funcional) no `runMigrations`. `f_unaccent('João Gomes Açaí')` → `Joao Gomes Acai`. EXPLAIN com `enable_seqscan=off` confirma o GIN (no volume atual o planner prefere Seq Scan — mesmo caso da Fase 5). |
+| **6.2 Busca por CPF / telefone / comércio** | inexistente (só nome) | coberto pelo multi-campo | `f_unaccent` não altera dígitos → CPF/telefone por substring também funcionam. **Normalização de dígitos (máscara) fica como evolução** (backlog do plano). |
+| **6.3 Busca em leads** (nome/empresa/email/telefone) | só filtro por status | `?q=` sem acento + status + paginação | `ListLeadsParams.q`; OR `f_unaccent(nome_responsavel/empresa/email/telefone)`; controller parseia `q`; frontend `LeadsAdminPage` + `SearchBar` (debounce 300ms, reseta página) + `leads.service.listarLeads(q, status, page, limit)`. |
+| **6.4 Multi-campo no `ListClientes`** | só `nome` | `?q=` OR em nome/comércio/cpf/telefone/telefone_comercio | `findClientesQuerySchema` + `q`; `ClienteRepository.findAll` OR com `f_unaccent`; `nome` mantido (back-compat, agora sem acento); frontend `ClienteList` migra pro `q`. |
+
+### CTs novos (smoke)
+
+- **BUS-PREP** cria clientes de busca · **BUS-UNACCENT** (`?q=joao` e `?q=João` acham "João Gomes") · **BUS-MULTI** (`?q=acai` por comércio, `?q=<CPF>` por CPF) · **LD-BUS** (`?q=` por nome/email em leads, mantendo status + paginação).
+
+### Restante da Fase 6 (pendente)
+
+- Nada — Fase 6 concluída.
 
 ## Fase 7 — Consistência transacional
 

@@ -309,6 +309,31 @@ async function main() {
     expect(r, 200, "editar cliente")
   })
 
+  // ---------- PLAN-083 Fase 6: busca sem acento + multi-campo (QP-11/12) ----------
+  const BUS_CPF = "76171855960"
+  let busId
+  await t("BUS-PREP", "cria clientes de busca (nome com acento + comércio)", async () => {
+    const a = await req("POST", "/api/clientes", { token: opToken, body: { nome: "João Gomes", telefone: "83988880101", cpf: BUS_CPF, comercio: "Padaria Açaí", endereco: { logradouro: "Rua A" } } })
+    expect(a, 201, "criar cliente acentuado")
+    busId = a.data.id
+  })
+  await t("BUS-UNACCENT", "busca sem acento: ?q=joao acha 'João Gomes' (e ?q=João)", async () => {
+    const r1 = await req("GET", `/api/clientes?q=joao`, { token: opToken })
+    expect(r1, 200, "busca joao")
+    if (!r1.data.data.some((c) => c.id === busId)) throw new Error("q=joao não achou cliente acentuado")
+    const r2 = await req("GET", `/api/clientes?q=${encodeURIComponent("João")}`, { token: opToken })
+    expect(r2, 200, "busca João")
+    if (!r2.data.data.some((c) => c.id === busId)) throw new Error("q=João não achou cliente")
+  })
+  await t("BUS-MULTI", "busca multi-campo: ?q=acai (comércio) e ?q=<parte do CPF>", async () => {
+    const r1 = await req("GET", `/api/clientes?q=acai`, { token: opToken })
+    expect(r1, 200, "busca acai")
+    if (!r1.data.data.some((c) => c.id === busId)) throw new Error("q=acai não achou por comércio")
+    const r2 = await req("GET", `/api/clientes?q=${BUS_CPF.slice(0, 5)}`, { token: opToken })
+    expect(r2, 200, "busca por CPF")
+    if (!r2.data.data.some((c) => c.id === busId)) throw new Error("busca por CPF não achou cliente")
+  })
+
   // ---------- PLAN-055: localização (GPS) — persistência (P1..P7) ----------
   let geoCli
   await t("GEO-001", "Criar com localizacao (principal) + localizacaoComercio (P1)", async () => {
@@ -2357,6 +2382,14 @@ async function main() {
     expect(p2, 200, "paginação page=2 limit=1")
     if (p2.data.data.length > 1) throw new Error("limit ignorado")
     if (p2.data.pagination.page !== 2) throw new Error("page ignorado")
+  })
+  await t("LD-BUS", "busca em leads: ?q por nome/empresa/email (mantém status + paginação)", async () => {
+    const qn = await req("GET", `/api/admin/leads?q=${encodeURIComponent("Maria Interessada")}`, { token: superToken })
+    expect(qn, 200, "busca por nome")
+    if (!qn.data.data.some((l) => l.id === leadId)) throw new Error("q por nome não achou o lead")
+    const qe = await req("GET", `/api/admin/leads?q=${encodeURIComponent(leadEmail)}`, { token: superToken })
+    expect(qe, 200, "busca por email")
+    if (!qe.data.data.some((l) => l.id === leadId)) throw new Error("q por email não achou o lead")
   })
 
   await t("LD-13", "não-super em /admin/leads → 403", async () => {

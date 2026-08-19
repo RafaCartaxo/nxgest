@@ -163,7 +163,7 @@
     "erroCriar": "Error creating client.",
     "nenhumEncontrado": "No clients found.",
     "naoEncontrado": "Client not found.",
-    "buscarPlaceholder": "Search by name...",
+    "buscarPlaceholder": "Search by name, CPF, phone or business...",
     "dadosCliente": "Client Details",
     "nome": "Name",
     "telefone": "Collection Phone",
@@ -877,6 +877,7 @@
     "painelSubtitle": "Prospects and company acquisition",
     "filtro": "Filter by status",
     "filtroTodos": "All",
+    "buscarPlaceholder": "Search by name, company, email or phone...",
     "status": {
       "NOVO": "New",
       "EMAIL_CONFIRMADO": "Email confirmed",

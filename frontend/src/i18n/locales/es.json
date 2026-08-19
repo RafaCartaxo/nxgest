@@ -163,7 +163,7 @@
     "erroCriar": "Error al crear cliente.",
     "nenhumEncontrado": "No se encontraron clientes.",
     "naoEncontrado": "Cliente no encontrado.",
-    "buscarPlaceholder": "Buscar por nombre...",
+    "buscarPlaceholder": "Buscar por nombre, CPF, teléfono o comercio...",
     "dadosCliente": "Datos del Cliente",
     "nome": "Nombre",
     "telefone": "Teléfono de Cobranza",
@@ -877,6 +877,7 @@
     "painelSubtitle": "Interesados y adquisición de empresas",
     "filtro": "Filtrar por estado",
     "filtroTodos": "Todos",
+    "buscarPlaceholder": "Buscar por nombre, empresa, correo o teléfono...",
     "status": {
       "NOVO": "Nuevo",
       "EMAIL_CONFIRMADO": "Correo confirmado",

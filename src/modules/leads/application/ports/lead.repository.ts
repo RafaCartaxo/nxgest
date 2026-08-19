@@ -10,6 +10,7 @@ export interface CriarLeadInput {
 
 export interface ListLeadsParams {
   status?: string
+  q?: string
   page: number
   limit: number
 }
