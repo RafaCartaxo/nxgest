@@ -36,8 +36,6 @@ updates:
       # @types/* (isentas de update-types) — major exige migração deliberada:
       - dependency-name: "@types/bcryptjs"
         versions: [">=3"]
-      - dependency-name: "@types/better-sqlite3"
-        versions: [">=8"]
       - dependency-name: "@types/cors"
         versions: [">=3"]
       - dependency-name: "@types/express"

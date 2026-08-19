@@ -7,7 +7,7 @@ Sistema de gestão de cobranças em campo.
 
 ## Stack
 
-**Backend:** Node.js + TypeScript + Express + SQLite (better-sqlite3 + Drizzle ORM)
+**Backend:** Node.js + TypeScript + Express + **PostgreSQL** (pg + Drizzle ORM)
 **Frontend:** React + TypeScript + Vite + TailwindCSS + React Query + React Hook Form
 
 ## Estrutura
@@ -34,7 +34,7 @@ cd nxgest
 npm install
 ```
 
-O banco de dados SQLite (`gestao.db`) é criado automaticamente na primeira execução — não requer configuração.
+> **Banco de dados:** hoje o único banco é o **PostgreSQL** (migração SQLite→PG concluída no PLAN-070). A aplicação exige um PostgreSQL acessível via `DATABASE_URL` (default local: `postgres://nxgest:nxgest-dev@localhost:5433/nxgest`).
 
 ## Configuração
 
@@ -48,7 +48,7 @@ cp .env.example .env
 |----------|--------|-----------|
 | `NODE_ENV` | `development` | Ambiente (`development` ou `production`) |
 | `PORT` | `3000` | Porta do servidor backend |
-| `DB_PATH` | `gestao.db` | Caminho do banco SQLite |
+| `DATABASE_URL` | `postgres://nxgest:nxgest-dev@localhost:5433/nxgest` | Conexão do PostgreSQL |
 
 ## Rodando
 

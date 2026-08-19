@@ -21,7 +21,7 @@ O **NX Gest** é um sistema de **gestão de cobranças em campo**: operadores vi
 
 | Camada | Tecnologia |
 |---|---|
-| Backend | Node.js + TypeScript + Express · SQLite (better-sqlite3) + Drizzle ORM · Zod |
+| Backend | Node.js + TypeScript + Express · **PostgreSQL** (pg) + Drizzle ORM · Zod |
 | Frontend | React + TypeScript + Vite + TailwindCSS + React Query + React Hook Form · i18n (pt/en/es) |
 | Autenticação | JWT (jsonwebtoken) + bcryptjs + express-rate-limit |
 | Testes | Vitest + Testing Library (RTL/jsdom) + `scripts/smoke-api.mjs` |
@@ -36,9 +36,9 @@ O **NX Gest** é um sistema de **gestão de cobranças em campo**: operadores vi
 
 | Ambiente | URL | Dados | Deploy |
 |---|---|---|---|
-| Desenvolvimento | `http://localhost:3000` (API) + Vite (HMR) | SQLite local `gestao.db` | `npm run dev` |
-| **Homologação (staging)** | `https://nxgestao.duckdns.org` | SQLite isolado + **seed fake** (`teste123!`) | **Automático** no merge à main |
-| **Produção** | `https://nxgest.com.br` | SQLite do volume prod (dados reais) | Automático via CD (gate: staging saudável) + manual (`workflow_dispatch`) |
+| Desenvolvimento | `http://localhost:3000` (API) + Vite (HMR) | PostgreSQL local `localhost:5433` | `npm run dev` |
+| **Homologação (staging)** | `https://nxgestao.duckdns.org` | PostgreSQL isolado + **seed fake** (`teste123!`) | **Automático** no merge à main |
+| **Produção** | `https://nxgest.com.br` | PostgreSQL do volume prod (dados reais) | Automático via CD (gate: staging saudável) + manual (`workflow_dispatch`) |
 
 ---
 

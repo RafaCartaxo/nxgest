@@ -36,13 +36,15 @@ Esta base alimenta diretamente a **collection Postman** (`api-collection.json`):
 Os cenários desta base são executados por `scripts/smoke-api.mjs` (`npm run smoke:api`) contra uma **instância isolada** (não usar o dev/3001):
 
 ```bash
-# 1) instância isolada (tabelas criadas no boot, seed aplicado depois)
-rm -f /tmp/nxgest-smoke.db*
-DB_PATH=/tmp/nxgest-smoke.db PORT=3002 npx tsx src/main.ts &   # cria tabelas
-# parar, então:
-DB_PATH=/tmp/nxgest-smoke.db node scripts/seed-demo.mjs        # seed (senha teste123!)
-# subir de novo com limite de login ampliado (o smoke faz ~12 logins e ~30 ativações):
-DB_PATH=/tmp/nxgest-smoke.db PORT=3002 LOGIN_RATE_LIMIT_MAX=1000 PUBLICO_RATE_LIMIT_MAX=1000 npx tsx src/main.ts &
+# 1) instância isolada (PostgreSQL próprio — nunca o banco de desenvolvimento)
+# Recomendado: usar o orquestrador (recria DB, schema, seed, sobe e roda tudo):
+#   source ~/.nvm/nvm.sh && nvm use && npm run smoke:local
+# Manual (equivalente ao CI):
+export DATABASE_URL=postgres://nxgest:nxgest-dev@localhost:5433/nxgest_smoke
+docker exec nxgest-pg-dev psql -U nxgest -d nxgest -c "DROP DATABASE IF EXISTS nxgest_smoke WITH (FORCE); CREATE DATABASE nxgest_smoke;"
+npx tsx scripts/create-schema.mjs   # schema sem boot (precisa tsx)
+node scripts/seed-demo.mjs          # seed (senha teste123!)
+PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 PUBLICO_RATE_LIMIT_MAX=100000 LEADS_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
 
 # 2) rodar
 node scripts/smoke-api.mjs --baseUrl http://localhost:3002       # ou npm run smoke:api
