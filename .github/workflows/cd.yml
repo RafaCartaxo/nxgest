@@ -21,15 +21,15 @@ concurrency:
 
 jobs:
   # Gate de promoção: produção só recebe código que passou CI + staging.
-  # - Automático: dispara quando o workflow CI (que roda test+smoke+deploy-staging)
-  #   termina com sucesso no push à main.
+  # - Automático: dispara quando o workflow CI (que roda Qualidade + Smoke +
+  #   Migração + Deploy em homologação) termina com sucesso no push à main.
   # - Manual: workflow_dispatch com input ref.
   validate:
-    name: valida CI + staging
+    name: Valida CI + staging (gate de promoção)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Garante que o CI do push passou
+      - name: Gate — CI do push passou
         if: github.event_name == 'workflow_run'
         run: |
           test "${{ github.event.workflow_run.conclusion }}" = "success" || {
@@ -38,7 +38,8 @@ jobs:
           }
           echo "==> CI verde no commit ${{ github.event.workflow_run.head_sha }}"
 
-      - uses: actions/checkout@v7
+      - name: Prepara o código do repositório (ref alvo)
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}
 
@@ -49,21 +50,22 @@ jobs:
           npx tsc --noEmit
           npm test
 
-      - name: Staging saudável (gate de promoção)
+      - name: Gate — staging saudável (health OK)
         run: |
           curl -fsS https://nxgestao.duckdns.org/api/health
 
   deploy-prod:
-    name: deploy-prod (nxgest.com.br)
+    name: Deploy em produção (nxgest.com.br)
     needs: validate
     environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - name: Prepara o código do repositório (ref alvo)
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}
-      - name: Deploy no VPS (SSH)
+      - name: Deploy no VPS (SSH) — produção
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -77,7 +79,7 @@ jobs:
             git checkout main
             git reset --hard "$REF"
             bash scripts/deploy.sh
-      - name: Health check pós-deploy
+      - name: Health check pós-deploy (produção)
         run: |
           sleep 10
           for i in 1 2 3 4 5; do
@@ -89,3 +91,17 @@ jobs:
           done
           echo "ERRO: health check de produção falhou após o deploy" >&2
           exit 1
+      - name: Resumo do deploy (job summary)
+        if: always()
+        run: |
+          {
+            echo "## Deploy em produção — ${{ github.sha }}"
+            echo ""
+            echo "**Ref:** ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}"
+            echo "**Fluxo:** CI verde → staging saudável → deploy → health check."
+            echo ""
+            echo "- [ ] CI do push passou"
+            echo "- [ ] Staging saudável (health OK)"
+            echo "- [ ] Deploy em produção executado"
+            echo "- [ ] Health check pós-deploy"
+          } >> "$GITHUB_STEP_SUMMARY"

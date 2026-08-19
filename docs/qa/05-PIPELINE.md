@@ -7,13 +7,13 @@
 ## Visão de alto nível
 
 ```text
-push/PR → [CI] tsc+build+audits+unit → smoke (274) → merge main
-                                                        ↓
-                      CI no push à main → deploy-staging (automático)
-                                                        ↓
-              [CD] validate (CI verde + staging saudável) → deploy-prod (automático)
-                                                        ↓
-                                      health check pós-deploy
+push/PR → [CI] Qualidade (tsc+build+audits+unit) → Smoke da API → merge main
+                                                               ↓
+                    CI no push à main → Deploy em homologação (automático)
+                                                               ↓
+            [CD] Valida CI + staging (gate) → Deploy em produção (automático)
+                                                               ↓
+                                             health check pós-deploy
 ```
 
 **Regra de promoção:** produção **só recebe código que passou CI e staging**.
@@ -22,13 +22,23 @@ push/PR → [CI] tsc+build+audits+unit → smoke (274) → merge main
 
 ## CI — `.github/workflows/ci.yml` (push/PR/manual)
 
-### Job `test`
-`npm ci` (workspaces) → `tsc --noEmit` → `npm run build` → `audit:ui` → `audit:styles` → `audit:modules` → `npm test` (78) → `test:coverage` (+ artifact 14 dias) → `docs:audit`.
+Jobs renomeados para leitura humana (nomes legíveis no run do GitHub):
+`Qualidade` · `Smoke da API` · `Migração de schema` · `Deploy em homologação`.
 
-### Job `smoke`
-`schema isolado` → `seed-demo` → **uma** instância (`JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000`) → `smoke-api` (274/274).
+### Job `Qualidade`
+`npm ci` → `tsc --noEmit` → `npm run build` → `check-dist` → `audit:ui` → `audit:styles` → `audit:modules` → `npm test` → `test:coverage` (+ artifact 14 dias) → `docs:audit`.
 
-### Job `deploy-staging` (push→main, `needs: [test, smoke]`)
+> **Legibilidade (logs):** cada step tem nome descritivo em português, `shell: bash`
+> (habilita `pipefail` — falha real quebra o job, sem falso verde) e o job termina
+> com um **resumo em markdown** (o que cada checagem valida + o que fazer se falhar).
+
+### Job `Smoke da API`
+`schema isolado` → `seed-demo` → **uma** instância (`JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000`) → `smoke-api` (274/274, resumo por seção).
+
+### Job `Migração de schema`
+`schema do modelo` → `migrate-modelo` (idempotente) → `valida-modelo` (invariantes).
+
+### Job `Deploy em homologação` (push→main, `needs: [Qualidade, Smoke da API]`)
 SSH (secrets `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY`) → `scripts/deploy-staging.sh` → staging em `nxgestao.duckdns.org`.
 
 ### Hardening
@@ -83,7 +93,7 @@ SSH (secrets `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY`) → `scripts/deploy-staging.sh
 
 ## Branch protection (main)
 
-- Checks obrigatórios: `tsc · build · audits · unit/UI` + `smoke-api (DB isolado)`.
+- Checks obrigatórios: `Qualidade` + `Smoke da API` (nomes legíveis — atualizado com a melhoria de logs).
 - Exige **1 review de PR** para merge.
 
 ---
