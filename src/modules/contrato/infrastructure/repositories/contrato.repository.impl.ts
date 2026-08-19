@@ -1,6 +1,6 @@
 import { eq, and, isNull, sql, count, inArray } from "drizzle-orm"
 import type { PgDatabase } from "drizzle-orm/pg-core"
-import { db, rawQuery, contratos, parcelas, movimentacoesFinanceiras, caixaConfig, pagamentos, clientes } from "../../../../database.js"
+import { db, contratos, parcelas, movimentacoesFinanceiras, caixaConfig, pagamentos, clientes } from "../../../../database.js"
 import type { Contrato, Parcela, ContratoComParcelas, MovimentacaoFinanceira, CaixaConfig } from "../../domain/contrato.entity.js"
 import type { IContratoRepository, FindAllParams, FindAllResult, ParcelaUpdateLote } from "../../application/ports/contrato.repository.js"
 import type { IPagamentoRepository } from "../../../pagamento/application/ports/pagamento.repository.js"
@@ -300,17 +300,25 @@ export class ContratoRepository implements IContratoRepository {
   }
 
   async getSaldoAtual(userId: string): Promise<number> {
+    // PLAN-083 Fase 7.1: a leitura de saldo roda no MESMO client da transação (this.drizzle.execute),
+    // não no pool global (rawQuery). `getSaldoAtual` é chamado dentro de Create/UpdateContratoUseCase
+    // via `repo` ligado à tx — antes o check de saldo lia em outra conexão, fora da transação
+    // (sem read-your-writes nem locks do mesmo tx). Sem tx (repo default), `this.drizzle` é o `db`.
     const caixa = await this.getCaixaConfig(userId)
     const base = caixa?.caixaBase ?? 0
-    const { rows: entradas } = await rawQuery<{ total: number }>(
-      "SELECT COALESCE(SUM(valor), 0) AS total FROM \"movimentacoes_financeiras\" WHERE tipo = 'entrada' AND \"user_id\" = ?",
-      [userId],
-    )
-    const { rows: saidas } = await rawQuery<{ total: number }>(
-      "SELECT COALESCE(SUM(valor), 0) AS total FROM \"movimentacoes_financeiras\" WHERE tipo = 'saida' AND \"user_id\" = ?",
-      [userId],
-    )
-    return base + (Number(entradas[0]?.total) || 0) - (Number(saidas[0]?.total) || 0)
+    const [entradas, saidas] = await Promise.all([
+      this.drizzle.execute<{ total: string }>(sql`
+        SELECT COALESCE(SUM(valor), 0) AS total
+        FROM "movimentacoes_financeiras"
+        WHERE tipo = 'entrada' AND "user_id" = ${userId}
+      `),
+      this.drizzle.execute<{ total: string }>(sql`
+        SELECT COALESCE(SUM(valor), 0) AS total
+        FROM "movimentacoes_financeiras"
+        WHERE tipo = 'saida' AND "user_id" = ${userId}
+      `),
+    ])
+    return base + (Number(entradas.rows[0]?.total) || 0) - (Number(saidas.rows[0]?.total) || 0)
   }
 
   async getCaixaConfig(userId: string): Promise<CaixaConfig | null> {

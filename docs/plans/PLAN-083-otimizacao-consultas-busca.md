@@ -1,6 +1,6 @@
 # PLAN-083 — Otimização de consultas, round trips e busca
 
-**Status:** 🔵 Em execução (19/08) — Fases 1–6 concluídas e validadas (smoke 274/274 + CTs novos); Fases 7–9 pendentes
+**Status:** 🔵 Em execução (19/08) — **backend concluído (Fases 1–7)** validadas (smoke 278/278); restam Fases 8 (frontend) e 9 (verificação/re-medição)
 
 **Versão:** 1.0
 
@@ -152,7 +152,15 @@ Detalhe de implementação: o `UPDATE ... FROM (VALUES)` roda via `this.drizzle.
 
 ## Fase 7 — Consistência transacional
 
-- **7.1 `rawQuery` fora da transação:** `ContratoRepository.getSaldoAtual` usa `rawQuery` (pool direto) e é chamado **dentro** de `CreateContratoUseCase.repository.transaction` — a leitura de saldo que valida `SaldoInsuficienteError` roda em outra conexão, fora da transação. Corrigir com variante transacional (`tx` ligado à conexão).
+### Executado em 19/08 (validado em runtime + smoke 278/278 + tsc + 154 testes + docs:audit)
+
+| Item | Antes | Depois | Como |
+|---|---|---|---|
+| **7.1 `getSaldoAtual` transacional** | leitura de saldo via `rawQuery` (pool global) mesmo dentro da tx do `CreateContrato`/`UpdateContrato` — check de `SaldoInsuficienteError` rodava em outra conexão, fora da transação | leitura no mesmo client da tx | `rawQuery` → `this.drizzle.execute(sql...)` (padrão da Fase 3 — usa o client da tx quando dentro, o `db` fora). Mesmas 2 queries, mesmo shape; só a conexão mudou. Remove o footgun de read-your-writes/locks e reduz 2 conexões→1 por request. |
+
+### Restante da Fase 7 (pendente)
+
+- Nada — Fase 7 concluída. **Com a Fase 7, toda a parte de backend do plano está fechada (Fases 1–7).**
 
 ## Fase 8 — Frontend (parceria — não re-golpear o backend otimizado)
 
