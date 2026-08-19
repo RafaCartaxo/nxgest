@@ -908,6 +908,11 @@
     "descartarHint": "The lead will be marked as discarded and personal data will be anonymized (LGPD).",
     "motivoObrigatorio": "Enter the reason for discarding.",
     "descartarSucesso": "Lead discarded.",
-    "emptyMessage": "No leads with this filter."
+    "emptyMessage": "No leads with this filter.",
+    "paginacao": {
+      "anterior": "Previous",
+      "proximo": "Next",
+      "de": "of"
+    }
   }
 }

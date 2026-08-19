@@ -8,11 +8,27 @@ export interface CriarLeadInput {
   origem?: string
 }
 
+export interface ListLeadsParams {
+  status?: string
+  page: number
+  limit: number
+}
+
+export interface ListLeadsResult {
+  data: Lead[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    pages: number
+  }
+}
+
 export interface ILeadRepository {
   create(input: CriarLeadInput): Promise<Lead>
   findByEmail(email: string): Promise<Lead | null>
   findById(id: string): Promise<Lead | null>
-  list(status?: string): Promise<Lead[]>
+  list(params: ListLeadsParams): Promise<ListLeadsResult>
   updateStatus(id: string, status: Lead["status"]): Promise<Lead | null>
   marcarConfirmado(id: string): Promise<Lead | null>
   marcarConvertido(id: string, data: { empresaId: string; por: string }): Promise<Lead | null>

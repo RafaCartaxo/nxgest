@@ -6,6 +6,7 @@ dist/
 *.db.backup-*
 *.log
 *.err
+.smoke.pid
 .env
 .env.staging
 NUL

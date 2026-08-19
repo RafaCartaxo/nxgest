@@ -1,6 +1,6 @@
 # PLAN-083 — Otimização de consultas, round trips e busca
 
-**Status:** 🔵 Em execução (18/08) — plano aprovado; Fase 0 baseline medido
+**Status:** 🔵 Em execução (19/08) — Fases 1–4 concluídas e validadas (smoke 274/274); Fases 5–9 pendentes
 
 **Versão:** 1.0
 
@@ -93,7 +93,7 @@ Detalhe de implementação (2.1): os JOINs **não** filtram `deleted_at` (espelh
 
 ## Fase 3 — Bulk operations
 
-### Executado em 19/08 (validado em runtime + smoke 317/317)
+### Executado em 19/08 (validado em runtime + smoke 274/274)
 
 | Item | Antes | Depois | Como |
 |---|---|---|---|
@@ -105,10 +105,18 @@ Detalhe de implementação: o `UPDATE ... FROM (VALUES)` roda via `this.drizzle.
 
 ## Fase 4 — Dados retornados (como as listas "retornam")
 
-- **4.1** `usuarios` sem `senha_hash` (e demais colunas não usadas) nos SELECTs de listagem/operador (`db.select()` explícito de colunas).
-- **4.2** `anexos.listByCliente` sem `caminho` (path físico não deve trafegar).
-- **4.3** `leads.list` com `LIMIT`/paginação (hoje retorna a tabela inteira, sem limite).
-- **4.4** `COUNT(*)` separado → `COUNT(*) OVER()` nas queries paginadas (movimentações, auditoria) — 1 query a menos por listagem.
+### Executado em 19/08 (validado em runtime + smoke 274/274 + tsc + 154 testes + docs:audit)
+
+| Item | Antes | Depois | Como |
+|---|---|---|---|
+| **4.1 `usuarios` sem `senha_hash`** | `db.select()` traz o hash em toda listagem/operador | hash **nunca trafega** | Projeção `colunasUsuarioPublicas` (colunas públicas explícitas) + `ativo` derivado no PG (`CASE WHEN senha_hash IS NOT NULL THEN true ELSE false END`) em `findAllOperadores`/`findById`/`findByEmail`/`getOperadorContexto`/`listEquipe` (admin). `auth.login` preserva o hash (necessário pra verificação). |
+| **4.2 `anexos.listByCliente` sem `caminho`** | `db.select()` trazia o path físico | path não sai da API | Projeção explícita (id/nome/tipo/mime/tamanho/createdAt); `findById` (download) mantém o select completo. |
+| **4.3 `leads.list` paginado** | retornava a tabela inteira, sem limite | `{ data, pagination }` com `LIMIT`/`OFFSET` | 1 query com `COUNT(*) OVER()`; controller parseia `page` (default 1) / `limit` (default 50, máx 100); frontend com botões Anterior/Próximo (`leads.service.ts` + `LeadsAdminPage`) + i18n pt/en/es. |
+| **4.4 `COUNT(*)` → `COUNT(*) OVER()`** | count separado por listagem (2 queries) | 1 query por listagem | Fusão do total no SELECT paginado de `listMovimentacoes` e `listAuditoriaCaixa` (caixa) — 1 round trip a menos em cada. |
+
+### Restante da Fase 4 (pendente)
+
+- Nada — Fase 4 concluída.
 
 ## Fase 5 — Índices
 

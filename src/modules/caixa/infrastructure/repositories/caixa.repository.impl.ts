@@ -56,10 +56,11 @@ export class CaixaRepository implements ICaixaRepository {
     const limit = params.limit ?? 20
     const offset = (page - 1) * limit
 
-    const { rows: data } = await rawQuery<{ id: string; operador_id: string; admin_id: string; valor_anterior: number; valor_novo: number; motivo: string; data: string; created_at: string; admin_nome: string | null }>(`
+    const { rows: data } = await rawQuery<{ id: string; operador_id: string; admin_id: string; valor_anterior: number; valor_novo: number; motivo: string; data: string; created_at: string; admin_nome: string | null; total: number }>(`
       SELECT
         a.id, a."operador_id", a."admin_id", a."valor_anterior", a."valor_novo", a.motivo, a.data, a."created_at",
-        u.nome AS "admin_nome"
+        u.nome AS "admin_nome",
+        COUNT(*) OVER()::int AS total
       FROM auditoria_caixa a
       LEFT JOIN usuarios u ON u.id = a."admin_id"
       WHERE a."operador_id" = ?
@@ -67,11 +68,7 @@ export class CaixaRepository implements ICaixaRepository {
       LIMIT ? OFFSET ?
     `, [operadorId, limit, offset])
 
-    const { rows: countRows } = await rawQuery<{ total: number }>(`
-      SELECT COUNT(*) AS total FROM auditoria_caixa a WHERE a."operador_id" = ?
-    `, [operadorId])
-
-    const total = Number(countRows[0]?.total ?? 0)
+    const total = Number(data[0]?.total ?? 0)
     return {
       data: data.map((r) => ({
         id: r.id,
@@ -137,11 +134,12 @@ export class CaixaRepository implements ICaixaRepository {
     // subqueries correlacionadas por linha — ~80 scans/página). COALESCE(cl_pg.nome, cl.nome)
     // reproduz o fallback pagamento→contrato da origem 'Cancelamento'. Sem filtro de
     // deleted_at nos JOINs, espelhando as subqueries originais.
-    const { rows: data } = await rawQuery<{ id: string; tipo: string; valor: number; origem: string; origem_id: string; descricao: string | null; data: string; created_at: string; cliente_nome: string | null; categoria: string | null }>(`
+    const { rows: data } = await rawQuery<{ id: string; tipo: string; valor: number; origem: string; origem_id: string; descricao: string | null; data: string; created_at: string; cliente_nome: string | null; categoria: string | null; total: number }>(`
       SELECT
         m.id, m.tipo, m.valor, m.origem, m."origem_id", m.descricao, m.data, m."created_at",
         COALESCE(cl_pg.nome, cl.nome) AS "cliente_nome",
-        g.categoria AS "categoria"
+        g.categoria AS "categoria",
+        COUNT(*) OVER()::int AS total
       FROM "movimentacoes_financeiras" m
       LEFT JOIN pagamentos pg ON pg.id = m."origem_id" AND m.origem IN ('Pagamento', 'Cancelamento')
       LEFT JOIN contratos ct_pg ON ct_pg.id = pg."contrato_id"
@@ -154,11 +152,7 @@ export class CaixaRepository implements ICaixaRepository {
       LIMIT ? OFFSET ?
     `, [...bindings, limit, offset])
 
-    const { rows: countRows } = await rawQuery<{ total: number }>(`
-      SELECT COUNT(*) AS total FROM "movimentacoes_financeiras" m WHERE ${where}
-    `, bindings)
-
-    const total = Number(countRows[0]?.total ?? 0)
+    const total = Number(data[0]?.total ?? 0)
 
     return {
       data: data.map((row) => ({

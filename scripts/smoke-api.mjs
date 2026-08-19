@@ -2345,13 +2345,18 @@ async function main() {
     if (r.data.code !== "TOKEN_EXPIRED") throw new Error(`code=${r.data.code}`)
   })
 
-  await t("LD-09", "super lista leads (200) com filtro por status", async () => {
+  await t("LD-09", "super lista leads (200) com filtro por status + paginação", async () => {
     const r = await req("GET", "/api/admin/leads", { token: superToken })
     expect(r, 200, "listar leads")
-    if (!r.data.some((l) => l.id === leadId)) throw new Error("lead não na lista")
+    if (!r.data.data.some((l) => l.id === leadId)) throw new Error("lead não na lista")
+    if (!r.data.pagination || typeof r.data.pagination.total !== "number") throw new Error("paginação ausente")
     const f = await req("GET", "/api/admin/leads?status=EMAIL_CONFIRMADO", { token: superToken })
     expect(f, 200, "filtro status")
-    if (!f.data.every((l) => l.status === "EMAIL_CONFIRMADO")) throw new Error("filtro quebrado")
+    if (!f.data.data.every((l) => l.status === "EMAIL_CONFIRMADO")) throw new Error("filtro quebrado")
+    const p2 = await req("GET", "/api/admin/leads?page=2&limit=1", { token: superToken })
+    expect(p2, 200, "paginação page=2 limit=1")
+    if (p2.data.data.length > 1) throw new Error("limit ignorado")
+    if (p2.data.pagination.page !== 2) throw new Error("page ignorado")
   })
 
   await t("LD-13", "não-super em /admin/leads → 403", async () => {

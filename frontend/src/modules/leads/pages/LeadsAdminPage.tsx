@@ -41,6 +41,8 @@ export function LeadsAdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filtro, setFiltro] = useState<string>(TODOS)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [descartarTarget, setDescartarTarget] = useState<Lead | null>(null)
   const [converterTarget, setConverterTarget] = useState<Lead | null>(null)
   const [motivo, setMotivo] = useState("")
@@ -50,13 +52,15 @@ export function LeadsAdminPage() {
     setLoading(true)
     setError(null)
     try {
-      setLeads(await listarLeads(filtro === TODOS ? undefined : filtro))
+      const result = await listarLeads(filtro === TODOS ? undefined : filtro, page)
+      setLeads(result.data)
+      setTotalPages(result.pagination.pages)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("lead.erroCarregar"))
     } finally {
       setLoading(false)
     }
-  }, [filtro, t])
+  }, [filtro, page, t])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -105,7 +109,7 @@ export function LeadsAdminPage() {
     }
   }
 
-  const filtered = leads.filter((l) => l.status === filtro || filtro === TODOS)
+  const filtered = leads
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">
@@ -115,7 +119,7 @@ export function LeadsAdminPage() {
         <FieldSelect
           label={t("lead.filtro")}
           value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
+          onChange={(e) => { setFiltro(e.target.value); setPage(1) }}
           options={[
             { value: TODOS, label: t("lead.filtroTodos") },
             { value: "NOVO", label: t("lead.status.NOVO") },
@@ -184,6 +188,19 @@ export function LeadsAdminPage() {
             </Card.Root>
           ))}
         </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-1">
+            <Button type="button" variant="ghost" onClick={() => setPage(page - 1)} disabled={page <= 1}>
+              {t("lead.paginacao.anterior")}
+            </Button>
+            <span className="text-sm text-text-secondary">
+              {page} {t("lead.paginacao.de")} {totalPages}
+            </span>
+            <Button type="button" variant="ghost" onClick={() => setPage(page + 1)} disabled={page >= totalPages}>
+              {t("lead.paginacao.proximo")}
+            </Button>
+          </div>
+        )}
       </EstadoTela>
 
       <ConfirmModal

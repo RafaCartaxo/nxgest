@@ -2573,18 +2573,21 @@ Reenvia o e-mail de confirmação (PLAN-064, LD-07). **Resposta sempre 200 gené
 
 # GET /api/admin/leads
 
-Lista leads comerciais com filtro por status (PLAN-064).
+Lista leads comerciais com filtro por status e paginação (PLAN-064, Fase 4.3 do PLAN-083).
 
 **Auth:** Super Admin (não-super → 403)
 
 ## Query
 
-`?status=NOVO` (opcional: `NOVO | EMAIL_CONFIRMADO | EM_ONBOARDING | CONVERTIDO | DESCARTADO`)
+`?status=NOVO` (opcional: `NOVO | EMAIL_CONFIRMADO | EM_ONBOARDING | CONVERTIDO | DESCARTADO`) · `?page=1` (default 1) · `?limit=50` (default 50, máx 100)
 
 ## Response 200
 
 ```json
-[ { "id": "...", "nomeResponsavel": "...", "empresa": "...", "email": "...", "telefone": "...", "origem": "Site", "status": "NOVO", "createdAt": "..." } ]
+{
+  "data": [ { "id": "...", "nomeResponsavel": "...", "empresa": "...", "email": "...", "telefone": "...", "origem": "Site", "status": "NOVO", "createdAt": "..." } ],
+  "pagination": { "page": 1, "limit": 50, "total": 12, "pages": 1 }
+}
 ```
 
 ---

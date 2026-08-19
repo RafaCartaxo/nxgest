@@ -1,8 +1,8 @@
-import { eq, and } from "drizzle-orm"
+import { eq, and, sql } from "drizzle-orm"
 import { v4 as uuid } from "uuid"
 import { db, leads } from "../../../../database.js"
 import type { Lead, LeadStatus } from "../../domain/lead.entity.js"
-import type { CriarLeadInput, ILeadRepository } from "../../application/ports/lead.repository.js"
+import type { CriarLeadInput, ILeadRepository, ListLeadsParams, ListLeadsResult } from "../../application/ports/lead.repository.js"
 
 const toLead = (r: typeof leads.$inferSelect): Lead => ({
   id: r.id,
@@ -56,11 +56,29 @@ export class LeadRepository implements ILeadRepository {
     return toLead(rows[0])
   }
 
-  async list(status?: string): Promise<Lead[]> {
-    const rows = status
-      ? await db.select().from(leads).where(and(eq(leads.status, status as LeadStatus))).orderBy(leads.createdAt)
-      : await db.select().from(leads).orderBy(leads.createdAt)
-    return rows.map(toLead)
+  async list(params: ListLeadsParams): Promise<ListLeadsResult> {
+    const offset = (params.page - 1) * params.limit
+    const where = params.status ? and(eq(leads.status, params.status as LeadStatus)) : undefined
+    const rows = await db
+      .select({
+        lead: leads,
+        total: sql<number>`COUNT(*) OVER()`,
+      })
+      .from(leads)
+      .where(where)
+      .orderBy(leads.createdAt)
+      .limit(params.limit)
+      .offset(offset)
+    const total = rows.length > 0 ? Number(rows[0].total) : 0
+    return {
+      data: rows.map((r) => toLead(r.lead)),
+      pagination: {
+        page: params.page,
+        limit: params.limit,
+        total,
+        pages: Math.ceil(total / params.limit),
+      },
+    }
   }
 
   async updateStatus(id: string, status: Lead["status"]): Promise<Lead | null> {

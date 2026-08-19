@@ -37,9 +37,15 @@ export async function reenviarConfirmacao(email: string): Promise<{ ok: boolean 
   return apiRequest<{ ok: boolean }>("POST", "/leads/reconfirmar", { email })
 }
 
-export async function listarLeads(status?: string): Promise<Lead[]> {
-  const params = status ? `?status=${encodeURIComponent(status)}` : ""
-  return apiRequest<Lead[]>("GET", `/admin/leads${params}`)
+export interface ListarLeadsResult {
+  data: Lead[]
+  pagination: { page: number; limit: number; total: number; pages: number }
+}
+
+export async function listarLeads(status?: string, page = 1, limit = 50): Promise<ListarLeadsResult> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (status) params.set("status", status)
+  return apiRequest<ListarLeadsResult>("GET", `/admin/leads?${params}`)
 }
 
 export async function iniciarOnboarding(id: string): Promise<Lead> {

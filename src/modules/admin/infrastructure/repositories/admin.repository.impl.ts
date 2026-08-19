@@ -15,7 +15,7 @@ type LinhaUsuario = {
   id: string
   nome: string
   email: string
-  senhaHash: string | null
+  ativo: boolean
   role: string
   createdAt: string
   deletedAt: string | null
@@ -27,7 +27,25 @@ type LinhaUsuario = {
   suspensoEm: string | null
 }
 
-/** Mapeia a linha completa (com senhaHash) → OperadorRow público (strip + status). */
+/** PLAN-083 Fase 4.1: projeção explícita de colunas públicas — o hash NUNCA trafega;
+ *  `ativo` é derivado no PG (`senha_hash IS NOT NULL`) sem expor o valor. */
+const colunasUsuarioPublicas = {
+  id: usuarios.id,
+  nome: usuarios.nome,
+  email: usuarios.email,
+  role: usuarios.role,
+  createdAt: usuarios.createdAt,
+  deletedAt: usuarios.deletedAt,
+  empresaId: usuarios.empresaId,
+  chefeId: usuarios.chefeId,
+  foto: usuarios.foto,
+  telefone: usuarios.telefone,
+  emailPendente: usuarios.emailPendente,
+  suspensoEm: usuarios.suspensoEm,
+  ativo: sql<boolean>`CASE WHEN ${usuarios.senhaHash} IS NOT NULL THEN true ELSE false END`,
+}
+
+/** Mapeia a linha pública (sem hash) → OperadorRow público (strip + status). */
 function toOperadorRow(
   row: LinhaUsuario,
   totalClientes = 0,
@@ -47,7 +65,7 @@ function toOperadorRow(
     telefone: row.telefone ?? null,
     emailPendente: row.emailPendente ?? null,
     suspensoEm: row.suspensoEm ?? null,
-    status: row.senhaHash ? "ativo" : "convidado",
+    status: row.ativo ? "ativo" : "convidado",
     conviteStatus,
     totalClientes,
     contratosAtivos,
@@ -97,7 +115,7 @@ export class AdminRepository implements IAdminRepository {
     if (scopeUserIds && scopeUserIds.length > 0) {
       conditions.push(inArray(usuarios.id, scopeUserIds))
     }
-    const rows = await db.select().from(usuarios).where(and(...conditions)).orderBy(usuarios.createdAt)
+    const rows = await db.select(colunasUsuarioPublicas).from(usuarios).where(and(...conditions)).orderBy(usuarios.createdAt)
 
     const [counts, conviteStatus] = await Promise.all([
       this.countsPorUsuario(rows.map((r) => r.id)),
@@ -117,7 +135,7 @@ export class AdminRepository implements IAdminRepository {
     if (scopeUserIds && scopeUserIds.length > 0) {
       conditions.push(inArray(usuarios.id, scopeUserIds))
     }
-    const rows = await db.select().from(usuarios).where(and(...conditions))
+    const rows = await db.select(colunasUsuarioPublicas).from(usuarios).where(and(...conditions))
     if (rows.length === 0) return null
     const row = rows[0]
     const [clientesCount, contratosCount, conviteStatus] = await Promise.all([
@@ -138,7 +156,13 @@ export class AdminRepository implements IAdminRepository {
     if (scopeUserIds && scopeUserIds.length > 0) {
       conditions.push(inArray(usuarios.id, scopeUserIds))
     }
-    const rows = await db.select().from(usuarios).where(and(...conditions))
+    const rows = await db.select({
+      id: usuarios.id,
+      email: usuarios.email,
+      role: usuarios.role,
+      emailPendente: usuarios.emailPendente,
+      ativo: sql<boolean>`CASE WHEN ${usuarios.senhaHash} IS NOT NULL THEN true ELSE false END`,
+    }).from(usuarios).where(and(...conditions))
     if (rows.length === 0) return null
     const row = rows[0]
     return {
@@ -146,12 +170,12 @@ export class AdminRepository implements IAdminRepository {
       email: row.email,
       role: row.role as OperadorRow["role"],
       emailPendente: row.emailPendente ?? null,
-      status: row.senhaHash ? "ativo" : "convidado",
+      status: row.ativo ? "ativo" : "convidado",
     }
   }
 
   async findByEmail(email: string): Promise<OperadorRow | null> {
-    const rows = await db.select().from(usuarios).where(sql`lower("email") = lower(${email})`)
+    const rows = await db.select(colunasUsuarioPublicas).from(usuarios).where(sql`lower("email") = lower(${email})`)
     if (rows.length === 0) return null
     const row = rows[0]
     const [clientesCount, contratosCount] = await Promise.all([
@@ -343,7 +367,7 @@ export class AdminRepository implements IAdminRepository {
     if (scopeUserIds && scopeUserIds.length > 0) {
       conditions.push(inArray(usuarios.id, scopeUserIds))
     }
-    const rows = await db.select().from(usuarios).where(and(...conditions))
+    const rows = await db.select(colunasUsuarioPublicas).from(usuarios).where(and(...conditions))
 
     // recebidoHoje por usuário (uma query agrupada)
     const userIds = rows.map((r) => r.id).filter((id): id is string => id !== null)

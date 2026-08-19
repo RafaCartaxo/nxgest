@@ -143,7 +143,9 @@ export class LeadController {
     if (!this.soSuper(req, res)) return
     try {
       const status = typeof req.query.status === "string" ? req.query.status : undefined
-      res.json(await this.listarLeads.execute(status))
+      const page = Math.max(1, Number(req.query.page) || 1)
+      const limit = Math.min(Math.max(1, Number(req.query.limit) || 50), 100)
+      res.json(await this.listarLeads.execute({ status, page, limit }))
     } catch (err) {
       console.error("Erro ao listar leads:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno do servidor." })

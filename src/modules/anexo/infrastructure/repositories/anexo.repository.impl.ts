@@ -15,7 +15,19 @@ export interface CriarAnexoInput {
 
 export class AnexoRepository {
   async listByCliente(clienteId: string): Promise<AnexoDto[]> {
-    const rows = await db.select().from(anexos).where(eq(anexos.clienteId, clienteId)).orderBy(anexos.createdAt)
+    // PLAN-083 Fase 4.2: só o que a listagem consome — `caminho`/`criado_por` não saem daqui.
+    const rows = await db
+      .select({
+        id: anexos.id,
+        nomeOriginal: anexos.nomeOriginal,
+        tipo: anexos.tipo,
+        mime: anexos.mime,
+        tamanho: anexos.tamanho,
+        createdAt: anexos.createdAt,
+      })
+      .from(anexos)
+      .where(eq(anexos.clienteId, clienteId))
+      .orderBy(anexos.createdAt)
     return rows.map((r) => ({
       id: r.id,
       nome: r.nomeOriginal,

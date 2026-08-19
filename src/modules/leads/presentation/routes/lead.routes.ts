@@ -2,6 +2,7 @@ import { Router } from "express"
 import rateLimit, { ipKeyGenerator } from "express-rate-limit"
 import { LeadController } from "../controllers/lead.controller.js"
 import { clientIp } from "../../../../shared/utils/clientIp.js"
+import { envNumber } from "../../../../shared/utils/env.js"
 
 const router = Router()
 const controller = new LeadController()
@@ -11,7 +12,7 @@ const ipDe = (req: Parameters<typeof clientIp>[0]) => ipKeyGenerator(clientIp(re
 
 const criarLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: envNumber("LEADS_RATE_LIMIT_MAX", 10),
   keyGenerator: ipDe,
   standardHeaders: true,
   legacyHeaders: false,
@@ -20,7 +21,7 @@ const criarLimiter = rateLimit({
 
 const confirmarLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: envNumber("LEADS_RATE_LIMIT_MAX", 10),
   keyGenerator: ipDe,
   standardHeaders: true,
   legacyHeaders: false,
@@ -29,7 +30,7 @@ const confirmarLimiter = rateLimit({
 
 const reenviarLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 3,
+  max: envNumber("LEADS_RATE_LIMIT_MAX", 3),
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => `${ipDe(req)}-${String((req.body as { email?: string })?.email ?? "").toLowerCase()}`,

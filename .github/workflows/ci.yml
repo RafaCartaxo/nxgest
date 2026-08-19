@@ -150,7 +150,7 @@ jobs:
           node scripts/seed-demo.mjs
           echo "::endgroup::"
           echo "::group::Subir instância (porta 3002)"
-          PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 PUBLICO_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
+          PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 PUBLICO_RATE_LIMIT_MAX=100000 LEADS_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
           SERVER_PID=$!
           trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
           sleep 6

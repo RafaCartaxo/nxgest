@@ -908,6 +908,11 @@
     "descartarHint": "O lead será marcado como descartado e os dados pessoais serão anonimizados (LGPD).",
     "motivoObrigatorio": "Informe o motivo do descarte.",
     "descartarSucesso": "Lead descartado.",
-    "emptyMessage": "Nenhum lead com este filtro."
+    "emptyMessage": "Nenhum lead com este filtro.",
+    "paginacao": {
+      "anterior": "Anterior",
+      "proximo": "Próximo",
+      "de": "de"
+    }
   }
 }
