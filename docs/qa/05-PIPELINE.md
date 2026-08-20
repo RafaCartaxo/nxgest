@@ -26,7 +26,7 @@ Jobs renomeados para leitura humana (nomes legíveis no run do GitHub):
 `Qualidade` · `Smoke da API` · `Migração de schema` · `Deploy em homologação`.
 
 ### Job `Qualidade`
-`npm ci` → `tsc --noEmit` → `npm run build` → `check-dist` → `audit:ui` → `audit:styles` → `audit:modules` → `npm test` → `test:coverage` (+ artifact 14 dias) → `docs:audit`.
+`npm ci` → `tsc --noEmit` → `npm run build` → `check-dist` → `audit:ui` → `audit:styles` → `audit:modules` → `npm test` → `test:coverage` (+ artifact 14 dias) → `docs:audit` → `audit:links`.
 
 > **Legibilidade (logs):** cada step tem nome descritivo em português, `shell: bash`
 > (habilita `pipefail` — falha real quebra o job, sem falso verde) e o job termina
@@ -39,7 +39,7 @@ Jobs renomeados para leitura humana (nomes legíveis no run do GitHub):
 `schema do modelo` → `migrate-modelo` (idempotente) → `valida-modelo` (invariantes).
 
 ### Job `Deploy em homologação` (push→main, `needs: [Qualidade, Smoke da API]`)
-SSH (secrets `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY`) → `scripts/deploy-staging.sh` → staging em `nxgestao.duckdns.org`.
+SSH (secrets `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY`) → `scripts/deploy-staging.sh <SHA do CI>` → staging em `nxgestao.duckdns.org` **no commit exato validado** (fetch + reset no SHA; nunca `git pull` solto na hora do deploy).
 
 ### Hardening
 `permissions: contents: read` · `concurrency` (cancel-in-progress) · `timeout-minutes` · `workflow_dispatch`.
@@ -55,8 +55,8 @@ SSH (secrets `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY`) → `scripts/deploy-staging.sh
 
 ### Jobs
 
-1. **`validate`** — garante CI verde (no automático) ou roda gates no manual (tsc+test no ref escolhido) + **health do staging** (gate de promoção).
-2. **`deploy-prod`** — `environment: production` → SSH → `scripts/deploy.sh` (backup pré-deploy + audits) → **health check pós-deploy** de `nxgest.com.br`.
+1. **`validate`** — garante CI verde (no automático) ou roda os **gates completos no manual** (tsc · build · check-dist · audit:ui/styles/modules · test · docs:audit · audit:links no ref escolhido — smoke fica de fora: ref de rollback já passou CI quando foi pushado) + **health do staging** (gate de promoção).
+2. **`deploy-prod`** — `environment: production` → SSH → `scripts/deploy.sh` (**backup pré-deploy obrigatório** + audits) → **health check pós-deploy** de `nxgest.com.br`.
 
 ---
 

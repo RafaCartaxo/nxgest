@@ -101,7 +101,7 @@ git pull                      # puxa o novo código (senha/token via chave SSH d
 
 O `scripts/deploy.sh`:
 1. Exige `.env` presente (senão aborta)
-2. **Backup pré-deploy** — chama `/opt/scripts/backup-nxgest.sh` (snapshot do banco antes do build; se o script estiver ausente, avisa e segue). **Pós-PLAN-070 (PostgreSQL):** o script do VPS deve fazer `pg_dump -Fc` (ver seção 5.0) — o `wal_checkpoint + cp` do SQLite não se aplica mais.
+2. **Backup pré-deploy OBRIGATÓRIO** — chama `/opt/scripts/backup-nxgest.sh` (`pg_dump -Fc`, ver seção 5.0); **aborta o deploy** se o script não existir ou falhar — escape explícito apenas com `NXGEST_SKIP_BACKUP=1`.
 3. **Gates de UI** — roda `audit:ui`, `audit:styles` e `audit:modules` via `docker run node:20-slim` (o host não tem node no PATH); **aborta o deploy se qualquer gate falhar**
 4. `docker compose -f docker-compose.prod.yml build app`
 5. `docker compose -f docker-compose.prod.yml up -d`
