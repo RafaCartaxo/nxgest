@@ -43,12 +43,19 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}
 
-      - name: CI gates no ref (tsc + testes unit/UI) — apenas no manual
+      - name: CI gates no ref (mesmos do job test) — apenas no manual
         if: github.event_name == 'workflow_dispatch'
         run: |
           npm ci
           npx tsc --noEmit
+          npm run build
+          node scripts/check-dist.mjs
+          npm run audit:ui
+          npm run audit:styles
+          npm run audit:modules
           npm test
+          npm run docs:audit
+          npm run audit:links
 
       - name: Gate — staging saudável (health OK)
         run: |

@@ -73,8 +73,18 @@ set -a; source "$ENV_FILE"; set +a
 MAIL_PROVIDER=console
 export MAIL_PROVIDER
 
-# 3) Traz o código (o runner já puxou, mas garante consistência local).
-git pull --ff-only origin main 2>/dev/null || true
+# 3) Traz o código no commit exato validado pelo CI (passado como arg).
+#    Deploy do GitHub Actions: staging sobe EXATAMENTE o SHA que passou em
+#    test+smoke — nunca o que a main tiver na hora (evita SHA não validado).
+#    Deploy manual (sem arg): assume o repo já posicionado, só garante a main.
+REF="${1:-}"
+if [ -n "$REF" ]; then
+  info "Posicionando o repositório no SHA validado: ${REF}"
+  git fetch origin "$REF"
+  git reset --hard "$REF"
+else
+  git pull --ff-only origin main 2>/dev/null || true
+fi
 
 # 4) Sobe a stack (build da imagem + containers). O boot cria as tabelas
 #    e o seed básico (super/admin) — terminando em "Servidor rodando".

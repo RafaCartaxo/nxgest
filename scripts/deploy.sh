@@ -16,15 +16,20 @@ fi
 # Rede compartilhada com o staging (homologação) — o Caddy roteia os dois domínios.
 docker network create nxgestao_net 2>/dev/null || true
 
-# Backup pré-deploy: snapshot do banco antes de reconstruir (cron de 12h não é
-# suficiente — cada implementação ganha um ponto de restauração). Script vive em
-# /opt/scripts no VPS; se ausente (ex.: rodando fora do VPS), segue sem backup.
+# Backup pré-deploy OBRIGATÓRIO: snapshot do banco antes de reconstruir (cron de
+# 12h não é suficiente — cada implementação ganha um ponto de restauração).
+# Sem o script de backup o deploy FALHA, exceto com escape explícito:
+#   NXGEST_SKIP_BACKUP=1 bash scripts/deploy.sh
 if [ -x /opt/scripts/backup-nxgest.sh ]; then
   info "Backup pré-deploy"
   /opt/scripts/backup-nxgest.sh
   ok "Backup pré-deploy concluído"
+elif [ "${NXGEST_SKIP_BACKUP:-0}" = "1" ]; then
+  info "⚠️ Backup pulado por NXGEST_SKIP_BACKUP=1 (escape explícito)"
 else
-  info "Script de backup não encontrado (/opt/scripts/backup-nxgest.sh) — deploy sem snapshot"
+  erro "Script de backup não encontrado (/opt/scripts/backup-nxgest.sh)"
+  erro "Deploy exige snapshot pré-deploy. Para forçar, rode com NXGEST_SKIP_BACKUP=1."
+  exit 1
 fi
 
 # Gate de UI (PLAN-044/045): nenhum padrão legado/anti-drift nem manifest incoerente

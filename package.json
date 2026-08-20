@@ -24,7 +24,8 @@
     "smoke:local": "node scripts/smoke.mjs",
     "smoke:up": "node scripts/smoke.mjs up",
     "smoke:down": "node scripts/smoke.mjs down",
-    "mail:test": "tsx scripts/mail-test.ts"
+    "mail:test": "tsx scripts/mail-test.ts",
+    "audit:links": "node scripts/audit-links.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

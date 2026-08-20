@@ -58,6 +58,9 @@ jobs:
       - name: Auditoria de documentação (SKILL-009)
         run: npm run docs:audit 2>&1 | tee /tmp/docs-audit.log
         shell: bash
+      - name: Auditoria de links e referências (PLAN-084)
+        run: npm run audit:links 2>&1 | tee /tmp/docs-links.log
+        shell: bash
       - name: Resumo do CI (job summary)
         if: always()
         shell: bash
@@ -67,6 +70,7 @@ jobs:
           STY_PASS="✅";  grep -q "nenhuma cor fixa" /tmp/audit-styles.log 2>/dev/null || STY_PASS="❌"
           MOD_PASS="✅";  grep -q "manifest coerente" /tmp/audit-modules.log 2>/dev/null || MOD_PASS="❌"
           DOC_PASS="✅";  grep -q "Nenhuma divergência" /tmp/docs-audit.log 2>/dev/null || DOC_PASS="❌"
+          LNK_PASS="✅";  grep -q "0 erro(s)" /tmp/docs-links.log 2>/dev/null || LNK_PASS="❌"
           TESTS="n/d"; FILES="?"
           if grep -q "Tests" /tmp/test.log 2>/dev/null; then
             FILES=$(grep -oP '\d+(?= passed)' /tmp/test.log | head -1)
@@ -77,7 +81,7 @@ jobs:
             STMTS=$(grep "All files" /tmp/coverage.log | awk -F'|' '{gsub(/ /,"",$2); print $2}')
           fi
           # Se alguma auditoria falhou, o veredito geral é de falha
-          if [ "$UI_PASS" = "❌" ] || [ "$STY_PASS" = "❌" ] || [ "$MOD_PASS" = "❌" ] || [ "$DOC_PASS" = "❌" ]; then
+          if [ "$UI_PASS" = "❌" ] || [ "$STY_PASS" = "❌" ] || [ "$MOD_PASS" = "❌" ] || [ "$DOC_PASS" = "❌" ] || [ "$LNK_PASS" = "❌" ]; then
             STATE="❌ falhou"
           else
             STATE="✅ aprovado"
@@ -98,12 +102,14 @@ jobs:
             echo "| **Testes** | Unitários + UI | ${FILES} arquivos · **${TESTS}** testes |"
             echo "| **Cobertura** | Statements | **${STMTS}%** |"
             echo "| **docs:audit** | Doc ↔ código consistente (SKILL-009) | **$DOC_PASS** |"
+            echo "| **audit:links** | Links/âncoras/órfãos da doc (PLAN-084) | **$LNK_PASS** |"
             echo ""
             echo "### Se algo falhou"
             echo "- **audit:ui:** o log aponta a ocorrência de padrão legado/fora-do-canônico. Migre para Card/Field/FieldSelect/Modal title/Tabs/Switch (ver docs/engineering/design/UI-COVERAGE.md)."
             echo "- **audit:styles:** classe fixa da paleta encontrada. Corrija ou o tema não refletirá nesses componentes."
             echo "- **audit:modules:** IDs ou dependsOn divergem entre backend e frontend (whitelabel)."
             echo "- **docs:audit:** alguma rota/CT/collection fora de sincronia. Rode \`npm run docs:audit\` e alinhe."
+            echo "- **audit:links:** link/âncora quebrada ou arquivo órfão. Rode \`npm run audit:links\` e corrija o alvo."
             echo "- **Testes/cobertura:** abra o step de testes e a mensagem do vitest para o caso que falhou."
             echo ""
             echo "_Logs dos passos ficam colapsados — expanda o passo para ver o detalhe._"
@@ -216,4 +222,4 @@ jobs:
           script: |
             set -euo pipefail
             cd /opt/nxgestao || { echo "ERRO: /opt/nxgestao não encontrado no VPS"; exit 1; }
-            bash scripts/deploy-staging.sh
+            bash scripts/deploy-staging.sh "${{ github.sha }}"
