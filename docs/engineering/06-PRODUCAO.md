@@ -124,30 +124,48 @@ curl -s https://nxgestao.duckdns.org/api/health
 
 ### 5.0 — PostgreSQL: `pg_dump`
 
-**Script de referência** (`/opt/scripts/backup-nxgest.sh`, no VPS):
+**Script de referência** (`/opt/scripts/backup-nxgest.sh`, no VPS — **instalar**: cópia corrigida e testada em `scripts/backup-nxgest.sh` do repo):
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
+
+# Backup do banco PostgreSQL (NX Gest) + anexos.
+# Instalar em /opt/scripts/backup-nxgest.sh (VPS) — chamado pelo deploy.sh
+# (gate pré-deploy) e recomendado no cron 2x/dia.
+# Requer acesso a /opt/nxgestao/.env (PG_USER/PG_DB/PG_PASSWORD).
+
 STAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_DIR=/opt/backups
 CONTAINER=nxgest-postgres
-OUT=$BACKUP_DIR/pg-${STAMP}.dump
-UPLOADS_TAR=/data/uploads-${STAMP}.tar.gz
-OUT_UPLOADS=$BACKUP_DIR/uploads-${STAMP}.tar.gz
-mkdir -p $BACKUP_DIR
-# 1) pg_dump custom-format (validação embutida: pg_restore -l)
-docker exec $CONTAINER pg_dump -U "$PG_USER" -d "$PG_DB" -Fc -f /tmp/backup.dump
-docker cp $CONTAINER:/tmp/backup.dump $OUT
-docker exec $CONTAINER rm -f /tmp/backup.dump
-pg_restore -l $OUT > /dev/null || { echo "ERRO: dump inválido"; exit 1; }
-# 2) Anexos (/data/uploads) — PLAN-042
-docker exec nxgestao-app-1 sh -c "cd /data && tar czf $UPLOADS_TAR uploads 2>/dev/null || tar czf $UPLOADS_TAR --files-from /dev/null" || true
-docker cp nxgestao-app-1:$UPLOADS_TAR $OUT_UPLOADS || true
-# 3) Retenção 14 dias
-find $BACKUP_DIR -name "pg-*.dump" -mtime +14 -delete
-find $BACKUP_DIR -name "uploads-*.tar.gz" -mtime +14 -delete
-ls -lh $BACKUP_DIR | tail -4
+APP=nxgestao-app-1
+ENV_FILE=/opt/nxgestao/.env
+
+[ -f "$ENV_FILE" ] || { echo "ERRO: $ENV_FILE não encontrado"; exit 1; }
+set -a; source "$ENV_FILE"; set +a
+: "${PG_USER:?PG_USER ausente em $ENV_FILE}"
+: "${PG_DB:?PG_DB ausente em $ENV_FILE}"
+
+mkdir -p "$BACKUP_DIR"
+OUT="$BACKUP_DIR/pg-${STAMP}.dump"
+OUT_UPLOADS="$BACKUP_DIR/uploads-${STAMP}.tar.gz"
+
+echo "==> pg_dump -Fc ($PG_DB)"
+docker exec -e PGPASSWORD="$PG_PASSWORD" "$CONTAINER" pg_dump -U "$PG_USER" -d "$PG_DB" -Fc -f /tmp/backup.dump
+docker cp "$CONTAINER:/tmp/backup.dump" "$OUT"
+docker exec "$CONTAINER" rm -f /tmp/backup.dump
+pg_restore -l "$OUT" >/dev/null || { echo "ERRO: dump inválido ($OUT)"; exit 1; }
+
+echo "==> anexos (uploads)"
+docker exec "$APP" sh -c "cd /data && tar czf /tmp/uploads.tgz uploads 2>/dev/null || tar czf /tmp/uploads.tgz --files-from /dev/null" || true
+docker cp "$APP:/tmp/uploads.tgz" "$OUT_UPLOADS" || true
+docker exec "$APP" rm -f /tmp/uploads.tgz || true
+
+echo "==> retenção 14 dias"
+find "$BACKUP_DIR" -name "pg-*.dump" -mtime +14 -delete
+find "$BACKUP_DIR" -name "uploads-*.tar.gz" -mtime +14 -delete
+ls -lh "$BACKUP_DIR" | tail -4
+echo "OK: $OUT"
 ```
 
 - **Restauração:** `docker exec nxgest-postgres pg_restore -U "$PG_USER" -d "$PG_DB" --clean --if-exists < dump` (com o container de app parado), depois validar `SELECT COUNT(*) FROM usuarios` > 0 e o health.
