@@ -50,7 +50,7 @@
 | PLAN-066 (segurança) | 🔵 P0 ✅ · P1 parcial · P2 ⏳ | P1: timeouts Caddy (T-08) + **executar firewalld/fail2ban no VPS** · P2: JWT curto/revogação, Cloudflare WAF, 2FA, senha mín. 8 |
 | **PLAN-077 (performance)** | 🔵 F1-F4 ✅ (15/08) · em prod | Bulk insert e otimização adicional encaminhados no PLAN-083; manter medição com volume real como acompanhamento |
 | **PLAN-079 (estabilidade deploy)** | ✅ Implementado (18/08) · **em produção** | Fix erro "text/html MIME" pós-code-splitting: cache-busting do SW · fallback assets→404 · static imutável · check-dist no CI |
-| **PLAN-084 (organização do repositório)** | 🔵 Blocos 1–3 concluídos · Bloco 5 parcial | Sync documental, fronteira Git/Docker e ambiente de staging organizados; Bloco 4 operacional separado |
+| **PLAN-084 (organização do repositório)** | ✅ **Concluído (20/08)** | Blocos 1–5: sync factual, fronteira Git/Docker, staging organizado, `audit:links` no CI, SHA validado no staging, gates completos no CD manual, backup obrigatório no deploy. Novos planos: **PLAN-080/081/082** 📝 Planejado |
 
 ## Pendências (verificação/ações futuras)
 
