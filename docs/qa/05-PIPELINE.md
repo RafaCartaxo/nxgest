@@ -33,7 +33,7 @@ Jobs renomeados para leitura humana (nomes legíveis no run do GitHub):
 > com um **resumo em markdown** (o que cada checagem valida + o que fazer se falhar).
 
 ### Job `Smoke da API`
-`schema isolado` → `seed-demo` → **uma** instância (`JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000`) → `smoke-api` (274/274, resumo por seção).
+`schema isolado` → `seed-demo` → **uma** instância (`JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000`) → `smoke-api` (278/278, resumo por seção).
 
 ### Job `Migração de schema`
 `schema do modelo` → `migrate-modelo` (idempotente) → `valida-modelo` (invariantes).

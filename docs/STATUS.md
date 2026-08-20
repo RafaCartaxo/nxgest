@@ -2,7 +2,7 @@
 
 > **Regra:** atualizar a cada sessão de trabalho, junto com o `CHECKLIST` do dia (e o `UPDATES.md` quando houver entrega relevante). Fonte de verdade dos detalhes: planos e docs linkados.
 
-**Última atualização:** 18/08/2026
+**Última atualização:** 20/08/2026
 
 ---
 
@@ -50,13 +50,14 @@
 | PLAN-066 (segurança) | 🔵 P0 ✅ · P1 parcial · P2 ⏳ | P1: timeouts Caddy (T-08) + **executar firewalld/fail2ban no VPS** · P2: JWT curto/revogação, Cloudflare WAF, 2FA, senha mín. 8 |
 | **PLAN-077 (performance)** | 🔵 F1-F4 ✅ (15/08) · em prod | Bulk insert e otimização adicional encaminhados no PLAN-083; manter medição com volume real como acompanhamento |
 | **PLAN-079 (estabilidade deploy)** | ✅ Implementado (18/08) · **em produção** | Fix erro "text/html MIME" pós-code-splitting: cache-busting do SW · fallback assets→404 · static imutável · check-dist no CI |
+| **PLAN-084 (organização do repositório)** | 🔵 Blocos 1–3 concluídos · Bloco 5 parcial | Sync documental, fronteira Git/Docker e ambiente de staging organizados; Bloco 4 operacional separado |
 
 ## Pendências (verificação/ações futuras)
 
 - [ ] **Cloudflare SSL Full (strict)** — recomendado (site já funcionando); ajuste de painel
-- [ ] **E-mail no staging** — `MAIL_PROVIDER=console` (não envia de verdade; mantido por ora — decisão de ativar depois)
+- [x] **E-mail no staging** — `MAIL_PROVIDER=console` (não envia de verdade; política atual)
 - [ ] Vulns dev-only restantes (`vite`/`vitest` — major bump, fora de escopo; monitorar via dependabot)
-- [ ] **Node 20 no dev local** — ✅ migrado (15/08); usar `nvm use 20` antes de subir backend/vite
+- [x] **Node 20 no dev local** — instalado; usar `nvm use 20` antes de subir backend/vite
 
 ## Backlog (próximos)
 

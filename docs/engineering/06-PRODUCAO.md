@@ -36,7 +36,7 @@
 |-------|------|---------|
 | **CI** (`.github/workflows/ci.yml`) | GitHub Actions | push/PR/manual |
 | — job `test` | tsc · build · check-dist · audit:ui/styles/modules · vitest (154) · coverage · docs:audit | — |
-| — job `smoke` | schema isolado → seed → smoke-api (274 cenários, DB/rate limits isolados) | — |
+| — job `smoke` | schema isolado → seed → smoke-api (278 cenários, DB/rate limits isolados) | — |
 | — job `deploy-staging` | SSH → VPS → `scripts/deploy-staging.sh` → **staging no ar** | merge/push à `main`, após test+smoke |
 | **CD** (`.github/workflows/cd.yml`) | GitHub Actions | `workflow_run` (CI concluído em main) + manual (`workflow_dispatch` com input `ref`) |
 | — job `validate` | CI verde do push + health do staging (gate de promoção) | — |
@@ -219,7 +219,7 @@ git reset --hard <commit-bom>   # cuidado: descarta mudanças locais no repo
 | Ambiente | `MAIL_PROVIDER` | Comportamento |
 |---|---|---|
 | dev (`NODE_ENV=development`) | qualquer | **`ConsoleMailer` — nunca envia** (regra dura, ignora a chave) |
-| staging | `resend` + chave Resend própria | envia real |
+| staging | `console` | não envia e-mail real |
 | produção | `resend` + chave | envia real |
 | default (sem `MAIL_PROVIDER`) | — | `production` → resend se houver chave, senão fail-closed · demais → console |
 

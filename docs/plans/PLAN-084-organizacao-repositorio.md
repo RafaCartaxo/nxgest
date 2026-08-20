@@ -1,6 +1,6 @@
 # PLAN-084 — Organização do Repositório
 
-**Status:** 🔵 Em execução — Blocos 1–3 concluídos · Bloco 5 parcial (verificado) · Bloco 4 separado (19–20/08/2026)
+**Status:** ✅ Concluído — Blocos 1–5 executados (Bloco 4 integrado na trilha em 20/08) · pendências 1–5 resolvidas (20/08/2026)
 **Projeto:** NX Gest (`nxgest`)
 **Origem:** plano elaborado no GitHub Copilot (sessão de memória) + reconciliação com o trabalho já entregue em 19/08 (PLAN-083 + purga SQLite→PG).
 **Relacionado:** PLAN-083 (concluído) · SKILL-009 (documentation sync) · `docs/README.md` · `docs/INDEX.md` · `AGENTS.md`
@@ -11,7 +11,8 @@
 - **Bloco 2 — Ambiente + fronteira ✅** — `.env.production.example` (sem `uuidgen`) · `.gitignore`/`.dockerignore` ampliados · `SEGURANCA.md` (`~/.config/nxgestao`) · e-mail `MAIL_FROM` unificado em `MAIL_FROM_ADDRESS` (compose) · `.env.staging.example` + staging com secrets aleatórios e `MAIL_PROVIDER=console` (`deploy-staging.sh`).
 - **Bloco 3 — Verificado ✅ (sem mudanças de código)** — `migracao:test`/`test-migracao` só em tasks históricas (nenhuma doc viva) · schema sem divergência (money=`NUMERIC(12,2)`, lat/lng=`doublePrecision` são colunas distintas) · `nxgestao` em docs vivas só operacional (VPS/`~/.config/nxgestao`).
 - **Bloco 5 — Parcial ✅** — link checker one-off: **3 links relativos corrigidos** em `docs/INDEX.md` (0 quebrados restantes) · PLAN-069 confirmado **parcial** (falta parte Admin — não marcar concluído) · item 17 (matriz plano/status/checklist) coberto por SKILL-009 + `docs/plans/README.md` + `docs/STATUS.md`.
-- **Bloco 4 — Separado (não iniciado)** — CI/CD operacional (SHA validado no deploy-staging · gates do CD · backup obrigatório no deploy.sh). Recomendado como trilha própria por risco.
+- **Bloco 4 — Concluído (20/08)** — SHA validado no staging (CI passa `${{ github.sha }}` → `deploy-staging.sh` faz `fetch` + `reset --hard` no SHA; `|| true` removido) · CD manual roda os gates completos (tsc/build/check-dist/audits/test/docs) · `deploy.sh` exige backup pré-deploy com escape explícito `NXGEST_SKIP_BACKUP=1`.
+- **Pendências finais (20/08)** — ① Rastreamento Git verificado (nenhum `.env` real/backup/upload/dump rastreado; `.gitignore`/`.dockerignore` cobrem tudo; remote sem token) · ② `GITHUB_TOKEN` do `.env` local ignorado pelo git — **revogação manual pendente** (ação no GitHub) · ③ Auditoria de links **automatizada** (`scripts/audit-links.mjs` + `npm run audit:links` + CI) · ④ Backups SQLite legados **deletados** (~8,5M) · ⑤ Bloco 4 acima.
 
 ## Objetivo
 
@@ -31,7 +32,7 @@ Organizar o repositório por responsabilidade e manter rastreabilidade entre có
 - Scripts: `scripts/**`; `scripts/arquivo/**` só como legado claramente identificado.
 - Infra: `Dockerfile`, `docker-compose*.yml`, `Caddyfile`, `.github/**`, `.nvmrc`.
 - Manifestos/lockfiles: `package.json`, `package-lock.json`, `frontend/package.json`, `.opencode/package.json` + lock.
-- Exemplos de ambiente: `.env.example`, `.env.production.example` (após correção).
+- Exemplos de ambiente: `.env.example`, `.env.production.example`, `.env.staging.example`.
 - Docs oficiais, planos, ADRs, QA, skills, templates, tasks, READMEs, collection gerada.
 - `AGENTS.md` e `.opencode/agents/**` (repo privado, sem segredos).
 
@@ -55,59 +56,50 @@ Itens já confirmados no estado atual e que não devem ser retrabalhados sem nov
 - ✅ `docs/qa/01-VISAO-GERAL.md` e `docs/product/07-CASOS-DE-USO-API.md` refletem PostgreSQL/Smoke PG.
 - ✅ `better-sqlite3` e `@types/better-sqlite3` não estão nas dependências atuais.
 - ✅ `docs/plans/PLAN-083-otimizacao-consultas-busca.md` está concluído e registra smoke 278/278.
-- ⚠️ O inventário local confirmou que README, QA 02/06, `.env.production.example`, `.dockerignore` e índices ainda exigem sincronização; esses itens permanecem nos blocos de execução abaixo.
+- ✅ README, QA 01/02/03/06, `.env.production.example`, `.dockerignore` e índices foram sincronizados nesta rodada.
 - ✅ Bloco de ambiente parcialmente aplicado: `.env.staging.example` versionável, staging sem envio real (`MAIL_PROVIDER=console`), secrets aleatórios na criação/atualização de `.env.staging`, rate limits de QA normalizados e `MAIL_FROM` removido dos Compose.
-- ⚠️ O `.env` local contém um `GITHUB_TOKEN`; revogar e recriar esse token antes de compartilhar o workspace ou executar qualquer operação que possa expô-lo.
+- ⚠️ O `.env` local contém um `GITHUB_TOKEN`; revogar e recriar esse token antes de compartilhar o workspace ou executar qualquer operação que possa expô-lo. **Estado (20/08):** o token permanece no `.env` local, **ignorado pelo git** (nunca versionado) e sem vazamento pro repo — a revogação em si é ação manual no GitHub (Settings → Developer settings → Personal access tokens).
 
-## Pendências confirmadas (por Bloco)
+## Pendências restantes (por Bloco)
 
-### Bloco 1 — Sync factual das docs vivas (baixo risco, alta prioridade)
+### Bloco 1 — Sync factual das docs vivas (concluído)
 | Item | Local | Ação |
 |---|---|---|
-| 1 | `docs/README.md:29` | `audita-docs` → comando oficial `npm run docs:audit` |
-| 2 | `AGENTS.md:20` | faixa "PLAN-001 a PLAN-069" → referência dinâmica ao `docs/plans/README.md` |
-| 3 | `docs/plans/README.md` | PLAN-083 `🔵` → `✅ Concluído`; incorporar PLAN-080/081/082/083 e este PLAN-084 |
-| 4 | `docs/STATUS.md` | itens 12–13/08 "aguardando commit" (linhas 23–28) → atualizar (já commitados/pushados) |
-| 5 | `docs/engineering/tasks/README.md` | incluir tasks de 14, 15 e 18/08 (lista hoje só até 13/08) |
+| 1–5 | Índices e status | Concluído: comandos, faixa de planos, PLAN-083/084, status e tasks sincronizados |
 
-### Bloco 2 — Ambiente, exemplos e fronteira Git/Docker
+### Bloco 2 — Ambiente, exemplos e fronteira Git/Docker (concluído)
 | Item | Local | Ação |
 |---|---|---|
-| 6 | `.env.production.example` | `uuidgen`/comandos shell como valores (linhas 6,7,11,22) → placeholders + instruções |
-| 7 | Política de e-mail | resolver `MAIL_FROM` vs `MAIL_FROM_ADDRESS` (1 fonte canônica) · staging `console` vs `resend` |
-| 8 | `docs/engineering/SEGURANCA.md` | `~/.config/nxgest` (linhas 22,45) → `~/.config/nxgestao` |
-| 9 | `.dockerignore` | **incompleto** — adicionar `.env.*`, `uploads`, `coverage`, logs, `.obsidian`, dumps PG, backups, `frontend/dist`, `*.db.backup-*`, `.opencode/node_modules` |
+| 6–9 | Env, Compose e ignores | Concluído: placeholders, `MAIL_FROM_ADDRESS`, staging `console`, credenciais e contexto Docker organizados |
 
-### Bloco 3 — Referências órfãs e coerência
+### Bloco 3 — Referências órfãs e coerência (concluído)
 | Item | Local | Ação |
 |---|---|---|
-| 10 | `migracao:test`/`test-migracao` | ocorrências em UPDATES/tasks/PLAN-059 → classificar como histórico; não deixar como comando corrente |
-| 11 | `docs/engineering/01-DATABASE.md` vs PLAN-070 | conferir `NUMERIC(12,2)` vs `doublePrecision` contra o schema real; definir fonte canônica |
-| 12 | Nomenclatura `nxgestao` vs `nxgest` | auditoria em texto/docs correntes; classificar por contexto (não renomear infra) |
+| 10–12 | Referências e nomenclatura | Concluído: ocorrências antigas classificadas, schema reconciliado e `nxgestao` restrito a infraestrutura operacional |
 
-### Bloco 4 — CI/CD operacional (trilha separada — maior risco)
+### Bloco 4 — CI/CD operacional (concluído em 20/08)
 | Item | Local | Ação |
 |---|---|---|
-| 13 | `scripts/deploy-staging.sh` | `git pull origin main` após CI → pode implantar SHA ≠ validado; checkout do SHA validado |
-| 14 | CD manual (`cd.yml`) | não replica todos os gates do CI (build/audits/smoke/docs) |
-| 15 | `scripts/deploy.sh` | prossegue sem backup externo → tornar backup obrigatório (com escape explícito) |
+| 13 | `scripts/deploy-staging.sh` | ✅ CI passa `${{ github.sha }}` → script faz `git fetch origin <sha>` + `git reset --hard`; `|| true` removido (deploy manual sem arg mantém `pull --ff-only`) |
+| 14 | CD manual (`cd.yml`) | ✅ `workflow_dispatch` roda gates completos (tsc · build · check-dist · audit:ui/styles/modules · test · docs:audit · audit:links); smoke fica fora com nota (ref de rollback já passou CI) |
+| 15 | `scripts/deploy.sh` | ✅ backup pré-deploy obrigatório (falha sem `/opt/scripts/backup-nxgest.sh`); escape explícito `NXGEST_SKIP_BACKUP=1` |
 
-### Bloco 5 — Governança e auditoria
+### Bloco 5 — Governança e auditoria (concluído em 20/08)
 | Item | Ação |
 |---|---|
-| 16 | `scripts/audit-docs.mjs` não valida links Markdown/arquivos/scripts órfãos → verificar ou criar check complementar no CI |
-| 17 | Matriz plano/status/checklist (link do plano ↔ status ↔ evidência da task) |
-| 18 | Verificar escopo real do PLAN-069 antes de qualquer ajuste de status (parte 2 Admin pendente) |
+| 16 | ✅ `scripts/audit-links.mjs` novo (links internos + âncoras + wikilinks + órfãos warn) · `npm run audit:links` · step no CI (job test) + job summary · 1 âncora pré-existente corrigida (`#módulo-admin`) · **0 erros** |
+| 17 | ✅ Matriz plano/status/checklist coberta por SKILL-009 + índice de planos + STATUS; automação dos links acima é o reforço |
+| 18 | ✅ PLAN-069 confirmado **parcial** (parte 2 Admin pendente) — status mantido 🔵 |
 
-## Ordem lógica de execução recomendada
+## Histórico da execução
 
-1. **Bloco 1** — sincronizar índices/status factuais (AGENTS, docs/README, plans/README, STATUS, tasks/README).
-2. **Bloco 2** — corrigir ambiente/exemplos e fronteira Git/Docker (env.production.example, e-mail, SEGURANCA, .dockerignore).
-3. **Bloco 3** — classificar referências órfãs, resolver divergência de schema e auditar nomenclatura.
-4. **Bloco 5** — link checker, matriz de rastreabilidade, escopo do PLAN-069.
-5. **Bloco 4 (separado)** — integridade CI/CD (SHA validado, gates de CD, backup obrigatório) como trilha própria por risco operacional.
+1. **Bloco 1** — sincronizado.
+2. **Bloco 2** — sincronizado.
+3. **Bloco 3** — referências e nomenclatura classificadas.
+4. **Bloco 5** — link checker automatizado (`audit-links`), matriz coberta, PLAN-069 confirmado parcial.
+5. **Bloco 4** — integrado: SHA validado no staging, gates completos no CD manual, backup obrigatório no deploy.
 
-> Bloco 4 fica **fora** da rodada inicial por mexer em pipeline de produção; tratar isoladamente.
+> Bloco 4 foi **integrado** à rodada em 20/08 (SHA validado no staging, gates completos no CD manual, backup obrigatório no deploy) — validado em staging antes do push.
 
 ## Validação
 
@@ -121,5 +113,5 @@ Itens já confirmados no estado atual e que não devem ser retrabalhados sem nov
 
 - Refatorar `src`/`frontend`; alterar comportamento da aplicação.
 - Renomear infraestrutura real em produção (`/opt/nxgestao`, volumes, containers, rede).
-- Apagar uploads/bancos/backups sem confirmar retenção e backup externo.
+- Apagar uploads/bancos/backups sem confirmar retenção e backup externo — **backups SQLite legados deletados em 20/08** após confirmar retenção (dados 100% no PG + `/opt/backups` no VPS). Obs.: `backup-offsite-gestao.db` (241K, 02/08) em `~/.config/nxgestao/backups/` permanece — decisão de retenção em aberto.
 - Reescrever histórico Git; mover toda a documentação antes de mapear links.

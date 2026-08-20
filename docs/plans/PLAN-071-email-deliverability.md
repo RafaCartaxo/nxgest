@@ -6,13 +6,13 @@
 
 **Início:** 11/08/2026
 
-**Origem:** e-mails transacionais do NX Gest caindo em spam (prod envia, mas não chega à caixa de entrada — caso relatado em 11/08). Decisões do Rafael: display name só ("NX Gest") · staging envia real · DMARC `rua=` agora e `quarantine` depois · dev **nunca** envia.
+**Origem:** e-mails transacionais do NX Gest caindo em spam (prod envia, mas não chega à caixa de entrada — caso relatado em 11/08). Decisões atuais: display name só ("NX Gest") · staging não envia real · DMARC `rua=` agora e `quarantine` depois · dev **nunca** envia.
 
 ---
 
 ## Objetivo
 
-Tirar os e-mails transacionais (convite, reset, confirmação de lead) da caixa de spam **sem** trocar de provedor, atacando os fatores que pesam: domínio novo (~3 dias), `From: no-reply@` sem display name, DMARC fraco. Além disso, deixar a **política de envio explícita e à prova de acidente**: dev nunca envia e-mail real; staging e produção enviam (via `MAIL_PROVIDER` real, hoje config morta).
+Tirar os e-mails transacionais (convite, reset, confirmação de lead) da caixa de spam **sem** trocar de provedor, atacando os fatores que pesam: domínio novo (~3 dias), `From: no-reply@` sem display name, DMARC fraco. Além disso, deixar a **política de envio explícita e à prova de acidente**: dev e staging não enviam e-mail real; produção envia via `MAIL_PROVIDER` real.
 
 ---
 
@@ -38,7 +38,7 @@ Tirar os e-mails transacionais (convite, reset, confirmação de lead) da caixa 
 | # | Decisão | Escolha |
 |---|---|---|
 | D1 | From | Só **display name "NX Gest"**; endereço continua `no-reply@nxgest.com.br` (sem MX novo) |
-| D2 | Staging | **Envia real** — `MAIL_PROVIDER=resend` + chave Resend própria de staging |
+| D2 | Staging | **Não envia real** — `MAIL_PROVIDER=console`; testes de envio real ficam restritos à produção/VPS |
 | D3 | DMARC | `rua=` agora (parser gratuito, default **dmarcian**) → monitorar 2–4 semanas → `p=quarantine` |
 | D4 | Dev | **Nunca envia** — `NODE_ENV=development` → `ConsoleMailer` sempre (ignora chave) |
 
@@ -80,7 +80,7 @@ Tirar os e-mails transacionais (convite, reset, confirmação de lead) da caixa 
 
 - `.env.example`: `MAIL_PROVIDER=console` + nota "development nunca envia" · `MAIL_FROM_NAME=NX Gest` · `MAIL_FROM_ADDRESS=no-reply@nxgest.com.br`.
 - `.env.production.example`: `MAIL_PROVIDER=resend` · `MAIL_FROM_NAME=NX Gest` · `MAIL_FROM_ADDRESS=no-reply@nxgest.com.br` (substitui `MAIL_FROM`).
-- `scripts/deploy-staging.sh`: default `.env.staging` → `MAIL_PROVIDER=resend` · `RESEND_API_KEY=` (operador preenche) · `MAIL_FROM_NAME=NX Gest` · `MAIL_FROM_ADDRESS=no-reply@nxgest.com.br`.
+- `scripts/deploy-staging.sh`: default `.env.staging` → `MAIL_PROVIDER=console` · `RESEND_API_KEY=` · `MAIL_FROM_NAME=NX Gest` · `MAIL_FROM_ADDRESS=no-reply@nxgest.com.br`.
 - `docker-compose.prod.yml` + `docker-compose.staging.yml`: repassar **`MAIL_FROM_NAME`/`MAIL_FROM_ADDRESS`** ao container (**F1** — sem isso o display name não chega em prod/staging; `MAIL_FROM` segue como fallback).
 - `docs/engineering/06-PRODUCAO.md` §9: display name, `MAIL_PROVIDER`, política dev/staging/prod, DMARC (rua→quarantine), warm-up.
 
@@ -108,7 +108,7 @@ Tirar os e-mails transacionais (convite, reset, confirmação de lead) da caixa 
 ## CTs (Dado/Quando/Então)
 
 - **EM-01** dev nunca envia — Dado `NODE_ENV=development` + `RESEND_API_KEY` setada | Quando `criarMailer()` | Então `ConsoleMailer` (nenhum e-mail real).
-- **EM-02** staging/prod enviam — Dado `MAIL_PROVIDER=resend` + chave | Então `ResendMailer`; falha de envio → 503 `EMAIL_UNAVAILABLE`.
+- **EM-02** produção envia — Dado `MAIL_PROVIDER=resend` + chave | Então `ResendMailer`; falha de envio → 503 `EMAIL_UNAVAILABLE`. Staging permanece em `ConsoleMailer`.
 - **EM-03** display name — Dado `MAIL_FROM_NAME=NX Gest` | Então payload do Resend tem `from: "NX Gest" <no-reply@nxgest.com.br>`.
 - **EM-04** reply-to — Dado `EmailMessage` com `replyTo` | Então payload inclui `reply_to`.
 - **EM-05** DMARC — Dado DNS após Fase 3 | Então `_dmarc` contém `rua=` (e, após período, `p=quarantine`).
@@ -129,7 +129,7 @@ Fase 4 — Monitoramento / aquecimento                    ⏳ após deploy
 
 ## Critérios de aceitação
 
-dev **nunca** envia (mesmo com chave — coberto por EM-01/EM-06) · staging envia real com chave própria · e-mail de teste com display name "NX Gest" ≥9/10 no mail-tester e chega na caixa de entrada (não spam) em Gmail e Hotmail · DMARC com `rua=` e depois `quarantine` · `npm test` + `docs:audit` limpos.
+dev e staging **nunca** enviam (mesmo com chave — coberto por EM-01/EM-06) · produção envia com display name "NX Gest" · e-mail de teste com display name "NX Gest" ≥9/10 no mail-tester e chega na caixa de entrada (não spam) em Gmail e Hotmail · DMARC com `rua=` e depois `quarantine` · `npm test` + `docs:audit` limpos.
 
 ## Fora de escopo
 

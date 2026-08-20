@@ -1480,7 +1480,7 @@ Remove um gasto (soft delete). Não estorna o caixa — o histórico é preserva
 | GET | `/api/auth/me` | Sim | Dados do operador logado |
 | PATCH | `/api/auth/senha` | Sim | Alterar a própria senha (BR-089/090) — PLAN-029 |
 
-> **Registro de operadores:** Movido para o [Módulo Admin](#módulo-admin) — `POST /api/admin/operadores`.
+> **Registro de operadores:** Movido para o [Módulo Admin](#módulo-admin-atualizado) — `POST /api/admin/operadores`.
 
 ---
 
