@@ -25,7 +25,9 @@ echo "==> pg_dump -Fc ($PG_DB)"
 docker exec -e PGPASSWORD="$PG_PASSWORD" "$CONTAINER" pg_dump -U "$PG_USER" -d "$PG_DB" -Fc -f /tmp/backup.dump
 docker cp "$CONTAINER:/tmp/backup.dump" "$OUT"
 docker exec "$CONTAINER" rm -f /tmp/backup.dump
-pg_restore -l "$OUT" >/dev/null || { echo "ERRO: dump inválido ($OUT)"; exit 1; }
+docker cp "$OUT" "$CONTAINER:/tmp/verify.dump"
+docker exec "$CONTAINER" pg_restore -l /tmp/verify.dump >/dev/null || { echo "ERRO: dump inválido ($OUT)"; docker exec "$CONTAINER" rm -f /tmp/verify.dump; exit 1; }
+docker exec "$CONTAINER" rm -f /tmp/verify.dump
 
 echo "==> anexos (uploads)"
 docker exec "$APP" sh -c "cd /data && tar czf /tmp/uploads.tgz uploads 2>/dev/null || tar czf /tmp/uploads.tgz --files-from /dev/null" || true
