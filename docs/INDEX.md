@@ -84,9 +84,9 @@ Consulte o [índice completo de planos](plans/README.md).
 
 | Script | npm | Finalidade |
 |--------|-----|------------|
-| [`scripts/audit-docs.mjs`](scripts/audit-docs.mjs) | `npm run docs:audit` | Auditoria de consistência: código ↔ 02-API ↔ 07 ↔ collection ↔ telas (SKILL-009) |
-| [`scripts/build-collection.mjs`](scripts/build-collection.mjs) | `npm run docs:collection` | Regenera `api-collection.json` a partir da lista canônica |
-| [`scripts/smoke-api.mjs`](scripts/smoke-api.mjs) | `npm run smoke:api` | Executa os cenários da [07-CASOS-DE-USO-API](product/07-CASOS-DE-USO-API.md) (PASS/FAIL) |
+| [`scripts/audit-docs.mjs`](../scripts/audit-docs.mjs) | `npm run docs:audit` | Auditoria de consistência: código ↔ 02-API ↔ 07 ↔ collection ↔ telas (SKILL-009) |
+| [`scripts/build-collection.mjs`](../scripts/build-collection.mjs) | `npm run docs:collection` | Regenera `api-collection.json` a partir da lista canônica |
+| [`scripts/smoke-api.mjs`](../scripts/smoke-api.mjs) | `npm run smoke:api` | Executa os cenários da [07-CASOS-DE-USO-API](product/07-CASOS-DE-USO-API.md) (PASS/FAIL) |
 
 ## Templates
 

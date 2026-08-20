@@ -1,9 +1,17 @@
 # PLAN-084 — Organização do Repositório
 
-**Status:** 🔵 Em execução — Blocos 1 e 2 iniciados (19/08/2026)
+**Status:** 🔵 Em execução — Blocos 1–3 concluídos · Bloco 5 parcial (verificado) · Bloco 4 separado (19–20/08/2026)
 **Projeto:** NX Gest (`nxgest`)
 **Origem:** plano elaborado no GitHub Copilot (sessão de memória) + reconciliação com o trabalho já entregue em 19/08 (PLAN-083 + purga SQLite→PG).
 **Relacionado:** PLAN-083 (concluído) · SKILL-009 (documentation sync) · `docs/README.md` · `docs/INDEX.md` · `AGENTS.md`
+
+## Progresso (20/08)
+
+- **Bloco 1 — Sync factual ✅** — `docs/README.md` (`audita-docs`→`npm run docs:audit`) · `AGENTS.md` (faixa de planos removida) · `docs/STATUS.md` (itens "aguardando commit" → em produção) · `docs/engineering/tasks/README.md` (14/15/18) · `docs/plans/README.md` (PLAN-083 ✅ + PLAN-084).
+- **Bloco 2 — Ambiente + fronteira ✅** — `.env.production.example` (sem `uuidgen`) · `.gitignore`/`.dockerignore` ampliados · `SEGURANCA.md` (`~/.config/nxgestao`) · e-mail `MAIL_FROM` unificado em `MAIL_FROM_ADDRESS` (compose) · `.env.staging.example` + staging com secrets aleatórios e `MAIL_PROVIDER=console` (`deploy-staging.sh`).
+- **Bloco 3 — Verificado ✅ (sem mudanças de código)** — `migracao:test`/`test-migracao` só em tasks históricas (nenhuma doc viva) · schema sem divergência (money=`NUMERIC(12,2)`, lat/lng=`doublePrecision` são colunas distintas) · `nxgestao` em docs vivas só operacional (VPS/`~/.config/nxgestao`).
+- **Bloco 5 — Parcial ✅** — link checker one-off: **3 links relativos corrigidos** em `docs/INDEX.md` (0 quebrados restantes) · PLAN-069 confirmado **parcial** (falta parte Admin — não marcar concluído) · item 17 (matriz plano/status/checklist) coberto por SKILL-009 + `docs/plans/README.md` + `docs/STATUS.md`.
+- **Bloco 4 — Separado (não iniciado)** — CI/CD operacional (SHA validado no deploy-staging · gates do CD · backup obrigatório no deploy.sh). Recomendado como trilha própria por risco.
 
 ## Objetivo
 
