@@ -85,7 +85,7 @@ frontend/src/
 
 ## Banco de dados
 
-- **SQLite** (WAL mode) via **Drizzle ORM** + SQL cru em queries específicas.
+- **PostgreSQL 16** via **Drizzle ORM (`pg-core`)** + SQL cru em queries específicas.
 - IDs: **UUID v4** (nada de sequencial dependente de regra).
 - **Isolamento multi-tenant**: `usuarios.empresaId` + JOIN — tabelas operacionais não têm `empresaId`.
 - Entidades operacionais têm `userId` (isolamento por operador); Parcela/PagamentoParcela acessadas via JOIN com a tabela pai.

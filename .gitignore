@@ -5,10 +5,20 @@ dist/
 *.db-wal
 *.db.backup-*
 *.log
+*.sqlite
+*.sqlite-*
+*.dump
+*.tar.gz
+*.zip
 *.err
 .smoke.pid
+*.pid
 .env
 .env.staging
+.env.*
+!.env.example
+!.env.production.example
+!.env.staging.example
 NUL
 .obsidian/
 
@@ -16,3 +26,8 @@ uploads/
 
 # Cobertura de testes (PLAN-067) — artefato gerado
 coverage/
+
+# Caches e arquivos locais de ferramentas
+.cache/
+.tmp/
+.DS_Store

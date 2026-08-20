@@ -54,3 +54,6 @@ tasks/
 | [11/08/2026](2026-08-11/CHECKLIST.md) | Pipeline CI/CD completo + staging de homologação (CI verde pela 1ª vez · CD prod com gate) | Concluído |
 | [12/08/2026](2026-08-12/CHECKLIST.md) | Validações manuais em produção (GPS, teclado/edição, PWA, anexos, rota) + fix do teclado na edição de endereço | Concluído |
 | [13/08/2026](2026-08-13/CHECKLIST.md) | REGISTRO PLAN-072 — identidade visual da empresa: autosserviço + branding por tenant (análise, gaps G1..14, CTs, verificação do fluxo de leads) | ✅ Registrado |
+| [14/08/2026](2026-08-14/CHECKLIST.md) | Fechamento do fluxo de conta — PLAN-075 (convites, e-mail, suspensão e segurança) | Concluído |
+| [15/08/2026](2026-08-15/CHECKLIST.md) | Performance e escalabilidade — PLAN-077 (PostgreSQL, queries, code-splitting e Node 20) | Concluído |
+| [18/08/2026](2026-08-18/CHECKLIST.md) | Estabilidade de deploy — PLAN-079 (cache-busting, fallback SPA e check-dist) | Concluído |

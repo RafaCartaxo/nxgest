@@ -13,7 +13,7 @@
 | VPS | `172.245.152.223` (root, **somente chave SSH**) · AlmaLinux 8.10 · Docker + Compose |
 | Repo no VPS | `/opt/nxgestao` |
 | `.env` | `/opt/nxgestao/.env` (prod) · `/opt/nxgestao/.env.staging` (staging) — chmod 600 |
-| Banco | SQLite — prod `nxgestao_data` · staging `nxgestao_staging_data` |
+| Banco | PostgreSQL 16 — prod `nxgestao_pgdata` · staging `nxgestao_staging_pgdata` |
 | Proxy/HTTPS | Caddy (Let's Encrypt automático) |
 
 > **Alerta:** o provedor **não oferece snapshots**. Backup próprio (cron) + cópia off-site são obrigatórios.
@@ -53,8 +53,8 @@ merge à main → CI verde → staging → CD → deploy-prod (automático)
 | Item | Valor |
 |---|---|
 | Automático | Cron 2x/dia no VPS (`/opt/scripts/backup-nxgest.sh`) |
-| Destino | `/opt/backups/gestao-<data>.db` + `uploads-<data>.tar.gz` |
-| Validação | WAL checkpoint + contagem de usuários (backup vazio = `.invalid` + falha) |
+| Destino | `/opt/backups/pg-<data>.dump` + `uploads-<data>.tar.gz` |
+| Validação | `pg_restore -l` + verificação de usuários (dump inválido = falha) |
 | Retenção | 14 dias |
 | Off-site | Manual `scp` + **cifrar** (gpg/age) — LGPD |
 

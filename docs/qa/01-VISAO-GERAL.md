@@ -52,7 +52,7 @@ npm test             # vitest (unit + UI)
 npm run smoke:api    # smoke API (requer instância isolada — ver 04-TESTES.md)
 ```
 
-Pré-requisitos: Node.js 18+ · npm 9+.
+Pré-requisitos: Node.js 20+ · npm 9+.
 
 ---
 

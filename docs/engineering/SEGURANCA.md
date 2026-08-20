@@ -19,7 +19,7 @@ Princípios: **defense in depth** · **menor privilégio** · **fail-closed**.
 - Auth JWT com secret forte; role/empresa resolvidas do **banco**; bloqueio de empresa inativa (BR-106) e conta convidada (PLAN-065).
 - Autorização em camadas (auth/requireModule/admin/super/capability/`resolveUsuarioAlvo`).
 - zod + respostas genéricas (sem enumeração) · uploads seguros (sem SVG / magic bytes / limites) · senha nunca retorna na API.
-- Segredos fora do repo (`~/.config/nxgest`); VPS SSH por chave; container non-root; `.env` chmod 600.
+- Segredos fora do repo (`~/.config/nxgestao`); VPS SSH por chave; container non-root; `.env` chmod 600.
 
 ## Gaps e ameaças (resumo — detalhe no PLAN-066)
 
@@ -42,7 +42,7 @@ Princípios: **defense in depth** · **menor privilégio** · **fail-closed**.
 - **`npm audit`** — checar periodicamente; tratar runtime primeiro (dev-only é baixo risco).
 - **Novo endpoint público** — exige rate limit + zod + resposta genérica quando aplicável.
 - **Novo upload** — allowlist MIME (sem SVG), magic bytes, limite, endpoint autenticado.
-- **Segredos** — nunca no repo; `.env` chmod 600 no VPS; credenciais em `~/.config/nxgest`.
+- **Segredos** — nunca no repo; `.env` chmod 600 no VPS; credenciais em `~/.config/nxgestao`.
 - **Deploy** — seguir `06-PRODUCAO.md`; `.env` de produção só no VPS.
 - **CTs de segurança** — novos entram em `07-CASOS-DE-USO-API.md` na execução do PLAN-066; existentes servem de regressão.
 

@@ -17,7 +17,7 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 | Índice geral | `docs/README.md` e `docs/INDEX.md` |
 | Produto (domínio, regras, PRD, roadmap) | `docs/product/` |
 | Arquitetura, banco, API, backend, frontend | `docs/engineering/` |
-| Planos de implementação (PLAN-001 a PLAN-069) | `docs/plans/README.md` |
+| Planos de implementação | `docs/plans/README.md` |
 | Decisões arquiteturais (ADRs) | `docs/decisions/ADR-INDEX.md` |
 | **Produção / operação (runbook)** | `docs/engineering/06-PRODUCAO.md` |
 | Deploy do primeiro cliente | `docs/plans/PLAN-018-deploy.md` |

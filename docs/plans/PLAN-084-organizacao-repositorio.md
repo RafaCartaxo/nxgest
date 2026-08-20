@@ -1,6 +1,6 @@
 # PLAN-084 — Organização do Repositório
 
-**Status:** 📝 Planejado (validação externa) — 19/08/2026
+**Status:** 🔵 Em execução — Blocos 1 e 2 iniciados (19/08/2026)
 **Projeto:** NX Gest (`nxgest`)
 **Origem:** plano elaborado no GitHub Copilot (sessão de memória) + reconciliação com o trabalho já entregue em 19/08 (PLAN-083 + purga SQLite→PG).
 **Relacionado:** PLAN-083 (concluído) · SKILL-009 (documentation sync) · `docs/README.md` · `docs/INDEX.md` · `AGENTS.md`
@@ -38,20 +38,18 @@ Organizar o repositório por responsabilidade e manter rastreabilidade entre có
 - Planos concluídos, tasks/handoffs antigos.
 - PLAN-018, ADRs e QA que descrevem SQLite — marcados `legacy`/`superseded` (não reescritos como corrente).
 
-## Estado de reconciliação (19/08) — já feito
+## Estado de reconciliação (19/08)
 
-Parte do escopo do plano já foi entregue nesta sessão e **não deve ser retrabalhada**:
+Itens já confirmados no estado atual e que não devem ser retrabalhados sem nova evidência:
 
-- ✅ `README.md` → PostgreSQL/Node 20/`DATABASE_URL`.
-- ✅ `.env.example` → `DB_PATH` removido (fica só `DATABASE_URL`/`UPLOADS_DIR`).
-- ✅ `docs/engineering/06-PRODUCAO.md` → backup só `pg_dump`; seções SQLite/WAL/off-site legadas removidas.
-- ✅ `AGENTS.md` → nota "hoje só existe PostgreSQL".
-- ✅ `docs/qa/01-VISAO-GERAL.md` → stack/ambientes PG.
-- ✅ `docs/product/07-CASOS-DE-USO-API.md` → procedimento de smoke PG.
-- ✅ `better-sqlite3` + `@types/better-sqlite3` removidos (package.json/lock) · `migrate:pg` removido · regra dependabot removida.
-- ✅ `scripts/migrate-sqlite-to-pg.mjs` → `scripts/arquivo/` · `scripts/arquivo/fix-caixa.mjs` deletado.
-- ✅ `gestao.db*` arquivado fora do repo (`~/.config/nxgestao/backups/legacy-sqlite/`).
-- ⚠️ `qa/02/03/06` **não** contêm SQLite (item do plano era exagerado) — confirmado por grep.
+- ✅ `.env.example` usa PostgreSQL e não contém `DB_PATH`.
+- ✅ `AGENTS.md` declara PostgreSQL como banco atual e `nxgest` como nome canônico.
+- ✅ `docs/qa/01-VISAO-GERAL.md` e `docs/product/07-CASOS-DE-USO-API.md` refletem PostgreSQL/Smoke PG.
+- ✅ `better-sqlite3` e `@types/better-sqlite3` não estão nas dependências atuais.
+- ✅ `docs/plans/PLAN-083-otimizacao-consultas-busca.md` está concluído e registra smoke 278/278.
+- ⚠️ O inventário local confirmou que README, QA 02/06, `.env.production.example`, `.dockerignore` e índices ainda exigem sincronização; esses itens permanecem nos blocos de execução abaixo.
+- ✅ Bloco de ambiente parcialmente aplicado: `.env.staging.example` versionável, staging sem envio real (`MAIL_PROVIDER=console`), secrets aleatórios na criação/atualização de `.env.staging`, rate limits de QA normalizados e `MAIL_FROM` removido dos Compose.
+- ⚠️ O `.env` local contém um `GITHUB_TOKEN`; revogar e recriar esse token antes de compartilhar o workspace ou executar qualquer operação que possa expô-lo.
 
 ## Pendências confirmadas (por Bloco)
 

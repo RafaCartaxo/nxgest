@@ -9,7 +9,7 @@
 ### Boot e organização
 
 - `src/main.ts` — cria o app Express, aplica middlewares globais e sobe na porta `PORT` (default 3000).
-- `src/database.ts` — conexão SQLite (WAL), schema (`createTables()`) e seeds iniciais (admin default + super admin + empresa "Desenvolvimento").
+- `src/database.ts` — conexão PostgreSQL, schema/migrações idempotentes e seeds iniciais (admin default + super admin + empresa "Desenvolvimento").
 - Módulos em `src/modules/<modulo>/` (ver `02-ARQUITETURA.md`).
 
 ### Middlewares globais (ordem no `main.ts`)

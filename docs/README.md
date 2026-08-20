@@ -26,7 +26,7 @@ Bem-vindo à documentação oficial do sistema de gestão de cobranças em campo
 3. Consulte o [ROADMAP.md](product/04-ROADMAP.md) para saber a fase atual
 4. Veja o [MAPEAMENTO-TELAS.md](engineering/05-MAPEAMENTO-TELAS.md) para as telas existentes
 5. Veja os casos de uso de validação: [fluxos](product/06-CASOS-DE-USO.md) e [API](product/07-CASOS-DE-USO-API.md)
-6. Para manter tudo alinhado (fonte única de verdade), use a [SKILL-009](skills/SKILL-009-documentation-sync.md) ou o comando `audita-docs`
+6. Para manter tudo alinhado (fonte única de verdade), use a [SKILL-009](skills/SKILL-009-documentation-sync.md) ou o comando `npm run docs:audit`
 7. Cada seção possui seu próprio README com a lista de documentos disponíveis
 
 ## Convenções
