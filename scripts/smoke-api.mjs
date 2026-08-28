@@ -1757,6 +1757,9 @@ async function main() {
   await t("AC-22", "convite revogado → 400 CONVITE_REVOGADO (PLAN-087)", async () => {
     const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Conv Revog", email: `convrev.${Date.now()}@uorak.com`, role: "operator" } })
     expect(criado, 201, "criar convidado")
+    // N2: um usuário só tem UM convite PENDENTE (findValidoPorUsuario = mais antigo).
+    // Revoga o automático primeiro para o nosso convite de token conhecido ser o único.
+    await req("PATCH", `/api/admin/operadores/${criado.data.id}/revogar-convite`, { token: adminToken })
     const raw = "rawtoken-revog-00001"
     await inserirConvite(criado.data.id, criado.data.email, raw, new Date(Date.now() + 3600e3).toISOString())
     await req("PATCH", `/api/admin/operadores/${criado.data.id}/revogar-convite`, { token: adminToken })
