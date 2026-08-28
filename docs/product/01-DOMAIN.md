@@ -48,7 +48,8 @@ Cada contrato possui suas próprias condições, sendo independente dos demais c
 * Registrar o percentual de juros.
 * Representar as condições financeiras do acordo.
 * Definir quantidade de parcelas.
-* Calcular automaticamente a data de término (dataFinal) como dataInicio + quantidadeParcelas, com ajuste de domingo.
+* Definir a periodicidade das parcelas (`diaria` padrão, `semanal` ou `alternada` — ver BR-039/BR-107).
+* Calcular automaticamente a data de término (dataFinal) como dataInicio + quantidadeParcelas × intervalo (1, 2 ou 7 dias), com ajuste de domingo (BR-108).
 * Gerenciar seu próprio estado.
 * Manter a relação com suas parcelas.
 * Manter a relação com seus pagamentos.

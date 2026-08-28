@@ -72,6 +72,7 @@ A verdade é decidida **no código**, e a documentação a espelha:
 | **Feature entregue (PLAN concluído)** | `docs/plans/README.md` (status) · `UPDATES.md` · `04-ROADMAP.md` (fase) | `BACKLOG.md` (move itens resolvidos) · UCs com status atualizado |
 | **Comportamento mudou** | `06`/`07` (conferências/CTs) · **rodar o smoke** (`scripts/smoke-api.mjs`) e registrar resultado | Rodar revisão da `SKILL-001-documentation-reviewer.md` |
 | **Entidade/schema do banco** | `01-DOMAIN.md` · `01-DATABASE.md` | UCs/BRs afetados · migração em `src/database.ts` |
+| **Lógica duplicada backend↔frontend** (ex.: `intervaloDePeriodicidade`/`calcularDataFinal` em `src/modules/contrato/domain/services/gerar-parcelas.ts` ↔ `frontend/src/modules/contrato/utils/calcularDataFinal.ts` — PLAN-076/085) | Atualizar **os dois arquivos no mesmo commit** + testes-espelho com a mesma matriz nos dois lados | `docs/plans/PLAN-085` · UCs/BRs · badge/labels que renderizam os valores do enum |
 
 ---
 

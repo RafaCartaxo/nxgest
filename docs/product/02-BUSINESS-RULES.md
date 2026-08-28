@@ -662,6 +662,28 @@ Contrato com início em 01/07/2026 (quarta-feira):
 
 A data final do contrato (dataFinal) será calculada automaticamente como `dataInicio + quantidadeParcelas × intervalo`, onde intervalo é `1` dia (diária) ou `7` dias (semanal), ajustando para segunda-feira se o cálculo recair em um domingo (BR-042).
 
+> **Revogada pela BR-108** (PLAN-085), que generaliza o intervalo para `1 | 2 | 7`.
+
+---
+
+## BR-107 (PLAN-085)
+
+Contrato com periodicidade **alternada** (`alternada`) tem parcelas a cada **2 dias** (pagar dia sim, dia não): a primeira parcela vence em `dataInicio + 2` e as seguintes a cada 2 dias.
+
+- **Sem restrição de dia de início** (diferente da semanal — BR-040-A): como o dia da semana varia a cada vencimento, não há "dia fixo" que possa cair sempre em domingo.
+- Vencimento que cair em domingo desliza para segunda-feira (BR-042), o que faz o padrão convergir para segunda/quarta/sexta (3 visitas por semana).
+- **Default de parcelas: 10** — padrão comercial de ~20 dias (os 2-4 deslizes de domingo somam dias; o span real é 22-24 dias, consistente com o comportamento da diária, que também passa de 20).
+
+> **Estende a BR-039**, que enumerava apenas parcelas diárias ou semanais.
+
+---
+
+## BR-108 (PLAN-085)
+
+A data final do contrato (`dataFinal`) será calculada automaticamente como `dataInicio + quantidadeParcelas × intervalo`, onde `intervalo` é `1` (diária), `2` (alternada) ou `7` (semanal), ajustando para segunda-feira se o cálculo recair em um domingo (BR-042).
+
+> **Revoga a BR-042-A**, cuja fórmula enumerava apenas os intervalos `1` e `7`.
+
 ---
 
 # Pagamentos

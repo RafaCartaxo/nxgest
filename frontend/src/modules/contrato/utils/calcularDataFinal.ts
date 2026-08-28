@@ -1,9 +1,11 @@
 import { parseDateLocal, getLocalDateString } from "../../../shared/utils/parseDateLocal.js"
 import type { Periodicidade } from "../services/contrato.service.js"
 
-/** Intervalo em dias entre vencimentos — diária = 1, semanal = 7 (PLAN-076). */
+/** Intervalo em dias entre vencimentos — diária = 1, semanal = 7, alternada = 2 (PLAN-076/085). */
 export function intervaloDePeriodicidade(periodicidade: Periodicidade): number {
-  return periodicidade === "semanal" ? 7 : 1
+  if (periodicidade === "semanal") return 7
+  if (periodicidade === "alternada") return 2
+  return 1
 }
 
 export function calcularDataFinal(

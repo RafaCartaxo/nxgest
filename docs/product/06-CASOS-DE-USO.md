@@ -323,20 +323,21 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 **Ator:** operador
 
-**Ação:** acessa `/contratos/novo`, escolhe cliente, valor, juros, parcelas, data, salva.
+**Ação:** acessa `/contratos/novo`, escolhe cliente, valor, juros, parcelas, **periodicidade (diária/semanal/alternada)**, data, salva.
 
-**O que DEVE acontecer:** valida **saldo do caixa ≥ valor** (senão 422); gera parcelas com juros e **pulando domingo**; gera **movimentação de saída** (origem Contrato); navega para o detalhe.
+**O que DEVE acontecer:** valida **saldo do caixa ≥ valor** (senão 422); gera parcelas conforme a periodicidade e **pulando domingo**; semanal não inicia em domingo (BR-040-A); gera **movimentação de saída** (origem Contrato); navega para o detalhe.
 
 **Reflexos de dados:** contratos · parcelas · movimentações financeiras (saída/Contrato) · saldo do caixa · detalhe do contrato.
 
 **Conferências:**
 - [ ] Caixa insuficiente bloqueia com mensagem clara?
 - [ ] Parcelas pulam domingo (não existe vencimento no domingo)?
+- [ ] Periodicidade alternada gera vencimentos a cada 2 dias (BR-107) e `dataFinal` com intervalo 2 (BR-108)?
 - [ ] Juros aplicados (valorFinal = valor × (1+juros%))?
 - [ ] Movimentação de saída do valor base aparece?
 - [ ] Detalhe do contrato coerente (saldo, recebido, parcelas)?
 
-**Regras:** BR-004 a BR-007, BR-039 a BR-042
+**Regras:** BR-004 a BR-007, BR-039 a BR-042, BR-107, BR-108
 
 ---
 
@@ -1021,14 +1022,15 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 **Ação:** abre `/contratos/:id/editar`.
 
-**O que DEVE acontecer:** sem pagamentos, pode alterar condições (juros, parcelas, valor, data) — parcelas antigas substituídas preservando histórico (BR-041); **com pagamentos**, tela de bloqueio (BR-006/BR-008).
+**O que DEVE acontecer:** sem pagamentos, pode alterar condições (juros, parcelas, valor, data, **periodicidade**) — parcelas antigas substituídas preservando histórico (BR-041); **com pagamentos**, tela de bloqueio (BR-006/BR-008).
 
 **Conferências:**
 - [ ] Sem pagamentos → edição liberada, parcelas recalculadas?
 - [ ] Com pagamentos → tela de bloqueio (aviso amarelo), sem formulário?
 - [ ] Histórico de parcelas antigas preservado (soft delete)?
+- [ ] Mudança para alternada regenera com intervalo 2 (BR-107/BR-108); semanal com domingo → 422 (BR-040-A)?
 
-**Regras:** BR-006, BR-008, BR-041
+**Regras:** BR-006, BR-008, BR-040, BR-040-A, BR-041, BR-107, BR-108
 
 ---
 

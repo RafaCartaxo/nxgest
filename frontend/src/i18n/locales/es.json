@@ -242,9 +242,11 @@
     "periodicidade": "Periodicidad",
     "periodicidadeOpcoes": {
       "diaria": "Diaria",
+      "alternada": "Día por medio",
       "semanal": "Semanal"
     },
     "porDia": "por día",
+    "porAlternada": "día por medio",
     "porSemana": "por semana",
     "dataInicio": "Fecha de Inicio",
     "totalAReceber": "Total a Recibir",

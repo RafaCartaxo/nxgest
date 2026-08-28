@@ -16,7 +16,7 @@ export function getContratoSchema(t: TFunction) {
         .string()
         .min(1, t("contrato.validacao.minimo1Parcela"))
         .refine((val) => parseInt(val) >= 1, t("contrato.validacao.minimo1Parcela")),
-      periodicidade: z.enum(["diaria", "semanal"]),
+      periodicidade: z.enum(["diaria", "semanal", "alternada"]),
       dataInicio: z
         .string()
         .min(1, t("contrato.validacao.informeDataInicio")),

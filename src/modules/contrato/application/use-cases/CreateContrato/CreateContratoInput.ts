@@ -10,7 +10,7 @@ export const createContratoSchema = z.object({
     .int()
     .positive("Quantidade de parcelas deve ser positiva"),
   periodicidade: z
-    .enum(PERIODICIDADES, { message: "Periodicidade deve ser 'diaria' ou 'semanal'" })
+    .enum(PERIODICIDADES, { message: "Periodicidade deve ser 'diaria', 'semanal' ou 'alternada'" })
     .default("diaria"),
   dataInicio: z
     .string()

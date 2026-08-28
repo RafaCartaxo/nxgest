@@ -41,15 +41,22 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
   // Periodicidade inicial (criação: diária pré-selecionada; edição: a do contrato).
   const periodicidadeInicial = initial?.periodicidade ?? "diaria"
 
+  // Default de parcelas por periodicidade (diária=20, alternada=10, semanal=3) — PLAN-076/085.
+  const defaultParcelasPorPeriodicidade: Record<Periodicidade, string> = {
+    diaria: "20",
+    alternada: "10",
+    semanal: "3",
+  }
+
   const form = useForm<ContratoFormData>({
     shouldFocusError: true,
     resolver: zodResolver(getContratoSchema(t)),
     defaultValues: {
       valorBase: initial?.valorBase ?? "",
       percentualJuros: initial?.percentualJuros ?? "20",
-      // Default de parcelas deriva da periodicidade inicial (diária=20, semanal=3);
-      // na edição mantém o valor salvo do contrato. O seletor também aplica 20/3 ao clicar.
-      quantidadeParcelas: initial?.quantidadeParcelas ?? (periodicidadeInicial === "semanal" ? "3" : "20"),
+      // Default de parcelas deriva da periodicidade inicial (diária=20, alternada=10, semanal=3);
+      // na edição mantém o valor salvo do contrato. O seletor também aplica o default ao clicar.
+      quantidadeParcelas: initial?.quantidadeParcelas ?? defaultParcelasPorPeriodicidade[periodicidadeInicial],
       periodicidade: periodicidadeInicial,
       dataInicio: initial?.dataInicio ?? "",
     },
@@ -66,6 +73,11 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
   const jurosNum = parseFloat(percentualJuros.replace(",", ".")) || 0
   const valorFinal = valorBaseNum * (1 + jurosNum / 100)
   const qtd = parseInt(quantidadeParcelas)
+  const rotuloPeriodicidade: Record<Periodicidade, string> = {
+    diaria: t("contrato.porDia"),
+    alternada: t("contrato.porAlternada"),
+    semanal: t("contrato.porSemana"),
+  }
 
   async function handleSubmit(data: ContratoFormData) {
     if (mode === "novo" && !clienteId) {
@@ -111,15 +123,15 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
         <Card.Body className="space-y-4 pt-2">
           <div className="space-y-2">
             <span className="text-sm font-medium text-text-primary">{t("contrato.periodicidade")}</span>
-            <div className="grid grid-cols-2 gap-2">
-              {(["diaria", "semanal"] as const).map((p) => (
+            <div className="grid grid-cols-3 gap-2">
+              {(["diaria", "alternada", "semanal"] as const).map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => {
                     form.setValue("periodicidade", p)
-                    // Default de parcelas do tipo (diária=20, semanal=3) — pode editar depois.
-                    form.setValue("quantidadeParcelas", p === "semanal" ? "3" : "20")
+                    // Default de parcelas do tipo (diária=20, alternada=10, semanal=3) — pode editar depois.
+                    form.setValue("quantidadeParcelas", defaultParcelasPorPeriodicidade[p])
                   }}
                   className={`rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
                     periodicidade === p
@@ -198,7 +210,7 @@ export function ContratoForm({ mode, clientes = [], clienteFixado, initial, onSu
             {qtd > 0 && (
               <p className="text-sm text-text-secondary">
                 {qtd}x de R$ {formatCurrency(valorFinal / qtd)}{" "}
-                {periodicidade === "semanal" ? t("contrato.porSemana") : t("contrato.porDia")}
+                {rotuloPeriodicidade[periodicidade]}
               </p>
             )}
             {dataInicio && qtd > 0 && (

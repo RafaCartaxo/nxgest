@@ -2,6 +2,15 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 27/08/2026 — Contrato com periodicidade alternada (PLAN-085)
+
+- **3º modelo de contrato: `alternada` (pagar dia sim, dia não)** — intervalo de **2 dias** (1º vencimento em `dataInicio+2`), default de **10 parcelas**, desliza domingo → segunda (BR-042). Nenhum vencimento em domingo; sem restrição de dia de início (BR-107).
+- **Zero migração** — a coluna `periodicidade` é `TEXT NOT NULL DEFAULT 'diaria'` sem CHECK; o novo valor passa a ser aceito sem `ALTER TABLE`.
+- **BR-107** (alternada, estende BR-039) e **BR-108** (`dataFinal` com intervalo `1|2|7`, revoga BR-042-A).
+- **Espelho sincronizado** — `intervaloDePeriodicidade` atualizado no backend (`gerar-parcelas.ts`) e no frontend (`calcularDataFinal.ts`) + **testes-espelho com a mesma matriz** nos dois lados (pega divergência de `dataFinal` exibida × persistida).
+- **Formulário** — grid `grid-cols-3`, lookup de default de parcelas (`diaria:20 · alternada:10 · semanal:3`) nos 2 pontos, rótulo do resumo por lookup, badge do card por lookup i18n.
+- **Validação** — tsc · `npm test` (19 testes novos de `alternada` no backend + 9 no frontend) · audits/ui/styles/docs verdes.
+
 ## 18/08/2026 — PLAN-079: estabilidade de deploy + fix "text/html MIME" — **em produção**
 
 - **Cache-busting automático do service worker (F1)** — `sw.js` usa placeholder `__NXGEST_CACHE_VERSION__`; plugin inline no `vite.config.ts` injeta hash sha1 do `index.html` no `closeBundle`. A cada deploy o `activate` limpa caches antigos → fim da mistura de hashes de chunks. Prod: `CACHE = "nxgest-a979e1c4d9fa"`.

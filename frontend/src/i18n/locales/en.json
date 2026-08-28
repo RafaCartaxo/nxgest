@@ -242,9 +242,11 @@
     "periodicidade": "Periodicity",
     "periodicidadeOpcoes": {
       "diaria": "Daily",
+      "alternada": "Every other day",
       "semanal": "Weekly"
     },
     "porDia": "per day",
+    "porAlternada": "every other day",
     "porSemana": "per week",
     "dataInicio": "Start Date",
     "totalAReceber": "Total Receivable",

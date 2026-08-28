@@ -12,14 +12,14 @@ interface ContratoCardProps {
   variant: "list-item" | "detail"
 }
 
-/** Badge de periodicidade (diária/semanal — PLAN-076) no canto superior direito do card. */
+/** Badge de periodicidade (diária/semanal/alternada — PLAN-076/085) no canto superior direito do card. */
 function BadgePeriodicidade({ c }: { c: Contrato }) {
   const { t } = useTranslation()
   return (
     <StatusBadge
       variant={c.periodicidade === "semanal" ? "warning" : "info"}
       size="sm"
-      label={c.periodicidade === "semanal" ? t("contrato.periodicidadeOpcoes.semanal") : t("contrato.periodicidadeOpcoes.diaria")}
+      label={t(`contrato.periodicidadeOpcoes.${c.periodicidade}`)}
     />
   )
 }

@@ -165,7 +165,11 @@ const endpoints = [
   mod("Contratos", "CRUD de contratos", [
     req("Criar", "POST", "/api/contratos", {
       body: { clienteId: "{{clienteId}}", valorBase: 1000, percentualJuros: 20, quantidadeParcelas: 5, periodicidade: "diaria", dataInicio: "2026-08-04" },
-      description: "API-UC-009 · 201 · 422 caixa insuficiente · 404 cliente · campo percentualJuros · periodicidade diaria/semanal",
+      description: "API-UC-009 · 201 · 422 caixa insuficiente · 404 cliente · campo percentualJuros · periodicidade diaria/semanal/alternada",
+    }),
+    req("Criar (alternada)", "POST", "/api/contratos", {
+      body: { clienteId: "{{clienteId}}", valorBase: 600, percentualJuros: 20, quantidadeParcelas: 10, periodicidade: "alternada", dataInicio: "2026-08-03" },
+      description: "API-CT-017d (PLAN-085) · 201 · vencimentos a cada 2 dias · span real 22-24 dias · nenhum vencimento em domingo",
     }),
     req("Listar", "GET", "/api/contratos", { description: "API-UC-010 · 200 lista escopada" }),
     req("Detalhe", "GET", "/api/contratos/{{contratoId}}", { description: "API-UC-011 · 200 · 404 outro operador" }),

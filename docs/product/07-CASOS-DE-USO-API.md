@@ -404,7 +404,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 **Request:** `{ clienteId, valorBase, percentualJuros, quantidadeParcelas, periodicidade?, dataInicio }`
 
 > **Campo correto é `percentualJuros`** (não `juros`) — mesmo nome usado no front (`contrato.schema.ts`). Omisso → default 20.
-> **`periodicidade`** (PLAN-076): `diaria` (padrão) ou `semanal` — semanal gera vencimentos no mesmo dia da semana da `dataInicio` (a cada 7 dias).
+> **`periodicidade`** (PLAN-076/085): `diaria` (padrão) · `semanal` (vencimentos a cada 7 dias, no mesmo dia da semana da `dataInicio`) · `alternada` (a cada 2 dias, dia sim dia não).
 
 **Response 201:** contrato com parcelas geradas
 
@@ -413,10 +413,11 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 - [ ] Parcelas pulam domingo (BR-042)?
 - [ ] `periodicidade` semanal → parcelas com vencimentos `+7*i` dias (mesmo dia da semana, BR-039)?
 - [ ] `periodicidade` semanal com `dataInicio` em domingo → 422 (BR-040-A)?
+- [ ] `periodicidade` alternada → parcelas com vencimentos `dataInicio + 2*i` dias, pulando domingo, e span real de 22-24 dias (BR-107/BR-108)?
 - [ ] Gera movimentação de saída (origem Contrato) refletida no caixa?
 - [ ] `valorFinal = valorBase × (1 + juros/100)` (BR-005)?
 
-**Regras:** BR-004 a BR-007, BR-019, BR-039, BR-040, BR-040-A, BR-041, BR-042 · **Postman:** `Contratos > Criar`
+**Regras:** BR-004 a BR-007, BR-019, BR-039, BR-040, BR-040-A, BR-041, BR-042, BR-107, BR-108 · **Postman:** `Contratos > Criar`
 
 ### API-CT-017 — Contrato válido
 **Dado** caixa suficiente → **Quando** `POST /api/contratos` → **Então** 201; `GET /api/caixa/movimentacoes` mostra saída/Contrato e `saldoAtual` caiu `valorBase`.
@@ -426,6 +427,9 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### API-CT-017c — Contrato semanal não inicia em domingo (PLAN-076)
 **Dado** `dataInicio` em domingo → **Quando** `POST /api/contratos` com `periodicidade: "semanal"` → **Então** 422 (BR-040-A).
+
+### API-CT-017d — Contrato alternado (PLAN-085)
+**Dado** caixa suficiente → **Quando** `POST /api/contratos` com `periodicidade: "alternada"` e `quantidadeParcelas: 10` → **Então** 201 com `periodicidade: "alternada"`, parcelas com vencimentos `dataInicio + 2*i` dias (dia sim, dia não), nenhum vencimento em domingo (BR-042) e `dataFinal` = `dataInicio + quantidadeParcelas × 2` dias ajustada (BR-108). Contrato pode iniciar em qualquer dia da semana (BR-107).
 
 ### API-CT-018 — Caixa insuficiente
 **Dado** `valorBase` maior que o saldo → **Então** 422 e **nenhuma** movimentação criada.
@@ -467,7 +471,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 **Coerência:**
 - [ ] Parcelas com estados coerentes (Pendente/Parcial/Paga) e saldos batendo com pagamentos?
 - [ ] Contrato de outro operador → 404?
-- [ ] Response inclui `periodicidade` (diaria/semanal) coerente com as parcelas (PLAN-076)?
+- [ ] Response inclui `periodicidade` (diaria/semanal/alternada) coerente com as parcelas (PLAN-076/085)?
 
 **Regras:** BR-008 a BR-012 · **Postman:** `Contratos > Detalhe`
 
@@ -490,7 +494,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 - [ ] Sem pagamentos → parcelas antigas substituídas (soft delete) preservando histórico (BR-041)?
 - [ ] Mudança para `semanal` mantendo `dataInicio` em domingo → 422 (BR-040-A, valor efetivo pós-merge)?
 
-**Regras:** BR-006, BR-008, BR-040, BR-040-A, BR-041 · **Postman:** `Contratos > Editar`
+**Regras:** BR-006, BR-008, BR-040, BR-040-A, BR-041, BR-107, BR-108 · **Postman:** `Contratos > Editar`
 
 ### API-CT-023 — Editar sem pagamentos
 **Dado** contrato sem pagamentos → **Quando** `PATCH /api/contratos/:id` → **Então** 200 e parcelas recalculadas.
@@ -500,6 +504,9 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ### API-CT-023c — Editar para semanal com dataInicio em domingo (PLAN-076)
 **Dado** contrato sem pagamentos cuja `dataInicio` (atual ou enviada) é domingo → **Quando** `PATCH /api/contratos/:id` com `{ periodicidade: "semanal" }` → **Então** 422 (BR-040-A).
+
+### API-CT-023d — Editar para alternada regenera parcelas (PLAN-085)
+**Dado** contrato sem pagamentos → **Quando** `PATCH /api/contratos/:id` com `{ periodicidade: "alternada" }` → **Então** 200 com `periodicidade: "alternada"` e parcelas com vencimentos `+2*i` (dia sim, dia não), sem restrição de `dataInicio` em domingo (BR-107).
 
 ### API-CT-024 — Editar com pagamentos
 **Dado** contrato com pagamentos → **Então** 409 (condições financeiras imutáveis).

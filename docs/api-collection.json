@@ -1020,7 +1020,44 @@
                 }
               }
             },
-            "description": "API-UC-009 · 201 · 422 caixa insuficiente · 404 cliente · campo percentualJuros · periodicidade diaria/semanal"
+            "description": "API-UC-009 · 201 · 422 caixa insuficiente · 404 cliente · campo percentualJuros · periodicidade diaria/semanal/alternada"
+          }
+        },
+        {
+          "name": "Criar (alternada)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/contratos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "contratos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"valorBase\": 600,\n  \"percentualJuros\": 20,\n  \"quantidadeParcelas\": 10,\n  \"periodicidade\": \"alternada\",\n  \"dataInicio\": \"2026-08-03\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "API-CT-017d (PLAN-085) · 201 · vencimentos a cada 2 dias · span real 22-24 dias · nenhum vencimento em domingo"
           }
         },
         {

@@ -8,7 +8,7 @@ export const updateContratoSchema = z
     quantidadeParcelas: z.number().int().positive().optional(),
     periodicidade: z
       .enum(PERIODICIDADES, {
-        message: "Periodicidade deve ser 'diaria' ou 'semanal'",
+        message: "Periodicidade deve ser 'diaria', 'semanal' ou 'alternada'",
       })
       .optional(),
     dataInicio: z

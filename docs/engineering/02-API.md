@@ -518,7 +518,7 @@ Cria um novo contrato com geração automática de parcelas e débito do Caixa B
 | valorBase | Sim | Positivo |
 | percentualJuros | Sim | Mínimo 0, padrão 20 |
 | quantidadeParcelas | Sim | Inteiro positivo |
-| periodicidade | Não | `diaria` (padrão) \| `semanal` |
+| periodicidade | Não | `diaria` (padrão) \| `semanal` \| `alternada` (a cada 2 dias) |
 | dataInicio | Sim | Formato AAAA-MM-DD; contrato semanal não pode iniciar em domingo |
 
 ## Response 201

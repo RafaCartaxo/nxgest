@@ -2,9 +2,11 @@ import { v4 as uuid } from "uuid"
 import type { Parcela, Periodicidade } from "../contrato.entity.js"
 import { parseDateLocal, getLocalDateString } from "../../../../shared/utils/parseDateLocal.js"
 
-/** Intervalo em dias entre vencimentos — diária = 1, semanal = 7 (PLAN-076). */
+/** Intervalo em dias entre vencimentos — diária = 1, semanal = 7, alternada = 2 (PLAN-076/085). */
 export function intervaloDePeriodicidade(periodicidade: Periodicidade): number {
-  return periodicidade === "semanal" ? 7 : 1
+  if (periodicidade === "semanal") return 7
+  if (periodicidade === "alternada") return 2
+  return 1
 }
 
 /** Ajusta um vencimento que caiu em domingo para a segunda-feira seguinte (BR-042). */

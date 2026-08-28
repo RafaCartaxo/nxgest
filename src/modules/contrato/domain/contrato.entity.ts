@@ -2,7 +2,7 @@ export type EstadoContrato = "Ativo" | "Finalizado" | "Cancelado"
 
 export type EstadoParcela = "Pendente" | "Parcial" | "Paga"
 
-export type Periodicidade = "diaria" | "semanal"
+export type Periodicidade = "diaria" | "semanal" | "alternada"
 
 export type TipoMovimentacao = "entrada" | "saida"
 

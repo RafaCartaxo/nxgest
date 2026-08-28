@@ -1,6 +1,6 @@
 import { apiRequest } from "../../../api/client.js"
 
-export type Periodicidade = "diaria" | "semanal"
+export type Periodicidade = "diaria" | "semanal" | "alternada"
 
 export interface Parcela {
   id: string
