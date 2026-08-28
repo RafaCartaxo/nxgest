@@ -432,6 +432,24 @@ O isolamento multi-tenant filtra `userId = ?` em toda consulta, mas nenhuma tabe
 
 ---
 
+# EPIC 11 — Pendências registradas em revisão (28/08)
+
+> Registros oriundos das revisões do vault (`brainwork`) aplicadas aos PLAN-080/081. Nenhum é bloqueador; cada um evolui para um PLAN próprio quando entrar.
+
+## P030 — Sidebar desktop colapsável (rail)
+
+**Cortada do PLAN-081 (D4) em 28/08** — lista vertical já escala; o rail resolveria largura de conteúdo (motivação mais fraca) e viola o normativo `06-UI-PATTERNS` ("desktop expande informação"). Se voltar, o plano precisa declarar que o motivo é **área de conteúdo** (não escala de nav) e justificar a exceção ao princípio.
+
+## P031 — Meta de verdade (admin define alvo por operador/período)
+
+**Do PLAN-080 (revisão 28/08):** "performance meta × real" virou "previsto × recebido" porque não existe entidade de meta no schema. Meta real exigiria tabela + CRUD + BR + tela — plano próprio, não ponta de gráfico.
+
+## P032 — Depreciação de `snapshots_atraso`
+
+**Do PLAN-080 (revisão 28/08):** classe 4 (amostragem oportunista, sem scheduler) — nenhum gráfico pode usar. Manter por compatibilidade (`historico-atrasos` permanece, API-UC-022/BR-086) enquanto existir o endpoint; remover a tabela quando o último consumidor sair **ou** quando um job agendado fizer a classe 4 virar classe 1 (registrar o gatilho no PLAN-080).
+
+---
+
 # Prioridade sugerida
 
 ## Sprint 1 — Concluído (PLAN-026)

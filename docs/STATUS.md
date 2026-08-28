@@ -2,7 +2,7 @@
 
 > **Regra:** atualizar a cada sessão de trabalho, junto com o `CHECKLIST` do dia (e o `UPDATES.md` quando houver entrega relevante). Fonte de verdade dos detalhes: planos e docs linkados.
 
-**Última atualização:** 27/08/2026
+**Última atualização:** 28/08/2026
 
 ---
 
@@ -15,11 +15,12 @@
 | VPS | `172.245.152.223` · repo `/opt/nxgestao` · vol prod `nxgestao_nxgestao_data` · vol staging `nxgestao_nxgestao_staging_data` |
 | E-mail | Resend ativo (`no-reply@nxgest.com.br`) — fail-closed (503 se indisponível) |
 | Deploy mais recente | **Automático via pipeline** — último commit da `main` (prod após staging saudável) |
-| CI/CD | **CI** (`.github/workflows/ci.yml`): tsc · build · check-dist · audits · test (172) · coverage · docs:audit + smoke isolado (278) + **deploy-staging** · **CD** (`.github/workflows/cd.yml`): validate (CI verde + staging) → **deploy-prod** automático/manual |
+| CI/CD | **CI** (`.github/workflows/ci.yml`): tsc · build · check-dist · audits · test (181) · coverage · docs:audit + smoke isolado (278) + **deploy-staging** · **CD** (`.github/workflows/cd.yml`): validate (CI verde + staging) → **deploy-prod** automático/manual |
 
 ## Entregas recentes
 
-- **PLAN-085 — contrato com periodicidade alternada (27/08)** — 3º modelo (`alternada`, a cada 2 dias, default 10 parcelas): zero migração, BR-107/BR-108, espelho backend↔frontend sincronizado com testes-espelho, formulário `grid-cols-3` + lookup de defaults, badge por i18n. tsc · testes (19 novos no backend + 9 no frontend) · audits/docs verdes.
+- **PLAN-087 — mensagens de falha de convite (28/08)** — incidente de produção resolvido: 6 códigos distintos na ativação (inclui `CONVITE_SUBSTITUIDO` para link trocado por reenvio), 6 chaves i18n órfãs ativadas, ação de saída no `AtivarPage`, e-mail com prazo real de 7 dias (3 idiomas), BR-109, 9 testes unitários novos + CTs.
+- **PLAN-085 — contrato com periodicidade alternada (27/08)** — 3º modelo (`alternada`, a cada 2 dias, default 10 parcelas): zero migração, BR-107/BR-108, espelho backend↔frontend sincronizado com testes-espelho, formulário `grid-cols-3` + lookup de defaults, badge por i18n. tsc · testes (19 novos no backend + 9 no frontend) · audits/docs verdes. **Em produção.**
 - **PLAN-076 + PLAN-077 + UI consolidada em produção (15/08)** — contrato com **periodicidade diária/semanal** (migração idempotente, BR-040-A); **performance**: pool PG com timeout, auth/módulo sem re-query (3→2 queries/request), `listarCobrancasDoDia` com `LATERAL`, N+1 em pagamentos, code-splitting frontend + GPS throttle; UI de Perfil/Operador/Admin consolidada. **Node 20 em todos os ambientes** (prod já era; dev migrado). Smoke **267/267** · testes **125/125** · CI/CD verdes · deploy prod ok.
 - **E-mail: identidade visual NX nos templates (13/08, PLAN-071 Fase 1b — em produção)** — `templates.ts` com layout único (marca "NX Gest" violeta · CTA `min-width` · rodapé institucional pt/en/es · cores da marca em hex). Os 3 templates (convite/reset/lead) usam o layout; textos preservados. Validado local (tsc/91 testes/render HTML).
 - **PLAN-070 concluído — PostgreSQL em produção (13/08)** — migração SQLite→PG concluída: `nxgest-postgres`/`staging-pg` healthy, cutover aplicado, débitos 1-3 resolvidos (TIMESTAMPTZ + snake_case + node 20). Otimização de queries/índices (PLAN-070 Fases B-I).
@@ -52,6 +53,8 @@
 | **PLAN-077 (performance)** | 🔵 F1-F4 ✅ (15/08) · em prod | Bulk insert e otimização adicional encaminhados no PLAN-083; manter medição com volume real como acompanhamento |
 | **PLAN-079 (estabilidade deploy)** | ✅ Implementado (18/08) · **em produção** | Fix erro "text/html MIME" pós-code-splitting: cache-busting do SW · fallback assets→404 · static imutável · check-dist no CI |
 | **PLAN-084 (organização do repositório)** | ✅ **Concluído (20/08)** | Blocos 1–5: sync factual, fronteira Git/Docker, staging organizado, `audit:links` no CI, SHA validado no staging, gates completos no CD manual, backup obrigatório no deploy. Novos planos: **PLAN-080/081/082** 📝 Planejado |
+| **PLAN-086 (identidade/posicionamento)** | 📝 Pendência (origem: vault `brainwork`) | Reposicionar a doc canônica p/ "plataforma modular de gestão operacional" (docs-only + 3 strings) + ADR-007. Checklist na nota do vault `NX Gest - Reposicionamento de identidade (PLAN-086)`. **Nota:** a copy preventiva do e-mail de convite saiu deste plano → executada no PLAN-087 |
+| ~~PLAN-087 (mensagens de falha de convite)~~ | ✅ **Implementado (28/08)** | Incidente de produção resolvido: códigos distintos na ativação + ação de saída + e-mail com prazo real. BR-109 |
 
 ## Pendências (verificação/ações futuras)
 
@@ -72,7 +75,7 @@
 
 ## Métricas de saúde
 
-- **Testes:** 172 verdes (34 arquivos) · smoke API **278/278** · `docs:audit` 0 divergências (62 rotas = 62 telas)
+- **Testes:** 181 verdes (35 arquivos) · smoke API **278/278** · `docs:audit` 0 divergências (62 rotas = 62 telas)
 - **Pipeline:** CI verde no push/PR · staging automático no merge à main · CD prod com gate de promoção (staging saudável) · `check-dist` (PLAN-079) garante consistência index.html ↔ chunks
 - **QA:** pacote `docs/qa/` (visão geral, arquitetura, engenharia, testes, pipeline, operação, segurança, glossário, checklists + trilha de estudo) · validações manuais de produção **concluídas (12/08)**
 - **Docs:** planos (incl. PLAN-070, PLAN-071) · 6 ADRs · 5 templates · skills SKILL-001..009
