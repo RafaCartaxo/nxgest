@@ -73,7 +73,7 @@ const endpoints = [
     req("Me", "GET", "/api/auth/me", { description: "API-UC-003 · 200 dados do usuário logado · 403 EMPRESA_INATIVA (BR-106) · status convidado/ativo (PLAN-065)" }),
     req("Ativar conta", "POST", "/api/auth/ativar", {
       body: { token: "{{conviteToken}}", senha: "novaSenha123" },
-      description: "PLAN-065 · 200 · 422 · 400 TOKEN_EXPIRED/TOKEN_INVALID · 429",
+      description: "PLAN-065/087 · 200 · 422 · 400 TOKEN_EXPIRED/TOKEN_INVALID/CONVITE_REVOGADO/CONVITE_JA_USADO/CONVITE_SUBSTITUIDO/CONVITE_EMAIL_NAO_CONFERE · 429",
     }),
     req("Esqueci senha", "POST", "/api/auth/forgot", {
       body: { email: "admin@cobranca.com" },

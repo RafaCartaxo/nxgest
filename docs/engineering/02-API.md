@@ -2327,9 +2327,15 @@ Ativação de conta **convidada** (PLAN-065): valida o token de convite (enviado
 | Código | HTTP |
 |--------|------|
 | VALIDATION_ERROR | 422 (token/senha < 6) |
-| TOKEN_EXPIRED | 400 |
-| TOKEN_INVALID | 400 (inválido, tipo errado ou já usado) |
+| TOKEN_EXPIRED | 400 (vencimento real de 7 dias) |
+| TOKEN_INVALID | 400 (token inexistente) |
+| CONVITE_REVOGADO | 400 (revogado pelo admin) |
+| CONVITE_JA_USADO | 400 (já utilizado — conta ativada) |
+| CONVITE_SUBSTITUIDO | 400 (link substituído por um convite mais recente) |
+| CONVITE_EMAIL_NAO_CONFERE | 400 (e-mail do usuário ≠ alvo do convite) |
 | RATE_LIMIT | 429 |
+
+> **PLAN-087:** cada motivo de falha tem código/mensagem próprios (antes, 4 situações caíam em `TOKEN_INVALID` com a mensagem genérica "Token inválido ou já utilizado" — incidente real de produção).
 
 ---
 

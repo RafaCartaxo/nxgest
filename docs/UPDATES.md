@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 28/08/2026 — Mensagens de falha de convite (PLAN-087)
+
+- **Incidente de produção resolvido** — link antigo de convite (após reenvio) mostrava "Token inválido ou já utilizado" e travava o usuário sem orientação. Agora a ativação diferencia **6 motivos** com código e mensagem próprios: `TOKEN_INVALID` (inexistente) · `TOKEN_EXPIRED` (vencimento real) · `CONVITE_REVOGADO` · `CONVITE_JA_USADO` · `CONVITE_SUBSTITUIDO` (**novo** — link trocado por um convite mais recente) · `CONVITE_EMAIL_NAO_CONFERE`.
+- **Fluxo de negócio intacto** — invalidação N2, lazy-expire N1.10 e binding `email_alvo` não mudaram; só mensagens/códigos.
+- **`AtivarPage`** — lookup código→i18n (ativa **6 chaves órfãs** que já existiam em pt/en/es) + **ação de saída** "Ir para o login" (dívida AC-07).
+- **E-mail preventivo** — `convite.seguro` informa prazo real (**7 dias**) e orienta usar **sempre o último convite** (3 idiomas).
+- **BR-109** nova · testes unitários novos (`AtivarContaUseCase.test.ts`, 9) · CTs AC-CT-21..25 · docs/collection sincronizadas.
+
 ## 27/08/2026 — Contrato com periodicidade alternada (PLAN-085)
 
 - **3º modelo de contrato: `alternada` (pagar dia sim, dia não)** — intervalo de **2 dias** (1º vencimento em `dataInicio+2`), default de **10 parcelas**, desliza domingo → segunda (BR-042). Nenhum vencimento em domingo; sem restrição de dia de início (BR-107).

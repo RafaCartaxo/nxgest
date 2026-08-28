@@ -16,7 +16,7 @@ import { AuthTokenRepository } from "../../infrastructure/repositories/auth-toke
 import { ConviteRepository } from "../../infrastructure/repositories/convite.repository.impl.js"
 import { criarMailer } from "../../../../shared/email/mailers.js"
 import { resolverLang } from "../../../../shared/email/templates.js"
-import { CredenciaisInvalidasError, SenhaAtualIncorretaError, ContaConvidadaError, ContaSuspensaError, TokenInvalidoError, TokenExpiradoError, EmailDuplicadoError } from "../../domain/errors/auth.error.js"
+import { CredenciaisInvalidasError, SenhaAtualIncorretaError, ContaConvidadaError, ContaSuspensaError, TokenInvalidoError, TokenExpiradoError, EmailDuplicadoError, ConviteRevogadoError, ConviteJaUsadoError, ConviteSubstituidoError, ConviteEmailNaoConfereError } from "../../domain/errors/auth.error.js"
 import { EmailEnvioFalhouError } from "../../../../shared/email/errors.js"
 import { validarFoto } from "../../../../shared/utils/foto.js"
 
@@ -156,12 +156,30 @@ export class AuthController {
       await this.ativarContaUseCase.execute({ token, senha })
       res.json({ ok: true })
     } catch (err) {
+      // PLAN-087: cada motivo de falha tem código/mensagem próprios (incidente real de
+      // produção — link substituído por reenvio mostrava "Token inválido ou já utilizado").
       if (err instanceof TokenExpiradoError) {
         res.status(400).json({ code: "TOKEN_EXPIRED", message: err.message })
         return
       }
       if (err instanceof TokenInvalidoError) {
         res.status(400).json({ code: "TOKEN_INVALID", message: err.message })
+        return
+      }
+      if (err instanceof ConviteRevogadoError) {
+        res.status(400).json({ code: "CONVITE_REVOGADO", message: err.message })
+        return
+      }
+      if (err instanceof ConviteJaUsadoError) {
+        res.status(400).json({ code: "CONVITE_JA_USADO", message: err.message })
+        return
+      }
+      if (err instanceof ConviteSubstituidoError) {
+        res.status(400).json({ code: "CONVITE_SUBSTITUIDO", message: err.message })
+        return
+      }
+      if (err instanceof ConviteEmailNaoConfereError) {
+        res.status(400).json({ code: "CONVITE_EMAIL_NAO_CONFERE", message: err.message })
         return
       }
       console.error("Erro ao ativar conta:", err)

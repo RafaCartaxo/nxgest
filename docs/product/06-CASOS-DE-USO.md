@@ -970,8 +970,9 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 - [ ] Troca de e-mail de convidado → novo convite para o novo endereço?
 - [ ] Troca de e-mail de ativo → `email_pendente`, e-mail atual segue valendo?
 - [ ] Reenviar/revogar convite e suspender/reativar conforme as regras?
+- [ ] Ativar com link antigo (após reenvio) → mensagem "use o último convite" (CONVITE_SUBSTITUIDO, PLAN-087), com ação de saída para o login?
 
-**Regras:** BR-057, BR-067, BR-089, BR-750
+**Regras:** BR-057, BR-067, BR-089, BR-109, BR-750
 
 ---
 

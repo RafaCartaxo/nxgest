@@ -23,9 +23,9 @@ export function resolverLang(header?: string): EmailLang {
 
 const textos = {
   convite: {
-    "pt-BR": { assunto: "Defina sua senha — NX Gest", titulo: "Você foi convidado", corpo: "Você recebeu um convite para acessar o NX Gest. Para começar, defina sua senha e ative sua conta.", botao: "Ativar minha conta", seguro: "O link é pessoal e possui validade limitada." },
-    en: { assunto: "Set your password — NX Gest", titulo: "You've been invited", corpo: "You received an invitation to access NX Gest. To get started, set your password and activate your account.", botao: "Activate my account", seguro: "This link is personal and has limited validity." },
-    es: { assunto: "Define tu contraseña — NX Gest", titulo: "Has sido invitado", corpo: "Recibiste una invitación para acceder a NX Gest. Para comenzar, define tu contraseña y activa tu cuenta.", botao: "Activar mi cuenta", seguro: "El enlace es personal y tiene validez limitada." },
+    "pt-BR": { assunto: "Defina sua senha — NX Gest", titulo: "Você foi convidado", corpo: "Você recebeu um convite para acessar o NX Gest. Para começar, defina sua senha e ative sua conta.", botao: "Ativar minha conta", seguro: "O link é pessoal e expira em 7 dias. Se você receber mais de um convite, use sempre o último — os anteriores deixam de funcionar." },
+    en: { assunto: "Set your password — NX Gest", titulo: "You've been invited", corpo: "You received an invitation to access NX Gest. To get started, set your password and activate your account.", botao: "Activate my account", seguro: "This link is personal and expires in 7 days. If you receive more than one invitation, always use the latest — previous ones stop working." },
+    es: { assunto: "Define tu contraseña — NX Gest", titulo: "Has sido invitado", corpo: "Recibiste una invitación para acceder a NX Gest. Para comenzar, define tu contraseña y activa tu cuenta.", botao: "Activar mi cuenta", seguro: "El enlace es personal y vence en 7 días. Si recibes más de una invitación, usa siempre la última: las anteriores dejan de funcionar." },
   },
   reset: {
     "pt-BR": { assunto: "Recuperar senha — NX Gest", titulo: "Redefina sua senha", corpo: "Recebemos uma solicitação para redefinir a senha da sua conta no NX Gest.", botao: "Redefinir minha senha", seguro: "Este link é válido por 30 minutos." },

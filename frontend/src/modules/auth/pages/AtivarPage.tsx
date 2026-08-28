@@ -16,6 +16,19 @@ export function AtivarPage() {
   const [searchParams] = useSearchParams()
   const token = searchParams.get("token") ?? ""
 
+  // PLAN-087: código da API → mensagem i18n específica (ativa as chaves órfãs).
+  function mensagemAtivacao(code: string, fallback: string): string {
+    const mapa: Record<string, string> = {
+      TOKEN_EXPIRED: t("auth.conviteExpiradoDetail"),
+      TOKEN_INVALID: t("auth.conviteInvalidoDetail"),
+      CONVITE_REVOGADO: t("auth.conviteRevogadoDetail"),
+      CONVITE_JA_USADO: t("auth.conviteJaUsadoDetail"),
+      CONVITE_SUBSTITUIDO: t("auth.conviteSubstituidoDetail"),
+      CONVITE_EMAIL_NAO_CONFERE: t("auth.conviteEmailNaoConfereDetail"),
+    }
+    return mapa[code] ?? fallback
+  }
+
   const [senha, setSenha] = useState("")
   const [confirmar, setConfirmar] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
@@ -40,9 +53,9 @@ export function AtivarPage() {
       setFeito(true)
     } catch (err) {
       if (err instanceof ApiError) {
-        // PLAN-075 P-10: convite expirado tem tratamento próprio; os demais
-        // (revogado/já usado/e-mail não confere) caem na mensagem genérica.
-        setErro(err.code === "TOKEN_EXPIRED" ? t("auth.conviteExpiradoDetail") : err.message)
+        // PLAN-087: cada código de falha do convite tem mensagem própria (fim da
+        // mensagem genérica "Token inválido ou já utilizado" — incidente real).
+        setErro(mensagemAtivacao(err.code, err.message))
       } else {
         setErro(t("auth.erroAtivar"))
       }
@@ -53,13 +66,25 @@ export function AtivarPage() {
 
   const tokenInvalido = !token
 
+  // PLAN-087: ação de saída (dívida AC-07) — erro nunca deixa o usuário preso na tela.
+  function renderErroComSaida(mensagem: string, aoDescartar?: () => void) {
+    return (
+      <div className="space-y-2">
+        <ErrorBanner message={mensagem} onDismiss={aoDescartar} />
+        <Button variant="ghost" onClick={() => navigate("/login")} className="w-full">
+          {t("auth.irLogin")}
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <PublicPageShell>
       <h2 className="font-display text-[22px] font-semibold">{t("auth.ativarTitle")}</h2>
       <p className="mt-1 mb-5 text-sm text-text-secondary">{t("auth.ativarSubtitle")}</p>
 
       {tokenInvalido ? (
-        <ErrorBanner message={t("auth.linkInvalido")} />
+        renderErroComSaida(t("auth.linkInvalido"))
       ) : feito ? (
         <SuccessState
           title={t("auth.ativarFeito")}
@@ -98,7 +123,7 @@ export function AtivarPage() {
             autoComplete="new-password"
           />
 
-          {erro && <ErrorBanner message={erro} onDismiss={() => setErro("")} />}
+          {erro && renderErroComSaida(erro, () => setErro(""))}
 
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? <span className="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden /> : null}

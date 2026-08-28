@@ -1494,8 +1494,23 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 ### AC-CT-05 — Ativar com token válido → login funciona
 **Dado** `POST /auth/ativar` com token válido + senha ≥6 → **Então** **200**; login com a nova senha → **200** (`status: "ativo"`).
 
-### AC-CT-08 — Token já usado → 400 TOKEN_INVALID
-**Dado** ativar 2× com o mesmo token → **Então** 2ª → **400** (convite marcado CONCLUIDO na 1ª).
+### AC-CT-08 — Token já usado → 400 CONVITE_JA_USADO (PLAN-087)
+**Dado** ativar 2× com o mesmo token → **Então** 2ª → **400** `CONVITE_JA_USADO` (convite marcado CONCLUIDO na 1ª; antes era `TOKEN_INVALID`).
+
+### AC-CT-21 — Convite revogado → 400 CONVITE_REVOGADO (PLAN-087)
+**Dado** convite PENDENTE revogado (`PATCH .../revogar-convite`) → **Quando** `POST /auth/ativar` com o token dele → **Então** **400** `CONVITE_REVOGADO`.
+
+### AC-CT-22 — Link substituído por reenvio → 400 CONVITE_SUBSTITUIDO (PLAN-087)
+**Dado** convite PENDENTE + reenvio (`PATCH .../reenviar-convite` → N2 invalida o anterior) → **Quando** ativar com o **token antigo** (ainda dentro dos 7 dias) → **Então** **400** `CONVITE_SUBSTITUIDO` — o incidente real de produção.
+
+### AC-CT-23 — E-mail não confere → 400 CONVITE_EMAIL_NAO_CONFERE (PLAN-087)
+**Dado** usuário com e-mail diferente do `email_alvo` do convite → **Então** `POST /auth/ativar` → **400** `CONVITE_EMAIL_NAO_CONFERE`.
+
+### AC-CT-24 — Token inexistente → 400 TOKEN_INVALID (PLAN-087)
+**Dado** token aleatório inexistente → **Então** **400** `TOKEN_INVALID` (mensagem "link não é válido" no front).
+
+### AC-CT-25 — Vencimento real → 400 TOKEN_EXPIRED (PLAN-087)
+**Dado** convite PENDENTE com `expira_em` no passado (7 dias, `auth-token.service.ts`) → **Então** **400** `TOKEN_EXPIRED` (lazy-expire marca EXPIRADO).
 
 ### AC-CT-20 — Empresa sem adminSenha → admin convidado
 **Dado** `POST /admin/empresas` sem `adminSenha` (R6: campo inexistente, admin sempre convidado) → **Então** **201**; login do admin → **403** `ACCOUNT_PENDING`.

@@ -55,3 +55,35 @@ export class TokenExpiradoError extends Error {
     this.name = "TokenExpiradoError"
   }
 }
+
+/** Ativação: convite foi revogado pelo admin (PLAN-087). */
+export class ConviteRevogadoError extends Error {
+  constructor() {
+    super("Convite revogado.")
+    this.name = "ConviteRevogadoError"
+  }
+}
+
+/** Ativação: convite já foi utilizado (conta já ativada). */
+export class ConviteJaUsadoError extends Error {
+  constructor() {
+    super("Convite já utilizado.")
+    this.name = "ConviteJaUsadoError"
+  }
+}
+
+/** Ativação: link substituído por um convite mais recente (reenvio — N2). */
+export class ConviteSubstituidoError extends Error {
+  constructor() {
+    super("Convite substituído por um novo.")
+    this.name = "ConviteSubstituidoError"
+  }
+}
+
+/** Ativação: o e-mail cadastrado no usuário não bate com o alvo do convite. */
+export class ConviteEmailNaoConfereError extends Error {
+  constructor() {
+    super("O convite não corresponde ao e-mail cadastrado.")
+    this.name = "ConviteEmailNaoConfereError"
+  }
+}

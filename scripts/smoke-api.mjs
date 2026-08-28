@@ -1737,10 +1737,42 @@ async function main() {
     convSenha = "novaSenha123"
   })
 
-  await t("AC-08", "ativar com token já usado → 400 TOKEN_INVALID (single-use)", async () => {
+  await t("AC-08", "ativar com token já usado → 400 CONVITE_JA_USADO (single-use, PLAN-087)", async () => {
     const r = await req("POST", "/api/auth/ativar", { body: { token: "rawtoken-ativar-123456", senha: "outra123" } })
     expect(r, 400, "single-use")
-    if (r.data.code !== "TOKEN_INVALID") throw new Error(`code=${r.data.code}`)
+    if (r.data.code !== "CONVITE_JA_USADO") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("AC-21", "link substituído por reenvio → 400 CONVITE_SUBSTITUIDO (PLAN-087)", async () => {
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Conv Subst", email: `convsubst.${Date.now()}@uorak.com`, role: "operator" } })
+    expect(criado, 201, "criar convidado")
+    const raw = "rawtoken-subst-00001"
+    await inserirConvite(criado.data.id, criado.data.email, raw, new Date(Date.now() + 3600e3).toISOString())
+    await req("PATCH", `/api/admin/operadores/${criado.data.id}/reenviar-convite`, { token: adminToken })
+    const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "outra123" } })
+    expect(r, 400, "substituído")
+    if (r.data.code !== "CONVITE_SUBSTITUIDO") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("AC-22", "convite revogado → 400 CONVITE_REVOGADO (PLAN-087)", async () => {
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Conv Revog", email: `convrev.${Date.now()}@uorak.com`, role: "operator" } })
+    expect(criado, 201, "criar convidado")
+    const raw = "rawtoken-revog-00001"
+    await inserirConvite(criado.data.id, criado.data.email, raw, new Date(Date.now() + 3600e3).toISOString())
+    await req("PATCH", `/api/admin/operadores/${criado.data.id}/revogar-convite`, { token: adminToken })
+    const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "outra123" } })
+    expect(r, 400, "revogado")
+    if (r.data.code !== "CONVITE_REVOGADO") throw new Error(`code=${r.data.code}`)
+  })
+
+  await t("AC-23", "e-mail do usuário ≠ alvo do convite → 400 CONVITE_EMAIL_NAO_CONFERE (PLAN-087)", async () => {
+    const criado = await req("POST", "/api/admin/operadores", { token: adminToken, body: { nome: "Conv Email", email: `convemail.${Date.now()}@uorak.com`, role: "operator" } })
+    expect(criado, 201, "criar convidado")
+    const raw = "rawtoken-email-00001"
+    await inserirConvite(criado.data.id, "outro-email@uorak.com", raw, new Date(Date.now() + 3600e3).toISOString())
+    const r = await req("POST", "/api/auth/ativar", { body: { token: raw, senha: "outra123" } })
+    expect(r, 400, "email não confere")
+    if (r.data.code !== "CONVITE_EMAIL_NAO_CONFERE") throw new Error(`code=${r.data.code}`)
   })
 
   await t("AC-19", "ativar com token de tipo errado → 400", async () => {

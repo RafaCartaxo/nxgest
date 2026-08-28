@@ -312,6 +312,25 @@ Ao expirar, o operador é redirecionado para a tela de login. Nenhuma operação
 
 ---
 
+## BR-109 (PLAN-087)
+
+A ativação de conta via convite (`POST /api/auth/ativar`) **diferencia os motivos de falha**, cada um com código e mensagem próprios — nunca caindo na genérica "Token inválido ou já utilizado" sem orientação:
+
+| Código | Situação | O que o usuário vê |
+|---|---|---|
+| `CONVITE_REVOGADO` | convite revogado pelo admin | convite foi revogado; peça um novo |
+| `CONVITE_JA_USADO` | convite já utilizado (conta já ativada) | entre com e-mail e senha |
+| `CONVITE_SUBSTITUIDO` | link substituído por um convite mais recente (reenvio — N2) | use o último e-mail enviado |
+| `CONVITE_EMAIL_NAO_CONFERE` | e-mail do usuário ≠ alvo do convite | verifique o link recebido |
+| `TOKEN_EXPIRED` | vencimento real (7 dias — ver `auth-token.service.ts`) | convite expirado; peça reenvio |
+| `TOKEN_INVALID` | token inexistente | link não é válido |
+
+- O fluxo de negócio do convite permanece intacto (invalidação N2, lazy-expire N1.10, binding `email_alvo` N1.7) — apenas as mensagens/códigos foram diferenciados.
+- A tela de ativação deve exibir a mensagem correspondente **e oferecer ação de saída** (ir para o login), sem prender o usuário.
+- O e-mail de convite informa o **prazo real (7 dias)** e orienta a usar **sempre o último convite** recebido.
+
+---
+
 # Administração
 
 ## BR-066
