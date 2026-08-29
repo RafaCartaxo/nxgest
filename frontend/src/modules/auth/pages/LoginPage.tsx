@@ -63,10 +63,7 @@ export function LoginPage() {
           </h1>
           <p className="mt-1 text-sm text-text-secondary sm:text-base">{t("auth.tagline")}</p>
           {/* parágrafo só em sm+/desktop — no celular pequeno causa scroll */}
-          <p className="mt-3 hidden text-sm text-text-muted sm:block">
-            Um hub que conecta cobrança em campo, clientes, contratos e caixa — e cresce junto com novos
-            segmentos.
-          </p>
+          <p className="mt-3 hidden text-sm text-text-muted sm:block">{t("auth.loginSubtitle")}</p>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-surface/70 px-3 py-1.5 text-xs text-text-secondary">
             <ShieldCheck className="size-3.5 text-success" aria-hidden />
             {t("auth.acessoEmpresa")}

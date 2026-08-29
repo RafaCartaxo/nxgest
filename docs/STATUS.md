@@ -19,6 +19,7 @@
 
 ## Entregas recentes
 
+- **PLAN-086 — identidade de plataforma (28/08)** — doc canônica (NORTH-STAR 1.1 · PROJECT 1.2 · PRD 1.1) em 2 níveis + **ADR-007** (3 níveis, critérios de admissão de vertical, `tipo_negocio` adiado com gatilhos A/B/C/D) + 4 strings user-facing (rodapé e-mail, manifest, `queroConhecerSubtitle`, `auth.loginSubtitle` nova). Zero BR · `auth.tagline` intacta.
 - **PLAN-087 — mensagens de falha de convite (28/08)** — incidente de produção resolvido: 6 códigos distintos na ativação (inclui `CONVITE_SUBSTITUIDO` para link trocado por reenvio), 6 chaves i18n órfãs ativadas, ação de saída no `AtivarPage`, e-mail com prazo real de 7 dias (3 idiomas), BR-109, 9 testes unitários novos + CTs.
 - **PLAN-085 — contrato com periodicidade alternada (27/08)** — 3º modelo (`alternada`, a cada 2 dias, default 10 parcelas): zero migração, BR-107/BR-108, espelho backend↔frontend sincronizado com testes-espelho, formulário `grid-cols-3` + lookup de defaults, badge por i18n. tsc · testes (19 novos no backend + 9 no frontend) · audits/docs verdes. **Em produção.**
 - **PLAN-076 + PLAN-077 + UI consolidada em produção (15/08)** — contrato com **periodicidade diária/semanal** (migração idempotente, BR-040-A); **performance**: pool PG com timeout, auth/módulo sem re-query (3→2 queries/request), `listarCobrancasDoDia` com `LATERAL`, N+1 em pagamentos, code-splitting frontend + GPS throttle; UI de Perfil/Operador/Admin consolidada. **Node 20 em todos os ambientes** (prod já era; dev migrado). Smoke **267/267** · testes **125/125** · CI/CD verdes · deploy prod ok.
@@ -53,7 +54,7 @@
 | **PLAN-077 (performance)** | 🔵 F1-F4 ✅ (15/08) · em prod | Bulk insert e otimização adicional encaminhados no PLAN-083; manter medição com volume real como acompanhamento |
 | **PLAN-079 (estabilidade deploy)** | ✅ Implementado (18/08) · **em produção** | Fix erro "text/html MIME" pós-code-splitting: cache-busting do SW · fallback assets→404 · static imutável · check-dist no CI |
 | **PLAN-084 (organização do repositório)** | ✅ **Concluído (20/08)** | Blocos 1–5: sync factual, fronteira Git/Docker, staging organizado, `audit:links` no CI, SHA validado no staging, gates completos no CD manual, backup obrigatório no deploy. Novos planos: **PLAN-080/081/082** 📝 Planejado |
-| **PLAN-086 (identidade/posicionamento)** | 📝 Pendência (origem: vault `brainwork`) | Reposicionar a doc canônica p/ "plataforma modular de gestão operacional" (docs-only + 3 strings) + ADR-007. Checklist na nota do vault `NX Gest - Reposicionamento de identidade (PLAN-086)`. **Nota:** a copy preventiva do e-mail de convite saiu deste plano → executada no PLAN-087 |
+| ~~PLAN-086 (identidade/posicionamento)~~ | ✅ **Implementado (28/08)** | Doc canônica em 2 níveis + **ADR-007** (critérios de admissão de vertical, `tipo_negocio` adiado) + 4 strings user-facing (inclui `auth.loginSubtitle` nova). Origem: vault `brainwork` |
 | ~~PLAN-087 (mensagens de falha de convite)~~ | ✅ **Implementado (28/08)** | Incidente de produção resolvido: códigos distintos na ativação + ação de saída + e-mail com prazo real. BR-109 |
 
 ## Pendências (verificação/ações futuras)

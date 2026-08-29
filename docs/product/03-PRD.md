@@ -2,15 +2,15 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.0
+**Versão:** 1.1
 
-**Última atualização:** 30/07/2026
+**Última atualização:** 28/08/2026
 
 ---
 
 # Objetivo
 
-Sistema de gestão de cobranças em campo para operações de crediário com cobranças recorrentes, permitindo controle completo de clientes, contratos, parcelas, pagamentos, gastos e caixa.
+**Plataforma modular de gestão operacional (NX Gest)** cujo primeiro vertical é o **crédito em campo** — operações de crediário com cobranças recorrentes, permitindo controle completo de clientes, contratos, parcelas, pagamentos, gastos e caixa (escopo de módulos = Module Manifest — ADR-007).
 
 ---
 
@@ -29,8 +29,6 @@ Operadores autenticados responsáveis pela gestão de clientes e cobranças em c
 - Controle de caixa e gastos
 - Dashboard com indicadores financeiros
 - Visualização de clientes em mapa
-- Autenticação multi-usuário com JWT
-- Painel de administração com gestão de operadores
 - Autenticação multi-usuário com JWT
 - Painel de administração com gestão de operadores
 

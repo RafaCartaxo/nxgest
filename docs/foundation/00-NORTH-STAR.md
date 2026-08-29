@@ -2,27 +2,29 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.0
+**Versão:** 1.1
 
-**Última atualização:** 27/06/2026
+**Última atualização:** 28/08/2026
 
 ---
 
 # Objetivo
 
-Construir um sistema de gestão de cobranças em campo que seja simples de utilizar, fácil de manter e preparado para evoluir continuamente, priorizando sempre a experiência do operador e a consistência dos dados.
+Construir uma **plataforma modular de gestão operacional** que seja simples de utilizar, fácil de manter e preparada para evoluir continuamente, priorizando sempre a experiência do usuário e a consistência dos dados.
 
 ---
 
 # Missão
 
-Permitir que um operador realize toda a rotina de cobrança em campo com o menor número possível de interações, mantendo controle total sobre clientes, contratos, pagamentos e caixa.
+**Nível 0 — Plataforma (NX Gest):** permitir que qualquer negócio operacional seja plugado por **módulos** (whitelabel multi-tenant) — o primeiro vertical é o crédito em campo; outros segmentos entram sem reescrever a base (ADR-007).
+
+**Nível 1 — Vertical "Crédito em campo":** permitir que um operador realize toda a rotina de cobrança em campo com o menor número possível de interações, mantendo controle total sobre clientes, contratos, pagamentos e caixa.
 
 ---
 
 # Visão
 
-Ser um sistema confiável, intuitivo e de baixa complexidade operacional, capaz de acompanhar a evolução do negócio sem exigir reestruturações frequentes.
+Ser uma **plataforma** confiável, intuitiva e de baixa complexidade operacional, capaz de crescer junto com novos segmentos sem exigir reestruturações frequentes.
 
 ---
 
@@ -106,20 +108,38 @@ O sistema deve reduzir esforço operacional.
 
 # O que este sistema é
 
+## Nível 0 — Plataforma (NX Gest)
+
+- Uma **plataforma modular de gestão operacional** (whitelabel multi-tenant), escopada por **capacidades**, não por domínio.
+- Um **hub** que conecta o negócio (hoje, crédito em campo) a clientes, contratos e caixa — e cresce com novos segmentos (ADR-007).
+
+## Nível 1 — Vertical "Crédito em campo"
+
 - Um sistema de gestão de cobranças em campo.
 - Um sistema de acompanhamento de contratos.
 - Um sistema de controle operacional.
 - Um sistema de apoio à tomada de decisão diária.
 
+### Regra de fronteira
+
+Toda demanda mapeia para um **módulo existente** ou justifica um **módulo novo** no Module Manifest. O que não mapeia é item de `BACKLOG.md`. Critérios de admissão de vertical: ver **ADR-007**.
+
 ---
 
 # O que este sistema não é
+
+## Nível 0 — Plataforma
 
 - ERP
 - Sistema contábil
 - Sistema financeiro completo
 - Marketplace
 - CRM completo
+- **Finanças pessoais / evolução pessoal** (B2C sem empresa — fora da Visão; custo de tenancy declarado no ADR-007)
+
+## Nível 1 — Vertical "Crédito em campo"
+
+O vertical herda os "não é" da plataforma e o escopo do domínio (`01-DOMAIN.md` / `02-BUSINESS-RULES.md`) — sem "não é" próprio adicional.
 
 Novas funcionalidades deverão respeitar este escopo.
 

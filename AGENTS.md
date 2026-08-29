@@ -4,7 +4,7 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 
 ## O projeto
 
-**NX Gest** (`nxgest`) — sistema de gestão de cobranças em campo (credores, contratos, parcelas, pagamentos, caixa). Backend Node.js + Express + TypeScript + **PostgreSQL** (pg + Drizzle `pg-core`); frontend React + Vite + TailwindCSS. (Migração SQLite→PG: PLAN-070 — **hoje só existe PostgreSQL**.)
+**NX Gest** (`nxgest`) — **plataforma modular de gestão operacional**; o primeiro vertical é o **crédito em campo** (credores, contratos, parcelas, pagamentos, caixa). Backend Node.js + Express + TypeScript + **PostgreSQL** (pg + Drizzle `pg-core`); frontend React + Vite + TailwindCSS. (Migração SQLite→PG: PLAN-070 — **hoje só existe PostgreSQL**.)
 
 > **Node ≥20** (CI e `react-router@7` exigem; usar `nvm use 20`).
 
@@ -21,6 +21,7 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 | Decisões arquiteturais (ADRs) | `docs/decisions/ADR-INDEX.md` |
 | **Produção / operação (runbook)** | `docs/engineering/06-PRODUCAO.md` |
 | Deploy do primeiro cliente | `docs/plans/PLAN-018-deploy.md` |
+| **O que é este produto?** | `docs/foundation/00-NORTH-STAR.md` (o que somos) → `docs/foundation/ADR-007-Identidade-Plataforma.md` (o que aceita entrar) → `docs/product/08-UC-MODULOS.md` (como plugar) |
 
 ## Segurança — regras obrigatórias
 

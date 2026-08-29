@@ -2,48 +2,41 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.1
+**Versão:** 1.2
 
-**Última atualização:** 27/06/2026
+**Última atualização:** 28/08/2026
 
 ---
 
 # Objetivo
 
-Desenvolver um sistema de gestão de cobranças em campo que permita controlar clientes, contratos, parcelas, pagamentos, gastos e caixa de forma simples, rápida e confiável.
+Desenvolver uma **plataforma modular de gestão operacional** (NX Gest) cujo primeiro vertical é o **crédito em campo**: permitir controlar clientes, contratos, parcelas, pagamentos, gastos e caixa de forma simples, rápida e confiável — com a arquitetura pronta para plugar novos segmentos por módulos (ADR-007).
 
-O sistema deve centralizar toda a operação diária do cobrador, reduzindo controles paralelos e fornecendo informações consistentes para acompanhamento financeiro e tomada de decisão.
+A plataforma deve centralizar a operação diária, reduzindo controles paralelos e fornecendo informações consistentes para acompanhamento financeiro e tomada de decisão.
 
 ---
 
 # Visão do Produto
 
-O produto foi concebido para atender operações de crediário com cobranças recorrentes, nas quais o operador realiza visitas presenciais aos clientes para registrar pagamentos, acompanhar contratos e controlar o fluxo financeiro da operação.
+O produto foi concebido como **plataforma whitelabel multi-tenant**. O primeiro vertical atende operações de crediário com cobranças recorrentes, nas quais o operador realiza visitas presenciais aos clientes para registrar pagamentos, acompanhar contratos e controlar o fluxo financeiro da operação.
 
-O sistema prioriza velocidade, simplicidade e rastreabilidade, permitindo que todas as movimentações financeiras possam ser consultadas e auditadas a qualquer momento.
+A plataforma prioriza velocidade, simplicidade e rastreabilidade, permitindo que todas as movimentações financeiras possam ser consultadas e auditadas a qualquer momento.
 
 ---
 
 # Público-Alvo
 
-O sistema destina-se a operadores responsáveis pela gestão de clientes e cobranças em campo.
+A plataforma destina-se a empresas que operam negócios de gestão operacional em campo; o vertical atual atende operadores responsáveis pela gestão de clientes e cobranças em campo.
 
-Inicialmente, o projeto será utilizado por um único operador, porém sua arquitetura deverá permitir evolução futura para múltiplos usuários sem necessidade de reestruturação significativa.
+Inicialmente, o projeto será utilizado por uma empresa com poucos usuários, porém sua arquitetura deverá permitir evolução futura para múltiplas empresas e segmentos sem necessidade de reestruturação significativa.
 
 ---
 
 # Escopo
 
-O sistema contempla os seguintes módulos:
+O escopo de **módulos** é a **fonte executável**: o **Module Manifest** (`src/modules/admin/domain/modules.ts` + espelho frontend, validado por `npm run audit:modules`) — ver `08-UC-MODULOS.md` e ADR-007.
 
-* Cliente
-* Contrato
-* Parcela
-* Pagamento
-* Caixa
-* Gasto
-* Dashboard
-* Mapa
+O primeiro vertical ("Crédito em campo") contempla: clientes, contratos, parcelas, pagamentos, caixa e gastos — com cobranças/rota/atendidos e os módulos de plataforma (central, auth, admin).
 
 Cada módulo deverá atuar de forma integrada, preservando a separação de responsabilidades definida pela arquitetura do projeto.
 
@@ -82,7 +75,9 @@ O desenvolvimento do sistema deverá respeitar os seguintes princípios:
 
 # Fora do Escopo
 
-Não fazem parte do objetivo deste projeto:
+## Nível 0 — Plataforma
+
+Não fazem parte do objetivo desta plataforma:
 
 * ERP;
 * Sistema contábil;
@@ -90,7 +85,12 @@ Não fazem parte do objetivo deste projeto:
 * Controle de estoque;
 * Gestão financeira empresarial;
 * CRM completo;
-* Gestão bancária.
+* Gestão bancária;
+* Finanças pessoais / evolução pessoal (B2C — fora da Visão; ADR-007).
+
+## Nível 1 — Vertical "Crédito em campo"
+
+O vertical herda os limites da plataforma e o escopo do domínio (`01-DOMAIN.md` / `02-BUSINESS-RULES.md`).
 
 ---
 

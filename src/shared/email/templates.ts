@@ -53,9 +53,9 @@ const fallbackLabel: Record<EmailLang, string> = {
 
 /** Rodapé institucional por idioma (plano §13) — padrão único. */
 const rodape: Record<EmailLang, { enviado: string; ignore: string; marca: string }> = {
-  "pt-BR": { enviado: "Este e-mail foi enviado pelo NX Gest.", ignore: "Se você não solicitou esta ação, pode ignorar esta mensagem.", marca: "NX Gest — gestão de cobranças em campo" },
-  en: { enviado: "This email was sent by NX Gest.", ignore: "If you didn't request this action, you can ignore this message.", marca: "NX Gest — field collections management" },
-  es: { enviado: "Este correo fue enviado por NX Gest.", ignore: "Si no solicitaste esta acción, puedes ignorar este mensaje.", marca: "NX Gest — gestión de cobros en campo" },
+  "pt-BR": { enviado: "Este e-mail foi enviado pelo NX Gest.", ignore: "Se você não solicitou esta ação, pode ignorar esta mensagem.", marca: "NX Gest — plataforma de gestão operacional" },
+  en: { enviado: "This email was sent by NX Gest.", ignore: "If you didn't request this action, you can ignore this message.", marca: "NX Gest — operational management platform" },
+  es: { enviado: "Este correo fue enviado por NX Gest.", ignore: "Si no solicitaste esta acción, puedes ignorar este mensaje.", marca: "NX Gest — plataforma de gestión operacional" },
 }
 
 // Cores da marca NX — equivalentes hex dos tokens do tema default (`index.css`).

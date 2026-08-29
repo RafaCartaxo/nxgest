@@ -2,7 +2,7 @@
   "id": "/",
   "name": "NX Gest",
   "short_name": "NX Gest",
-  "description": "Gestão de cobranças em campo — clientes, contratos, parcelas, pagamentos e caixa.",
+  "description": "Plataforma modular de gestão operacional — clientes, contratos, parcelas, pagamentos e caixa.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

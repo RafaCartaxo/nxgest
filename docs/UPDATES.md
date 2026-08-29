@@ -2,6 +2,13 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 28/08/2026 — Identidade de plataforma (PLAN-086)
+
+- **Doc canônica reposicionada** — `00-NORTH-STAR` (1.1), `00-PROJECT` (1.2) e `03-PRD` (1.1) agora descrevem o NX Gest como **plataforma modular de gestão operacional** com o **crédito em campo** como primeiro vertical, em **2 níveis** ("é"/"não é" com Nível 0 Plataforma / Nível 1 Vertical) + Regra de fronteira. Bullets duplicados do PRD removidos.
+- **ADR-007 — Identidade de Plataforma** (novo): 3 níveis conceituais (2 de prosa, 1 fonte executável = Module Manifest), tabela canônica de nomes, **6 critérios de admissão de vertical**, regra de fronteira, gatilhos A/B/C/D para reabrir `tipo_negocio`, §"Escopos futuros não comprometidos". Registrado em foundation/README, ADR-INDEX e `docs/INDEX` (que também passou a listar ADR-005/006).
+- **4 strings user-facing**: `rodape.marca` do e-mail → "plataforma de gestão operacional" (3 idiomas) · `manifest.webmanifest` description · `queroConhecerSubtitle` (sem "de cobranças" + artigo "**o** NX Gest") · **`auth.loginSubtitle` nova** (subtítulo do login movido do hardcoded para i18n — estava sem tradução en/es).
+- **`auth.tagline` intacta** (já era plataforma) · **zero BR** · `AGENTS.md` com linha "O que é este produto?" · nota de anti-drift na SKILL-009 §3 · anotação no PLAN-071.
+
 ## 28/08/2026 — Mensagens de falha de convite (PLAN-087)
 
 - **Incidente de produção resolvido** — link antigo de convite (após reenvio) mostrava "Token inválido ou já utilizado" e travava o usuário sem orientação. Agora a ativação diferencia **6 motivos** com código e mensagem próprios: `TOKEN_INVALID` (inexistente) · `TOKEN_EXPIRED` (vencimento real) · `CONVITE_REVOGADO` · `CONVITE_JA_USADO` · `CONVITE_SUBSTITUIDO` (**novo** — link trocado por um convite mais recente) · `CONVITE_EMAIL_NAO_CONFERE`.

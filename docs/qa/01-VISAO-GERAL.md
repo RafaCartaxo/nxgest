@@ -6,11 +6,11 @@
 
 ## O que é
 
-O **NX Gest** é um sistema de **gestão de cobranças em campo**: operadores visitam clientes, negociam contratos, recebem parcelas e controlam o caixa. É uma aplicação **multi-tenant** (várias empresas no mesmo deploy), com isolamento de dados por empresa.
+O **NX Gest** é uma **plataforma modular de gestão operacional** (whitelabel multi-tenant) cujo primeiro vertical é o **crédito em campo**: operadores visitam clientes, negociam contratos, recebem parcelas e controlam o caixa. É uma aplicação **multi-tenant** (várias empresas no mesmo deploy), com isolamento de dados por empresa.
 
 | Item | Valor |
 |---|---|
-| Produto | Gestão de cobranças em campo |
+| Produto | Plataforma modular de gestão operacional (vertical: crédito em campo) |
 | Modelo | Multi-tenant (empresas → usuários → dados operacionais) |
 | Perfis | `super_admin` · `admin` · `socio` · `operator` |
 | Público | Operadores em campo + admins das empresas + super admin do sistema |

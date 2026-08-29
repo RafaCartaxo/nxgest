@@ -426,6 +426,7 @@
     "mostrarSenha": "Show password",
     "ocultarSenha": "Hide password",
     "tagline": "Centralized management for your business",
+    "loginSubtitle": "A hub that connects field collections, customers, contracts and cash — and grows with new segments.",
     "loginCardSubtitle": "Use your company credentials.",
     "acessoEmpresa": "Per-company access · profiles and permissions",
     "esqueciSenha": "Forgot your password?",
@@ -854,7 +855,7 @@
   "lead": {
     "navLeads": "Leads",
     "queroConhecerTitle": "Get to know us",
-    "queroConhecerSubtitle": "Tell us how NX Gest can help your collection business.",
+    "queroConhecerSubtitle": "Tell us how NX Gest can help your business.",
     "nomeResponsavel": "Responsible name",
     "empresa": "Company",
     "email": "Email",

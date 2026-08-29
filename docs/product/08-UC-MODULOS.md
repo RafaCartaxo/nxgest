@@ -8,6 +8,12 @@
 
 ---
 
+## Escopo e verticais (ADR-007)
+
+O NX Gest é uma **plataforma modular** (escopo por capacidades). Este doc valida o **módulo** (nível 2), o que é independente do vertical (nível 1). Hoje existe **um** vertical — **crédito em campo** — formado por `clientes`, `contratos`, `cobrancas`, `rota` e `atendidos`; `caixa`/`gastos` são genéricos e `central`/`auth`/`admin` são plataforma. Uma **nova vertical** entra pelos critérios de admissão do **ADR-007** (caber no manifest com tudo declarado, preservar isolamento, rastreabilidade, UCs/CTs + linha aqui, sem novo motor de persistência/autorização, 3 idiomas).
+
+---
+
 ## Módulos × validação
 
 | Módulo | Deps | UCs (06) | API-UCs (07) | Validação "off" |

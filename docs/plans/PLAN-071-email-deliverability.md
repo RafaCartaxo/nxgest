@@ -67,6 +67,7 @@ Tirar os e-mails transacionais (convite, reset, confirmação de lead) da caixa 
 
 ### `src/shared/email/templates.ts` — identidade visual NX (Fase 1b, 13/08)
 - **Layout único reutilizável** (`montar`) com identidade NX: marca **"NX Gest"** violeta (`#0520ae`), título/corpo em `Arial/Helvetica` (compatibilidade máxima), **botão CTA** `#0520ae` com `min-width`, **rodapé institucional** por idioma ("Se não foi você, ignore." + "NX Gest — gestão de cobranças em campo").
+  > **Anotação (PLAN-086, 28/08):** o `rodape[*].marca` foi atualizado para "NX Gest — plataforma de gestão operacional" no PLAN-086. Plano não reescrito.
 - Cores da marca (equivalente hex do tema `default`): primária `#0520ae` · hover `#02116c` · texto `#1f2430`/`#5b626f` · fundo `#f4f8fc` · borda `#dde3ea`.
 - Os 3 templates (`convite`/`reset`/`lead`) usam o mesmo layout — só título/corpo/botão mudam. Textos atuais preservados.
 

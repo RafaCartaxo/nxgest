@@ -1,6 +1,6 @@
 # Documentação do Projeto
 
-Bem-vindo à documentação oficial do sistema de gestão de cobranças em campo.
+Bem-vindo à documentação oficial da plataforma modular de gestão operacional NX Gest (primeiro vertical: crédito em campo).
 
 ## Seções
 

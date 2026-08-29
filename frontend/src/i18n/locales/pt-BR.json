@@ -426,6 +426,7 @@
     "mostrarSenha": "Mostrar senha",
     "ocultarSenha": "Ocultar senha",
     "tagline": "Gestão centralizada para o seu negócio",
+    "loginSubtitle": "Um hub que conecta cobrança em campo, clientes, contratos e caixa — e cresce junto com novos segmentos.",
     "loginCardSubtitle": "Use suas credenciais da empresa.",
     "acessoEmpresa": "Acesso por empresa · perfis e permissões",
     "esqueciSenha": "Esqueci minha senha",
@@ -854,7 +855,7 @@
   "lead": {
     "navLeads": "Leads",
     "queroConhecerTitle": "Quero conhecer",
-    "queroConhecerSubtitle": "Conte como a NX Gest pode ajudar o seu negócio de cobranças.",
+    "queroConhecerSubtitle": "Conte como o NX Gest pode ajudar o seu negócio.",
     "nomeResponsavel": "Nome do responsável",
     "empresa": "Empresa",
     "email": "E-mail",

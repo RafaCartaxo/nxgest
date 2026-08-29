@@ -1,6 +1,6 @@
 # NX Gest
 
-Sistema de gestão de cobranças em campo.
+Plataforma modular de gestão operacional — o primeiro vertical é o crédito em campo (clientes, contratos, parcelas, pagamentos e caixa).
 
 ![CI](https://img.shields.io/github/actions/workflow/status/RafaCartaxo/nxgest/ci.yml?branch=main&label=CI&logo=github)
 ![CD](https://img.shields.io/github/actions/workflow/status/RafaCartaxo/nxgest/cd.yml?branch=main&label=CD&logo=github)

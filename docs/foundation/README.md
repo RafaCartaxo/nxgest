@@ -13,7 +13,8 @@ Documentos fundamentais que definem o propósito, os princípios e as decisões 
 | [ADR-004 — Infra de Deploy](ADR-004-Infra-Deploy.md) | VPS + Caddy + DuckDNS, decisão de infraestrutura | Aprovado |
 | [ADR-005 — Governança de UI](ADR-005-UI-Governance.md) | Débito do redesign + guardrails anti-drift (audit:ui) | Aprovado |
 | [ADR-006 — Module Manifest](ADR-006-Module-Manifest.md) | Fonte única do whitelabel granular (PLAN-045) | Aprovado |
+| [ADR-007 — Identidade de Plataforma](ADR-007-Identidade-Plataforma.md) | 3 níveis conceituais (plataforma/vertical/módulo) + critérios de admissão de vertical (PLAN-086) | Aprovado |
 
 ## Ordem de leitura recomendada
 
-00-NORTH-STAR → ADR-001 → ADR-002 → ADR-003 → ADR-004 → ADR-005 → ADR-006
+00-NORTH-STAR → ADR-001 → ADR-002 → ADR-003 → ADR-004 → ADR-005 → ADR-006 → ADR-007

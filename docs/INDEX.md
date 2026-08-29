@@ -7,6 +7,9 @@
 - [ADR-002 — Arquitetura do Frontend](foundation/ADR-002-Arquitetura-Front.md) — Stack e decisões de frontend
 - [ADR-003 — Auth + Autorização](foundation/ADR-003-Auth-Autorizacao.md) — Subsistema de autenticação e permissões
 - [ADR-004 — Infraestrutura de Deploy](foundation/ADR-004-Infra-Deploy.md) — VPS + Caddy + DuckDNS, decisão de infraestrutura
+- [ADR-005 — Governança de UI](foundation/ADR-005-UI-Governance.md) — Débito do redesign + guardrails anti-drift (audit:ui)
+- [ADR-006 — Module Manifest](foundation/ADR-006-Module-Manifest.md) — Fonte única do whitelabel granular (PLAN-045)
+- [ADR-007 — Identidade de Plataforma](foundation/ADR-007-Identidade-Plataforma.md) — 3 níveis conceituais + critérios de admissão de vertical (PLAN-086)
 
 ## Product
 
