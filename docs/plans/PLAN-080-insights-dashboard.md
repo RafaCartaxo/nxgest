@@ -181,6 +181,39 @@ Estrutura (Clean Architecture): `domain/` (tipos + erros), `application/ports/in
 
 ---
 
+## Fase 1 — especificação de frontend (adicionada 28/08, antes da execução)
+
+Fecha as lacunas de UX de dados usando as **convenções reais** do repo (verificado no código em 28/08):
+
+| # | Ponto | Especificação (convenção usada) |
+|---|---|---|
+| F1-f1 | Loading | Blocos em fetch pendente usam **`EstadoTela`** (`shared/components/EstadoTela.tsx` — loading com spinner) dentro do `ChartCard`; o `ChartCard` entrega só o "chrome" (Card + título + tooltip) |
+| F1-f2 | Erro | **`EstadoTela`** com `error` + `onRetry` → `refetch` do React Query (`t("common.retry")`) |
+| F1-f3 | Período | **`SegmentedControl`** (`dia \| semana \| mes`, default `semana`) no topo → muda `?periodo=` + `invalidateQueries` |
+| F1-f4 | A11y | Gráfico com `role="img"` + **`aria-label`** descritivo (ex.: "Tendência de recebimentos por dia no período") |
+| F1-f5 | Eixos/tooltip | Eixos: `formatarData` (X) + `formatCurrency` compacto (Y); tooltip: `formatCurrency` completo |
+| F1-f6 | Bloco sem dados | **`EstadoTela`** com `empty` + `emptyMessage` = `insights.semDadosPeriodo` (por bloco — distinto do empty-state da página) |
+| F1-f7 | Cores | `chartColors.ts` com sonda (ref. `favicon.ts:22`) + **`useChartTheme`** consumindo **`ThemeContext`** (palette/mode) — re-resolve na troca de tema; **fallback determinístico p/ jsdom** (CT assere o fallback) |
+
+**Padrões reusados (não reinventar):** `EstadoTela` (loading/erro/empty) · `hooks/useOperacoes.ts` (padrão de hook React Query) · `apiRequest` + interfaces (padrão `caixa.service.ts`) · `lazyPage` + `RequireModule` (padrão `App.tsx`) · `formatarData`/`formatCurrency` (`shared/utils`).
+
+### Mapeamento frontend × CTs (07) — coerência
+
+| Cenário de frontend | CT que sustenta | Onde valida |
+|---|---|---|
+| Página on com dados | **novo API-CT** — `GET /api/insights/resumo` 200 + shape coerente | API + render |
+| Módulo off → rota some / API 403 | **novo API-CT** — off → `403 MODULE_DISABLED` (padrão `MOD-G-CT`/§l.1242-1245) | UI (`RequireModule`) + API |
+| Tenant sem `contratos` → empty-state da página | **novo API-CT** — resumo com dono ausente → agregado vazio | UI empty |
+| Período sem eventos → empty por bloco | **novo API-CT** — `?periodo=` sem eventos → arrays vazios | UI bloco |
+| Seletor muda `?periodo=` | **novo API-CT** — `dia\|semana\|mes` → shape consistente | UI + API |
+| Loading / erro + retry | — (UI) — **component tests** (`EstadoTela` em loading/erro + `refetch`) | testes de componente |
+| Série só de classe 1/2 | **D12** — CT falha se série apontar classe 3/4 | unit + audit |
+| `insights` no `ModuleId` | **W1** — não "módulo inválido" (contraste: API-CT-093) | `validateModulos` |
+| Off sem cascata (`dependsOn: []`) | **W2** — desligar `contratos` **não** desliga `insights` | PATCH `/modulos` |
+| Nasce on por default | **W3** — default = todos (contraste: API-CT-096) | `login`/`me` |
+
+---
+
 ## QA / CTs (anti-falhas)
 
 | Camada | Entrega |
