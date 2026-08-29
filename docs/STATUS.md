@@ -19,6 +19,7 @@
 
 ## Entregas recentes
 
+- **PLAN-080 — módulo Insights (F0+F1+F2, 28-29/08)** — whitelabel `insights` read-only: endpoint único `/api/insights/resumo` (classes 1+2) + `/api/insights/carteira` (classe 3 + gastos por categoria + contribuição); página `/insights` com gráficos Recharts (ChartCard + chartColors/useChartTheme + EstadoTela + a11y), manifest `dependsOn: []`, CTs 134-140 + smoke INS-01..05. **Fase 1.5 (item de nav) bloqueada no PLAN-081.** **Em produção.**
 - **PLAN-086 — identidade de plataforma (28/08)** — doc canônica (NORTH-STAR 1.1 · PROJECT 1.2 · PRD 1.1) em 2 níveis + **ADR-007** (3 níveis, critérios de admissão de vertical, `tipo_negocio` adiado com gatilhos A/B/C/D) + 4 strings user-facing (rodapé e-mail, manifest, `queroConhecerSubtitle`, `auth.loginSubtitle` nova). Zero BR · `auth.tagline` intacta.
 - **PLAN-087 — mensagens de falha de convite (28/08)** — incidente de produção resolvido: 6 códigos distintos na ativação (inclui `CONVITE_SUBSTITUIDO` para link trocado por reenvio), 6 chaves i18n órfãs ativadas, ação de saída no `AtivarPage`, e-mail com prazo real de 7 dias (3 idiomas), BR-109, 9 testes unitários novos + CTs.
 - **PLAN-085 — contrato com periodicidade alternada (27/08)** — 3º modelo (`alternada`, a cada 2 dias, default 10 parcelas): zero migração, BR-107/BR-108, espelho backend↔frontend sincronizado com testes-espelho, formulário `grid-cols-3` + lookup de defaults, badge por i18n. tsc · testes (19 novos no backend + 9 no frontend) · audits/docs verdes. **Em produção.**
@@ -76,7 +77,7 @@
 
 ## Métricas de saúde
 
-- **Testes:** 181 verdes (35 arquivos) · smoke API **278/278** · `docs:audit` 0 divergências (62 rotas = 62 telas)
+- **Testes:** 195 verdes (40 arquivos) · smoke API **verde no CI (inclui INS-01..05)** · `docs:audit` 0 divergências (73 rotas = 73 telas · 29 telas front)
 - **Pipeline:** CI verde no push/PR · staging automático no merge à main · CD prod com gate de promoção (staging saudável) · `check-dist` (PLAN-079) garante consistência index.html ↔ chunks
 - **QA:** pacote `docs/qa/` (visão geral, arquitetura, engenharia, testes, pipeline, operação, segurança, glossário, checklists + trilha de estudo) · validações manuais de produção **concluídas (12/08)**
 - **Docs:** planos (incl. PLAN-070, PLAN-071) · 6 ADRs · 5 templates · skills SKILL-001..009

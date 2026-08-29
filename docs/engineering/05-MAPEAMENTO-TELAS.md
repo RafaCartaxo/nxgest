@@ -1202,8 +1202,10 @@ Modal ModulosModal (ação "Configurar"):
 │ Insights · gráficos operacionais (PLAN-080)  │  ← PageHeader
 │ [Dia | Semana | Mês]                        │  ← SegmentedControl (período)
 ├────────────────────────┬─────────────────────┤
-│ Tendência de recebimentos│ Previsto × Recebido │  ← ChartCard ×2
-│   (área, cor do tema)   │   (barras)          │
+│ Tendência de recebimentos│ Previsto × Recebido │  ← ChartCard ×2 (F1)
+├────────────────────────┼─────────────────────┤
+│ Carteira (donut)        │ Gastos cat. (donut) │  ← ChartCard ×3 (F2)
+│ Contribuição (barras)   │                     │
 └────────────────────────┴─────────────────────┘
 ```
 
@@ -1211,13 +1213,14 @@ Modal ModulosModal (ação "Configurar"):
 | Área | Componente |
 |------|-----------|
 | Header | `PageHeader` (icon LineChart) + `SegmentedControl` (período) |
-| Cards | `ChartCard` (chrome) + `TendenciaChart` (Area) / `PrevistoRecebidoChart` (Bar) |
+| F1 cards | `ChartCard` + `TendenciaChart` (Area) / `PrevistoRecebidoChart` (Bar) |
+| F2 cards | `ChartCard` + `CarteiraChart` (donut, classe 3) / `GastosCategoriaChart` (donut) / `ContribuicaoChart` (barras) |
 | Estados | `EstadoTela` (Loading/Error com "Tentar novamente"/Empty — página e por bloco) |
 | Cores | `useChartTheme`/`resolveChartColor` (tema: dark/paletas/whitelabel) |
 
 **Comportamento:**
-- Dados via `GET /api/insights/resumo?periodo=` (React Query, `staleTime` 5min, sem refetch no foco).
-- Série por dia: `recebido` (classe 1) e `previsto` (classe 2); período `dia`/`semana`/`mes`.
+- F1: `GET /api/insights/resumo?periodo=` (React Query, `staleTime` 5min, sem refetch no foco) — série por dia: `recebido` (classe 1) e `previsto` (classe 2).
+- F2: `GET /api/insights/carteira` — snapshot da carteira (classe 3), gastos por categoria e contribuição (composição, sem placar).
 - A11y: `role="img"` + `aria-label` por gráfico.
 
 ---

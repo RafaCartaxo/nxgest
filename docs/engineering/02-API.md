@@ -1477,6 +1477,7 @@ Remove um gasto (soft delete). Não estorna o caixa — o histórico é preserva
 | Método | Endpoint | Descrição |
 |---------|----------|-----------|
 | GET | `/api/insights/resumo` | Resumo agregado (tendência + previsto × recebido) |
+| GET | `/api/insights/carteira` | Carteira/envelhecimento (snapshot) + gastos por categoria + contribuição |
 
 ---
 
@@ -1516,6 +1517,35 @@ Resumo agregado de insights (PLAN-080 F1) — **módulo read-only**. Um único e
 | Código | HTTP |
 |---------|------|
 | VALIDATION_ERROR | 422 (periodo inválido) |
+| MODULE_DISABLED | 403 (módulo off) |
+| RATE_LIMIT | 429 |
+
+---
+
+# GET /api/insights/carteira
+
+Carteira/envelhecimento (PLAN-080 F2) — **snapshot do presente** (classe 3) + gastos por categoria (classe 1) + **contribuição** de operadores (classe 1, composição do total sem placar).
+
+**Auth:** Bearer + `requireModule("insights")`
+
+**Escopo:** operator = próprio · socio = subárvore · admin = empresa · super = `?usuarioId=` / `?empresaId=` / próprio.
+
+## Response 200
+
+```json
+{
+    "carteira": { "emAtraso": 200.00, "aVencer": 800.00, "pagas": 1500.00, "total": 2500.00 },
+    "gastosPorCategoria": [ { "categoria": "Transporte", "total": 120.00 } ],
+    "contribuicaoOperadores": [ { "usuarioId": "...", "nome": "Ana", "recebido": 1000.00 } ]
+}
+```
+
+> **D12:** `carteira` é **classe 3** (estado mutável) — válido apenas como snapshot do presente, **nunca** como série.
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
 | MODULE_DISABLED | 403 (módulo off) |
 | RATE_LIMIT | 429 |
 

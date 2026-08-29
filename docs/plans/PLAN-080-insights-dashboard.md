@@ -1,8 +1,8 @@
 # PLAN-080 — Insights Dashboard (whitelabel `insights` + Recharts)
 
-**Status:** 📝 Planejado (não implementado) · **Fase 0.5 (correção de direção) aplicada em 28/08**
+**Status:** ✅ **Implementado (F0+F1+F2, 28-29/08)** · **Fase 1.5 bloqueada no PLAN-081** (item de nav na aba "Mais")
 
-**Versão:** 1.1
+**Versão:** 1.2
 
 **Início:** 18/08/2026
 
@@ -55,13 +55,13 @@ Introduzir um **módulo whitelabel `insights`** (leitura pura) com gráficos dos
 
 ## Estrutura de fases (revisada 28/08)
 
-| Fase | Conteúdo | Nav |
-|---|---|---|
-| **0** | base sem módulo e sem nav (recharts, `ChartCard`, `chartColors` com sonda, mock `ResizeObserver`, regra de hex) — desbloqueia o PLAN-082 em paralelo | — |
-| **0.5** | decisões irreversíveis (este bloco) — doc-only | — |
-| **1** | backend + página, **só classes 1 e 2**; rota `/insights` por URL **sem item de nav** | — |
-| **1.5** | navegação (depois do PLAN-081): item `insights` entra no **"Mais"** via `hasModule` | aba "Mais" |
-| **2** | classe 3 (snapshot), gastos por categoria, **contribuição** por operador; `dependsOn` continua `[]` | — |
+| Fase | Conteúdo | Nav | Estado |
+|---|---|---|---|
+| **0** | base sem módulo e sem nav (recharts, `ChartCard`, `chartColors` com sonda, mock `ResizeObserver`, regra de hex) — desbloqueia o PLAN-082 em paralelo | — | ✅ feito (28/08) |
+| **0.5** | decisões irreversíveis (revisão) — doc-only | — | ✅ feito (28/08) |
+| **1** | backend + página, **só classes 1 e 2**; rota `/insights` por URL **sem item de nav** | — | ✅ feito (29/08) |
+| **1.5** | navegação (depois do PLAN-081): item `insights` entra no **"Mais"** via `hasModule` | aba "Mais" | 🔒 **bloqueada** — PLAN-081 |
+| **2** | classe 3 (carteira snapshot), gastos por categoria, **contribuição** por operador; `dependsOn` continua `[]` | — | ✅ feito (29/08) |
 
 ## Decisões
 

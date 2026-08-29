@@ -1250,6 +1250,16 @@ async function main() {
       await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
     }
   })
+  await t("INS-05", "carteira insights → 200 shape (classe 3 + gastos + contribuição)", async () => {
+    const r = await req("GET", "/api/insights/carteira", { token: insToken })
+    expect(r, 200, "carteira")
+    const c = r.data?.carteira
+    if (typeof c?.emAtraso !== "number" || typeof c?.aVencer !== "number" || typeof c?.pagas !== "number" || typeof c?.total !== "number") {
+      throw new Error(`carteira shape inválido: ${JSON.stringify(r.data)}`)
+    }
+    if (!Array.isArray(r.data?.gastosPorCategoria)) throw new Error("gastosPorCategoria deve ser array")
+    if (!Array.isArray(r.data?.contribuicaoOperadores)) throw new Error("contribuicaoOperadores deve ser array")
+  })
 
   // ---------- GUARD DE DESATIVAÇÃO COM DADOS (BR-105) + IMPACTO ----------
   let guardEmpresaId, guardAdminToken, guardClienteId, guardContratoId

@@ -1884,6 +1884,35 @@
             },
             "description": "API-UC-047 (PLAN-080 F1) · 200 série recebido×previsto · 422 periodo inválido · 403 MODULE_DISABLED"
           }
+        },
+        {
+          "name": "Carteira",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/insights/carteira",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "insights",
+                "carteira"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "PLAN-080 F2 · 200 carteira + gastos por categoria + contribuição · 403 MODULE_DISABLED"
+          }
         }
       ]
     },

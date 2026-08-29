@@ -1272,6 +1272,23 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 ### API-CT-139 — Sem contratos → série zerada (empty no front)
 **Dado** empresa sem `contratos` → **Então** `GET /api/insights/resumo` → **200** com todos os `recebido`/`previsto` = 0 (front mostra empty-state da página).
 
+## API-UC-048 — Carteira de insights
+
+**Endpoint:** `GET /api/insights/carteira` · **Auth:** Bearer + `requireModule("insights")`
+
+**Response 200:** `{ carteira { emAtraso, aVencer, pagas, total }, gastosPorCategoria[], contribuicaoOperadores[] }`
+
+**Coerência:**
+- [ ] `carteira` é **snapshot do presente** (classe 3 — `saldo_pendente`/`estado`), nunca série?
+- [ ] `Σ contribuicaoOperadores.recebido` = recebido total não estornado do escopo?
+- [ ] Escopo: operator=próprio · socio=subárvore · admin=empresa · super=`?usuarioId=`/`?empresaId=`?
+- [ ] Módulo off → **403 `MODULE_DISABLED`**?
+
+**Regras:** PLAN-080 F2 · **Postman:** `Insights > Carteira`
+
+### API-CT-140 — Carteira (snapshot classe 3) + gastos + contribuição (F2)
+**Dado** usuário com parcelas/pagamentos/gastos → **Então** `GET /api/insights/carteira` → **200** com `carteira { emAtraso, aVencer, pagas, total }` (Σ coerente), `gastosPorCategoria[]` (GROUP BY) e `contribuicaoOperadores[]` (Σ `recebido` = total recebido não estornado do escopo). Operador sem contratos → `total` 0 e arrays vazios (empty no front).
+
 ---
 
 # WHITELABEL — ENFORCEMENT NO BACKEND (PLAN-036, P024)

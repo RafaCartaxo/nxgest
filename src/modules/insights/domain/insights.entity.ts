@@ -14,3 +14,28 @@ export interface ResumoInsights {
   dataFim: string
   serie: SerieItem[]
 }
+
+/** Carteira — snapshot do presente (classe 3), nunca série. */
+export interface CarteiraSnapshot {
+  emAtraso: number
+  aVencer: number
+  pagas: number
+  total: number
+}
+
+export interface GastoCategoria {
+  categoria: string
+  total: number
+}
+
+export interface ContribuicaoOperador {
+  usuarioId: string
+  nome: string
+  recebido: number
+}
+
+export interface ResumoCarteira {
+  carteira: CarteiraSnapshot
+  gastosPorCategoria: GastoCategoria[]
+  contribuicaoOperadores: ContribuicaoOperador[]
+}

@@ -234,6 +234,9 @@ const endpoints = [
       query: [{ key: "periodo", value: "semana" }],
       description: "API-UC-047 (PLAN-080 F1) · 200 série recebido×previsto · 422 periodo inválido · 403 MODULE_DISABLED",
     }),
+    req("Carteira", "GET", "/api/insights/carteira", {
+      description: "PLAN-080 F2 · 200 carteira + gastos por categoria + contribuição · 403 MODULE_DISABLED",
+    }),
   ]),
 
   mod("Admin", "Gestão de operadores e dashboard (admin/super_admin)", [

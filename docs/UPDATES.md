@@ -2,6 +2,15 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 28-29/08/2026 — Módulo Insights (PLAN-080 F1+F2)
+
+- **Módulo whitelabel `insights`** (read-only) — endpoint único **`GET /api/insights/resumo?periodo=`** (F1: séries `recebido` classe 1 + `previsto` classe 2 por dia) e **`GET /api/insights/carteira`** (F2: snapshot da carteira classe 3 + gastos por categoria + **contribuição** de operadores, sem placar).
+- **Fase 0 (28/08):** `recharts` + **`ChartCard`** canônico + **`chartColors`/`useChartTheme`** (sonda + `ThemeContext`, fallback jsdom) + mock `ResizeObserver` + **regra de hex** no `audit:styles` (D14).
+- **Página `/insights`** — alcançável por URL (sem item de nav até a Fase 1.5); gráficos (Tendência, Previsto×Recebido, Carteira, Gastos por categoria, Contribuição) com `EstadoTela` (loading/erro/retry/empty por bloco), `SegmentedControl` de período, a11y (`role="img"`+aria-label) e cores do tema.
+- **Manifest:** `insights` na `ModuleId` + `MODULE_MANIFEST` (`dependsOn: []`, `widgets: []`) + espelho frontend — `audit:modules` coerente.
+- **Docs/CTs:** 02-API · collection (75) · UC-088 · API-UC-047/048 + CTs 134-140 · linha 08 · tela 21 no 05 · smoke INS-01..05.
+- **Validação:** testes **195** · `docs:audit` 0 · audits/ui/styles/links 0 · CI/CD verdes (F1 e F2 em produção).
+
 ## 28/08/2026 — Identidade de plataforma (PLAN-086)
 
 - **Doc canônica reposicionada** — `00-NORTH-STAR` (1.1), `00-PROJECT` (1.2) e `03-PRD` (1.1) agora descrevem o NX Gest como **plataforma modular de gestão operacional** com o **crédito em campo** como primeiro vertical, em **2 níveis** ("é"/"não é" com Nível 0 Plataforma / Nível 1 Vertical) + Regra de fronteira. Bullets duplicados do PRD removidos.

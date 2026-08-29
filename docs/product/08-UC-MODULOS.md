@@ -25,7 +25,7 @@ O NX Gest é uma **plataforma modular** (escopo por capacidades). Este doc valid
 | **rota** | cobrancas | 002, 003, 004, 005, 018, 019, 037 | 023 | POST /visitas → 403; Central sem "Minha rota" |
 | **cobrancas** | contratos | 009, 020, 038 | 018, 022 | historico-atrasos → 403; Central sem Pendentes/clientes pendentes |
 | **atendidos** | cobrancas | 010, 021, 036, 070 | — | UI-gated; Central sem link Atendidos/"Ver resumo" |
-| **insights** | — | 088 | 047 | resumo → 403; rota `/insights` some (sem nav até F1.5) |
+| **insights** | — | 088 | 047, 048 | resumo/carteira → 403; rota `/insights` some (sem nav até F1.5) |
 
 ## Módulos transversais / compositores
 
