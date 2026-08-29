@@ -88,6 +88,7 @@
 | `SegmentedControl` | ✅ | `shared/components/SegmentedControl` — pills segmentadas (modo do tema; port Lovable, PLAN-069) |
 | `AjustarCaixaModal` | ✅ | `modules/caixa/components` — ajuste da caixa (base) em modal, form único compartilhado; usado na CaixaPage e no OperadorDetail (PLAN-069 · fix 12/08: `AjusteCaixaCard` inline substituído pelo modal) |
 | `CollapsibleSection` | ✅ | `shared/components/CollapsibleSection` — seção com header clicável + chevron, colapsada por padrão, count no header e limite de itens ("Ver mais"); usado na CaixaPage (movimentações/histórico) e OperadorDetail (histórico) |
+| `ChartCard` | ✅ | `shared/components/ChartCard` — card canônico de gráfico (Card + título), chrome apenas; conteúdo decide estado (`EstadoTela`) ou gráfico Recharts (PLAN-080/082) |
 | `CaixaKpis` | ✅ | `modules/caixa/components` — 6 KPIs de caixa (Base/Saldo/Lucro/A receber/Recebido semana/Cobrado hoje) com `kpis[]` e `onKpiClick?`; reutilizado na CaixaPage (cliques) e OperadorDetail |
 | `AjusteHistorico` / `AjusteRow` | ✅ | `modules/caixa/components` — histórico de ajustes (valor `value-lg` + "por **Nome**" + motivo + data) reutilizado na CaixaPage e OperadorDetail |
 | `MovimentacoesList` / `MovimentacaoRow` | ✅ | `modules/caixa/components` — movimentações do caixa em 2 blocos (valor/origem/badges/data + cliente/descrição sem truncate) |

@@ -14,3 +14,13 @@ if (typeof HTMLCanvasElement !== "undefined" && !HTMLCanvasElement.prototype.get
     } as unknown as CanvasRenderingContext2D
   } as never
 }
+
+// jsdom não tem ResizeObserver — o Recharts (ResponsiveContainer, PLAN-080) e o
+// Modal/sheet dependem dele. Mock único no setup (compartilhado com PLAN-082).
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver
+}

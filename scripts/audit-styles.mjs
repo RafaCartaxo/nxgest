@@ -61,4 +61,26 @@ if (matches.length > 0) {
   process.exit(1)
 }
 
-console.log(`✓ audit:styles — ${files.length} arquivos varridos, nenhuma cor fixa da paleta (PLAN-035)`)
+// PLAN-080 (D14): gráficos devem usar cor do tema via `resolveChartColor` — nunca
+// literal de cor no arquivo de gráfico (Recharts não aceita `var()` no path SVG, e
+// hex fixo burlaria os tokens). A fonte autorizada é `utils/chartColors.ts` (fallbacks).
+const HEX_RE = /(?:#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(|oklch\()/gi
+const chartScope = file => /(modules[\\/]insights[\\/]|components[\\/]ChartCard[\\/])/.test(file)
+const hexMatches = []
+for (const file of files) {
+  if (!chartScope(file)) continue
+  const lines = readFileSync(file, "utf8").split("\n")
+  lines.forEach((line, i) => {
+    HEX_RE.lastIndex = 0
+    const found = line.match(HEX_RE)
+    if (found) hexMatches.push(`${relative(root, file)}:${i + 1} → ${found.join(", ")}`)
+  })
+}
+if (hexMatches.length > 0) {
+  console.error(`✗ ${hexMatches.length} cor(es) literal(is) em arquivo de gráfico — usar resolveChartColor() do tema (PLAN-080):\n`)
+  for (const m of hexMatches) console.error(`  ${m}`)
+  console.error("\n→ Corrija ou o gráfico não seguirá o tema (dark/paletas/whitelabel).")
+  process.exit(1)
+}
+
+console.log(`✓ audit:styles — ${files.length} arquivos varridos, nenhuma cor fixa da paleta nem hex em gráficos (PLAN-035/080)`)
