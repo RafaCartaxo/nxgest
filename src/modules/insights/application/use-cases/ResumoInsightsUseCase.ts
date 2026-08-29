@@ -23,8 +23,8 @@ export function rangeDoPeriodo(periodo: PeriodoInsight, hoje = new Date()): { da
 export class ResumoInsightsUseCase {
   constructor(private readonly repository: IInsightsRepository) {}
 
-  async execute(userId: string, periodo: PeriodoInsight): Promise<ResumoInsights> {
-    const { dataInicio, dataFim } = rangeDoPeriodo(periodo)
+  async execute(userId: string, periodo: PeriodoInsight, hoje = new Date()): Promise<ResumoInsights> {
+    const { dataInicio, dataFim } = rangeDoPeriodo(periodo, hoje)
 
     const [recebido, previsto] = await Promise.all([
       this.repository.recebidoPorData(userId, dataInicio, dataFim),

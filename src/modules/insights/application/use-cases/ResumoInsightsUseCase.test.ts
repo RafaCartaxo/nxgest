@@ -31,7 +31,8 @@ describe("ResumoInsightsUseCase (PLAN-080 F1)", () => {
       previstoPorData: vi.fn().mockResolvedValue({ "2026-08-24": 1500 }),
     })
     const useCase = new ResumoInsightsUseCase(r)
-    const result = await useCase.execute("u-1", "semana")
+    // data fixa injetada — independe do fuso do runner
+    const result = await useCase.execute("u-1", "semana", new Date("2026-08-28T12:00:00"))
 
     expect(result.periodo).toBe("semana")
     expect(result.serie).toHaveLength(7)
