@@ -30,6 +30,7 @@
 - [05-MAPEAMENTO-TELAS.md](engineering/05-MAPEAMENTO-TELAS.md) — Mapeamento de telas, componentes e aderência ao Design System
 - [06-PRODUCAO.md](engineering/06-PRODUCAO.md) — Runbook de operação: acesso, deploy, backup, rollback
 - [07-FORMS-INPUTS.md](engineering/07-FORMS-INPUTS.md) — Padrões de formulários e inputs (Field, validação, máscaras)
+- [08-SETUP-NOVA-MAQUINA.md](engineering/08-SETUP-NOVA-MAQUINA.md) — Setup de nova máquina, portabilidade de SO e Disaster Recovery
 - [TESTES.md](engineering/TESTES.md) — Estratégia de testes, rotina e convenções (PLAN-067)
 - [SEGURANCA.md](engineering/SEGURANCA.md) — Postura de segurança, gaps e processos (PLAN-066)
 

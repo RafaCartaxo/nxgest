@@ -21,10 +21,13 @@ scripts/                      — Scripts utilitários
 
 ## Pré-requisitos
 
-- Node.js 20+
-- npm 9+
+- Node.js 20+ (LTS) & npm 9+
+- Docker & Docker Compose (para o PostgreSQL 16 local de desenvolvimento)
+- Git & OpenSSH
 
-## Instalação
+> **Guia completo de instalação por SO e Setup de Nova Máquina:** Veja [`docs/engineering/08-SETUP-NOVA-MAQUINA.md`](docs/engineering/08-SETUP-NOVA-MAQUINA.md) para instruções detalhadas em Fedora, Ubuntu/Debian, Arch Linux, macOS e Windows (WSL2), além de recuperação de credenciais e Disaster Recovery.
+
+## Instalação Rápida
 
 ```bash
 git clone https://github.com/RafaCartaxo/nxgest.git
@@ -32,6 +35,9 @@ cd nxgest
 
 # Instala tudo (backend + frontend) — npm workspaces unifica a node_modules
 npm install
+
+# Sobe o banco de dados PostgreSQL 16 local (porta 5433)
+docker compose up -d postgres
 ```
 
 > **Banco de dados:** hoje o único banco é o **PostgreSQL** (migração SQLite→PG concluída no PLAN-070). A aplicação exige um PostgreSQL acessível via `DATABASE_URL` (default local: `postgres://nxgest:nxgest-dev@localhost:5433/nxgest`).

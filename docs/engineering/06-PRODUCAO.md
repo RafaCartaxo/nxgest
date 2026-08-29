@@ -6,7 +6,7 @@
 
 **Projeto:** NX Gest
 
-**Documentos relacionados:** `plans/PLAN-018-deploy.md` (deploy), `foundation/ADR-004-Infra-Deploy.md` (decisão de infra)
+**Documentos relacionados:** `plans/PLAN-018-deploy.md` (deploy), `foundation/ADR-004-Infra-Deploy.md` (decisão de infra), `engineering/08-SETUP-NOVA-MAQUINA.md` (setup de máquina e Disaster Recovery)
 
 ---
 
@@ -59,7 +59,7 @@
 ssh root@172.245.152.223
 ```
 
-> Se a chave for perdida: recuperar acesso pelo painel do provedor (console/VNC) e reinstalar a chave em `/root/.ssh/authorized_keys`.
+> Se a chave for perdida: recuperar acesso pelo painel do provedor (console/VNC) e reinstalar a chave em `/root/.ssh/authorized_keys` (passo a passo detalhado em [`08-SETUP-NOVA-MAQUINA.md §6.2`](08-SETUP-NOVA-MAQUINA.md#62-se-voc-gerou-uma-chave-ssh-nova-ou-perdeu-a-antiga)).
 
 ---
 
@@ -173,7 +173,7 @@ echo "OK: $OUT"
 - **Restauração:** `docker exec nxgest-postgres pg_restore -U "$PG_USER" -d "$PG_DB" --clean --if-exists < dump` (com o container de app parado), depois validar `SELECT COUNT(*) FROM usuarios` > 0 e o health.
 - **Validação do backup:** `pg_restore -l pg-<DATA>.dump` lista os objetos (dump vazio/corrompido falha aqui).
 - **Pré-deploy:** o `deploy.sh` chama este script — cada deploy gera `pg-<DATA>.dump` antes do build.
-- **Cópia off-site (recomendado ao menos semanal):** baixar `pg-<DATA>.dump` + `uploads-<DATA>.tar.gz` via `scp` para `~/.config/nxgestao/backups/`. Contém dados pessoais/financeiros (LGPD) — **criptografar** (`gpg --symmetric --cipher-algo AES256`) antes de deixar em armazenamento externo; a senha vai em `~/.config/nxgestao/ACESSOS.md` (fora do repo). Se o VPS for perdido por completo, a cópia off-site é a única via de recuperação.
+- **Cópia off-site (recomendado ao menos semanal):** baixar `pg-<DATA>.dump` + `uploads-<DATA>.tar.gz` via `bash scripts/pull-backup.sh` (ou `scp`) para `~/.config/nxgestao/backups/`. Contém dados pessoais/financeiros (LGPD) — **criptografar** (`gpg --symmetric --cipher-algo AES256`) antes de deixar em armazenamento externo; a senha vai em `~/.config/nxgestao/ACESSOS.md` (fora do repo). Se o VPS for perdido por completo, a cópia off-site é a única via de recuperação (ver guia de Disaster Recovery em [`08-SETUP-NOVA-MAQUINA.md §7`](08-SETUP-NOVA-MAQUINA.md#7-backups-off-site-e-plano-de-recuperao-de-desastres-drp)).
 
 ---
 

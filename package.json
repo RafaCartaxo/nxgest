@@ -25,7 +25,8 @@
     "smoke:up": "node scripts/smoke.mjs up",
     "smoke:down": "node scripts/smoke.mjs down",
     "mail:test": "tsx scripts/mail-test.ts",
-    "audit:links": "node scripts/audit-links.mjs"
+    "audit:links": "node scripts/audit-links.mjs",
+    "backup:pull": "bash scripts/pull-backup.sh"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
