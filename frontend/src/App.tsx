@@ -56,6 +56,7 @@ const AdminPage = () => lazyPage("AdminPage", () => import("./modules/admin/page
 const SuperAdminPage = () => lazyPage("SuperAdminPage", () => import("./modules/admin/pages/SuperAdminPage.js"))
 const OperadorDetail = () => lazyPage("OperadorDetail", () => import("./modules/admin/pages/OperadorDetail.js"))
 const DevBoardPage = () => lazyPage("DevBoardPage", () => import("./modules/devboard/pages/DevBoardPage.js"))
+const InsightsPage = () => lazyPage("InsightsPage", () => import("./modules/insights/pages/InsightsPage.js"))
 
 export function App() {
   return (
@@ -89,6 +90,8 @@ export function App() {
                   <Route path="/contratos/:id/editar" element={<RequireModule mod="contratos"><ContratoEdit /></RequireModule>} />
                   <Route path="/caixa" element={<RequireModule mod="caixa"><CaixaPage /></RequireModule>} />
                   <Route path="/gastos" element={<RequireModule mod="gastos"><GastoPage /></RequireModule>} />
+                  {/* PLAN-080 F1: insights — alcançável por URL, sem item de nav (item entra na aba "Mais" na Fase 1.5). */}
+                  <Route path="/insights" element={<RequireModule mod="insights"><InsightsPage /></RequireModule>} />
                    <Route path="/perfil" element={<PerfilPage />} />
                    <Route path="/devboard" element={<SuperAdminRoute><DevBoardPage /></SuperAdminRoute>} />
                    <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />

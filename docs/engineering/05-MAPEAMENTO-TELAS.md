@@ -47,6 +47,7 @@ Documentar todas as telas do sistema, seus componentes, estrutura visual e ader�
 | 18 | Perfil (Meus dados) | `/perfil` | auth | Formulário |
 | 19 | Conta Suspensa (bloqueio no `ProtectedRoute`) | — (tela cheia) | auth | Estado (bloqueio) |
 | 20 | Board Dev (visibilidade git/CI) | `/devboard` | devboard | Dashboard |
+| 21 | Insights (gráficos operacionais) | `/insights` | insights | Dashboard |
 
 **Total:** 28 superfícies (27 telas + Conta Suspensa) · 28 rotas (27 + `*` catch-all) | 8 módulos | 65 componentes (24 shared + 2 feedback + 1 auth + 38 módulo)
 
@@ -1188,6 +1189,36 @@ Modal ModulosModal (ação "Configurar"):
 - PRs com badge "rascunho"; dependabot separado com badge próprio.
 - Erros da GitHub API (503/504/502) viram mensagem amigável com "Tentar novamente".
 - Navegação: sidebar (desktop) + aba "Board" na tab bar (mobile), ícone `Activity` — exclusivo do super_admin.
+
+---
+
+## 21. Insights (gráficos operacionais)
+
+**Arquivo:** `frontend/src/modules/insights/pages/InsightsPage.tsx` · Rota `/insights` · Acessível com o módulo `insights` ativo (`RequireModule`) · PLAN-080 F1 (alcançável por URL; **sem item de nav** até a Fase 1.5)
+
+**Estrutura Visual:**
+```
+┌──────────────────────────────────────────────┐
+│ Insights · gráficos operacionais (PLAN-080)  │  ← PageHeader
+│ [Dia | Semana | Mês]                        │  ← SegmentedControl (período)
+├────────────────────────┬─────────────────────┤
+│ Tendência de recebimentos│ Previsto × Recebido │  ← ChartCard ×2
+│   (área, cor do tema)   │   (barras)          │
+└────────────────────────┴─────────────────────┘
+```
+
+**Componentes:**
+| Área | Componente |
+|------|-----------|
+| Header | `PageHeader` (icon LineChart) + `SegmentedControl` (período) |
+| Cards | `ChartCard` (chrome) + `TendenciaChart` (Area) / `PrevistoRecebidoChart` (Bar) |
+| Estados | `EstadoTela` (Loading/Error com "Tentar novamente"/Empty — página e por bloco) |
+| Cores | `useChartTheme`/`resolveChartColor` (tema: dark/paletas/whitelabel) |
+
+**Comportamento:**
+- Dados via `GET /api/insights/resumo?periodo=` (React Query, `staleTime` 5min, sem refetch no foco).
+- Série por dia: `recebido` (classe 1) e `previsto` (classe 2); período `dia`/`semana`/`mes`.
+- A11y: `role="img"` + `aria-label` por gráfico.
 
 ---
 

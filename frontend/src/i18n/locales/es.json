@@ -767,7 +767,28 @@
     "cobrancas": "Cobros",
     "cobrancas.descricao": "Cobros en campo por cuota.",
     "atendidos": "Atendidos",
-    "atendidos.descricao": "Historial de atenciones del día."
+    "atendidos.descricao": "Historial de atenciones del día.",
+    "insights": "Insights",
+    "insights.descricao": "Gráficos operativos y financieros (solo lectura)."
+  },
+  "insights": {
+    "title": "Insights",
+    "subtitle": "Gráficos operativos y financieros del período.",
+    "erroCarregar": "No se pudieron cargar los insights.",
+    "semDados": "No hay datos disponibles para los módulos activos en el período.",
+    "semDadosPeriodo": "Sin datos en este período.",
+    "tendencia": "Tendencia de cobros",
+    "tendenciaAria": "Tendencia de cobros por día en el período",
+    "previstoRecebido": "Previsto × Recibido",
+    "previstoRecebidoAria": "Previsto versus recibido por día en el período",
+    "recebido": "Recibido",
+    "previsto": "Previsto",
+    "periodo": {
+      "label": "Período",
+      "dia": "Día",
+      "semana": "Semana",
+      "mes": "Mes"
+    }
   },
   "gps": {
     "capturar": "Capturar ubicación",

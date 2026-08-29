@@ -7,6 +7,7 @@ const FALLBACKS: Record<string, string> = {
   "--color-warning": "#d97706",
   "--color-danger": "#dc2626",
   "--color-text-muted": "#5b626f",
+  "--color-border": "#dde3ea",
 }
 
 /**
@@ -50,6 +51,7 @@ export function resolveChartColor(token: string, fallback?: string): string {
  * Hook de cores de série para gráficos (F1-f7): assina o `ThemeContext`
  * (palette/modo) e re-resolve as cores quando o tema muda — a troca de
  * paleta/dark re-renderiza e o `resolveChartColor` lê o valor EFETIVO.
+ * Ordem: [primary, success, warning, danger, muted, border].
  */
 export function useChartTheme(): string[] {
   const theme = useContext(ThemeContext)
@@ -60,6 +62,7 @@ export function useChartTheme(): string[] {
       resolveChartColor("--color-warning"),
       resolveChartColor("--color-danger"),
       resolveChartColor("--color-text-muted"),
+      resolveChartColor("--color-border"),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [theme.palette, theme.mode, theme.isDark],

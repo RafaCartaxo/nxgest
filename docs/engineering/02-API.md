@@ -1470,6 +1470,57 @@ Remove um gasto (soft delete). Não estorna o caixa — o histórico é preserva
 
 ---
 
+# Módulo Insights (PLAN-080)
+
+## Endpoints
+
+| Método | Endpoint | Descrição |
+|---------|----------|-----------|
+| GET | `/api/insights/resumo` | Resumo agregado (tendência + previsto × recebido) |
+
+---
+
+# GET /api/insights/resumo
+
+Resumo agregado de insights (PLAN-080 F1) — **módulo read-only**. Um único endpoint (D13) devolve a série por dia de **recebido** (classe 1: pagamentos não estornados — event log) e **previsto** (classe 2: `parcelas.valor_previsto` por `data_vencimento`, cronograma imutável).
+
+**Auth:** Bearer + `requireModule("insights")` · **Rate limit:** padrão do usuário
+
+## Query Parameters
+
+| Parâmetro | Tipo | Obrigatório | Padrão | Descrição |
+|-----------|------|-------------|---------|-----------|
+| periodo | string | Não | semana | `dia` (hoje) · `semana` (últimos 7 dias) · `mes` (últimos 30 dias) |
+
+**Escopo:** `resolveUsuarioAlvo` — operador = próprio; admin/sócio/super = `?usuarioId=` (drill-down) ou próprio (mesmo padrão dos demais módulos).
+
+## Response 200
+
+```json
+{
+    "periodo": "semana",
+    "dataInicio": "2026-08-22",
+    "dataFim": "2026-08-28",
+    "serie": [
+        { "data": "2026-08-22", "recebido": 0, "previsto": 0 },
+        { "data": "2026-08-23", "recebido": 0, "previsto": 0 },
+        { "data": "2026-08-24", "recebido": 1200.00, "previsto": 1500.00 }
+    ]
+}
+```
+
+> **D12 (classes de dado):** a série usa **classe 1** (event log de pagamentos) e **classe 2** (cronograma imutável de parcelas) — **nunca** `snapshots_atraso` (classe 4) nem `saldo_pendente` (classe 3).
+
+## Possíveis Erros
+
+| Código | HTTP |
+|---------|------|
+| VALIDATION_ERROR | 422 (periodo inválido) |
+| MODULE_DISABLED | 403 (módulo off) |
+| RATE_LIMIT | 429 |
+
+---
+
 # Módulo Auth
 
 ## Endpoints

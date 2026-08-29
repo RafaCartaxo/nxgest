@@ -1847,6 +1847,47 @@
       ]
     },
     {
+      "name": "Insights",
+      "description": "Resumo agregado (read-only — PLAN-080)",
+      "item": [
+        {
+          "name": "Resumo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/insights/resumo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "insights",
+                "resumo"
+              ],
+              "query": [
+                {
+                  "key": "periodo",
+                  "value": "semana"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "API-UC-047 (PLAN-080 F1) · 200 série recebido×previsto · 422 periodo inválido · 403 MODULE_DISABLED"
+          }
+        }
+      ]
+    },
+    {
       "name": "Admin",
       "description": "Gestão de operadores e dashboard (admin/super_admin)",
       "item": [

@@ -767,7 +767,28 @@
     "cobrancas": "Cobranças",
     "cobrancas.descricao": "Recebimentos em campo por parcela.",
     "atendidos": "Atendidos",
-    "atendidos.descricao": "Histórico de atendimentos do dia."
+    "atendidos.descricao": "Histórico de atendimentos do dia.",
+    "insights": "Insights",
+    "insights.descricao": "Gráficos operacionais e financeiros (leitura)."
+  },
+  "insights": {
+    "title": "Insights",
+    "subtitle": "Gráficos operacionais e financeiros do período.",
+    "erroCarregar": "Não foi possível carregar os insights.",
+    "semDados": "Nenhum dado disponível para os módulos ativos no período.",
+    "semDadosPeriodo": "Sem dados neste período.",
+    "tendencia": "Tendência de recebimentos",
+    "tendenciaAria": "Tendência de recebimentos por dia no período",
+    "previstoRecebido": "Previsto × Recebido",
+    "previstoRecebidoAria": "Previsto versus recebido por dia no período",
+    "recebido": "Recebido",
+    "previsto": "Previsto",
+    "periodo": {
+      "label": "Período",
+      "dia": "Dia",
+      "semana": "Semana",
+      "mes": "Mês"
+    }
   },
   "gps": {
     "capturar": "Capturar localização",

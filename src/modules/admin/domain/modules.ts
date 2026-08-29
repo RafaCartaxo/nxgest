@@ -1,6 +1,6 @@
 /** Registro canônico de módulos do whitelabel (fonte única — PLAN-031/045). */
 
-export type ModuleId = "clientes" | "contratos" | "caixa" | "gastos" | "rota" | "cobrancas" | "atendidos"
+export type ModuleId = "clientes" | "contratos" | "caixa" | "gastos" | "rota" | "cobrancas" | "atendidos" | "insights"
 
 export interface ModuleManifestEntry {
   labelKey: string
@@ -80,6 +80,15 @@ export const MODULE_MANIFEST: Record<string, ModuleManifestEntry> = {
     capacidades: [],
     dependsOn: ["cobrancas"],
     ucs: ["UC-010", "UC-021", "UC-036", "UC-070"],
+  },
+  insights: {
+    labelKey: "modules.insights",
+    surfaces: ["/insights"],
+    dados: ["/api/insights"],
+    widgets: [],
+    capacidades: [],
+    dependsOn: [],
+    ucs: ["UC-088", "API-UC-047"],
   },
 }
 

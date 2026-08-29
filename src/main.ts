@@ -18,6 +18,7 @@ import { operacoesRoutes } from "./modules/operacoes/presentation/routes/operaco
 import { caixaRoutes } from "./modules/caixa/presentation/routes/caixa.routes.js"
 import { empresaRoutes } from "./modules/admin/presentation/routes/empresa.routes.js"
 import { gastoRoutes } from "./modules/gasto/presentation/routes/gasto.routes.js"
+import { insightsRoutes } from "./modules/insights/presentation/routes/insights.routes.js"
 import { leadPublicRoutes } from "./modules/leads/presentation/routes/lead.routes.js"
 import { leadAdminRoutes } from "./modules/leads/presentation/routes/lead.admin.routes.js"
 import { devboardRoutes } from "./modules/devboard/presentation/routes/devboard.routes.js"
@@ -74,6 +75,8 @@ app.use("/api/pagamentos", authMiddleware, userRateLimit, requireModule("contrat
 app.use("/api/operacoes", authMiddleware, userRateLimit, operacoesRoutes)
 app.use("/api/caixa", authMiddleware, userRateLimit, requireModule("caixa"), caixaRoutes)
 app.use("/api/gastos", authMiddleware, userRateLimit, requireModule("gastos"), gastoRoutes)
+// Insights (PLAN-080 F1): módulo read-only — endpoint único `/api/insights/resumo`.
+app.use("/api/insights", authMiddleware, userRateLimit, requireModule("insights"), insightsRoutes)
 
 // Devboard: visibilidade de git/CI (exclusivo do super_admin — proxy da GitHub API, token no servidor).
 app.use("/api/devboard", authMiddleware, superAdminMiddleware, devboardRoutes)

@@ -1,4 +1,4 @@
-import { Users, FileText, Wallet, Receipt, MapPinned, ClipboardList, CheckCircle2 } from "lucide-react"
+import { Users, FileText, Wallet, Receipt, MapPinned, ClipboardList, CheckCircle2, LineChart } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 export const MODULES = [
@@ -9,6 +9,7 @@ export const MODULES = [
   { id: "rota", labelKey: "modules.rota", descricaoKey: "modules.rota.descricao", dependsOn: ["cobrancas"] as string[], icon: MapPinned },
   { id: "cobrancas", labelKey: "modules.cobrancas", descricaoKey: "modules.cobrancas.descricao", dependsOn: ["contratos"] as string[], icon: ClipboardList },
   { id: "atendidos", labelKey: "modules.atendidos", descricaoKey: "modules.atendidos.descricao", dependsOn: ["cobrancas"] as string[], icon: CheckCircle2 },
+  { id: "insights", labelKey: "modules.insights", descricaoKey: "modules.insights.descricao", dependsOn: [] as string[], icon: LineChart },
 ] as const
 
 export type ModuleId = (typeof MODULES)[number]["id"]
@@ -41,6 +42,7 @@ export const MODULE_WIDGETS: Record<ModuleId, string[]> = {
   rota: ["minhaRota"],
   cobrancas: ["pendentesDia", "clientesPendentes", "receber"],
   atendidos: ["atendidosHoje"],
+  insights: [],
 }
 
 /** Widget ativo? verdadeiro se o módulo DONO está ativo (ou modulos ausente = todos). */

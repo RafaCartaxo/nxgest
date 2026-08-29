@@ -1235,6 +1235,45 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 
 ---
 
+# INSIGHTS (PLAN-080 F1) — resumo agregado
+
+## API-UC-047 — Resumo de insights
+
+**Endpoint:** `GET /api/insights/resumo` · **Query:** `periodo=dia|semana|mes` · **Auth:** Bearer + `requireModule("insights")`
+
+**Response 200:** `{ periodo, dataInicio, dataFim, serie: [{ data, recebido, previsto }] }`
+
+**Coerência:**
+- [ ] `periodo` inválido → **422**?
+- [ ] Série por dia no range (dia=1, semana=7, mes=30) com `0` onde não há dado?
+- [ ] `recebido` = Σ pagamentos não estornados (classe 1); `previsto` = Σ `valor_previsto` por vencimento (classe 2)?
+- [ ] Módulo off → **403 `MODULE_DISABLED`** (W1: `insights` reconhecido — não "módulo inválido")?
+- [ ] Operador vê só o próprio; admin/sócio com `?usuarioId=` fora do escopo → 404?
+- [ ] **W2:** desligar `contratos` **não** desliga `insights` (`dependsOn: []`)?
+- [ ] **W3:** nova empresa nasce com `insights` on por default; desligar sem `force` → 200 (read-only)?
+
+**Regras:** PLAN-080 · BR-092/093 · **Postman:** `Insights > Resumo`
+
+### API-CT-134 — Resumo válido (semana)
+**Dado** usuário com pagamentos/parcelas → **Então** `GET /api/insights/resumo?periodo=semana` → **200** com 7 pontos, `dataInicio` = hoje-6, `dataFim` = hoje, e `recebido`/`previsto` coerentes.
+
+### API-CT-135 — Período inválido → 422
+**Dado** `periodo=ano` → **Então** **422** `VALIDATION_ERROR`.
+
+### API-CT-136 — Módulo off → 403 MODULE_DISABLED (W1)
+**Dado** empresa com `insights` desligado → **Então** `GET /api/insights/resumo` → **403** `MODULE_DISABLED` (módulo reconhecido pelo `ModuleId` — contraste com API-CT-093).
+
+### API-CT-137 — Sem cascata (W2)
+**Dado** empresa com `contratos` desligado (e `insights` ligado) → **Então** `GET /api/insights/resumo` → **200** (vazio se sem contratos; **não** 403) — `dependsOn: []`.
+
+### API-CT-138 — Default on + desligável (W3)
+**Dado** nova empresa → **Então** `insights` nasce on (`usuario.modulos` inclui); `PATCH /modulos` desligando sem `force` → **200** (read-only, sem bloqueio).
+
+### API-CT-139 — Sem contratos → série zerada (empty no front)
+**Dado** empresa sem `contratos` → **Então** `GET /api/insights/resumo` → **200** com todos os `recebido`/`previsto` = 0 (front mostra empty-state da página).
+
+---
+
 # WHITELABEL — ENFORCEMENT NO BACKEND (PLAN-036, P024)
 
 ## API-UC-043 — Modulos com enforcement (403 por módulo)

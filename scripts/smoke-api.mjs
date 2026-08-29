@@ -1041,7 +1041,7 @@ async function main() {
     const r = await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: adminToken, body: { modulos: [] } })
     expect(r, 403, "admin sem permissão")
   })
-  const MODULOS_ALL = ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos"]
+  const MODULOS_ALL = ["clientes", "contratos", "caixa", "gastos", "rota", "cobrancas", "atendidos", "insights"]
   await t("MOD-097", "Enforcement: módulo off → 403 MODULE_DISABLED; ativo → 200 (P024)", async () => {
     const tenantLogin = await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })
     expect(tenantLogin, 200, "login tenant")
@@ -1208,8 +1208,46 @@ async function main() {
       const g = await req("GET", `/api/clientes/${cliId}/anexos`, { token: novaTenantToken })
       expect(g, 403, "anexos off GET")
       if (g.data?.code !== "CAPABILITY_DISABLED") throw new Error(`code=${g.data?.code}`)
+} finally {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    }
+  })
+
+  // INSIGHTS (PLAN-080 F1) — resumo agregado + enforcement de módulo
+  const insToken = (await req("POST", "/api/auth/login", { body: { email: novaEmpresaAdminEmail, senha: SENHA } })).data.token
+  await t("INS-01", "resumo insights válido → 200 shape (semana = 7 pontos)", async () => {
+    const r = await req("GET", "/api/insights/resumo?periodo=semana", { token: insToken })
+    expect(r, 200, "resumo semana")
+    if (r.data.periodo !== "semana") throw new Error(`periodo=${r.data.periodo}`)
+    if (!Array.isArray(r.data.serie) || r.data.serie.length !== 7) throw new Error(`serie.length=${r.data.serie?.length}`)
+    for (const item of r.data.serie) {
+      if (typeof item.data !== "string" || typeof item.recebido !== "number" || typeof item.previsto !== "number") {
+        throw new Error(`shape inválido: ${JSON.stringify(item)}`)
+      }
+    }
+  })
+  await t("INS-02", "periodo inválido → 422", async () => {
+    const r = await req("GET", "/api/insights/resumo?periodo=ano", { token: insToken })
+    expect(r, 422, "periodo inválido")
+  })
+  await t("INS-03", "módulo insights off → 403 MODULE_DISABLED (W1)", async () => {
+    const semInsights = MODULOS_ALL.filter((m) => m !== "insights")
+    try {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: semInsights } })
+      const r = await req("GET", "/api/insights/resumo", { token: insToken })
+      expect(r, 403, "insights off")
+      if (r.data?.code !== "MODULE_DISABLED") throw new Error(`code=${r.data?.code}`)
     } finally {
-      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/capacidades`, { token: superToken, body: { capacidades: null } })
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
+    }
+  })
+  await t("INS-04", "W2: desligar contratos NÃO desliga insights (dependsOn: [])", async () => {
+    try {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: ["insights"] } })
+      const r = await req("GET", "/api/insights/resumo", { token: insToken })
+      expect(r, 200, "insights segue on sem contratos")
+    } finally {
+      await req("PATCH", `/api/admin/empresas/${novaEmpresaId}/modulos`, { token: superToken, body: { modulos: MODULOS_ALL } })
     }
   })
 

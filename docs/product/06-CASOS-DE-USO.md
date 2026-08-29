@@ -1726,6 +1726,27 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
+### UC-088 — Visualizar insights (`/insights`)
+
+**Ator:** operador (e admin/sócio via `?usuarioId=` — drill-down, como os demais módulos)
+
+**Ação:** acessa `/insights` (alcançável por URL; sem item de nav até a Fase 1.5), escolhe o **período** (dia/semana/mês), visualiza **Tendência de recebimentos** e **Previsto × Recebido**.
+
+**O que DEVE acontecer:** carrega o resumo agregado (`GET /api/insights/resumo?periodo=`); estados por `EstadoTela` (loading/erro com "Tentar novamente"/empty); **empty-state** da página quando não há dados e **por bloco** quando o período não tem eventos; gráficos seguem o tema (cores via `resolveChartColor`); módulo off → rota e API bloqueadas (403 `MODULE_DISABLED`).
+
+**Conferências:**
+- [ ] Seletor de período muda o `?periodo=` e recarrega?
+- [ ] Loading/erro/empty usam o padrão `EstadoTela`?
+- [ ] Erro de rede oferece "Tentar novamente" (`refetch`)?
+- [ ] Módulo off → `/insights` some e a API responde 403 `MODULE_DISABLED`?
+- [ ] Sem `contratos` → empty-state da página; período sem eventos → empty por bloco?
+- [ ] Cores dos gráficos seguem o tema (dark/paletas/whitelabel)?
+- [ ] Gráfico acessível (`role="img"` + `aria-label`)?
+
+**Regras:** PLAN-080 · API-UC-047 · BR-092/093 (módulo)
+
+---
+
 # Referências
 
 - `02-BUSINESS-RULES.md` — regras de negócio numeradas (BR)

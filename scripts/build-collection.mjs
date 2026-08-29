@@ -229,6 +229,13 @@ const endpoints = [
     req("Excluir", "DELETE", "/api/gastos/{{gastoId}}", { description: "API-UC-031 · 204 · 404 inexistente" }),
   ]),
 
+  mod("Insights", "Resumo agregado (read-only — PLAN-080)", [
+    req("Resumo", "GET", "/api/insights/resumo", {
+      query: [{ key: "periodo", value: "semana" }],
+      description: "API-UC-047 (PLAN-080 F1) · 200 série recebido×previsto · 422 periodo inválido · 403 MODULE_DISABLED",
+    }),
+  ]),
+
   mod("Admin", "Gestão de operadores e dashboard (admin/super_admin)", [
     req("Listar operadores", "GET", "/api/admin/operadores", { description: "API-UC-032 · 200 · 403 operator" }),
     req("Detalhe operador", "GET", "/api/admin/operadores/{{operadorId}}", { description: "API-UC-033 · 200 · 404 outra empresa" }),

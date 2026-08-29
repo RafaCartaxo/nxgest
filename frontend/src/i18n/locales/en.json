@@ -767,7 +767,28 @@
     "cobrancas": "Collections",
     "cobrancas.descricao": "Field collections per installment.",
     "atendidos": "Attended",
-    "atendidos.descricao": "History of today's attendances."
+    "atendidos.descricao": "History of today's attendances.",
+    "insights": "Insights",
+    "insights.descricao": "Operational and financial charts (read-only)."
+  },
+  "insights": {
+    "title": "Insights",
+    "subtitle": "Operational and financial charts for the period.",
+    "erroCarregar": "Unable to load insights.",
+    "semDados": "No data available for the active modules in this period.",
+    "semDadosPeriodo": "No data for this period.",
+    "tendencia": "Collections trend",
+    "tendenciaAria": "Collections trend per day in the period",
+    "previstoRecebido": "Expected vs. Collected",
+    "previstoRecebidoAria": "Expected versus collected per day in the period",
+    "recebido": "Collected",
+    "previsto": "Expected",
+    "periodo": {
+      "label": "Period",
+      "dia": "Day",
+      "semana": "Week",
+      "mes": "Month"
+    }
   },
   "gps": {
     "capturar": "Capture location",
