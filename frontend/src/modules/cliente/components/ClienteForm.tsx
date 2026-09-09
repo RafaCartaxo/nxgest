@@ -354,6 +354,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
             required
             type="tel"
             placeholder={t("cliente.telefonePlaceholder")}
+            {...form.register("telefone")}
             value={form.watch("telefone")}
             onChange={(e) => { form.setValue("telefone", maskPhone(e.target.value)); form.clearErrors("telefone") }}
             error={errors.telefone?.message}
@@ -362,6 +363,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
             label={t("cliente.cpf")}
             inputMode="numeric"
             placeholder={t("cliente.cpfPlaceholder")}
+            {...form.register("cpf")}
             value={form.watch("cpf") ?? ""}
             onChange={(e) => { form.setValue("cpf", maskCpf(e.target.value)); form.clearErrors("cpf") }}
             error={errors.cpf?.message}
@@ -386,6 +388,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
             label={t("cliente.telefoneComercio")}
             type="tel"
             placeholder={t("cliente.telefonePlaceholder")}
+            {...form.register("telefoneComercio")}
             value={form.watch("telefoneComercio") ?? ""}
             onChange={(e) => { form.setValue("telefoneComercio", maskPhone(e.target.value)); form.clearErrors("telefoneComercio") }}
             error={errors.telefoneComercio?.message}

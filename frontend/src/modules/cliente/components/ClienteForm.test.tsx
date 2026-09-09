@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { FeedbackProvider } from "../../../shared/feedback/FeedbackProvider.js"
 import { ClienteForm } from "./ClienteForm.js"
@@ -114,5 +114,60 @@ describe("ClienteForm — regressão do teclado/foco ao editar endereço (fix 12
     // Comércio + principal capturados → 2 badges "capturada"; sem descarte.
     expect(screen.getAllByText("gps.capturada")).toHaveLength(2)
     expect(screen.queryByText("gps.descartada")).not.toBeInTheDocument()
+  })
+})
+
+describe("ClienteForm — foco no campo com erro ao salvar (NXG-026)", () => {
+  function renderCreate() {
+    const onSubmit = vi.fn()
+    render(
+      <FeedbackProvider>
+        <ClienteForm onSubmit={onSubmit} onCancel={vi.fn()} />
+      </FeedbackProvider>,
+    )
+    return onSubmit
+  }
+
+  function campo(name: string): HTMLInputElement {
+    return document.querySelector(`input[name="${name}"]`) as HTMLInputElement
+  }
+
+  async function preencherObrigatoriosValidos(user: ReturnType<typeof userEvent.setup>) {
+    // telefone/comercio usam o mesmo placeholder → seletor por name
+    await user.type(campo("nome"), "Maria Silva")
+    await user.type(campo("telefone"), "83988887777")
+    await user.type(campo("comercio"), "Padaria")
+  }
+
+  it("CPF inválido → foco vai para o campo CPF e onSubmit não é chamado", async () => {
+    const user = userEvent.setup()
+    const onSubmit = renderCreate()
+    await preencherObrigatoriosValidos(user)
+
+    const cpf = campo("cpf")
+    await user.type(cpf, "11111111111")
+    expect(cpf).toHaveValue("111.111.111-11")
+
+    await user.click(screen.getByRole("button", { name: "common.save" }))
+
+    await waitFor(() => expect(document.activeElement).toBe(cpf))
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(screen.getByText("cliente.validacao.cpfInvalido")).toBeInTheDocument()
+  })
+
+  it("Telefone inválido → foco vai para o campo telefone", async () => {
+    const user = userEvent.setup()
+    const onSubmit = renderCreate()
+
+    await user.type(campo("nome"), "Maria Silva")
+    await user.type(campo("telefone"), "123")
+    await user.type(campo("comercio"), "Padaria")
+
+    await user.click(screen.getByRole("button", { name: "common.save" }))
+
+    const telefone = campo("telefone")
+    await waitFor(() => expect(document.activeElement).toBe(telefone))
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(screen.getByText("cliente.validacao.telefoneInvalido")).toBeInTheDocument()
   })
 })

@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 29/08/2026 — Fix: foco no campo com erro ao salvar cliente (NXG-026)
+
+- **Bug resolvido (local, sem deploy)** — CPF/telefone inválido não levava a tela ao campo (`shouldFocusError` sem `ref` nos inputs controlados).
+- **Fix mínimo:** `{...form.register("cpf"|"telefone"|"telefoneComercio")}` no `ClienteForm` (máscaras intactas).
+- **Regressão:** 2 testes novos (`document.activeElement`); controle negativo confirma que falham sem o fix.
+- **Validação:** tsc · **197/197 testes** · `audit:ui/styles` · `build` · CT-B01..B04 manuais no navegador local.
+- **Pendente:** push/deploy por decisão do dono.
+
 ## 28-29/08/2026 — Módulo Insights (PLAN-080 F1+F2)
 
 - **Módulo whitelabel `insights`** (read-only) — endpoint único **`GET /api/insights/resumo?periodo=`** (F1: séries `recebido` classe 1 + `previsto` classe 2 por dia) e **`GET /api/insights/carteira`** (F2: snapshot da carteira classe 3 + gastos por categoria + **contribuição** de operadores, sem placar).
