@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, writeFileSync, existsSync, rmSync, chmodSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, existsSync, rmSync, chmodSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { parseArgs } from './smoke.mjs'
 
@@ -58,3 +58,23 @@ test('no-recreate alcança schema sem conectar para recriar banco', () => {
     assert.notEqual(result.status, 0)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
+
+test('falha de startup encerra o grupo próprio e remove PID', () => {
+  const dir = mkdtempSync(path.join(process.cwd(), '.smoke-startup-'))
+  try {
+    const marker = path.join(dir, 'pid')
+    const npx = path.join(dir, 'npx')
+    const node = path.join(dir, 'node')
+    writeFileSync(npx, '#!/bin/sh\nif [ "$2" = scripts/create-schema.mjs ]; then exit 0; fi\nprintf "%s" "$$" > "$MARKER"\nexec /bin/sleep 60\n')
+    writeFileSync(node, '#!/bin/sh\nexit 0\n')
+    chmodSync(npx, 0o700); chmodSync(node, 0o700)
+    const result = run('scripts/smoke.mjs', ['--no-recreate'], { PATH: dir, MARKER: marker, SMOKE_PORT: '39482', SMOKE_DATABASE_URL: 'postgres://u:p@127.0.0.1:59482/nxgest_smoke_double' })
+    assert.notEqual(result.status, 0)
+    assert.match(result.stderr, /não respondeu/)
+    assert.equal(existsSync(path.join(process.cwd(), '.smoke.pid')), false)
+    assert.equal(existsSync(marker), true)
+    assert.throws(() => process.kill(-Number(requirePid(marker)), 0), { code: 'ESRCH' })
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})
+
+function requirePid(file) { return Number(readFileSync(file, 'utf8')) }
