@@ -4,10 +4,12 @@ export interface Cliente {
   id: string
   nome: string
   cpf?: string
+  documento?: string
   comercio?: string
   telefone: string
   telefoneComercio?: string
   endereco: {
+    cep?: string
     logradouro?: string
     numero?: string
     complemento?: string
@@ -16,6 +18,7 @@ export interface Cliente {
     estado?: string
   }
   enderecoComercio?: {
+    cep?: string
     logradouro?: string
     numero?: string
     bairro?: string
@@ -24,6 +27,8 @@ export interface Cliente {
   } | null
   localizacao?: { lat: number; lng: number } | null
   localizacaoComercio?: { lat: number; lng: number } | null
+  localizacaoOrigem?: "gps" | "cep_aproximado" | null
+  localizacaoComercioOrigem?: "gps" | "cep_aproximado" | null
   foto?: string
   totalContratos?: number
   saldoDevedor?: number

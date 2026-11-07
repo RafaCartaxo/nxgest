@@ -15,6 +15,7 @@ interface GpsControlProps {
   erro?: string | null
   /** Aviso já traduzido (ex.: geocode sem endereço). */
   aviso?: string | null
+  origem?: "gps" | "cep_aproximado" | null
   onCapturar: () => void
   className?: string
 }
@@ -30,6 +31,7 @@ export function GpsControl({
   capturando = false,
   erro,
   aviso,
+  origem = "gps",
   onCapturar,
   className = "",
 }: GpsControlProps) {
@@ -49,6 +51,7 @@ export function GpsControl({
           {capturada ? (
             <>
               <StatusBadge variant="success" label={t("gps.capturada")} />
+              {origem === "cep_aproximado" && <span className="ml-2 text-xs font-medium text-warning-text">CEP aprox.</span>}
               <p className="tabular mt-1.5 text-xs text-text-secondary">{formatarCoords(coords)}</p>
             </>
           ) : (

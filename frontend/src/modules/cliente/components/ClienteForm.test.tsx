@@ -115,6 +115,15 @@ describe("ClienteForm — regressão do teclado/foco ao editar endereço (fix 12
     expect(screen.getAllByText("gps.capturada")).toHaveLength(2)
     expect(screen.queryByText("gps.descartada")).not.toBeInTheDocument()
   })
+
+  it("inicia comércio expandido e endereço pessoal recolhido", () => {
+    renderForm()
+    const toggles = screen.getAllByRole("button", { name: /recolher|expandir/i })
+    expect(toggles[0]).toHaveAttribute("aria-expanded", "true")
+    expect(toggles[1]).toHaveAttribute("aria-expanded", "false")
+    expect(toggles[0]).toHaveAccessibleName("Recolher endereço do comércio")
+    expect(toggles[1]).toHaveAccessibleName("Expandir endereço pessoal")
+  })
 })
 
 describe("ClienteForm — foco no campo com erro ao salvar (NXG-026)", () => {
@@ -169,5 +178,77 @@ describe("ClienteForm — foco no campo com erro ao salvar (NXG-026)", () => {
     await waitFor(() => expect(document.activeElement).toBe(telefone))
     expect(onSubmit).not.toHaveBeenCalled()
     expect(screen.getByText("cliente.validacao.telefoneInvalido")).toBeInTheDocument()
+  })
+
+  it("CEP com formato inválido exibe confirmação ao salvar", async () => {
+    const user = userEvent.setup()
+    renderCreate()
+    const cep = campo("comercioCep")
+    await user.type(cep, "123")
+    await preencherObrigatoriosValidos(user)
+    await user.click(screen.getByRole("button", { name: "common.save" }))
+    expect(await screen.findByText("CEP inválido")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Salvar sem CEP" })).toBeInTheDocument()
+  })
+
+  it("envia null ao remover CEP existente durante a edição", async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn()
+    render(
+      <FeedbackProvider>
+        <ClienteForm
+          initial={{ ...clienteComLocalizacao, endereco: { ...clienteComLocalizacao.endereco, cep: "58000000" } }}
+          onSubmit={onSubmit}
+          onCancel={vi.fn()}
+        />
+      </FeedbackProvider>,
+    )
+    await user.clear(campo("cep"))
+    await user.click(screen.getByRole("button", { name: "common.save" }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ endereco: { cep: null } })
+  })
+
+  it("permite salvar sem CPF e sem Documento", async () => {
+    const user = userEvent.setup()
+    const onSubmit = renderCreate()
+    await preencherObrigatoriosValidos(user)
+
+    await user.click(screen.getByRole("button", { name: "common.save" }))
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("cpf")
+    expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("documento")
+  })
+
+  it("envia o Documento alternativo sem aplicar máscara", async () => {
+    const user = userEvent.setup()
+    const onSubmit = renderCreate()
+    await preencherObrigatoriosValidos(user)
+    await user.type(campo("documento"), "RG 12.345.678-9")
+
+    await user.click(screen.getByRole("button", { name: "common.save" }))
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ documento: "RG 12.345.678-9" })
+    expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("cpf")
+  })
+
+  it("preenche endereço pelo CEP sem alterar número ou complemento", async () => {
+    const user = userEvent.setup()
+    renderCreate()
+    const cep = campo("comercioCep")
+    const numero = campo("comercioNumero")
+    await user.type(numero, "42")
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ logradouro: "Av. CEP", bairro: "Centro", localidade: "João Pessoa", uf: "PB" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ lat: "-7.1", lon: "-34.8" }]), { status: 200 }))
+    vi.stubGlobal("fetch", fetchMock)
+    await user.type(cep, "58000000")
+    await waitFor(() => expect(campo("comercioLogradouro")).toHaveValue("Av. CEP"))
+    expect(numero).toHaveValue("42")
+    expect(campo("comercioBairro")).toHaveValue("Centro")
+    expect(campo("comercioCidade")).toHaveValue("João Pessoa")
+    expect(document.querySelector('[name="comercioEstado"]')).toHaveValue("PB")
   })
 })

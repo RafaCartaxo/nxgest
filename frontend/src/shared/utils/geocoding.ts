@@ -41,3 +41,19 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Geocodin
     estado: ufDoEndereco(addr) || undefined,
   }
 }
+
+export async function geocodeEndereco(endereco: Partial<GeocodingResult>): Promise<{ lat: number; lng: number } | null> {
+  const partes = [endereco.logradouro, endereco.bairro, endereco.cidade, endereco.estado, "Brasil"].filter(Boolean)
+  if (partes.length < 3) return null
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&q=${encodeURIComponent(partes.join(", "))}`
+  try {
+    const resp = await fetch(url)
+    if (!resp.ok) return null
+    const data = await resp.json() as Array<{ lat?: string; lon?: string }>
+    const lat = Number(data[0]?.lat)
+    const lng = Number(data[0]?.lon)
+    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null
+  } catch {
+    return null
+  }
+}

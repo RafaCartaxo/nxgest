@@ -213,6 +213,7 @@ Cria um novo cliente.
 |---------|------------|--------|
 | nome | Sim | 3 a 100 caracteres |
 | cpf | Não | 11 dígitos (validado se informado) |
+| documento | Não | Texto livre (RG ou outro), até 20 caracteres |
 | comercio | Sim | 1 a 100 caracteres |
 | telefone | Sim | 10 a 11 dígitos |
 | endereco | Sim | Objeto Address |
@@ -222,6 +223,7 @@ Cria um novo cliente.
 | endereco.bairro | Não | Texto livre |
 | endereco.cidade | Não | 2 a 100 caracteres |
 | endereco.estado | Não | 2 caracteres |
+| endereco.cep | Não | 8 dígitos, sem máscara |
 | localizacao | Não | Objeto Location |
 | localizacao.lat | Condicional | Número |
 | localizacao.lng | Condicional | Número |

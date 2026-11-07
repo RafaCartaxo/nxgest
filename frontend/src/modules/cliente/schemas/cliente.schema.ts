@@ -54,6 +54,8 @@ export function getClienteSchema(t: TFunction) {
         (val) => !val || isValidCpf(val),
         t("cliente.validacao.cpfInvalido"),
       ),
+    documento: z.string().trim().max(20, t("cliente.validacao.documentoMaximo")).optional(),
+    cep: z.string().optional(),
     comercio: z
       .string({ required_error: t("cliente.validacao.required") })
       .min(1, t("cliente.validacao.required")),
@@ -81,6 +83,7 @@ export function getClienteSchema(t: TFunction) {
         (val) => !val || val.length === 2,
         t("cliente.validacao.ufInvalida"),
       ),
+    comercioCep: z.string().optional(),
     comercioLogradouro: z.string().optional(),
     comercioNumero: z.string().optional(),
     comercioBairro: z.string().optional(),

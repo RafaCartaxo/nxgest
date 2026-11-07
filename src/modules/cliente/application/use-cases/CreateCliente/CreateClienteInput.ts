@@ -11,11 +11,13 @@ export const createClienteSchema = z.object({
     .refine((val) => !val || isValidCpf(val), {
       message: "CPF inválido.",
     }),
+  documento: z.string().trim().max(20, "Documento deve conter no máximo 20 caracteres").optional(),
   comercio: z.string().min(1, "Campo obrigatório"),
   telefone: z.string().regex(/^\d{10,11}$/, "Telefone deve conter 10 ou 11 dígitos"),
   telefoneComercio: z.string().regex(/^\d{10,11}$/, "Telefone deve conter 10 ou 11 dígitos").optional(),
   endereco: z
     .object({
+      cep: z.string().regex(/^\d{8}$/, "CEP deve conter 8 dígitos").optional(),
       logradouro: z
         .string()
         .max(150)
@@ -30,6 +32,7 @@ export const createClienteSchema = z.object({
     .optional()
     .nullable(),
   enderecoComercio: z.object({
+    cep: z.string().regex(/^\d{8}$/, "CEP deve conter 8 dígitos").optional(),
     logradouro: z.string().optional(),
     numero: z.string().optional(),
     bairro: z.string().optional(),
@@ -49,6 +52,7 @@ export const createClienteSchema = z.object({
     })
     .optional()
     .nullable(),
+  localizacaoOrigem: z.enum(["gps", "cep_aproximado"]).optional().nullable(),
   localizacaoComercio: z
     .object({
       lat: z.number(),
@@ -56,6 +60,7 @@ export const createClienteSchema = z.object({
     })
     .optional()
     .nullable(),
+  localizacaoComercioOrigem: z.enum(["gps", "cep_aproximado"]).optional().nullable(),
 })
 
 export type CreateClienteInput = z.infer<typeof createClienteSchema>

@@ -33,6 +33,11 @@ export function maskPhone(value: string): string {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
 }
 
+export function maskCep(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 8)
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d
+}
+
 export function unmask(value: string): string {
   return value.replace(/\D/g, "")
 }

@@ -1,23 +1,26 @@
 import { memo, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useForm, type FieldErrors, type UseFormRegister } from "react-hook-form"
+import { useForm, type FieldErrors, type UseFormRegister, type UseFormSetValue } from "react-hook-form"
 import type { TFunction } from "i18next"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Check, UserRound, Store } from "lucide-react"
+import { Check, ChevronDown, ChevronRight, UserRound, Store } from "lucide-react"
 import { AvatarField } from "../../../shared/components/Avatar/Avatar.js"
 import { ApiError } from "../../../api/client.js"
 import { Button } from "../../../shared/components/Button.js"
+import { ConfirmModal } from "../../../shared/components/ConfirmModal.js"
 import { Card } from "../../../shared/components/Card/Card.js"
 import { Field } from "../../../shared/components/Field/Field.js"
 import { FieldSelect } from "../../../shared/components/Field/FieldSelect.js"
 import { useFeedback } from "../../../shared/feedback/useFeedback.js"
-import { maskCpf, maskPhone, unmask } from "../../../shared/utils/masks.js"
+import { maskCpf, maskPhone, maskCep, unmask } from "../../../shared/utils/masks.js"
 import { getClienteSchema, UFS, type ClienteFormData } from "../schemas/cliente.schema.js"
 import type { Cliente } from "../services/cliente.service.js"
 import { useGeolocation, type UseGeolocationReturn } from "../../../shared/geo/hooks.js"
 import { GpsControl, type GpsEstado } from "../../../shared/geo/GpsControl.js"
 import { estadoGpsInicial } from "../../../shared/geo/estadoGps.js"
 import type { EnderecoTexto } from "../../../shared/geo/types.js"
+import { consultarCep, CepError, type ResultadoCep } from "../../../shared/utils/cep.js"
+import { geocodeEndereco } from "../../../shared/utils/geocoding.js"
 
 interface ClienteFormProps {
   /** Cliente a editar (null = novo). */
@@ -27,24 +30,25 @@ interface ClienteFormProps {
   onCancel: () => void
 }
 
-const camposComercio = ["comercioLogradouro", "comercioBairro", "comercioCidade", "comercioEstado"]
-const camposPrincipal = ["logradouro", "bairro", "cidade", "estado", "complemento"]
+const camposComercio = ["comercioLogradouro", "comercioBairro", "comercioCidade", "comercioEstado", "comercioCep"]
+const camposPrincipal = ["logradouro", "bairro", "cidade", "estado", "complemento", "cep"]
 
 const defaultValues: ClienteFormData = {
-  nome: "", telefone: "", telefoneComercio: "", cpf: "", comercio: "",
-  logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
-  comercioLogradouro: "", comercioNumero: "", comercioBairro: "", comercioCidade: "", comercioEstado: "",
+  nome: "", telefone: "", telefoneComercio: "", cpf: "", documento: "", comercio: "",
+  logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", cep: "",
+  comercioLogradouro: "", comercioNumero: "", comercioBairro: "", comercioCidade: "", comercioEstado: "", comercioCep: "",
   comercioLat: undefined, comercioLng: undefined,
   lat: undefined, lng: undefined, foto: undefined,
 }
 
-function blocoComercio(prefix: "comercio" | ""): Record<"logradouro" | "numero" | "bairro" | "cidade" | "uf", keyof ClienteFormData> {
+function blocoComercio(prefix: "comercio" | ""): Record<"logradouro" | "numero" | "bairro" | "cidade" | "uf" | "cep", keyof ClienteFormData> {
   return {
     logradouro: prefix ? "comercioLogradouro" : "logradouro",
     numero: prefix ? "comercioNumero" : "numero",
     bairro: prefix ? "comercioBairro" : "bairro",
     cidade: prefix ? "comercioCidade" : "cidade",
     uf: prefix ? "comercioEstado" : "estado",
+    cep: prefix ? "comercioCep" : "cep",
   }
 }
 
@@ -54,6 +58,10 @@ interface EnderecoFieldsProps {
   register: UseFormRegister<ClienteFormData>
   errors: FieldErrors<ClienteFormData>
   t: TFunction
+  setValue: UseFormSetValue<ClienteFormData>
+  onCepResolved: (prefix: "comercio" | "", resultado: ResultadoCep) => Promise<void>
+  onCepInvalid: (prefix: "comercio" | "") => void
+  onCepChanged: (prefix: "comercio" | "") => void
 }
 
 /**
@@ -61,10 +69,53 @@ interface EnderecoFieldsProps {
  * de módulo + memo para não remontar os inputs a cada render do form — remontar
  * perdia o foco do campo editado e fechava o teclado no celular (fix 12/08).
  */
-function EnderecoFields({ prefix, comComplemento, register, errors, t }: EnderecoFieldsProps) {
+function EnderecoFields({ prefix, comComplemento, register, errors, t, setValue, onCepResolved, onCepInvalid, onCepChanged }: EnderecoFieldsProps) {
   const f = blocoComercio(prefix)
+  const [cepErro, setCepErro] = useState<string | null>(null)
+  const consultaCepRef = useRef(0)
+  const cepRegistration = register(f.cep)
+  async function buscarCep(value: string) {
+    const cepNormalizado = value.replace(/\D/g, "")
+    if (cepNormalizado.length !== 8) return
+    const consultaAtual = ++consultaCepRef.current
+    try {
+      const resultado = await consultarCep(value)
+      if (consultaAtual !== consultaCepRef.current) return
+      if (resultado.logradouro) setValue(f.logradouro, resultado.logradouro)
+      if (resultado.bairro) setValue(f.bairro, resultado.bairro)
+      if (resultado.cidade) setValue(f.cidade, resultado.cidade)
+      if (resultado.estado) setValue(f.uf, resultado.estado)
+      await onCepResolved(prefix, resultado)
+      setCepErro(null)
+    } catch (error) {
+      if (error instanceof CepError) {
+        const mensagem = error.tipo === "nao_encontrado"
+          ? "CEP não encontrado."
+          : "Não foi possível consultar o CEP."
+        setCepErro(mensagem)
+        onCepInvalid(prefix)
+      }
+    }
+  }
   return (
     <div className="grid gap-4 p-4 sm:grid-cols-2">
+      <Field
+        label="CEP"
+        inputMode="numeric"
+        placeholder="00000-000"
+        {...cepRegistration}
+        onInput={(e) => {
+          const input = e.target as HTMLInputElement
+          input.value = maskCep(input.value)
+          setCepErro(null)
+          onCepChanged(prefix)
+        }}
+        onChange={(e) => {
+          cepRegistration.onChange(e)
+          void buscarCep(e.target.value)
+        }}
+        error={cepErro ?? undefined}
+      />
       <div className="sm:col-span-2">
         <Field
           label={t("cliente.logradouro")}
@@ -96,6 +147,7 @@ const EnderecoFieldsMemo = memo(EnderecoFields)
 type BlocoGps = {
   coords: { lat: number; lng: number } | null
   estado: GpsEstado
+  origem: "gps" | "cep_aproximado" | null
   aviso: string | null
 }
 
@@ -115,8 +167,12 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
     defaultValues,
   })
 
-  const [gpsComercio, setGpsComercio] = useState<BlocoGps>({ coords: null, estado: "vazio", aviso: null })
-  const [gpsPrincipal, setGpsPrincipal] = useState<BlocoGps>({ coords: null, estado: "vazio", aviso: null })
+  const [gpsComercio, setGpsComercio] = useState<BlocoGps>({ coords: null, estado: "vazio", origem: null, aviso: null })
+  const [gpsPrincipal, setGpsPrincipal] = useState<BlocoGps>({ coords: null, estado: "vazio", origem: null, aviso: null })
+  const [enderecoComercioAberto, setEnderecoComercioAberto] = useState(true)
+  const [enderecoPrincipalAberto, setEnderecoPrincipalAberto] = useState(false)
+  const [cepInvalido, setCepInvalido] = useState<"cep" | "comercioCep" | null>(null)
+  const [cepConsultaInvalida, setCepConsultaInvalida] = useState<"cep" | "comercioCep" | null>(null)
   const isGeocodingRef = useRef(false)
   const geoComercio = useGeolocation()
   const geoPrincipal = useGeolocation()
@@ -132,6 +188,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       telefone: maskPhone(initial.telefone),
       telefoneComercio: initial.telefoneComercio ? maskPhone(initial.telefoneComercio) : "",
       cpf: initial.cpf ? maskCpf(initial.cpf) : "",
+      documento: initial.documento ?? "",
       comercio: initial.comercio ?? "",
       logradouro: initial.endereco.logradouro,
       numero: initial.endereco.numero ?? "",
@@ -139,11 +196,13 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       bairro: initial.endereco.bairro ?? "",
       cidade: initial.endereco.cidade ?? "",
       estado: initial.endereco.estado ?? "",
+      cep: initial.endereco.cep ? maskCep(initial.endereco.cep) : "",
       comercioLogradouro: initial.enderecoComercio?.logradouro ?? "",
       comercioNumero: initial.enderecoComercio?.numero ?? "",
       comercioBairro: initial.enderecoComercio?.bairro ?? "",
       comercioCidade: initial.enderecoComercio?.cidade ?? "",
       comercioEstado: initial.enderecoComercio?.estado ?? "",
+      comercioCep: initial.enderecoComercio?.cep ? maskCep(initial.enderecoComercio.cep) : "",
       comercioLat: initial.localizacaoComercio?.lat,
       comercioLng: initial.localizacaoComercio?.lng,
       lat: initial.localizacao?.lat,
@@ -151,8 +210,8 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       foto: initial.foto ?? undefined,
     })
     // P7: o GpsControl é controlado — refletir a localização salva no estado do bloco.
-    setGpsComercio(estadoGpsInicial(initial.localizacaoComercio))
-    setGpsPrincipal(estadoGpsInicial(initial.localizacao))
+    setGpsComercio({ ...estadoGpsInicial(initial.localizacaoComercio), origem: initial.localizacaoComercioOrigem ?? "gps" })
+    setGpsPrincipal({ ...estadoGpsInicial(initial.localizacao), origem: initial.localizacaoOrigem ?? "gps" })
     isGeocodingRef.current = false
   }, [initial, form])
 
@@ -164,13 +223,13 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
         if (value.comercioLat != null || value.comercioLng != null) {
           form.setValue("comercioLat", undefined)
           form.setValue("comercioLng", undefined)
-          setGpsComercio((p) => ({ ...p, coords: null, estado: "invalidada" }))
+          setGpsComercio((p) => ({ ...p, coords: null, estado: "invalidada", origem: null }))
         }
       } else if (camposPrincipal.includes(name)) {
         if (value.lat != null || value.lng != null) {
           form.setValue("lat", undefined)
           form.setValue("lng", undefined)
-          setGpsPrincipal((p) => ({ ...p, coords: null, estado: "invalidada" }))
+          setGpsPrincipal((p) => ({ ...p, coords: null, estado: "invalidada", origem: null }))
         }
       }
     })
@@ -192,6 +251,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
     setBloco(() => ({
       coords: r.localizacao,
       estado: "capturada",
+      origem: "gps",
       aviso: r.origem === "gps" ? t("gps.avisoGeocode") : null,
     }))
   }
@@ -230,6 +290,26 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
       setGpsPrincipal,
     )
 
+  async function resolverLocalizacaoCep(prefix: "comercio" | "", resultado: ResultadoCep) {
+    const cepAtual = String(form.getValues(prefix ? "comercioCep" : "cep") ?? "").replace(/\D/g, "")
+    if (cepAtual !== resultado.cep) return
+    const coords = await geocodeEndereco(resultado)
+    if (!coords) return
+    const cepDepoisDaConsulta = String(form.getValues(prefix ? "comercioCep" : "cep") ?? "").replace(/\D/g, "")
+    if (cepDepoisDaConsulta !== resultado.cep) return
+    isGeocodingRef.current = true
+    if (prefix) {
+      form.setValue("comercioLat", coords.lat)
+      form.setValue("comercioLng", coords.lng)
+      setGpsComercio({ coords, estado: "capturada", origem: "cep_aproximado", aviso: "Localização aproximada pelo CEP." })
+    } else {
+      form.setValue("lat", coords.lat)
+      form.setValue("lng", coords.lng)
+      setGpsPrincipal({ coords, estado: "capturada", origem: "cep_aproximado", aviso: "Localização aproximada pelo CEP." })
+    }
+    isGeocodingRef.current = false
+  }
+
   function buildPayload(data: ClienteFormData): Record<string, unknown> {
     const payload: Record<string, unknown> = {
       foto: data.foto || (editing ? null : undefined),
@@ -244,10 +324,13 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
         bairro: data.bairro || undefined,
         cidade: data.cidade || undefined,
         estado: data.estado || undefined,
+        cep: data.cep ? unmask(data.cep) : editing ? null : undefined,
       },
     }
     const cpfDigits = data.cpf ? unmask(data.cpf) : ""
     if (cpfDigits) payload.cpf = cpfDigits
+    const documento = data.documento?.trim() ?? ""
+    if (documento || editing) payload.documento = documento || null
 
     payload.enderecoComercio = data.comercioLogradouro
       ? {
@@ -256,6 +339,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
           bairro: data.comercioBairro || undefined,
           cidade: data.comercioCidade || undefined,
           estado: data.comercioEstado || undefined,
+          cep: data.comercioCep ? unmask(data.comercioCep) : editing ? null : undefined,
         }
       : editing
         ? null
@@ -267,6 +351,7 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
         : editing
           ? null
           : undefined
+    payload.localizacaoComercioOrigem = payload.localizacaoComercio ? gpsComercio.origem : null
 
     payload.localizacao =
       data.lat != null && data.lng != null
@@ -274,11 +359,23 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
         : editing
           ? null
           : undefined
+    payload.localizacaoOrigem = payload.localizacao ? gpsPrincipal.origem : null
 
     return payload
   }
 
   async function handleSubmit(data: ClienteFormData) {
+    const cep = (data.cep ?? "").replace(/\D/g, "")
+    const comercioCep = (data.comercioCep ?? "").replace(/\D/g, "")
+    const campoCepInvalido = cep.length > 0 && cep.length !== 8
+      ? "cep"
+      : comercioCep.length > 0 && comercioCep.length !== 8
+        ? "comercioCep"
+        : null
+    if (campoCepInvalido || cepConsultaInvalida) {
+      setCepInvalido(campoCepInvalido ?? cepConsultaInvalida)
+      return
+    }
     await feedback.run({
       loading: t("common.saving"),
       success: editing ? "Cliente atualizado." : "Cliente cadastrado.",
@@ -327,6 +424,23 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" noValidate>
+      <ConfirmModal
+        open={cepInvalido !== null}
+        title="CEP inválido"
+        message="Corrija o CEP ou salve o cadastro sem esse CEP."
+        confirmLabel="Salvar sem CEP"
+        cancelLabel="Corrigir CEP"
+        onConfirm={() => {
+          if (cepInvalido) form.setValue(cepInvalido, "")
+          setCepConsultaInvalida(null)
+          setCepInvalido(null)
+          queueMicrotask(() => void form.handleSubmit(handleSubmit)())
+        }}
+        onCancel={() => {
+          if (cepInvalido) form.setFocus(cepInvalido)
+          setCepInvalido(null)
+        }}
+      />
       <Card.Root variant="detail">
         <Card.Header className="border-b border-border-light pb-3">
           <UserRound className="size-4 text-primary-text" aria-hidden />
@@ -368,6 +482,13 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
             onChange={(e) => { form.setValue("cpf", maskCpf(e.target.value)); form.clearErrors("cpf") }}
             error={errors.cpf?.message}
           />
+          <Field
+            label={t("cliente.documento")}
+            placeholder={t("cliente.documentoPlaceholder")}
+            maxLength={20}
+            error={errors.documento?.message}
+            {...form.register("documento")}
+          />
         </div>
       </Card.Root>
 
@@ -400,14 +521,18 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
         <Card.Header className="border-b border-border-light pb-3">
           <Store className="size-4 text-primary-text" aria-hidden />
           <Card.Title>{t("cliente.enderecoComercio")}</Card.Title>
+          <button type="button" className="ml-auto inline-flex items-center text-primary" aria-label={`${enderecoComercioAberto ? "Recolher" : "Expandir"} endereço do comércio`} aria-expanded={enderecoComercioAberto} onClick={() => setEnderecoComercioAberto((aberto) => !aberto)}>
+            {enderecoComercioAberto ? <ChevronDown className="size-4" aria-hidden /> : <ChevronRight className="size-4" aria-hidden />}
+          </button>
         </Card.Header>
-        <div className="p-4">
+        <div className="p-4" hidden={!enderecoComercioAberto}>
           <GpsControl
             coords={gpsComercio.coords}
             estado={gpsComercio.estado}
             capturando={geoComercio.capturando}
             erro={geoComercio.erro ? t(geoComercio.erro) : null}
             aviso={gpsComercio.aviso}
+            origem={gpsComercio.origem}
             onCapturar={capturarComercio}
           />
           <EnderecoFieldsMemo
@@ -416,6 +541,10 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
             register={form.register}
             errors={errors}
             t={t}
+            setValue={form.setValue}
+            onCepResolved={resolverLocalizacaoCep}
+            onCepInvalid={() => setCepConsultaInvalida("comercioCep")}
+            onCepChanged={() => setCepConsultaInvalida(null)}
           />
         </div>
       </Card.Root>
@@ -424,17 +553,21 @@ export function ClienteForm({ initial = null, onSubmit, onCancel }: ClienteFormP
         <Card.Header className="border-b border-border-light pb-3">
           <UserRound className="size-4 text-primary-text" aria-hidden />
           <Card.Title>{t("cliente.endereco")}</Card.Title>
+          <button type="button" className="ml-auto inline-flex items-center text-primary" aria-label={`${enderecoPrincipalAberto ? "Recolher" : "Expandir"} endereço pessoal`} aria-expanded={enderecoPrincipalAberto} onClick={() => setEnderecoPrincipalAberto((aberto) => !aberto)}>
+            {enderecoPrincipalAberto ? <ChevronDown className="size-4" aria-hidden /> : <ChevronRight className="size-4" aria-hidden />}
+          </button>
         </Card.Header>
-        <div className="p-4">
+        <div className="p-4" hidden={!enderecoPrincipalAberto}>
           <GpsControl
             coords={gpsPrincipal.coords}
             estado={gpsPrincipal.estado}
             capturando={geoPrincipal.capturando}
             erro={geoPrincipal.erro ? t(geoPrincipal.erro) : null}
             aviso={gpsPrincipal.aviso}
+            origem={gpsPrincipal.origem}
             onCapturar={capturarPrincipal}
           />
-          <EnderecoFieldsMemo prefix="" comComplemento register={form.register} errors={errors} t={t} />
+          <EnderecoFieldsMemo prefix="" comComplemento register={form.register} errors={errors} t={t} setValue={form.setValue} onCepResolved={resolverLocalizacaoCep} onCepInvalid={() => setCepConsultaInvalida("cep")} onCepChanged={() => setCepConsultaInvalida(null)} />
         </div>
       </Card.Root>
 

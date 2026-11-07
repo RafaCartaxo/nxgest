@@ -1,5 +1,6 @@
 /** Endereço em texto livre (logradouro/numero/bairro/cidade/UF). Todos opcionais (dados reais podem vir incompletos). */
 export interface EnderecoTexto {
+  cep?: string | null
   logradouro?: string
   numero?: string | null
   complemento?: string | null

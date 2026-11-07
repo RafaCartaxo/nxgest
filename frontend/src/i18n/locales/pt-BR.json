@@ -171,6 +171,8 @@
     "telefoneComercio": "Telefone do Comércio",
     "cpf": "CPF",
     "cpfPlaceholder": "000.000.000-00",
+    "documento": "Documento",
+    "documentoPlaceholder": "RG, CNH ou outro documento",
     "comercio": "Comércio",
     "comercioPlaceholder": "Ex.: Mercadinho São José",
     "endereco": "Endereço Pessoal",
@@ -207,6 +209,7 @@
       "nomeMinimo": "O nome deve possuir pelo menos 3 caracteres.",
       "telefoneInvalido": "Informe um telefone válido.",
       "cpfInvalido": "CPF inválido.",
+      "documentoMaximo": "O documento deve possuir no máximo 20 caracteres.",
       "enderecoInvalido": "Informe um endereço válido.",
       "cidadeMinimo": "A cidade deve possuir pelo menos 2 caracteres.",
       "ufInvalida": "UF inválida."

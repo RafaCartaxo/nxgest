@@ -1,4 +1,5 @@
 export interface Address {
+  cep?: string | null
   logradouro?: string | null
   numero?: string
   complemento?: string
@@ -12,7 +13,10 @@ export interface Location {
   lng: number
 }
 
+export type LocationOrigin = "gps" | "cep_aproximado"
+
 export interface AddressPartial {
+  cep?: string | null
   logradouro?: string
   numero?: string
   bairro?: string
@@ -24,6 +28,7 @@ export interface Cliente {
   id: string
   nome: string
   cpf?: string
+  documento?: string | null
   comercio: string
   telefone: string
   telefoneComercio?: string
@@ -31,6 +36,8 @@ export interface Cliente {
   enderecoComercio?: AddressPartial | null
   localizacao?: Location | null
   localizacaoComercio?: Location | null
+  localizacaoOrigem?: LocationOrigin | null
+  localizacaoComercioOrigem?: LocationOrigin | null
   foto?: string | null
   totalContratos?: number
   createdAt: string

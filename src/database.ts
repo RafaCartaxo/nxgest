@@ -83,6 +83,7 @@ export const clientes = pgTable("clientes", {
   id: text("id").primaryKey(),
   nome: text("nome").notNull(),
   cpf: text("cpf"),
+  documento: text("documento"),
   comercio: text("comercio").notNull(),
   telefone: text("telefone").notNull(),
   telefoneComercio: text("telefone_comercio"),
@@ -92,15 +93,19 @@ export const clientes = pgTable("clientes", {
   bairro: text("bairro"),
   cidade: text("cidade"),
   estado: text("estado"),
+  cep: text("cep"),
   lat: doublePrecision("lat"),
   lng: doublePrecision("lng"),
+  localizacaoOrigem: text("localizacao_origem"),
   comercioLogradouro: text("comercio_logradouro"),
   comercioNumero: text("comercio_numero"),
   comercioBairro: text("comercio_bairro"),
   comercioCidade: text("comercio_cidade"),
   comercioEstado: text("comercio_estado"),
+  comercioCep: text("comercio_cep"),
   comercioLat: doublePrecision("comercio_lat"),
   comercioLng: doublePrecision("comercio_lng"),
+  localizacaoComercioOrigem: text("localizacao_comercio_origem"),
   foto: text("foto"),
   createdAt: ts("created_at").notNull(),
   updatedAt: ts("updated_at").notNull(),
@@ -422,12 +427,12 @@ CREATE TABLE IF NOT EXISTS "convites" (
       "criado_em" TIMESTAMPTZ NOT NULL, "expira_em" TIMESTAMPTZ NOT NULL, "usado_em" TIMESTAMPTZ, "revogado_em" TIMESTAMPTZ
     );
 CREATE TABLE IF NOT EXISTS "clientes" (
-      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "cpf" TEXT, "comercio" TEXT NOT NULL,
+      "id" TEXT PRIMARY KEY, "nome" TEXT NOT NULL, "cpf" TEXT, "documento" TEXT, "comercio" TEXT NOT NULL,
       "telefone" TEXT NOT NULL, "telefone_comercio" TEXT, "logradouro" TEXT,
-      "numero" TEXT, "complemento" TEXT, "bairro" TEXT, "cidade" TEXT, "estado" TEXT,
-      "lat" DOUBLE PRECISION, "lng" DOUBLE PRECISION,
+      "numero" TEXT, "complemento" TEXT, "bairro" TEXT, "cidade" TEXT, "estado" TEXT, "cep" TEXT,
+      "lat" DOUBLE PRECISION, "lng" DOUBLE PRECISION, "localizacao_origem" TEXT,
       "comercio_logradouro" TEXT, "comercio_numero" TEXT, "comercio_bairro" TEXT,
-      "comercio_cidade" TEXT, "comercio_estado" TEXT, "comercio_lat" DOUBLE PRECISION, "comercio_lng" DOUBLE PRECISION,
+      "comercio_cidade" TEXT, "comercio_estado" TEXT, "comercio_cep" TEXT, "comercio_lat" DOUBLE PRECISION, "comercio_lng" DOUBLE PRECISION, "localizacao_comercio_origem" TEXT,
       "foto" TEXT, "created_at" TIMESTAMPTZ NOT NULL, "updated_at" TIMESTAMPTZ NOT NULL, "deleted_at" TIMESTAMPTZ, "user_id" TEXT
     );
 CREATE TABLE IF NOT EXISTS "leads" (
@@ -572,6 +577,11 @@ CREATE TABLE IF NOT EXISTS "auth_tokens" (
   // ALTERs idempotentes — endereço pessoal do cliente deixou de ser obrigatório (2026-08-13).
   // `DROP NOT NULL` é idempotente: em coluna já nullable não faz nada.
   await pool.query(`ALTER TABLE "clientes" ALTER COLUMN "logradouro" DROP NOT NULL`)
+  await pool.query(`ALTER TABLE "clientes" ADD COLUMN IF NOT EXISTS "documento" TEXT`)
+  await pool.query(`ALTER TABLE "clientes" ADD COLUMN IF NOT EXISTS "cep" TEXT`)
+  await pool.query(`ALTER TABLE "clientes" ADD COLUMN IF NOT EXISTS "comercio_cep" TEXT`)
+  await pool.query(`ALTER TABLE "clientes" ADD COLUMN IF NOT EXISTS "localizacao_origem" TEXT`)
+  await pool.query(`ALTER TABLE "clientes" ADD COLUMN IF NOT EXISTS "localizacao_comercio_origem" TEXT`)
 
   // PLAN-075 (13/08) — dados cadastrais, acesso e segurança de usuários: idempotente em
   // banco novo e existente (mesmo padrão `ADD COLUMN IF NOT EXISTS` do PLAN-070/072).

@@ -14,10 +14,12 @@ function rowToCliente(row: ClienteRow): Cliente {
     id: row.id,
     nome: row.nome,
     cpf: row.cpf ?? undefined,
+    documento: row.documento ?? undefined,
     comercio: row.comercio,
     telefone: row.telefone,
     telefoneComercio: row.telefoneComercio ?? undefined,
     endereco: {
+      cep: row.cep ?? undefined,
       logradouro: row.logradouro ?? undefined,
       numero: row.numero ?? undefined,
       complemento: row.complemento ?? undefined,
@@ -25,8 +27,9 @@ function rowToCliente(row: ClienteRow): Cliente {
       cidade: row.cidade ?? undefined,
       estado: row.estado ?? undefined,
     },
-    enderecoComercio: row.comercioLogradouro ? {
-      logradouro: row.comercioLogradouro,
+    enderecoComercio: row.comercioLogradouro || row.comercioCep ? {
+      cep: row.comercioCep ?? undefined,
+      logradouro: row.comercioLogradouro ?? undefined,
       numero: row.comercioNumero ?? undefined,
       bairro: row.comercioBairro ?? undefined,
       cidade: row.comercioCidade ?? undefined,
@@ -36,10 +39,12 @@ function rowToCliente(row: ClienteRow): Cliente {
       row.comercioLat !== null && row.comercioLng !== null
         ? { lat: row.comercioLat, lng: row.comercioLng }
         : null,
+    localizacaoComercioOrigem: (row.localizacaoComercioOrigem as "gps" | "cep_aproximado" | null) ?? null,
     localizacao:
       row.lat !== null && row.lng !== null
         ? { lat: row.lat, lng: row.lng }
         : null,
+    localizacaoOrigem: (row.localizacaoOrigem as "gps" | "cep_aproximado" | null) ?? null,
     foto: row.foto ?? undefined,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -54,6 +59,7 @@ export class ClienteRepository implements IClienteRepository {
       id: cliente.id,
       nome: cliente.nome,
       cpf: cliente.cpf ?? null,
+      documento: cliente.documento ?? null,
       comercio: cliente.comercio,
       telefone: cliente.telefone,
       telefoneComercio: cliente.telefoneComercio ?? null,
@@ -63,15 +69,19 @@ export class ClienteRepository implements IClienteRepository {
       bairro: cliente.endereco?.bairro ?? null,
       cidade: cliente.endereco?.cidade ?? null,
       estado: cliente.endereco?.estado ?? null,
+      cep: cliente.endereco?.cep ?? null,
       lat: cliente.localizacao?.lat ?? null,
       lng: cliente.localizacao?.lng ?? null,
+      localizacaoOrigem: cliente.localizacaoOrigem ?? null,
       comercioLogradouro: cliente.enderecoComercio?.logradouro ?? null,
       comercioNumero: cliente.enderecoComercio?.numero ?? null,
       comercioBairro: cliente.enderecoComercio?.bairro ?? null,
       comercioCidade: cliente.enderecoComercio?.cidade ?? null,
       comercioEstado: cliente.enderecoComercio?.estado ?? null,
+      comercioCep: cliente.enderecoComercio?.cep ?? null,
       comercioLat: cliente.localizacaoComercio?.lat ?? null,
       comercioLng: cliente.localizacaoComercio?.lng ?? null,
+      localizacaoComercioOrigem: cliente.localizacaoComercioOrigem ?? null,
       foto: cliente.foto ?? null,
       createdAt: cliente.createdAt,
       updatedAt: cliente.updatedAt,
@@ -160,6 +170,7 @@ export class ClienteRepository implements IClienteRepository {
 
     if (data.nome !== undefined) updateData.nome = data.nome
     if (data.cpf !== undefined) updateData.cpf = data.cpf ?? null
+    if (data.documento !== undefined) updateData.documento = data.documento ?? null
     if (data.comercio !== undefined) updateData.comercio = data.comercio
     if (data.telefone !== undefined) updateData.telefone = data.telefone
     if (data.telefoneComercio !== undefined) updateData.telefoneComercio = data.telefoneComercio ?? null
@@ -170,6 +181,7 @@ export class ClienteRepository implements IClienteRepository {
       if (data.endereco.bairro !== undefined) updateData.bairro = data.endereco.bairro ?? null
       if (data.endereco.cidade !== undefined) updateData.cidade = data.endereco.cidade
       if (data.endereco.estado !== undefined) updateData.estado = data.endereco.estado
+      if (data.endereco.cep !== undefined) updateData.cep = data.endereco.cep ?? null
     }
     if (data.enderecoComercio !== undefined) {
       if (data.enderecoComercio === null) {
@@ -178,21 +190,25 @@ export class ClienteRepository implements IClienteRepository {
         updateData.comercioBairro = null
         updateData.comercioCidade = null
         updateData.comercioEstado = null
+        updateData.comercioCep = null
       } else {
         if (data.enderecoComercio.logradouro !== undefined) updateData.comercioLogradouro = data.enderecoComercio.logradouro
         if (data.enderecoComercio.numero !== undefined) updateData.comercioNumero = data.enderecoComercio.numero ?? null
         if (data.enderecoComercio.bairro !== undefined) updateData.comercioBairro = data.enderecoComercio.bairro ?? null
         if (data.enderecoComercio.cidade !== undefined) updateData.comercioCidade = data.enderecoComercio.cidade
         if (data.enderecoComercio.estado !== undefined) updateData.comercioEstado = data.enderecoComercio.estado
+        if (data.enderecoComercio.cep !== undefined) updateData.comercioCep = data.enderecoComercio.cep ?? null
       }
     }
     if (data.localizacao !== undefined) {
       if (data.localizacao === null) {
         updateData.lat = null
         updateData.lng = null
+        updateData.localizacaoOrigem = null
       } else {
         updateData.lat = data.localizacao.lat
         updateData.lng = data.localizacao.lng
+        if (data.localizacaoOrigem !== undefined) updateData.localizacaoOrigem = data.localizacaoOrigem
       }
     }
     if (data.foto !== undefined) updateData.foto = data.foto ?? null
@@ -200,9 +216,11 @@ export class ClienteRepository implements IClienteRepository {
       if (data.localizacaoComercio === null) {
         updateData.comercioLat = null
         updateData.comercioLng = null
+        updateData.localizacaoComercioOrigem = null
       } else {
         updateData.comercioLat = data.localizacaoComercio.lat
         updateData.comercioLng = data.localizacaoComercio.lng
+        if (data.localizacaoComercioOrigem !== undefined) updateData.localizacaoComercioOrigem = data.localizacaoComercioOrigem
       }
     }
     if (data.updatedAt !== undefined) updateData.updatedAt = data.updatedAt

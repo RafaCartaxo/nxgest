@@ -25,6 +25,7 @@ export class UpdateClienteUseCase {
 
     if (input.nome !== undefined) data.nome = input.nome
     if (input.cpf !== undefined) data.cpf = input.cpf
+    if (input.documento !== undefined) data.documento = input.documento?.trim() || null
     if (input.comercio !== undefined) data.comercio = input.comercio
     if (input.telefone !== undefined) data.telefone = input.telefone
     if (input.telefoneComercio !== undefined) data.telefoneComercio = input.telefoneComercio
@@ -37,6 +38,7 @@ export class UpdateClienteUseCase {
         bairro: input.endereco.bairro,
         cidade: input.endereco.cidade,
         estado: input.endereco.estado,
+        cep: input.endereco.cep,
       }
     }
     if (input.enderecoComercio !== undefined) {
@@ -46,12 +48,14 @@ export class UpdateClienteUseCase {
     if (input.localizacao !== undefined) {
       data.localizacao = input.localizacao ?? null
     }
+    if (input.localizacaoOrigem !== undefined) data.localizacaoOrigem = input.localizacaoOrigem ?? null
 
     if (input.foto !== undefined) data.foto = input.foto
 
     if (input.localizacaoComercio !== undefined) {
       data.localizacaoComercio = input.localizacaoComercio ?? null
     }
+    if (input.localizacaoComercioOrigem !== undefined) data.localizacaoComercioOrigem = input.localizacaoComercioOrigem ?? null
 
     data.updatedAt = new Date().toISOString()
 

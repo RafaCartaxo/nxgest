@@ -171,6 +171,8 @@
     "telefoneComercio": "Teléfono Comercial",
     "cpf": "CPF",
     "cpfPlaceholder": "000.000.000-00",
+    "documento": "Documento",
+    "documentoPlaceholder": "DNI, licencia u otro documento",
     "comercio": "Comercio",
     "comercioPlaceholder": "Ej.: Mercadinho São José",
     "endereco": "Dirección Personal",
@@ -207,6 +209,7 @@
       "nomeMinimo": "El nombre debe tener al menos 3 caracteres.",
       "telefoneInvalido": "Ingrese un teléfono válido.",
       "cpfInvalido": "CPF inválido.",
+      "documentoMaximo": "El documento debe tener como máximo 20 caracteres.",
       "enderecoInvalido": "Ingrese una dirección válida.",
       "cidadeMinimo": "La ciudad debe tener al menos 2 caracteres.",
       "ufInvalida": "UF inválida."

@@ -171,6 +171,8 @@
     "telefoneComercio": "Business Phone",
     "cpf": "CPF",
     "cpfPlaceholder": "000.000.000-00",
+    "documento": "Document",
+    "documentoPlaceholder": "ID, driver's license or other document",
     "comercio": "Business",
     "comercioPlaceholder": "E.g.: São José Market",
     "endereco": "Personal Address",
@@ -207,6 +209,7 @@
       "nomeMinimo": "Name must be at least 3 characters.",
       "telefoneInvalido": "Enter a valid phone number.",
       "cpfInvalido": "Invalid CPF.",
+      "documentoMaximo": "Document must contain at most 20 characters.",
       "enderecoInvalido": "Enter a valid address.",
       "cidadeMinimo": "City must be at least 2 characters.",
       "ufInvalida": "Invalid state."
