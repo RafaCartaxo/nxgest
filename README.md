@@ -84,6 +84,7 @@ Para explorar os endpoints, importe `docs/api-collection.json` no Postman.
 
 ```bash
 npm test
+npm run test:safety
 ```
 
 ## Documentação

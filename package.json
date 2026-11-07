@@ -29,7 +29,8 @@
     "backup:pull": "bash scripts/pull-backup.sh",
     "db:up": "docker compose --project-directory . -f infra/docker-compose.yml up -d postgres",
     "db:down": "docker compose --project-directory . -f infra/docker-compose.yml down",
-    "db:ps": "docker compose --project-directory . -f infra/docker-compose.yml ps"
+    "db:ps": "docker compose --project-directory . -f infra/docker-compose.yml ps",
+    "test:safety": "node --test scripts/safety-check.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

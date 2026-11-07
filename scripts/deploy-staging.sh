@@ -18,64 +18,10 @@ COMPOSE="--project-directory . -f infra/docker-compose.staging.yml"
 # 1) Rede compartilhada com o Caddy de produção (uma vez só).
 docker network create nxgestao_net 2>/dev/null || true
 
-# 2) .env.staging — se não existir, cria com secrets aleatórios e sem envio de
-#    e-mail. Nunca leva os segredos de produção (.env).
-if [ ! -f "$ENV_FILE" ]; then
-  info ".env.staging não existe — criando configuração de QA"
-  JWT_SECRET=$(openssl rand -hex 32)
-  ADMIN_DEFAULT_PASSWORD=$(openssl rand -hex 16)
-  SUPER_ADMIN_DEFAULT_PASSWORD=$(openssl rand -hex 16)
-  PG_PASSWORD=$(openssl rand -hex 16)
-  cat > "$ENV_FILE" <<'EOF'
-DOMAIN=nxgestao.duckdns.org
-CORS_ORIGIN=https://nxgestao.duckdns.org
-JWT_SECRET=__GENERATED_JWT_SECRET__
-ADMIN_DEFAULT_PASSWORD=__GENERATED_ADMIN_PASSWORD__
-SUPER_ADMIN_EMAIL=super@nxgest.com
-SUPER_ADMIN_DEFAULT_PASSWORD=__GENERATED_SUPER_PASSWORD__
-PG_DB=nxgest
-PG_USER=nxgest
-PG_PASSWORD=__GENERATED_PG_PASSWORD__
-MAIL_PROVIDER=console
-RESEND_API_KEY=
-MAIL_FROM_NAME="NX Gest"
-MAIL_FROM_ADDRESS=no-reply@nxgest.com.br
-APP_URL=https://nxgestao.duckdns.org
-LOGIN_RATE_LIMIT_MAX=10
-PUBLICO_RATE_LIMIT_MAX=10
-USER_RATE_LIMIT_MAX=600
-EOF
-  sed -i \
-    -e "s/__GENERATED_JWT_SECRET__/$JWT_SECRET/" \
-    -e "s/__GENERATED_ADMIN_PASSWORD__/$ADMIN_DEFAULT_PASSWORD/" \
-    -e "s/__GENERATED_SUPER_PASSWORD__/$SUPER_ADMIN_DEFAULT_PASSWORD/" \
-    -e "s/__GENERATED_PG_PASSWORD__/$PG_PASSWORD/" \
-    "$ENV_FILE"
-  chmod 600 "$ENV_FILE"
-  ok ".env.staging criado"
-fi
-
-# 2b) Chaves PostgreSQL ausentes em .env.staging antigo (PLAN-070) — append idempotente,
-#     para staging existente que foi criado na era SQLite (sem PG_*).
-for key in PG_DB PG_USER PG_PASSWORD; do
-  if ! grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
-    case "$key" in
-      PG_DB) val=nxgest ;;
-      PG_USER) val=nxgest ;;
-      PG_PASSWORD) val=$(openssl rand -hex 16) ;;
-    esac
-    echo "${key}=${val}" >> "$ENV_FILE"
-    info "${key} adicionado ao .env.staging"
-  fi
-done
-# Parse dotenv como dados; nunca execute o conteúdo do arquivo legado como shell.
-ENV_PAIRS=$(node scripts/read-staging-env.mjs "$ENV_FILE")
-while IFS=: read -r key encoded; do
-  [ -z "$key" ] && continue
-  value=$(printf '%s' "$encoded" | base64 -d)
-  export "$key=$value"
-done <<< "$ENV_PAIRS"
-unset ENV_PAIRS value encoded key
+# A biblioteca é código versionado; o arquivo .env é lido somente como dados.
+source scripts/staging-env.sh
+prepare_staging_env "$ENV_FILE"
+load_staging_env "$ENV_FILE"
 # Staging nunca envia e-mail real, mesmo que um arquivo antigo tenha Resend.
 MAIL_PROVIDER=console
 export MAIL_PROVIDER

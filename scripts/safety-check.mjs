@@ -7,20 +7,32 @@ import { parseArgs } from './smoke.mjs'
 
 const run = (script, args, env = {}) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8', env: { PATH: process.env.PATH, ...env } })
 
-test('staging lê espaços e texto de shell sem executar conteúdo', () => {
+test('staging gera, reutiliza e lê dados sem executar shell', () => {
   const dir = mkdtempSync(path.join(process.cwd(), '.staging-test-'))
   try {
     const file = path.join(dir, 'synthetic.env')
     const marker = path.join(dir, 'executed')
-    writeFileSync(file, `MAIL_FROM_NAME=NX Gest\nAPP_URL=$(touch ${marker})\n`)
-    const result = run('scripts/read-staging-env.mjs', [file])
-    assert.equal(result.status, 0)
-    const values = Object.fromEntries(result.stdout.trim().split('\n').map(line => { const i = line.indexOf(':'); return [line.slice(0, i), Buffer.from(line.slice(i + 1), 'base64').toString()] }))
-    assert.equal(values.MAIL_FROM_NAME, 'NX Gest')
-    assert.equal(values.APP_URL, `$(touch ${marker})`)
+    const hostNode = path.join(dir, 'node')
+    writeFileSync(hostNode, '#!/bin/sh\nexit 93\n')
+    chmodSync(hostNode, 0o700)
+    const shell = `set -e; source scripts/staging-env.sh; info() { :; }; ok() { :; }; erro() { printf '%s\\n' "$*" >&2; }; prepare_staging_env "$1"; load_staging_env "$1"; printf '%s\\n%s\\n' "$MAIL_FROM_NAME" "\${APP_URL-}"`
+    const bash = () => spawnSync('bash', ['-c', shell, 'staging-test', file], { encoding: 'utf8', env: { PATH: `${dir}:/usr/bin:/bin` } })
+    let result = bash()
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(result.stdout, /^NX Gest\n/)
+    const original = readFileSync(file)
+    result = bash()
+    assert.equal(result.status, 0, result.stderr)
+    assert.deepEqual(readFileSync(file), original)
+    writeFileSync(file, `PG_DB=test\nPG_USER=test\nPG_PASSWORD=test\nMAIL_FROM_NAME=NX Gest\nAPP_URL=$(touch ${marker})\n`)
+    const legacy = readFileSync(file)
+    result = bash()
+    assert.equal(result.status, 0, result.stderr)
+    assert.equal(result.stdout, `NX Gest\n$(touch ${marker})\n`)
     assert.equal(existsSync(marker), false)
-    writeFileSync(file, 'NODE_OPTIONS=--require=evil\n')
-    assert.notEqual(run('scripts/read-staging-env.mjs', [file]).status, 0)
+    assert.deepEqual(readFileSync(file), legacy)
+    writeFileSync(file, 'PG_DB=test\nPG_USER=test\nPG_PASSWORD=test\nNODE_OPTIONS=evil\n')
+    assert.notEqual(bash().status, 0)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
 
@@ -30,7 +42,7 @@ test('smoke falha fechado antes de conectar para alvos e opções inseguros', ()
     assert.notEqual(result.status, 0)
     assert.match(result.stderr, /SMOKE_DATABASE_URL|argumentos inválidos/)
   }
-  for (const url of ['postgres://u:p@localhost:5433/nxgest', 'postgres://u:p@host.example:5433/nxgest_smoke', 'postgres://u:p@localhost:5433/postgres']) {
+  for (const url of ['postgres://u:p@localhost:5433/nxgest', 'postgres://u:p@host.example:5433/nxgest_smoke', 'postgres://u:p@localhost:5433/postgres', 'postgres://u:p@localhost:55439/nxgest_smoke?host=example.org']) {
     const result = run('scripts/smoke.mjs', ['--no-recreate'], { SMOKE_DATABASE_URL: url })
     assert.notEqual(result.status, 0)
     assert.match(result.stderr, /alvo recusado/)
@@ -51,7 +63,7 @@ test('no-recreate alcança schema sem conectar para recriar banco', () => {
     const npx = path.join(dir, 'npx')
     writeFileSync(npx, '#!/bin/sh\nprintf called > "$MARKER"\nexit 42\n')
     chmodSync(npx, 0o700)
-    const result = run('scripts/smoke.mjs', ['--no-recreate'], { PATH: dir, MARKER: marker, SMOKE_PORT: '39481', SMOKE_DATABASE_URL: 'postgres://u:p@127.0.0.1:59481/nxgest_smoke_double' })
+    const result = run('scripts/smoke.mjs', ['--no-recreate'], { PATH: `${dir}:/usr/bin:/bin`, MARKER: marker, SMOKE_PORT: '39481', SMOKE_DATABASE_URL: 'postgres://u:p@127.0.0.1:59481/nxgest_smoke_double' })
     assert.equal(existsSync(marker), true)
     assert.match(result.stdout, /create-schema/)
     assert.doesNotMatch(result.stdout, /Recriando banco/)
@@ -68,13 +80,35 @@ test('falha de startup encerra o grupo próprio e remove PID', () => {
     writeFileSync(npx, '#!/bin/sh\nif [ "$2" = scripts/create-schema.mjs ]; then exit 0; fi\nprintf "%s" "$$" > "$MARKER"\nexec /bin/sleep 60\n')
     writeFileSync(node, '#!/bin/sh\nexit 0\n')
     chmodSync(npx, 0o700); chmodSync(node, 0o700)
-    const result = run('scripts/smoke.mjs', ['--no-recreate'], { PATH: dir, MARKER: marker, SMOKE_PORT: '39482', SMOKE_DATABASE_URL: 'postgres://u:p@127.0.0.1:59482/nxgest_smoke_double' })
+    const result = run('scripts/smoke.mjs', ['--no-recreate'], { PATH: `${dir}:/usr/bin:/bin`, MARKER: marker, SMOKE_PORT: '39482', SMOKE_DATABASE_URL: 'postgres://u:p@127.0.0.1:59482/nxgest_smoke_double' })
     assert.notEqual(result.status, 0)
     assert.match(result.stderr, /não respondeu/)
     assert.equal(existsSync(path.join(process.cwd(), '.smoke.pid')), false)
     assert.equal(existsSync(marker), true)
-    assert.throws(() => process.kill(-Number(requirePid(marker)), 0), { code: 'ESRCH' })
+    assert.throws(() => process.kill(Number(requirePid(marker)), 0), { code: 'ESRCH' })
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
 
 function requirePid(file) { return Number(readFileSync(file, 'utf8')) }
+
+test('PID forjado não sinaliza um processo alheio', () => {
+  const pidFile = path.join(process.cwd(), '.smoke.pid')
+  writeFileSync(pidFile, JSON.stringify({ pid: process.pid, start: 'forjado', nonce: 'a'.repeat(48) }), { flag: 'wx' })
+  try {
+    const result = run('scripts/smoke.mjs', ['down'])
+    assert.notEqual(result.status, 0)
+    assert.match(result.stderr, /identidade do processo não confere/)
+    assert.doesNotThrow(() => process.kill(process.pid, 0))
+    assert.equal(existsSync(pidFile), true)
+  } finally { rmSync(pidFile) }
+})
+
+test('PID extinto é limpo sem sinalizar outro processo', () => {
+  const pidFile = path.join(process.cwd(), '.smoke.pid')
+  writeFileSync(pidFile, JSON.stringify({ pid: 2147483647, start: 'antigo', nonce: 'b'.repeat(48) }), { flag: 'wx' })
+  try {
+    const result = run('scripts/smoke.mjs', ['down'])
+    assert.equal(result.status, 0, result.stderr)
+    assert.equal(existsSync(pidFile), false)
+  } finally { rmSync(pidFile, { force: true }) }
+})

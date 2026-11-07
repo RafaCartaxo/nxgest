@@ -26,6 +26,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
 import pg from "pg"
+import { randomBytes } from "node:crypto"
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const DATABASE_URL = process.env.SMOKE_DATABASE_URL
@@ -58,8 +59,8 @@ function validateTarget(databaseUrl) {
   if (!databaseUrl) fail("defina SMOKE_DATABASE_URL para um banco de teste local dedicado")
   let url
   try { url = new URL(databaseUrl) } catch { fail("SMOKE_DATABASE_URL inválida") }
-  if (!["postgres:", "postgresql:"].includes(url.protocol) || !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) || !/^nxgest_smoke(?:_[a-z0-9]+)*$/.test(decodeURIComponent(url.pathname.slice(1))) || !url.port || ["5432", "5433"].includes(url.port)) {
-    fail("alvo recusado: use PostgreSQL local, porta dedicada diferente de 5432/5433 e banco nxgest_smoke[_sufixo]")
+  if (!["postgres:", "postgresql:"].includes(url.protocol) || !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) || !/^nxgest_smoke(?:_[a-z0-9]+)*$/.test(decodeURIComponent(url.pathname.slice(1))) || !url.port || url.search || url.hash || ["5432", "5433"].includes(url.port)) {
+    fail("alvo recusado: use PostgreSQL local, porta dedicada diferente de 5432/5433, sem parâmetros e banco nxgest_smoke[_sufixo]")
   }
 }
 
@@ -105,21 +106,21 @@ async function healthOk() {
   }
 }
 
-function processStart(pid) {
-  if (process.platform === "linux") {
-    const stat = readFileSync(`/proc/${pid}/stat`, "utf8")
-    return stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19]
-  }
-  // macOS e outros sistemas Unix não expõem /proc; o início do processo
-  // é consultado no ps. Falhar fechado se a identidade não for recuperável.
-  return execFileSync("ps", ["-o", "lstart=", "-p", String(pid)], { encoding: "utf8" }).trim()
+const SUPERVISOR = path.join(ROOT, "scripts/smoke-supervisor.mjs")
+
+function processIdentity(pid) {
+  // ps está disponível nos Unix suportados (Linux, macOS e WSL). O nonce
+  // aleatório vincula a identidade ao processo iniciado por esta execução.
+  const query = (field) => execFileSync("ps", ["-ww", "-o", `${field}=`, "-p", String(pid)], { encoding: "utf8" }).trim()
+  return { start: query("lstart"), command: query("command"), group: Number(query("pgid")) }
 }
 
 function startServer() {
   if (existsSync(PID_FILE)) fail("arquivo PID existente: inspecione a instância anterior antes de iniciar")
 
   console.log(`[smoke] 🚀 Subindo servidor em ${BASE_URL} (PID em .smoke.pid)`)
-  const child = spawn("npx", ["tsx", "src/main.ts"], {
+  const nonce = randomBytes(24).toString("hex")
+  const child = spawn(process.execPath, [SUPERVISOR, nonce], {
     cwd: ROOT,
     detached: true,
     stdio: ["ignore", "inherit", "inherit"],
@@ -127,9 +128,9 @@ function startServer() {
   })
   child.unref()
   try {
-    const start = processStart(child.pid)
-    if (!start) fail("não foi possível identificar o processo criado")
-    writeFileSync(PID_FILE, JSON.stringify({ pid: child.pid, start }))
+    const identity = processIdentity(child.pid)
+    if (!identity.start || identity.group !== child.pid || !identity.command.includes(SUPERVISOR) || !identity.command.endsWith(` ${nonce}`)) fail("não foi possível identificar o processo criado")
+    writeFileSync(PID_FILE, JSON.stringify({ pid: child.pid, start: identity.start, nonce }), { flag: "wx", mode: 0o600 })
     ownedProcess = true
   } catch (error) {
     try { process.kill(-child.pid, "SIGTERM") } catch (err) { if (err.code !== "ESRCH") throw err }
@@ -156,13 +157,17 @@ function stopServer() {
   let entry
   try {
     entry = JSON.parse(readFileSync(PID_FILE, "utf8"))
-    if (!Number.isSafeInteger(entry.pid) || entry.pid <= 1 || typeof entry.start !== "string" || !entry.start) throw new Error("PID inválido")
-    const start = processStart(entry.pid)
-    if (start !== entry.start) throw new Error("identidade do processo não confere")
+    if (!Number.isSafeInteger(entry.pid) || entry.pid <= 1 || typeof entry.start !== "string" || !entry.start || !/^[a-f0-9]{48}$/.test(entry.nonce)) throw new Error("PID inválido")
+    const identity = processIdentity(entry.pid)
+    if (identity.start !== entry.start || identity.group !== entry.pid || !identity.command.includes(SUPERVISOR) || !identity.command.endsWith(` ${entry.nonce}`)) throw new Error("identidade do processo não confere")
     process.kill(-entry.pid, "SIGTERM")
     console.log(`[smoke] 🛑 Grupo de processos próprio ${entry.pid} encerrado`)
   } catch (err) {
-    if (err.code !== "ENOENT" && err.code !== "ESRCH") fail(`PID não verificado; nenhum processo sinalizado: ${err.message}`)
+    let absent = false
+    if (entry && Number.isSafeInteger(entry.pid) && entry.pid > 1) {
+      try { process.kill(entry.pid, 0) } catch (probe) { absent = probe.code === "ESRCH" }
+    }
+    if (!absent) fail(`PID não verificado; nenhum processo sinalizado: ${err.message}`)
   }
   rmSync(PID_FILE, { force: true })
 }

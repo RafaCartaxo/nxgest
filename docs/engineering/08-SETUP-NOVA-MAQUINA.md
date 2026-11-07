@@ -9,7 +9,7 @@
 
 ## 1. Visão Geral e Filosofia de Portabilidade
 
-O **NX Gest** foi arquitetado para permitir que qualquer desenvolvedor com as devidas autorizações consiga **iniciar ou retomar o trabalho em qualquer computador em menos de 15 minutos**, independentemente do sistema operacional utilizado (Fedora, Ubuntu, Debian, Arch Linux, macOS ou Windows via WSL2).
+O **NX Gest** foi arquitetado para permitir que qualquer desenvolvedor com as devidas autorizações consiga **iniciar ou retomar o trabalho em um computador suportado**, com instruções para Fedora, Ubuntu, Debian, Arch Linux, macOS ou Windows via WSL2. A duração depende da máquina e da rede; 15 minutos é uma meta, não uma medida comprovada.
 
 Para que essa portabilidade funcione sem imprevistos nem perda de dados em caso de pane do computador, é fundamental entender a separação entre o que está no versionamento e o que reside localmente.
 
@@ -205,7 +205,7 @@ npm run dev
 
 Este comando sobe simultaneamente:
 * **Backend API**: `http://localhost:3000/api` (com recarregamento automático via `tsx watch`)
-* **Frontend SPA**: `http://localhost:5173` (com Hot Module Replacement via Vite)
+* **Frontend SPA**: `https://localhost:5173` (com Hot Module Replacement via Vite)
 
 ---
 
@@ -382,4 +382,4 @@ Ao configurar um novo computador ou após formatar o sistema:
 - [ ] **7. Testes validados**: `npm test` passou com 100% de sucesso.
 - [ ] **8. Chave SSH configurada**: Chave autorizada no GitHub e na VPS (`ssh root@172.245.152.223`).
 - [ ] **9. Segredos restaurados**: Pasta `~/.config/nxgestao/` criada e permissões ajustadas (`chmod 600`).
-- [ ] **10. App rodando localmente**: `npm run dev` abre a aplicação em `http://localhost:5173`.
+- [ ] **10. App rodando localmente**: `npm run dev` abre a aplicação em `https://localhost:5173`.

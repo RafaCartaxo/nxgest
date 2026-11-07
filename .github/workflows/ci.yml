@@ -45,6 +45,8 @@ jobs:
       - name: Testes unitários + UI (vitest)
         run: npm test 2>&1 | tee /tmp/test.log
         shell: bash
+      - name: Segurança dos scripts de staging e smoke
+        run: npm run test:safety
       - name: Cobertura de testes
         run: npm run test:coverage 2>&1 | tee /tmp/coverage.log
         shell: bash
