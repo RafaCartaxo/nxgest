@@ -112,3 +112,31 @@ test('PID extinto é limpo sem sinalizar outro processo', () => {
     assert.equal(existsSync(pidFile), false)
   } finally { rmSync(pidFile, { force: true }) }
 })
+
+test('startup que encerra espontaneamente limpa o PID sem sinalizar outro processo', () => {
+  const dir = mkdtempSync(path.join(process.cwd(), '.smoke-exit-'))
+  try {
+    const npx = path.join(dir, 'npx')
+    const node = path.join(dir, 'node')
+    writeFileSync(npx, '#!/bin/sh\nif [ "$2" = scripts/create-schema.mjs ]; then exit 0; fi\nexit 17\n')
+    writeFileSync(node, '#!/bin/sh\nexit 0\n')
+    chmodSync(npx, 0o700); chmodSync(node, 0o700)
+    const result = run('scripts/smoke.mjs', ['--no-recreate'], { PATH: `${dir}:/usr/bin:/bin`, SMOKE_PORT: '39483', SMOKE_DATABASE_URL: 'postgres://u:p@127.0.0.1:59483/nxgest_smoke_double' })
+    assert.notEqual(result.status, 0)
+    assert.match(result.stdout, /Subindo servidor/)
+    assert.match(result.stderr, /servidor não respondeu/)
+    assert.doesNotMatch(result.stderr, /PID não verificado/)
+    assert.equal(existsSync(path.join(process.cwd(), '.smoke.pid')), false)
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})
+
+test('registro de PID malformado não é removido nem sinalizado', () => {
+  const pidFile = path.join(process.cwd(), '.smoke.pid')
+  writeFileSync(pidFile, JSON.stringify({ pid: 2147483647 }), { flag: 'wx' })
+  try {
+    const result = run('scripts/smoke.mjs', ['down'])
+    assert.notEqual(result.status, 0)
+    assert.match(result.stderr, /PID não verificado/)
+    assert.equal(existsSync(pidFile), true)
+  } finally { rmSync(pidFile) }
+})

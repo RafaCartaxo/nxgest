@@ -155,16 +155,18 @@ function startServer() {
 function stopServer() {
   if (!existsSync(PID_FILE)) return
   let entry
+  let validEntry = false
   try {
     entry = JSON.parse(readFileSync(PID_FILE, "utf8"))
     if (!Number.isSafeInteger(entry.pid) || entry.pid <= 1 || typeof entry.start !== "string" || !entry.start || !/^[a-f0-9]{48}$/.test(entry.nonce)) throw new Error("PID inválido")
+    validEntry = true
     const identity = processIdentity(entry.pid)
     if (identity.start !== entry.start || identity.group !== entry.pid || !identity.command.includes(SUPERVISOR) || !identity.command.endsWith(` ${entry.nonce}`)) throw new Error("identidade do processo não confere")
     process.kill(-entry.pid, "SIGTERM")
     console.log(`[smoke] 🛑 Grupo de processos próprio ${entry.pid} encerrado`)
   } catch (err) {
     let absent = false
-    if (entry && Number.isSafeInteger(entry.pid) && entry.pid > 1) {
+    if (validEntry) {
       try { process.kill(entry.pid, 0) } catch (probe) { absent = probe.code === "ESRCH" }
     }
     if (!absent) fail(`PID não verificado; nenhum processo sinalizado: ${err.message}`)
