@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, writeFileSync, existsSync, rmSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, existsSync, rmSync, chmodSync } from 'node:fs'
 import path from 'node:path'
 import { parseArgs } from './smoke.mjs'
 
@@ -42,4 +42,19 @@ test('smoke reconhece --no-recreate em qualquer posição e rejeita opções des
   assert.deepEqual(parseArgs(['up', '--no-recreate']), { cmd: 'up', recreate: false })
   assert.deepEqual(parseArgs(['--no-recreate', 'up']), { cmd: 'up', recreate: false })
   assert.throws(() => parseArgs(['--oops']))
+})
+
+test('no-recreate alcança schema sem conectar para recriar banco', () => {
+  const dir = mkdtempSync(path.join(process.cwd(), '.smoke-double-'))
+  try {
+    const marker = path.join(dir, 'invoked')
+    const npx = path.join(dir, 'npx')
+    writeFileSync(npx, '#!/bin/sh\nprintf called > "$MARKER"\nexit 42\n')
+    chmodSync(npx, 0o700)
+    const result = run('scripts/smoke.mjs', ['--no-recreate'], { PATH: dir, MARKER: marker, SMOKE_PORT: '39481', SMOKE_DATABASE_URL: 'postgres://u:p@127.0.0.1:59481/nxgest_smoke_double' })
+    assert.equal(existsSync(marker), true)
+    assert.match(result.stdout, /create-schema/)
+    assert.doesNotMatch(result.stdout, /Recriando banco/)
+    assert.notEqual(result.status, 0)
+  } finally { rmSync(dir, { recursive: true, force: true }) }
 })
