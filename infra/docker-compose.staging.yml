@@ -4,9 +4,13 @@
 # - Caddy único (docker-compose.prod.yml) encaminha duckdns → staging-app:8081
 # - Volume próprio (nxgestao_staging_data) — produção intacta
 # - Seed fake só na primeira vez (DB vazio) via deploy-staging.sh
+name: nxgestao
+
 services:
   staging-app:
-    build: .
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
     container_name: staging-app
     restart: unless-stopped
     environment:

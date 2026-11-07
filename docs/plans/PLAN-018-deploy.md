@@ -390,7 +390,7 @@ volumes:
 | `CORS_ORIGIN` | `.env` (arquivo) | `https://<seu-dominio>` |
 | `DOMAIN` | `.env` (arquivo) | `<seu-dominio.com.br>` |
 
-Modelo em `.env.production.example` (nunca commitar o `.env`).
+Modelo em `.env.example` (ajustar para produção conforme o runbook) (nunca commitar o `.env`).
 
 ### D.4 — Comandos de setup (executar uma vez)
 
@@ -413,7 +413,7 @@ systemctl enable --now docker
 dnf install -y git openssl
 git clone https://github.com/RafaCartaxo/nxgest.git /opt/nxgest
 cd /opt/nxgest
-cp .env.production.example .env
+cp .env.example .env
 # Editar .env: DOMAIN, CORS_ORIGIN, JWT_SECRET (openssl rand -hex 32), ADMIN_DEFAULT_PASSWORD
 
 # 5. Subir

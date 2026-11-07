@@ -1,6 +1,10 @@
+name: nxgestao
+
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
     restart: unless-stopped
     environment:
       - NODE_ENV=production
@@ -58,7 +62,7 @@ services:
     environment:
       - DOMAIN=${DOMAIN}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro,z
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro,z
       - caddy_data:/data
       - caddy_config:/config
     networks:

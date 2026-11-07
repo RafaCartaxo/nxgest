@@ -9,7 +9,7 @@ ok()   { printf '✓ %s\n' "$*"; }
 erro() { printf '✗ %s\n' "$*" >&2; }
 
 if [ ! -f .env ]; then
-  erro "Arquivo .env não encontrado. Copie de .env.production.example"
+  erro "Arquivo .env não encontrado. Consulte .env.example e docs/engineering/06-PRODUCAO.md"
   exit 1
 fi
 
@@ -41,7 +41,7 @@ docker run --rm -v "$(pwd)":/app -w /app node:20-slim node scripts/audit-modules
 ok "Auditorias passaram (nenhum padrão legado)"
 
 info "Build da imagem + subir containers (produção)"
-docker compose -f docker-compose.prod.yml build app
-docker compose -f docker-compose.prod.yml up -d
+docker compose --project-directory . -f infra/docker-compose.prod.yml build app
+docker compose --project-directory . -f infra/docker-compose.prod.yml up -d
 docker image prune -f
 ok "Deploy de produção concluído"

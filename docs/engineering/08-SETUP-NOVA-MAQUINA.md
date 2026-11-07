@@ -161,7 +161,7 @@ cd nxgest
 O projeto utiliza `npm workspaces` na raiz, gerenciando o backend e o frontend simultaneamente:
 
 ```bash
-npm install
+npm ci
 ```
 
 ### Passo 3: Configurar Variáveis de Ambiente Locais
@@ -181,10 +181,10 @@ O banco de desenvolvimento roda em um container Docker isolado na porta **5433**
 
 ```bash
 # Iniciar o PostgreSQL de desenvolvimento em background
-docker compose up -d postgres
+npm run db:up
 
 # Validar se o container está saudável
-docker compose ps
+npm run db:ps
 ```
 
 ### Passo 5: Rodar os Testes e Auditorias
@@ -332,7 +332,7 @@ Se a VPS original for destruída e você precisar subir uma nova máquina do zer
 4. **Inicie os containers:**
    ```bash
    cd /opt/nxgestao
-   docker compose -f docker-compose.prod.yml up -d postgres
+   docker compose --project-directory . -f infra/docker-compose.prod.yml up -d postgres
    ```
 5. **Restaure o dump do PostgreSQL:**
    ```bash
@@ -350,7 +350,7 @@ Se a VPS original for destruída e você precisar subir uma nova máquina do zer
    ```
 7. **Inicie a aplicação completa:**
    ```bash
-   docker compose -f docker-compose.prod.yml up -d
+   docker compose --project-directory . -f infra/docker-compose.prod.yml up -d
    ```
 8. **Atualize o IP no Cloudflare** para apontar para o novo IP do servidor.
 
@@ -376,9 +376,9 @@ Ao configurar um novo computador ou após formatar o sistema:
 - [ ] **1. Ferramentas base instaladas**: Git, OpenSSH, Docker e Docker Compose ativos.
 - [ ] **2. Node 20 LTS ativo**: `nvm use 20` (Node ≥20.x, npm ≥9.x).
 - [ ] **3. Repositório clonado**: `git clone https://github.com/RafaCartaxo/nxgest.git`.
-- [ ] **4. Dependências instaladas**: `npm install` concluído sem erros.
+- [ ] **4. Dependências instaladas**: `npm ci` concluído sem erros.
 - [ ] **5. Arquivo `.env` de desenvolvimento**: `cp .env.example .env`.
-- [ ] **6. PostgreSQL local rodando**: `docker compose up -d postgres` na porta 5433.
+- [ ] **6. PostgreSQL local rodando**: `npm run db:up` na porta 5433.
 - [ ] **7. Testes validados**: `npm test` passou com 100% de sucesso.
 - [ ] **8. Chave SSH configurada**: Chave autorizada no GitHub e na VPS (`ssh root@172.245.152.223`).
 - [ ] **9. Segredos restaurados**: Pasta `~/.config/nxgestao/` criada e permissões ajustadas (`chmod 600`).

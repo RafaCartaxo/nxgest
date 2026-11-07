@@ -103,8 +103,8 @@ O `scripts/deploy.sh`:
 1. Exige `.env` presente (senão aborta)
 2. **Backup pré-deploy OBRIGATÓRIO** — chama `/opt/scripts/backup-nxgest.sh` (`pg_dump -Fc`, ver seção 5.0); **aborta o deploy** se o script não existir ou falhar — escape explícito apenas com `NXGEST_SKIP_BACKUP=1`.
 3. **Gates de UI** — roda `audit:ui`, `audit:styles` e `audit:modules` via `docker run node:20-slim` (o host não tem node no PATH); **aborta o deploy se qualquer gate falhar**
-4. `docker compose -f docker-compose.prod.yml build app`
-5. `docker compose -f docker-compose.prod.yml up -d`
+4. `docker compose --project-directory . -f infra/docker-compose.prod.yml build app`
+5. `docker compose --project-directory . -f infra/docker-compose.prod.yml up -d`
 6. `docker image prune -f`
 
 **Dados:** o volume `nxgestao_nxgestao_data` sobrevive a builds e `up`/`down` — o banco não é recriado.
@@ -181,9 +181,9 @@ echo "OK: $OUT"
 
 | O que | Comando |
 |-------|---------|
-| Logs do app (tempo real) | `docker compose -f /opt/nxgestao/docker-compose.prod.yml logs -f app` |
-| Logs do Caddy | `docker compose -f /opt/nxgestao/docker-compose.prod.yml logs -f caddy` |
-| Status dos containers | `docker compose -f /opt/nxgestao/docker-compose.prod.yml ps` |
+| Logs do app (tempo real) | `docker compose --project-directory /opt/nxgestao -f /opt/nxgestao/infra/docker-compose.prod.yml logs -f app` |
+| Logs do Caddy | `docker compose --project-directory /opt/nxgestao -f /opt/nxgestao/infra/docker-compose.prod.yml logs -f caddy` |
+| Status dos containers | `docker compose --project-directory /opt/nxgestao -f /opt/nxgestao/infra/docker-compose.prod.yml ps` |
 | CPU/memória | `docker stats` |
 | Disco | `df -h` |
 | Processos | `docker ps` |
@@ -200,7 +200,7 @@ git checkout <commit-anterior> -- src/ frontend/
 ./scripts/deploy.sh
 
 # Opção 2 — reiniciar o container (se travou, mas a imagem ainda serve)
-docker compose -f docker-compose.prod.yml restart app
+docker compose --project-directory /opt/nxgestao -f /opt/nxgestao/infra/docker-compose.prod.yml restart app
 
 # Opção 3 — reconstruir do zero (sem perder dados — volume persiste)
 cd /opt/nxgestao
@@ -348,3 +348,8 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
   # /etc/fail2ban/jail.local → [sshd] enabled = true, bantime = 1h, maxretry = 3
   ```
 - **Confirmar** com `firewall-cmd --list-all` e `fail2ban-client status sshd`; registrar o resultado no CHECKLIST do dia.
+
+
+## Contrato de configuração por ambiente
+
+O único modelo versionado é `.env.example`, com valores locais de desenvolvimento. Nunca copie valores de desenvolvimento para produção. No ambiente operacional, configure separadamente domínio, CORS e APP_URL HTTPS, segredos JWT, senhas fortes de seed e PostgreSQL; ajuste `PG_DB`, `PG_USER` e `PG_PASSWORD` para a instalação existente. O Compose constrói `DATABASE_URL` interna a partir de `PG_*`. Configure `MAIL_PROVIDER=resend`, `RESEND_API_KEY` e remetente verificado quando desejado; `GITHUB_TOKEN` é opcional. Staging usa arquivo próprio `.env.staging`, força mailer console e gera segredos novos apenas se o arquivo não existir. `MAIL_FROM_NAME` pode conter espaços; o leitor não executa comandos do arquivo. `LOGIN_RATE_LIMIT_MAX`, `USER_RATE_LIMIT_MAX` e demais limites seguem defaults da aplicação quando não propagados. Valores do pool e `PUBLICO_RATE_LIMIT_MAX`/`LEADS_RATE_LIMIT_MAX` exigem passagem explícita pelo Compose para alterar defaults no container. Nunca compartilhe envs reais.

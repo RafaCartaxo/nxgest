@@ -13,7 +13,7 @@ ok()   { printf '✓ %s\n' "$*"; }
 erro() { printf '✗ %s\n' "$*" >&2; }
 
 ENV_FILE=.env.staging
-COMPOSE="-f docker-compose.staging.yml"
+COMPOSE="--project-directory . -f infra/docker-compose.staging.yml"
 
 # 1) Rede compartilhada com o Caddy de produção (uma vez só).
 docker network create nxgestao_net 2>/dev/null || true
@@ -38,7 +38,7 @@ PG_USER=nxgest
 PG_PASSWORD=__GENERATED_PG_PASSWORD__
 MAIL_PROVIDER=console
 RESEND_API_KEY=
-MAIL_FROM_NAME=NX Gest
+MAIL_FROM_NAME="NX Gest"
 MAIL_FROM_ADDRESS=no-reply@nxgest.com.br
 APP_URL=https://nxgestao.duckdns.org
 LOGIN_RATE_LIMIT_MAX=10
@@ -68,7 +68,14 @@ for key in PG_DB PG_USER PG_PASSWORD; do
     info "${key} adicionado ao .env.staging"
   fi
 done
-set -a; source "$ENV_FILE"; set +a
+# Parse dotenv como dados; nunca execute o conteúdo do arquivo legado como shell.
+ENV_PAIRS=$(node scripts/read-staging-env.mjs "$ENV_FILE")
+while IFS=: read -r key encoded; do
+  [ -z "$key" ] && continue
+  value=$(printf '%s' "$encoded" | base64 -d)
+  export "$key=$value"
+done <<< "$ENV_PAIRS"
+unset ENV_PAIRS value encoded key
 # Staging nunca envia e-mail real, mesmo que um arquivo antigo tenha Resend.
 MAIL_PROVIDER=console
 export MAIL_PROVIDER

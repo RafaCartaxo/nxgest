@@ -16,8 +16,13 @@ Plataforma modular de gestão operacional — o primeiro vertical é o crédito 
 src/                          — Backend (Express API)
 frontend/                     — Frontend (React SPA)
 docs/                         — Documentação completa do projeto
+infra/                        — Dockerfiles, Compose e Caddy
 scripts/                      — Scripts utilitários
+.github/                      — Workflows de CI/CD (GitHub Actions)
+agents/                       — Contratos de agentes de IA, independentes de plataforma (ver agents/README.md)
 ```
+
+Agentes de IA que trabalham neste repositório seguem [`AGENTS.md`](AGENTS.md) (contrato global) e [`agents/README.md`](agents/README.md) (contratos específicos por agente).
 
 ## Pré-requisitos
 
@@ -34,10 +39,10 @@ git clone https://github.com/RafaCartaxo/nxgest.git
 cd nxgest
 
 # Instala tudo (backend + frontend) — npm workspaces unifica a node_modules
-npm install
+npm ci
 
 # Sobe o banco de dados PostgreSQL 16 local (porta 5433)
-docker compose up -d postgres
+npm run db:up
 ```
 
 > **Banco de dados:** hoje o único banco é o **PostgreSQL** (migração SQLite→PG concluída no PLAN-070). A aplicação exige um PostgreSQL acessível via `DATABASE_URL` (default local: `postgres://nxgest:nxgest-dev@localhost:5433/nxgest`).

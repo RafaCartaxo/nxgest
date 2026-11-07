@@ -140,8 +140,8 @@ Executa os **cenários da `07-CASOS-DE-USO-API.md`** (fluxos reais do front + to
 
 ## Quando quiser um raio-X (sem mudança)
 
-- Use o comando `audita-docs` (opencode) ou rode o script diretamente.
-- O agente `.opencode/agents/docs-sync.md` reporta os gaps e o plano de correção (read-only por padrão).
+- Rode o script diretamente (`node scripts/audit-docs.mjs` ou `npm run docs:audit`).
+- O agente `agents/docs-sync.md` reporta os gaps e o plano de correção (read-only por padrão).
 
 ---
 
@@ -161,5 +161,5 @@ Executa os **cenários da `07-CASOS-DE-USO-API.md`** (fluxos reais do front + to
 - `scripts/audit-docs.mjs` — auditoria automatizada (`npm run docs:audit`)
 - `scripts/build-collection.mjs` — gerador da collection (`npm run docs:collection`)
 - `scripts/smoke-api.mjs` — executável dos cenários da `07` (`npm run smoke:api`)
-- `.opencode/agents/docs-sync.md` — agente que opera esta skill
+- `agents/docs-sync.md` — agente que opera esta skill
 - `docs/INDEX.md` — porta de entrada única

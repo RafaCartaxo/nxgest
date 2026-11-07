@@ -41,10 +41,10 @@ npm run test:coverage  # cobertura v8 (report-only, meta sobe gradual)
 
 ```bash
 source ~/.nvm/nvm.sh && nvm use      # Node ≥20 (.nvmrc)
-npm run smoke:local                  # recria DB → schema → seed → sobe :3002 → roda o smoke → teardown
+SMOKE_DATABASE_URL=postgres://nxgest:nxgest-dev@localhost:55432/nxgest_smoke npm run smoke:local  # somente banco isolado; recria DB → schema → seed → sobe :3002 → roda o smoke → teardown
 ```
 
-O `scripts/smoke.mjs` faz: `DROP/CREATE` do banco alvo (nunca o dev), `create-schema` via `npx tsx`, `seed-demo`, sobe o servidor em `SMOKE_PORT` (3002) com rate limits ampliados (`LOGIN_RATE_LIMIT_MAX`/`USER_RATE_LIMIT_MAX`/`PUBLICO_RATE_LIMIT_MAX`/`LEADS_RATE_LIMIT_MAX`) e derruba no fim (PID em `.smoke.pid`). Subcomandos: `npm run smoke:up` (só sobe a pilha) · `npm run smoke:down` (derruba) · `node scripts/smoke.mjs --no-recreate` (depuração).
+Configure uma instância PostgreSQL exclusiva na porta indicada e `SMOKE_DATABASE_URL` explícita (host local, porta explícita diferente de 5432 e 5433 e banco `nxgest_smoke` ou `nxgest_smoke_sufixo`). A variável `DATABASE_URL` não autoriza o alvo. `--no-recreate` ainda executa schema/seed e exige banco de teste. O `scripts/smoke.mjs` faz: `DROP/CREATE` do banco alvo (nunca o dev), `create-schema` via `npx tsx`, `seed-demo`, sobe o servidor em `SMOKE_PORT` (3002) com rate limits ampliados (`LOGIN_RATE_LIMIT_MAX`/`USER_RATE_LIMIT_MAX`/`PUBLICO_RATE_LIMIT_MAX`/`LEADS_RATE_LIMIT_MAX`) e derruba no fim (PID em `.smoke.pid`). Subcomandos: `npm run smoke:up` (só sobe a pilha) · `npm run smoke:down` (derruba) · `node scripts/smoke.mjs --no-recreate` (depuração).
 
 **Manual (equivalente ao job smoke do CI, `ci.yml`):**
 

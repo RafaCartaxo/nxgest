@@ -27,17 +27,19 @@ Organizar o repositório por responsabilidade e manter rastreabilidade entre có
 
 ## Classificação do repositório
 
+> **Nota (17/10/2026 — NXG-MEL-0007):** `.opencode/` foi removido do repositório; a governança de agentes passou a ser independente de plataforma, com `AGENTS.md` como contrato global e `agents/` como fonte canônica neutra (`agents/README.md` + `docs-sync.md`/`ops-runner.md`/`product-planner.md`/`qa-reviewer.md`). As referências a `.opencode` abaixo refletem a classificação vigente até 20/08/2026 e foram atualizadas nesta nota; os blocos de execução 1–5 (concluídos em 20/08) não foram reescritos.
+
 ### Permanecem rastreados
 - Código/testes: `src/**`, `frontend/src/**`, `frontend/public/**`.
 - Scripts: `scripts/**`; `scripts/arquivo/**` só como legado claramente identificado.
 - Infra: `Dockerfile`, `docker-compose*.yml`, `Caddyfile`, `.github/**`, `.nvmrc`.
-- Manifestos/lockfiles: `package.json`, `package-lock.json`, `frontend/package.json`, `.opencode/package.json` + lock.
-- Exemplos de ambiente: `.env.example`, `.env.production.example`, `.env.staging.example`.
+- Manifestos/lockfiles: `package.json`, `package-lock.json`, `frontend/package.json`.
+- Exemplo canônico atual: `.env.example`; diferenças de staging e produção no runbook.
 - Docs oficiais, planos, ADRs, QA, skills, templates, tasks, READMEs, collection gerada.
-- `AGENTS.md` e `.opencode/agents/**` (repo privado, sem segredos).
+- `AGENTS.md` e `agents/**` (contratos de agentes neutros, independentes de plataforma, repo privado, sem segredos).
 
 ### Devem ser ignorados / removidos da árvore quando possível
-- `.env*` reais, `node_modules/**` (inclui `frontend` e `.opencode`), `dist/**`, `frontend/dist/**`, `coverage/**`, logs, PIDs, caches, temporários.
+- `.env*` reais, `node_modules/**` (inclui `frontend`), `dist/**`, `frontend/dist/**`, `coverage/**`, logs, PIDs, caches, temporários.
 - `uploads/**`, `gestao.db*`, sidecars WAL/SHM, backups SQLite, dumps PG, `.tar.gz` de backup.
 - `.obsidian/**` (estado local do vault).
 - `.dockerignore` deve excluir essas classes (não enviar dados/segredos ao contexto de build).

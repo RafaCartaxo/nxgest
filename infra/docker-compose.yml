@@ -1,6 +1,10 @@
+name: nxgestao
+
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
     ports:
       - "8080:8080"
     environment:

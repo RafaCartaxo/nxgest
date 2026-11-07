@@ -15,10 +15,8 @@ frontend/dist/
 *.pid
 .env*
 !.env.example
-!.env.production.example
 uploads/
 coverage/
 .obsidian/
-.opencode/node_modules/
 .git/
 docs/

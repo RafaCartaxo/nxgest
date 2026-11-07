@@ -17,7 +17,7 @@
  *   node scripts/smoke.mjs --no-recreate  # full sem DROP/CREATE do DB (depuração)
  *
  * Envs:
- *   DATABASE_URL      conexão da instância (default postgres://nxgest:nxgest-dev@localhost:5433/nxgest_smoke)
+ *   SMOKE_DATABASE_URL conexão explícita para banco local dedicado nxgest_smoke[_sufixo]
  *   SMOKE_PORT        porta do servidor (default 3002)
  *   SMOKE_JWT_SECRET  JWT do smoke (default ci-smoke-secret)
  */
@@ -28,10 +28,11 @@ import path from "node:path"
 import pg from "pg"
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
-const DATABASE_URL = process.env.DATABASE_URL ?? "postgres://nxgest:nxgest-dev@localhost:5433/nxgest_smoke"
+const DATABASE_URL = process.env.SMOKE_DATABASE_URL
 const PORT = process.env.SMOKE_PORT ?? "3002"
 const JWT_SECRET = process.env.SMOKE_JWT_SECRET ?? "ci-smoke-secret"
 const PID_FILE = path.join(ROOT, ".smoke.pid")
+let ownedProcess = false
 const HEALTH_URL = `http://127.0.0.1:${PORT}/api/health`
 const BASE_URL = `http://127.0.0.1:${PORT}`
 
@@ -44,7 +45,7 @@ const RATE_ENVS = {
 
 const fail = (msg) => {
   console.error(`\n[smoke] ❌ ${msg}`)
-  process.exit(1)
+  throw new Error(msg)
 }
 
 const sh = (cmd, args, env = {}) => {
@@ -53,6 +54,15 @@ const sh = (cmd, args, env = {}) => {
 }
 
 /** Deriva a conexão de manutenção (`postgres`) a partir da DATABASE_URL. */
+function validateTarget(databaseUrl) {
+  if (!databaseUrl) fail("defina SMOKE_DATABASE_URL para um banco de teste local dedicado")
+  let url
+  try { url = new URL(databaseUrl) } catch { fail("SMOKE_DATABASE_URL inválida") }
+  if (!["postgres:", "postgresql:"].includes(url.protocol) || !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) || !/^nxgest_smoke(?:_[a-z0-9]+)*$/.test(decodeURIComponent(url.pathname.slice(1))) || !url.port || ["5432", "5433"].includes(url.port)) {
+    fail("alvo recusado: use PostgreSQL local, porta dedicada diferente de 5432/5433 e banco nxgest_smoke[_sufixo]")
+  }
+}
+
 function adminUrl(databaseUrl) {
   const u = new URL(databaseUrl)
   u.pathname = "/postgres"
@@ -96,11 +106,7 @@ async function healthOk() {
 }
 
 function startServer() {
-  if (existsSync(PID_FILE)) {
-    console.warn(`[smoke] ⚠️ PID anterior encontrado (${readFileSync(PID_FILE, "utf8").trim()}) — executando down() primeiro`)
-    stopServer()
-  }
-  if (existsSync(PID_FILE)) rmSync(PID_FILE)
+  if (existsSync(PID_FILE)) fail("arquivo PID existente: inspecione a instância anterior antes de iniciar")
 
   console.log(`[smoke] 🚀 Subindo servidor em ${BASE_URL} (PID em .smoke.pid)`)
   const child = spawn("npx", ["tsx", "src/main.ts"], {
@@ -110,9 +116,12 @@ function startServer() {
     env: { ...process.env, PORT, JWT_SECRET, DATABASE_URL, ...RATE_ENVS },
   })
   child.unref()
-  writeFileSync(PID_FILE, String(child.pid))
+  const stat = readFileSync(`/proc/${child.pid}/stat`, "utf8")
+  const start = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19]
+  writeFileSync(PID_FILE, JSON.stringify({ pid: child.pid, start }))
+  ownedProcess = true
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const deadline = Date.now() + 20000
     const tick = async () => {
       if (await healthOk()) {
@@ -120,7 +129,7 @@ function startServer() {
         resolve()
         return
       }
-      if (Date.now() > deadline) fail(`servidor não respondeu em /api/health em 20s — veja os logs acima`)
+      if (Date.now() > deadline) { reject(new Error("servidor não respondeu em /api/health em 20s")); return }
       setTimeout(tick, 500)
     }
     tick()
@@ -129,12 +138,17 @@ function startServer() {
 
 function stopServer() {
   if (!existsSync(PID_FILE)) return
-  const pid = Number(readFileSync(PID_FILE, "utf8").trim())
+  let entry
   try {
-    process.kill(pid, "SIGTERM")
-    console.log(`[smoke] 🛑 Servidor (PID ${pid}) encerrado`)
+    entry = JSON.parse(readFileSync(PID_FILE, "utf8"))
+    if (!Number.isSafeInteger(entry.pid) || entry.pid <= 1 || !/^\d+$/.test(entry.start)) throw new Error("PID inválido")
+    const stat = readFileSync(`/proc/${entry.pid}/stat`, "utf8")
+    const start = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19]
+    if (start !== entry.start) throw new Error("identidade do processo não confere")
+    process.kill(-entry.pid, "SIGTERM")
+    console.log(`[smoke] 🛑 Grupo de processos próprio ${entry.pid} encerrado`)
   } catch (err) {
-    if (err.code !== "ESRCH") console.warn(`[smoke] ⚠️ falha ao matar PID ${pid}: ${err.message}`)
+    if (err.code !== "ENOENT" && err.code !== "ESRCH") fail(`PID não verificado; nenhum processo sinalizado: ${err.message}`)
   }
   rmSync(PID_FILE, { force: true })
 }
@@ -151,9 +165,9 @@ async function up(recreate) {
 }
 
 async function full(recreate) {
-  await up(recreate)
   let code = 0
   try {
+    await up(recreate)
     console.log(`[smoke] 🧪 Rodando smoke-api contra ${BASE_URL}`)
     const r = spawnSync("node", ["scripts/smoke-api.mjs", "--baseUrl", BASE_URL], {
       cwd: ROOT,
@@ -162,24 +176,34 @@ async function full(recreate) {
     })
     code = r.status ?? 1
   } finally {
-    stopServer()
+    if (ownedProcess) stopServer()
   }
   process.exit(code)
 }
 
+export function parseArgs(args) {
+  const commands = args.filter(arg => !arg.startsWith("--"))
+  if (commands.length > 1 || commands.some(arg => !["up", "down", "full"].includes(arg)) || args.some(arg => arg.startsWith("--") && arg !== "--no-recreate") || args.filter(arg => arg === "--no-recreate").length > 1) fail("argumentos inválidos")
+  const cmd = commands[0] ?? "full"
+  if (cmd === "down" && args.includes("--no-recreate")) fail("opção inválida para down")
+  const recreate = !args.includes("--no-recreate")
+  return { cmd, recreate }
+}
+
 async function main() {
-  const [cmd, ...rest] = process.argv.slice(2)
-  const recreate = !rest.includes("--no-recreate")
+  const { cmd, recreate } = parseArgs(process.argv.slice(2))
+  if (cmd !== "down") validateTarget(DATABASE_URL)
   const nodeMajor = Number(process.versions.node.split(".")[0])
   if (nodeMajor < 20) fail(`Node ${process.version} detectado — o projeto exige Node ≥20 (veja .nvmrc). Rode: source ~/.nvm/nvm.sh && nvm use`)
 
-  if (cmd === "up") await up(recreate)
+  if (cmd === "up") {
+    try { await up(recreate) } catch (error) { if (ownedProcess) stopServer(); throw error }
+  }
   else if (cmd === "down") stopServer()
   else await full(recreate)
 }
 
-main().catch((err) => {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((err) => {
   console.error(`\n[smoke] ❌ erro inesperado: ${err.message}`)
-  stopServer()
   process.exit(1)
 })

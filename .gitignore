@@ -17,8 +17,6 @@ dist/
 .env.staging
 .env.*
 !.env.example
-!.env.production.example
-!.env.staging.example
 NUL
 .obsidian/
 

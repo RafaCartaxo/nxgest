@@ -26,7 +26,10 @@
     "smoke:down": "node scripts/smoke.mjs down",
     "mail:test": "tsx scripts/mail-test.ts",
     "audit:links": "node scripts/audit-links.mjs",
-    "backup:pull": "bash scripts/pull-backup.sh"
+    "backup:pull": "bash scripts/pull-backup.sh",
+    "db:up": "docker compose --project-directory . -f infra/docker-compose.yml up -d postgres",
+    "db:down": "docker compose --project-directory . -f infra/docker-compose.yml down",
+    "db:ps": "docker compose --project-directory . -f infra/docker-compose.yml ps"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

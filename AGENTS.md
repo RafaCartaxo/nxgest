@@ -83,7 +83,7 @@ Bug reportado "em produção" nem sempre é bug de código. Antes de investigar,
 
 ## Agentes do projeto
 
-Subagentes customizados (se existirem) ficam em `.opencode/agents/`. Cada um tem escopo e permissões próprios; todos herdam estas regras.
+Os contratos de agentes de IA do projeto são independentes de plataforma e ficam em [`agents/`](agents/README.md) — índice em `agents/README.md`. Cada um documenta seu próprio escopo (identidade, responsabilidade, entradas/saídas, limites, regras de segurança, protocolo, critérios de conclusão); todos herdam as regras deste documento. Adaptadores específicos de uma plataforma (OpenCode, Claude Code, etc.), se necessários, ficam fora deste repositório.
 
 ## Skills do ambiente
 

@@ -38,7 +38,7 @@ Os cenários desta base são executados por `scripts/smoke-api.mjs` (`npm run sm
 ```bash
 # 1) instância isolada (PostgreSQL próprio — nunca o banco de desenvolvimento)
 # Recomendado: usar o orquestrador (recria DB, schema, seed, sobe e roda tudo):
-#   source ~/.nvm/nvm.sh && nvm use && npm run smoke:local
+#   source ~/.nvm/nvm.sh && nvm use && SMOKE_DATABASE_URL=postgres://nxgest:nxgest-dev@localhost:55432/nxgest_smoke npm run smoke:local
 # Manual (equivalente ao CI):
 export DATABASE_URL=postgres://nxgest:nxgest-dev@localhost:5433/nxgest_smoke
 docker exec nxgest-pg-dev psql -U nxgest -d nxgest -c "DROP DATABASE IF EXISTS nxgest_smoke WITH (FORCE); CREATE DATABASE nxgest_smoke;"
