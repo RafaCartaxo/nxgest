@@ -26,6 +26,10 @@ staging_id=$(docker inspect --format '{{.Id}}' staging-app)
 bash scripts/container-health.sh "$staging_id" "$image" || fail
 curl -fsS --max-time 5 https://nxgestao.duckdns.org/api/health | "$NXGEST_JQ" -e 'type == "object" and .status == "ok" and .db == "connected"' >/dev/null || fail
 [[ "$(docker inspect --format '{{.Id}}' staging-app)" == "$staging_id" ]] || fail
+# Dependências existentes são observadas; Compose não as modifica.
+[[ "$(docker inspect --format '{{.State.Status}}|{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}' nxgest-postgres)" == 'running|healthy' ]] || fail
+proxy=$(docker ps -q --filter label=com.docker.compose.project=nxgestao --filter label=com.docker.compose.service=caddy) || fail
+[[ "$proxy" =~ ^[a-f0-9]{12,64}$ && "$(docker inspect --format '{{.State.Status}}' "$proxy")" == running ]] || fail
 # Marcar antes de mutar serviço: falha/interrupção bloqueia repetição automática.
 (umask 077; set -C; printf 'pending sha=%s\n' "$sha" > "$pending") || fail
 (umask 077; set -C; cat -- "$tarfile" > "$saved") || fail
@@ -33,12 +37,12 @@ actual=$(sha256sum -- "$saved");actual=${actual%% *};[[ "sha256:$actual" == "$ta
 loaded=$(bash scripts/load-verified-image.sh "$saved" "$tarhash" "$sha")
 [[ "$loaded" == "$image" ]] || fail
 export NXGEST_PROD_IMAGE="$loaded"
-docker compose --project-directory . -f infra/docker-compose.prod.yml up -d --no-build --pull never app >&2
+docker compose --project-directory . -f infra/docker-compose.prod.yml up -d --no-deps --no-build --pull never app >&2
 container=$(docker compose --project-directory . -f infra/docker-compose.prod.yml ps -q app)
 [[ -n "$container" && "$(docker inspect --format '{{.Image}}' "$container")" == "$loaded" ]] || fail
 container_id=$(docker inspect --format '{{.Id}}' "$container")
 [[ "$container_id" =~ ^[a-f0-9]{64}$ ]] || fail
-bash scripts/container-health.sh "$container_id" "$loaded" || fail
+bash scripts/container-health.sh "$container_id" "$loaded" --wait || fail
 curl -fsS --max-time 5 https://nxgest.com.br/api/health | "$NXGEST_JQ" -e 'type == "object" and .status == "ok" and .db == "connected"' >/dev/null || fail
 [[ "$(docker compose --project-directory . -f infra/docker-compose.prod.yml ps -q app)" == "$container" && "$(docker inspect --format '{{.Id}}' "$container")" == "$container_id" && "$(docker inspect --format '{{.Image}}' "$container_id")" == "$loaded" && "$(docker image inspect --format '{{.Id}}' "nxgest-build:$sha")" == "$loaded" ]] || fail
 # Só remove a tag recém-criada por este load; nenhum volume ou dado é removido.

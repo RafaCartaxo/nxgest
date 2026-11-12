@@ -62,6 +62,10 @@ jobs:
           TAR_DIGEST: ${{ steps.verified.outputs.tar }}
           ZIP_DIGEST: ${{ steps.verified.outputs.zip }}
           ARTIFACT_ID: ${{ steps.verified.outputs.artifact }}
+          STAGING_MODE: ${{ vars.CT011_STAGING_MODE }}
+          ADOPTION_POLICY_HASH: ${{ vars.CT011_ADOPTION_POLICY_SHA256 }}
+          ADOPTION_DECISION: ${{ vars.CT011_ADOPTION_DECISION }}
+          ADOPTION_HOST: ${{ vars.CT011_ADOPTION_HOST }}
         run: |
           set -euo pipefail
           umask 077
@@ -70,7 +74,12 @@ jobs:
           printf '%s\n' "$VPS_KEY" > ssh-private/key
           cp infra/staging-known-hosts ssh-private/known_hosts
           unset VPS_KEY
-          bash scripts/staging-transport.sh "$IMAGE_PATH" "$SOURCE_SHA" "$TAR_DIGEST" "$ZIP_DIGEST" "$CI_RUN" 1 "$ARTIFACT_ID" "$VPS_HOST" "$VPS_USER" "$PWD/ssh-private/key" "$PWD/ssh-private/known_hosts" > staging-remote.txt
+          case "${STAGING_MODE:-staging}" in
+            staging) adoption_args=(staging) ;;
+            staging-adoption) adoption_args=(staging-adoption "$ADOPTION_POLICY_HASH" "$ADOPTION_DECISION" "$ADOPTION_HOST") ;;
+            *) exit 1 ;;
+          esac
+          bash scripts/staging-transport.sh "$IMAGE_PATH" "$SOURCE_SHA" "$TAR_DIGEST" "$ZIP_DIGEST" "$CI_RUN" 1 "$ARTIFACT_ID" "$VPS_HOST" "$VPS_USER" "$PWD/ssh-private/key" "$PWD/ssh-private/known_hosts" "${adoption_args[@]}" > staging-remote.txt
           RECEIPT=$(grep '^STAGING_RECEIPT ' staging-remote.txt)
           [[ "$RECEIPT" =~ ^STAGING_RECEIPT\ sha=([a-f0-9]{40})\ run=([0-9]+)\ attempt=1\ artifact=([0-9]+)\ zip=(sha256:[a-f0-9]{64})\ tar=(sha256:[a-f0-9]{64})\ image=(sha256:[a-f0-9]{64})$ ]]
           [[ "${BASH_REMATCH[1]}" == "$SOURCE_SHA" && "${BASH_REMATCH[2]}" == "$CI_RUN" && "${BASH_REMATCH[3]}" == "$ARTIFACT_ID" && "${BASH_REMATCH[4]}" == "$ZIP_DIGEST" && "${BASH_REMATCH[5]}" == "$TAR_DIGEST" ]]
