@@ -25,26 +25,30 @@ fi
 # O bootstrap detém o lock e entrega apenas o tar autenticado no runner.
 flock -n 9 || { erro "Lock ausente"; exit 1; }
 : "${NXGEST_IMAGE_TAR:?tar verificado obrigatório}" "${NXGEST_IMAGE_DIGEST:?digest obrigatório}"
+# Enquanto o legado estiver retido, Compose pode identificá-lo pelas labels.
+adoption_consumed=$(git rev-parse --git-path nxgest-staging-adoption-consumed)
+[[ ! -e "$adoption_consumed" && ! -L "$adoption_consumed" ]] || { erro "Adoção retida exige encerramento revisado"; exit 1; }
 source scripts/staging-env.sh
 [ -f "$ENV_FILE" ] && [ ! -L "$ENV_FILE" ] || { erro "Configuração staging indisponível"; exit 1; }
 load_staging_env "$ENV_FILE"
 MAIL_PROVIDER=console
 export MAIL_PROVIDER
+fail_stage(){ erro "Dependência staging indisponível"; exit 1; }
+# Dependências existentes são observadas; Compose não as modifica.
+[[ "$(docker inspect --format '{{.State.Status}}|{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}' staging-pg)" == 'running|healthy' ]] || fail_stage
+proxy=$(docker ps -q --filter label=com.docker.compose.project=nxgestao --filter label=com.docker.compose.service=caddy) || fail_stage
+[[ "$proxy" =~ ^[a-f0-9]{12,64}$ && "$(docker inspect --format '{{.State.Status}}' "$proxy")" == running ]] || fail_stage
 image_id=$(bash scripts/load-verified-image.sh "$NXGEST_IMAGE_TAR" "$NXGEST_IMAGE_DIGEST" "$NXGEST_DEPLOY_SHA")
 temporary_tag="nxgest-build:$NXGEST_DEPLOY_SHA"
 export NXGEST_STAGING_IMAGE="$image_id"
 # Não cria redes nem busca imagens; dependências devem estar disponíveis.
-docker compose $COMPOSE up -d --no-build --pull never staging-app >&2
+docker compose $COMPOSE up -d --no-deps --no-build --pull never staging-app >&2
 container_id=$(docker inspect --format '{{.Id}}' staging-app)
 [[ "$container_id" =~ ^[a-f0-9]{64}$ ]] || { erro "Container staging inválido"; exit 1; }
 container_image=$(docker inspect --format '{{.Image}}' "$container_id")
 [[ "$container_image" == "$image_id" ]] || { erro "Imagem efetiva divergente"; exit 1; }
-ready=0
-for i in $(seq 1 30); do
-  if bash scripts/container-health.sh "$container_id" "$image_id" && curl -fsS --max-time 5 https://nxgestao.duckdns.org/api/health | "$NXGEST_JQ" -e 'type == "object" and .status == "ok" and .db == "connected"' >/dev/null; then ready=1; break; fi
-  sleep 2
-done
-[ "$ready" = 1 ] || { erro "Health/DB de staging não verificado"; exit 1; }
+bash scripts/container-health.sh "$container_id" "$image_id" --wait || { erro "Health interno staging indisponível"; exit 1; }
+curl -fsS --max-time 5 https://nxgestao.duckdns.org/api/health | "$NXGEST_JQ" -e 'type == "object" and .status == "ok" and .db == "connected"' >/dev/null || { erro "Health público staging indisponível"; exit 1; }
 # Revalidar tag e container sob o mesmo lock depois do health.
 [[ "$(docker inspect --format '{{.Id}}' staging-app)" == "$container_id" && "$(docker image inspect --format '{{.Id}}' "$NXGEST_STAGING_IMAGE")" == "$image_id" && "$(docker inspect --format '{{.Image}}' staging-app)" == "$image_id" ]] || { erro "Imagem alterada durante staging"; exit 1; }
 # Remove apenas a tag temporária criada por este load, após confirmar identidade.

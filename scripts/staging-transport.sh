@@ -4,7 +4,7 @@ set -euo pipefail
 file=${1:-}; sha=${2:-}; tar_digest=${3:-}; zip_digest=${4:-}; run=${5:-}; attempt=${6:-}; artifact=${7:-}; host=${8:-}; user=${9:-}; key=${10:-}; known=${11:-}; mode=${12:-staging}; staging_run=${13:-}; image=${14:-}; policy_hash=${15:-}
 fail(){ echo 'Transporte staging recusado' >&2; exit 1; }
 [[ -f "$file" && ! -L "$file" && "$sha" =~ ^[a-f0-9]{40}$ && "$tar_digest" =~ ^sha256:[a-f0-9]{64}$ && "$zip_digest" =~ ^sha256:[a-f0-9]{64}$ && "$run" =~ ^[0-9]+$ && "$attempt" == 1 && "$artifact" =~ ^[0-9]+$ && "$host" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ && "$user" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ && -f "$key" && ! -L "$key" && -f "$known" && ! -L "$known" ]] || fail
-if [[ "$mode" == production-initial ]]; then [[ "$staging_run" =~ ^[0-9]+$ && "$image" =~ ^sha256:[a-f0-9]{64}$ && "$policy_hash" =~ ^sha256:[a-f0-9]{64}$ ]] || fail; elif [[ "$mode" != staging ]]; then fail; fi
+if [[ "$mode" == production-initial ]]; then [[ "$staging_run" =~ ^[0-9]+$ && "$image" =~ ^sha256:[a-f0-9]{64}$ && "$policy_hash" =~ ^sha256:[a-f0-9]{64}$ ]] || fail; elif [[ "$mode" == staging-adoption ]]; then [[ "$staging_run" =~ ^sha256:[a-f0-9]{64}$ && "$image" =~ ^[A-Za-z0-9._/-]{1,160}$ && "$policy_hash" =~ ^[A-Za-z0-9._-]{1,128}$ ]] || fail; elif [[ "$mode" != staging ]]; then fail; fi
 [[ "$(wc -l < "$known")" -eq 1 ]] || fail
 [[ "$(awk '{print $1}' "$known")" == nxgest-staging ]] || fail
 [[ "$(ssh-keygen -lf "$known" -E sha256 | awk '{print $2}')" == 'SHA256:9mo2a7iYwuHEHlO7SyeHFhwatAv6Hf0yY4yUDhpbPrc' ]] || fail
@@ -23,6 +23,8 @@ actual=$(sha256sum -- "$incoming"); actual=${actual%% *}; [ "sha256:$actual" = "
 if ! git cat-file -e "$1^{commit}" 2>/dev/null; then git fetch --no-tags origin "$1" >/dev/null 2>&1 || { echo "fetch falhou" >&2; exit 1; }; fi
 if [ "$7" = staging ]; then
   git show "$1:scripts/deploy-bootstrap.sh" | bash -s -- staging "$1" "$incoming" "$2" "$3" "$4" "$5" "$6"
+elif [ "$7" = staging-adoption ]; then
+  git show "$1:scripts/deploy-bootstrap.sh" | bash -s -- staging-adoption "$1" "$incoming" "$2" "$3" "$4" "$5" "$6" "$8" "$9" "${10}"
 else
   git show "$1:scripts/deploy-bootstrap.sh" | bash -s -- production-initial "$1" "$incoming" "$2" "$3" "$4" "$6" "$8" "$9" "${10}"
 fi'

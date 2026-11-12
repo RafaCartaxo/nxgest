@@ -3,7 +3,7 @@
 set -euo pipefail
 mode=${1:-}
 sha=${2:-}
-[[ "$mode" == staging || "$mode" == production || "$mode" == production-initial ]] || { echo 'Modo inválido' >&2; exit 1; }
+[[ "$mode" == staging || "$mode" == staging-adoption || "$mode" == production || "$mode" == production-initial ]] || { echo 'Modo inválido' >&2; exit 1; }
 [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo 'SHA inválido' >&2; exit 1; }
 # O lock é herdado pelo descritor 9 da entrada automatizada ou manual.
 flock -n 9 || { echo 'Lock do deploy ausente ou ocupado' >&2; exit 1; }
@@ -20,6 +20,20 @@ pending=$(git rev-parse --git-path nxgest-staging-pending)
 [ ! -e "$pending" ] && [ ! -L "$pending" ] || { echo 'Staging pendente exige recuperação' >&2; exit 1; }
 if [[ "$mode" = production || "$mode" = production-initial ]]; then
   [ -f "$marker" ] && [ ! -L "$marker" ] && [ "$(cat "$marker")" = "$sha" ] || { echo 'SHA não validado no staging; produção bloqueada' >&2; exit 1; }
+fi
+if [ "$mode" = staging-adoption ]; then
+  artifact=${3:-}; image_digest=${4:-}; zip_digest=${5:-}; run_id=${6:-}; attempt=${7:-}; artifact_id=${8:-}; adoption_hash=${9:-}; adoption_decision=${10:-}; adoption_host=${11:-}
+  [[ "$image_digest" =~ ^sha256:[a-f0-9]{64}$ && "$zip_digest" =~ ^sha256:[a-f0-9]{64}$ && "$run_id" =~ ^[0-9]+$ && "$attempt" == 1 && "$artifact_id" =~ ^[0-9]+$ && -f "$artifact" && ! -L "$artifact" ]] || { echo 'Seleção adoção inválida' >&2; exit 1; }
+  actual=$(sha256sum -- "$artifact"); [[ "sha256:${actual%% *}" == "$image_digest" ]] || { echo 'Tar divergente' >&2; exit 1; }
+  [ ! -e "$state" ] && [ ! -L "$state" ] && [ ! -e "$marker" ] && [ ! -L "$marker" ] || { echo 'Estado staging já existe' >&2; exit 1; }
+  git cat-file -e "$sha:scripts/staging-adoption-policy.sh" || exit 1
+  git show "$sha:scripts/staging-adoption-policy.sh" | bash -s -- "$adoption_hash" "$adoption_decision" "$sha" "$run_id" "$attempt" "$artifact_id" "$zip_digest" "$image_digest" "$adoption_host" || exit 1
+  git checkout --detach --no-overwrite-ignore "$sha"
+  [ "$(git rev-parse HEAD)" = "$sha" ] || exit 1
+  bash scripts/staging-adoption-policy.sh "$adoption_hash" "$adoption_decision" "$sha" "$run_id" "$attempt" "$artifact_id" "$zip_digest" "$image_digest" "$adoption_host" || exit 1
+  image_id=$(bash scripts/load-verified-image.sh "$artifact" "$image_digest" "$sha") || exit 1
+  bash scripts/staging-adoption-capsule.sh "$adoption_hash" "$adoption_decision" "$sha" "$run_id" "$attempt" "$artifact_id" "$zip_digest" "$image_digest" "$adoption_host" "$image_id" || exit 1
+  exec bash scripts/staging-adoption-execute.sh "$adoption_hash" "$adoption_decision" "$sha" "$run_id" "$attempt" "$artifact_id" "$zip_digest" "$image_digest" "$adoption_host" "$image_id"
 fi
 if [ "$mode" = staging ]; then
   artifact=${3:-}; image_digest=${4:-}; zip_digest=${5:-}; run_id=${6:-}; attempt=${7:-}; artifact_id=${8:-}
