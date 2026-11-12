@@ -39,7 +39,7 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 - **Domínio:** `nxgest.com.br` — DNS no Cloudflare (proxied), SSL funcionando, **e-mail transacional ativo** (Resend, `no-reply@nxgest.com.br`); DuckDNS = staging
 - **Backup:** cron 2x/dia no VPS → `/opt/backups`; **host não tem snapshot** — nunca assumir recuperação pelo provedor
 - Para operar (deploy, backup, logs, rollback, usuários): seguir `docs/engineering/06-PRODUCAO.md`
-- **Deploy local no VPS:** `cd /opt/nxgestao && git pull && bash scripts/deploy.sh` (prod) · `bash scripts/deploy-staging.sh` (staging)
+- **Deploy manual autorizado:** seguir o bootstrap por SHA em `docs/engineering/06-PRODUCAO.md` §4; não chamar scripts diretamente nem descartar alterações do checkout.
 
 ## Comandos
 

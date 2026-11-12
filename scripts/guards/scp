@@ -1,0 +1,3 @@
+#!/bin/sh
+printf "GUARDA_BLOQUEOU %s\n" "${0##*/}" >&2
+exit 97

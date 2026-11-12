@@ -30,7 +30,10 @@
     "db:up": "docker compose --project-directory . -f infra/docker-compose.yml up -d postgres",
     "db:down": "docker compose --project-directory . -f infra/docker-compose.yml down",
     "db:ps": "docker compose --project-directory . -f infra/docker-compose.yml ps",
-    "test:safety": "node --test scripts/safety-check.mjs"
+    "test:safety": "node --test scripts/safety-check.mjs",
+    "test:deploy": "node --test scripts/deploy-transition.check.mjs",
+    "test:backup": "node --test scripts/backup-recovery.check.mjs",
+    "test:corrections": "bash scripts/test-corrections-isolated.sh"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

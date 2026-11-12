@@ -1,0 +1,89 @@
+name: Staging verificado
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+  actions: read
+  attestations: write
+  id-token: write
+concurrency:
+  group: nxgest-staging
+  cancel-in-progress: false
+jobs:
+  staging:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == 1 && github.event.workflow_run.workflow_id == 330080640
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: staging
+    steps:
+      - name: Checkout do controlador aprovado
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ vars.CT011_CONTROLLER_SHA }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Verifica e materializa o artifact
+        id: verified
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONTROLLED_POLICY: ${{ secrets.CT011_BUILD_POLICY }}
+          POLICY_SHA256: ${{ vars.CT011_BUILD_POLICY_SHA256 }}
+          POLICY_DECISION: ${{ vars.CT011_BUILD_POLICY_DECISION }}
+          CI_RUN: ${{ github.event.workflow_run.id }}
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+          CONTROLLER_SHA: ${{ vars.CT011_CONTROLLER_SHA }}
+        run: |
+          set -euo pipefail
+          [[ "$CONTROLLER_SHA" =~ ^[a-f0-9]{40}$ && "$(git rev-parse HEAD)" == "$CONTROLLER_SHA" ]]
+          umask 077
+          mkdir -p .maestro/coord-qa/build-policies
+          printf %s "$CONTROLLED_POLICY" > .maestro/coord-qa/build-policies/staging.json
+          unset CONTROLLED_POLICY
+          node scripts/verify-build-artifact.mjs verify-event "$PWD/.maestro/coord-qa/build-policies/staging.json" "$POLICY_SHA256" "$POLICY_DECISION" "$CI_RUN" "$CI_SHA" > verified.json
+          jq -e --arg run "$CI_RUN" --arg sha "$CI_SHA" '.verified == true and .fixture == false and .runId == $run and .attempt == 1 and .sourceSha == $sha' verified.json >/dev/null
+          printf 'path=%s\n' "$(jq -er .imagePath verified.json)" >> "$GITHUB_OUTPUT"
+          printf 'tar=%s\n' "$(jq -er .imageSha256 verified.json)" >> "$GITHUB_OUTPUT"
+          printf 'zip=%s\n' "$(jq -er .zipSha256 verified.json)" >> "$GITHUB_OUTPUT"
+          printf 'artifact=%s\n' "$(jq -er .artifactId verified.json)" >> "$GITHUB_OUTPUT"
+      - name: Envia bytes e executa bootstrap sob lock
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          CI_RUN: ${{ github.event.workflow_run.id }}
+          IMAGE_PATH: ${{ steps.verified.outputs.path }}
+          TAR_DIGEST: ${{ steps.verified.outputs.tar }}
+          ZIP_DIGEST: ${{ steps.verified.outputs.zip }}
+          ARTIFACT_ID: ${{ steps.verified.outputs.artifact }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -m 700 ssh-private
+          trap 'rm -f -- ssh-private/key ssh-private/known_hosts; rmdir ssh-private' EXIT
+          printf '%s\n' "$VPS_KEY" > ssh-private/key
+          cp infra/staging-known-hosts ssh-private/known_hosts
+          unset VPS_KEY
+          bash scripts/staging-transport.sh "$IMAGE_PATH" "$SOURCE_SHA" "$TAR_DIGEST" "$ZIP_DIGEST" "$CI_RUN" 1 "$ARTIFACT_ID" "$VPS_HOST" "$VPS_USER" "$PWD/ssh-private/key" "$PWD/ssh-private/known_hosts" > staging-remote.txt
+          RECEIPT=$(grep '^STAGING_RECEIPT ' staging-remote.txt)
+          [[ "$RECEIPT" =~ ^STAGING_RECEIPT\ sha=([a-f0-9]{40})\ run=([0-9]+)\ attempt=1\ artifact=([0-9]+)\ zip=(sha256:[a-f0-9]{64})\ tar=(sha256:[a-f0-9]{64})\ image=(sha256:[a-f0-9]{64})$ ]]
+          [[ "${BASH_REMATCH[1]}" == "$SOURCE_SHA" && "${BASH_REMATCH[2]}" == "$CI_RUN" && "${BASH_REMATCH[3]}" == "$ARTIFACT_ID" && "${BASH_REMATCH[4]}" == "$ZIP_DIGEST" && "${BASH_REMATCH[5]}" == "$TAR_DIGEST" ]]
+          IMAGE_ID=${BASH_REMATCH[6]}
+          jq -n --arg sha "$SOURCE_SHA" --arg run "$CI_RUN" --arg artifact "$ARTIFACT_ID" --arg zip "$ZIP_DIGEST" --arg tar "$TAR_DIGEST" --arg image "$IMAGE_ID" --arg staging_run "$GITHUB_RUN_ID" --argjson staging_attempt "$GITHUB_RUN_ATTEMPT" '{version:"nxg-staging-v1",sha:$sha,ciRun:$run,ciAttempt:1,artifact:$artifact,zip:$zip,tar:$tar,image:$image,stagingRun:$staging_run,stagingAttempt:$staging_attempt,health:"ok",db:"connected"}' > staging-receipt.json
+      - name: Atesta recibo do staging
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: staging-receipt.json
+      - name: Publica recibo de staging
+        uses: actions/upload-artifact@v7
+        with:
+          name: nxgest-staging-${{ github.run_id }}-${{ github.run_attempt }}
+          path: staging-receipt.json
+          if-no-files-found: error
+          retention-days: 14

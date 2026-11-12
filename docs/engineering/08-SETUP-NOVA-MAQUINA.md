@@ -26,8 +26,8 @@ Para que essa portabilidade funcione sem imprevistos nem perda de dados em caso 
 │ └─ Documentação completa (docs/)                            │
 └─────────────────────────────────────────────────────────────┘
                                ▲
-                               │  O Git precisa dos segredos abaixo
-                               ▼  para rodar localmente e acessar a VPS
+                               │  Dev usa configuração própria sintética;
+                               ▼  operação autorizada requer acessos externos
 ┌─────────────────────────────────────────────────────────────┐
 │ FORA DO GIT (Vive na sua máquina / Cofre de Senhas)         │
 │ ├─ Chave privada SSH (~/.ssh/id_ed25519)                     │
@@ -211,7 +211,7 @@ Este comando sobe simultaneamente:
 
 ## 5. Gestão de Segredos & Continuidade de Acessos
 
-Como segredos **não ficam no Git**, ao trocar de máquina você precisa restabelecer sua pasta de credenciais.
+O fluxo de desenvolvimento local usa `.env.example` e não requer credenciais de VPS, Cloudflare ou Resend. Somente uma pessoa autorizada a operar ambientes reais precisa restabelecer os acessos necessários, que **não ficam no Git**.
 
 ### 5.1 — Estrutura da pasta `~/.config/nxgestao/`
 
@@ -222,7 +222,7 @@ mkdir -p ~/.config/nxgestao
 chmod 700 ~/.config/nxgestao
 ```
 
-Esta pasta deve conter os seguintes arquivos (com permissão `600`):
+Quando forem necessários para operação autorizada, os registros podem incluir arquivos com permissão `600`:
 * `ACESSOS.md`: Relação de painéis, URLs, e-mails de acesso e anotações seguras.
 * `vps-root-pw.txt`: Senha do usuário root da VPS (de contingência para console VNC).
 * `vps-admin-pw.txt`: Senha do usuário administrador inicial (`admin@cobranca.com`).
@@ -236,14 +236,28 @@ Esta pasta deve conter os seguintes arquivos (com permissão `600`):
 2. **Cópia Criptografada Pessoal (GPG/AES-256)**:
    * Para transportar sua pasta `~/.config/nxgestao/` e suas chaves SSH para um novo computador com segurança:
    ```bash
-   # Na máquina antiga (para gerar o arquivo protegido):
-   tar -czf - ~/.config/nxgestao ~/.ssh | gpg -c --armor --cipher-algo AES256 -o nxgest-segredos.gpg
-   
-   # Na nova máquina (para restaurar):
-   gpg -d nxgest-segredos.gpg | tar -xzf - -C /
-   chmod 700 ~/.ssh ~/.config/nxgestao
-   chmod 600 ~/.ssh/* ~/.config/nxgestao/*
+   # Na máquina antiga: caminhos relativos ao home de origem. Guarde o arquivo
+   # cifrado em local privado e transfira-o por canal seguro; não o versione.
+   ( set -euo pipefail; umask 077; tar -C "$HOME" -czf - .config/nxgestao .ssh | gpg -c --armor --cipher-algo AES256 -o nxgest-segredos.gpg )
+
+   # Na máquina nova: falha se já houver conteúdo nesses destinos.
+   (
+     set -euo pipefail
+     umask 077
+     mkdir -p "$HOME/.config"
+     test ! -e "$HOME/.config/nxgestao" && test ! -e "$HOME/.ssh" || { echo "Destinos existentes: revisar e mesclar manualmente" >&2; exit 1; }
+     restore_dir=$(mktemp -d "$HOME/.nxgest-restauracao.XXXXXXXX")
+     chmod 700 "$restore_dir"
+     gpg -d nxgest-segredos.gpg | tar -xzf - -C "$restore_dir"
+     find "$restore_dir/.config/nxgestao" "$restore_dir/.ssh" -type d -exec chmod 700 {} +
+     find "$restore_dir/.config/nxgestao" "$restore_dir/.ssh" -type f -exec chmod 600 {} +
+     mv -n "$restore_dir/.config/nxgestao" "$HOME/.config/"
+     mv -n "$restore_dir/.ssh" "$HOME/"
+     rmdir "$restore_dir/.config" "$restore_dir"
+   )
    ```
+
+   A extração ocorre sob diretório temporário privado (`700`) e `umask 077`; permissões são ajustadas antes da movimentação. Em caso de falha, o diretório temporário privado pode permanecer para inspeção e limpeza segura. Use apenas arquivos cifrados de origem confiável e confira colisões antes de mesclar manualmente.
 
 ---
 
@@ -306,23 +320,13 @@ ssh nxgest-vps
 > [!WARNING]
 > O provedor da VPS **não realiza snapshots automáticos**. A proteção contra perda total do servidor depende dos backups em `/opt/backups/` e da sua cópia off-site periódica.
 
-### 7.1 — Como baixar o backup do servidor para sua máquina local
+### 7.1 — Cópia do conjunto de backup
 
-Você pode utilizar o script utilitário do projeto:
+O formato associado é um diretório por ID. `scripts/pull-backup.sh <id> <destino-existente> <usuario@host> <chave>` copia o conjunto completo, verifica hashes e publica sem sobrescrever. A implementação foi exercitada somente com transporte dublado; origem, conectividade e recuperação reais continuam pendentes de autorização e validação. Falha ou ausência de conjunto não são sucesso. Os padrões legados `pg-*.dump` e `uploads-*.tar.gz` não comprovam cópia do conjunto atual. Consulte `09-BACKUP-ROLLBACK.md` antes de qualquer operação autorizada.
 
-```bash
-# Na raiz do repositório:
-bash scripts/pull-backup.sh
-```
+### 7.2 — Recuperação legada (não validada para o conjunto atual)
 
-Ou executar manualmente via `scp`:
-```bash
-mkdir -p ~/.config/nxgestao/backups
-scp root@172.245.152.223:/opt/backups/pg-*.dump ~/.config/nxgestao/backups/
-scp root@172.245.152.223:/opt/backups/uploads-*.tar.gz ~/.config/nxgestao/backups/
-```
-
-### 7.2 — Restaurando o Banco de Dados em um Novo VPS (Disaster Recovery)
+> Os comandos abaixo descrevem o formato legado e não constituem procedimento validado para o conjunto atual nem autorização operacional.
 
 Se a VPS original for destruída e você precisar subir uma nova máquina do zero:
 
@@ -369,7 +373,7 @@ Se a VPS original for destruída e você precisar subir uma nova máquina do zer
 
 ---
 
-## 9. Checklist Rápido: "Nova Máquina em 15 Minutos"
+## 9. Checklist rápido: nova máquina
 
 Ao configurar um novo computador ou após formatar o sistema:
 
@@ -380,6 +384,6 @@ Ao configurar um novo computador ou após formatar o sistema:
 - [ ] **5. Arquivo `.env` de desenvolvimento**: `cp .env.example .env`.
 - [ ] **6. PostgreSQL local rodando**: `npm run db:up` na porta 5433.
 - [ ] **7. Testes validados**: `npm test` passou com 100% de sucesso.
-- [ ] **8. Chave SSH configurada**: Chave autorizada no GitHub e na VPS (`ssh root@172.245.152.223`).
-- [ ] **9. Segredos restaurados**: Pasta `~/.config/nxgestao/` criada e permissões ajustadas (`chmod 600`).
+- [ ] **8. Operação autorizada apenas**: acesso SSH adequado configurado se houver necessidade de operar a VPS.
+- [ ] **9. Operação autorizada apenas**: credenciais necessárias recuperadas com permissões apropriadas; não são pré-requisito para desenvolvimento.
 - [ ] **10. App rodando localmente**: `npm run dev` abre a aplicação em `https://localhost:5173`.

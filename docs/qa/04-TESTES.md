@@ -30,6 +30,8 @@
 ```bash
 npm test               # unit + UI (vitest) — gate obrigatório
 npm run test:safety    # segurança de staging e smoke — gate obrigatório, também no CI
+npm run test:deploy    # transição de deploy em repositórios e serviços dublados
+npm run test:backup    # backup, política e retorno somente com fixtures/dublês
 npm run test:watch     # watch
 npm run test:coverage  # cobertura v8 (report-only, meta sobe gradual)
 ```
@@ -103,3 +105,8 @@ node scripts/smoke-api.mjs --baseUrl http://127.0.0.1:3002
 - `docs/product/07-CASOS-DE-USO-API.md` — cenários da API (fonte do smoke)
 - `docs/product/06-CASOS-DE-USO.md` — fluxos de validação por tela
 - `docs/plans/PLAN-067-testes.md` — plano de testes (infra + próximas camadas)
+
+
+## Correções de backup — gate isolado
+
+`npm run test:corrections` executa ambos os testes de `scripts/corrections.check.mjs` em uma cópia sintética, sem rede. Requer Linux, Node.js 20 ou superior, bubblewrap (`bwrap`), namespaces de usuário/PID/rede habilitados, os utilitários usuais e `/usr/bin/docker`, `/usr/bin/curl`, `/usr/bin/ssh` e `/usr/bin/scp` disponíveis para serem encobertos por guardas. Sem qualquer requisito, o runner falha antes dos testes; não há fallback sem isolamento. As guardas são sondadas por PATH, caminho absoluto e subprocesso. A execução do GitHub Actions e sua compatibilidade com esses requisitos não foram verificadas nesta entrega; não se infere operação real ou restore.

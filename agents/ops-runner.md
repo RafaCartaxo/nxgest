@@ -33,7 +33,7 @@ Executar e orientar operações no VPS de produção/staging do NX Gest, seguind
 ## Protocolo de comunicação
 
 1. **Health check** — `curl -s https://nxgest.com.br/api/health`.
-2. **Deploy** — `ssh root@172.245.152.223 'cd /opt/nxgestao && git pull && ./scripts/deploy.sh'`; validar sempre com health check após o deploy.
+2. **Deploy autorizado** — seguir o bootstrap por SHA e lock do runbook `06-PRODUCAO.md` §4; validar sempre com health check após o deploy. Não executar `git pull` ou chamar o script diretamente.
 3. **Logs** — `ssh root@172.245.152.223 'cd /opt/nxgestao && docker compose --project-directory . -f infra/docker-compose.prod.yml logs -f --tail 100 app'`.
 4. **Backup manual** — `ssh root@172.245.152.223 '/opt/scripts/backup-nxgest.sh'`.
 5. **Listar containers** — `ssh root@172.245.152.223 'cd /opt/nxgestao && docker compose --project-directory . -f infra/docker-compose.prod.yml ps'`.

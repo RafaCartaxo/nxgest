@@ -1,114 +1,101 @@
 name: CD
-
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["Staging verificado"]
     types: [completed]
     branches: [main]
   workflow_dispatch:
     inputs:
-      ref:
-        description: "Branch/tag/commit para deployar em produção (default: main)"
-        required: false
-        default: "main"
-
+      staging_run:
+        description: "ID exato do run de staging aprovado"
+        required: true
+        type: string
 permissions:
   contents: read
-
+  actions: read
+  attestations: write
+  id-token: write
 concurrency:
   group: cd-prod
   cancel-in-progress: false
-
 jobs:
-  # Gate de promoção: produção só recebe código que passou CI + staging.
-  # - Automático: dispara quando o workflow CI (que roda Qualidade + Smoke +
-  #   Migração + Deploy em homologação) termina com sucesso no push à main.
-  # - Manual: workflow_dispatch com input ref.
-  validate:
-    name: Valida CI + staging (gate de promoção)
+  deploy-inicial:
+    if: github.repository_id == '1304448439' && ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.run_attempt == 1 && github.event.workflow_run.head_branch == 'main'))
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Gate — CI do push passou
-        if: github.event_name == 'workflow_run'
-        run: |
-          test "${{ github.event.workflow_run.conclusion }}" = "success" || {
-            echo "ERRO: CI do push falhou — produção bloqueada." >&2
-            exit 1
-          }
-          echo "==> CI verde no commit ${{ github.event.workflow_run.head_sha }}"
-
-      - name: Prepara o código do repositório (ref alvo)
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}
-
-      - name: CI gates no ref (mesmos do job test) — apenas no manual
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          npm ci
-          npx tsc --noEmit
-          npm run build
-          node scripts/check-dist.mjs
-          npm run audit:ui
-          npm run audit:styles
-          npm run audit:modules
-          npm test
-          npm run docs:audit
-          npm run audit:links
-
-      - name: Gate — staging saudável (health OK)
-        run: |
-          curl -fsS https://nxgestao.duckdns.org/api/health
-
-  deploy-prod:
-    name: Deploy em produção (nxgest.com.br)
-    needs: validate
     environment: production
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
-      - name: Prepara o código do repositório (ref alvo)
+      - name: Checkout do controlador aprovado
         uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}
-      - name: Deploy no VPS (SSH) — produção
-        uses: appleboy/ssh-action@v1
+          ref: ${{ vars.CT011_CONTROLLER_SHA }}
+      - uses: actions/setup-node@v7
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            cd /opt/nxgestao || { echo "ERRO: /opt/nxgestao não encontrado no VPS"; exit 1; }
-            REF="${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}"
-            git fetch origin
-            git checkout main
-            git reset --hard "$REF"
-            bash scripts/deploy.sh
-      - name: Health check pós-deploy (produção)
+          node-version: 20
+      - name: Verifica staging atestado e artifact CI idêntico
+        id: verified
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONTROLLER_SHA: ${{ vars.CT011_CONTROLLER_SHA }}
+          STAGING_POLICY: ${{ secrets.CT011_STAGING_POLICY }}
+          STAGING_POLICY_HASH: ${{ vars.CT011_STAGING_POLICY_SHA256 }}
+          STAGING_DECISION: ${{ vars.CT011_STAGING_POLICY_DECISION }}
+          BUILD_POLICY: ${{ secrets.CT011_BUILD_POLICY }}
+          BUILD_POLICY_HASH: ${{ vars.CT011_BUILD_POLICY_SHA256 }}
+          BUILD_DECISION: ${{ vars.CT011_BUILD_POLICY_DECISION }}
+          STAGING_RUN: ${{ inputs.staging_run || github.event.workflow_run.id }}
         run: |
-          sleep 10
-          for i in 1 2 3 4 5; do
-            if curl -fsS https://nxgest.com.br/api/health >/dev/null 2>&1; then
-              echo "==> Produção OK: https://nxgest.com.br"
-              exit 0
-            fi
-            sleep 6
-          done
-          echo "ERRO: health check de produção falhou após o deploy" >&2
-          exit 1
-      - name: Resumo do deploy (job summary)
-        if: always()
+          set -euo pipefail
+          [[ "$CONTROLLER_SHA" =~ ^[a-f0-9]{40}$ && "$(git rev-parse HEAD)" == "$CONTROLLER_SHA" && "$STAGING_RUN" =~ ^[0-9]+$ ]]
+          umask 077
+          mkdir -p .maestro/coord-qa/build-policies
+          printf %s "$STAGING_POLICY" > .maestro/coord-qa/build-policies/staging.json
+          printf %s "$BUILD_POLICY" > .maestro/coord-qa/build-policies/build.json
+          unset STAGING_POLICY BUILD_POLICY
+          node scripts/verify-staging-receipt.mjs verify "$PWD/.maestro/coord-qa/build-policies/staging.json" "$STAGING_POLICY_HASH" "$STAGING_DECISION" "$STAGING_RUN" > staging-verified.json
+          jq -e '.verified == true and .fixture == false' staging-verified.json >/dev/null
+          CI_RUN=$(jq -er .ciRun staging-verified.json)
+          SOURCE_SHA=$(jq -er .sha staging-verified.json)
+          node scripts/verify-build-artifact.mjs verify-event "$PWD/.maestro/coord-qa/build-policies/build.json" "$BUILD_POLICY_HASH" "$BUILD_DECISION" "$CI_RUN" "$SOURCE_SHA" > build-verified.json
+          jq -e --slurpfile stage staging-verified.json '.verified == true and .fixture == false and .runId == $stage[0].ciRun and .sourceSha == $stage[0].sha and .artifactId == $stage[0].artifact and .zipSha256 == $stage[0].zip and .imageSha256 == $stage[0].tar' build-verified.json >/dev/null
+          printf 'path=%s\n' "$(jq -er .imagePath build-verified.json)" >> "$GITHUB_OUTPUT"
+          for item in sha ciRun artifact zip tar image stagingRun; do printf '%s=%s\n' "$item" "$(jq -er --arg item "$item" '.[$item]' staging-verified.json)" >> "$GITHUB_OUTPUT"; done
+      - name: Materializa primeira baseline sob lock
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+          POLICY_HASH: ${{ vars.CT011_FIRST_POLICY_SHA256 }}
+          IMAGE_PATH: ${{ steps.verified.outputs.path }}
+          SOURCE_SHA: ${{ steps.verified.outputs.sha }}
+          CI_RUN: ${{ steps.verified.outputs.ciRun }}
+          ARTIFACT_ID: ${{ steps.verified.outputs.artifact }}
+          ZIP_DIGEST: ${{ steps.verified.outputs.zip }}
+          TAR_DIGEST: ${{ steps.verified.outputs.tar }}
+          STAGING_IMAGE: ${{ steps.verified.outputs.image }}
+          STAGING_RUN: ${{ steps.verified.outputs.stagingRun }}
         run: |
-          {
-            echo "## Deploy em produção — ${{ github.sha }}"
-            echo ""
-            echo "**Ref:** ${{ inputs.ref || github.event.workflow_run.head_sha || 'main' }}"
-            echo "**Fluxo:** CI verde → staging saudável → deploy → health check."
-            echo ""
-            echo "- [ ] CI do push passou"
-            echo "- [ ] Staging saudável (health OK)"
-            echo "- [ ] Deploy em produção executado"
-            echo "- [ ] Health check pós-deploy"
-          } >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          umask 077
+          mkdir -m 700 ssh-private
+          trap 'rm -f -- ssh-private/key ssh-private/known_hosts; rmdir ssh-private' EXIT
+          printf '%s\n' "$VPS_KEY" > ssh-private/key
+          cp infra/staging-known-hosts ssh-private/known_hosts
+          unset VPS_KEY
+          bash scripts/staging-transport.sh "$IMAGE_PATH" "$SOURCE_SHA" "$TAR_DIGEST" "$ZIP_DIGEST" "$CI_RUN" 1 "$ARTIFACT_ID" "$VPS_HOST" "$VPS_USER" "$PWD/ssh-private/key" "$PWD/ssh-private/known_hosts" production-initial "$STAGING_RUN" "$STAGING_IMAGE" "$POLICY_HASH" > production-remote.txt
+          EXPECTED="PRODUCTION_BASELINE sha=$SOURCE_SHA tar=$TAR_DIGEST image=$STAGING_IMAGE"
+          grep -Fx "$EXPECTED" production-remote.txt >/dev/null
+          jq -n --arg sha "$SOURCE_SHA" --arg ci "$CI_RUN" --arg artifact "$ARTIFACT_ID" --arg zip "$ZIP_DIGEST" --arg tar "$TAR_DIGEST" --arg image "$STAGING_IMAGE" --arg staging "$STAGING_RUN" --arg run "$GITHUB_RUN_ID" '{version:"nxg-production-baseline-v1",sha:$sha,ciRun:$ci,artifact:$artifact,zip:$zip,tar:$tar,image:$image,stagingRun:$staging,productionRun:$run}' > production-receipt.json
+      - name: Atesta recibo de produção
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: production-receipt.json
+      - name: Publica recibo de produção
+        uses: actions/upload-artifact@v7
+        with:
+          name: nxgest-production-${{ github.run_id }}-${{ github.run_attempt }}
+          path: production-receipt.json
+          if-no-files-found: error
+          retention-days: 14

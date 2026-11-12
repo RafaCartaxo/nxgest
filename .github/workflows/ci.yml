@@ -47,6 +47,12 @@ jobs:
         shell: bash
       - name: Segurança dos scripts de staging e smoke
         run: npm run test:safety
+      - name: Transição segura de deploy (fixtures isoladas)
+        run: npm run test:deploy
+      - name: Backup e retorno (fixtures com dublês)
+        run: npm run test:backup
+      - name: Correções de backup (fixtures isoladas)
+        run: npm run test:corrections
       - name: Cobertura de testes
         run: npm run test:coverage 2>&1 | tee /tmp/coverage.log
         shell: bash
@@ -206,22 +212,77 @@ jobs:
           node scripts/migrate-modelo.mjs
           node scripts/valida-modelo.mjs
 
-  deploy-staging:
-    name: Deploy em homologação
-    runs-on: ubuntu-latest
-    needs: [test, smoke]
+  build-artifact:
+    name: Build único e atestação
+    needs: [test, smoke, migracao]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     steps:
-      - name: Prepara o código do repositório
+      - name: Checkout exato do SHA
         uses: actions/checkout@v7
-      - name: Deploy no VPS (SSH) — staging
-        uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            cd /opt/nxgestao || { echo "ERRO: /opt/nxgestao não encontrado no VPS"; exit 1; }
-            bash scripts/deploy-staging.sh "${{ github.sha }}"
+          ref: ${{ github.sha }}
+      - name: Configura Node.js 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Metadados públicos do GH no runner de build
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ && "$RUN_ID" =~ ^[0-9]+$ ]]
+          GH_COMMAND=$(command -v gh)
+          [[ "$GH_COMMAND" = /* && "$GH_COMMAND" != *$'\n'* ]]
+          GH_PATH=$(readlink -f -- "$GH_COMMAND")
+          [[ "$GH_PATH" = /* && -f "$GH_PATH" && -x "$GH_PATH" && "$GH_PATH" != *$'\n'* ]]
+          GH_VERSION_OUTPUT=$(env -i PATH=/usr/bin:/bin HOME=/nonexistent "$GH_PATH" --version)
+          GH_VERSION=${GH_VERSION_OUTPUT%%$'\n'*}
+          [[ "$GH_VERSION" =~ ^gh[[:space:]]version[[:space:]][0-9]+\.[0-9]+\.[0-9]+ ]]
+          GH_VERSION=$(printf '%s\n' "$GH_VERSION" | awk '{print $1, $2, $3}')
+          GH_DIGEST=$(sha256sum -- "$GH_PATH"); GH_DIGEST=${GH_DIGEST%% *}
+          [[ "$GH_DIGEST" =~ ^[a-f0-9]{64}$ ]]
+          {
+            printf '### Metadados públicos GH — build\n\n'
+            printf -- '- run: %s\n- SHA: %s\n' "$RUN_ID" "$SOURCE_SHA"
+            printf -- '- command -v: `%s`\n- caminho físico: `%s`\n' "$GH_COMMAND" "$GH_PATH"
+            printf -- '- versão: `%s`\n- SHA-256: `%s`\n' "$GH_VERSION" "$GH_DIGEST"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Cria imagem e recibo
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ && "$RUN_ID" =~ ^[0-9]+$ && "$RUN_ATTEMPT" == 1 ]]
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          mkdir -m 700 artifact
+          docker build --platform linux/amd64 -f infra/Dockerfile -t "nxgest-build:$SOURCE_SHA" .
+          docker save "nxgest-build:$SOURCE_SHA" -o artifact/image.tar
+          node -e 'const fs=require("fs"),crypto=require("crypto");const f="artifact/image.tar",h=crypto.createHash("sha256"),s=fs.createReadStream(f);s.on("error",()=>process.exit(1));s.on("data",b=>h.update(b));s.on("end",()=>fs.writeFileSync("artifact/receipt.json",JSON.stringify({version:"nxg-build-receipt-v1",runId:process.env.RUN_ID,attempt:Number(process.env.RUN_ATTEMPT),sourceSha:process.env.SOURCE_SHA,platform:"linux/amd64",imageSize:fs.statSync(f).size,imageSha256:"sha256:"+h.digest("hex")})))'
+      - name: Atesta imagem
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: artifact/image.tar
+      - name: Atesta recibo
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: artifact/receipt.json
+      - name: Publica artefato único
+        uses: actions/upload-artifact@v7
+        with:
+          name: nxgest-build-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifact/image.tar
+            artifact/receipt.json
+          if-no-files-found: error
+          retention-days: 14

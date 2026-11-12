@@ -92,27 +92,41 @@ As credenciais **não ficam no repositório**. Localização dos valores:
 
 ## 4. Deploy de atualizações (fluxo normal)
 
+O deploy automático obtém o SHA validado pelo CI, bloqueia o checkout compartilhado e carrega o bootstrap diretamente desse SHA antes de trocar arquivos. O staging só registra o SHA após concluir com sucesso; produção exige esse mesmo SHA e backup obrigatório. Uma tentativa concorrente falha sem alterar o checkout. O checkout com alterações rastreadas ou arquivos novos não ignorados é recusado; arquivos ignorados em conflito com o alvo também bloqueiam a troca. Nunca use `reset --hard` para contornar o bloqueio.
+
+Para operação manual **somente após autorização e validação do SHA no CI**, execute no checkout operacional. Use primeiro `staging`; produção só aceita o mesmo SHA registrado por staging. É necessário Git, Bash e `flock` (util-linux) no host; o helper e o script são carregados do SHA alvo. Ref antiga que não contém o bootstrap é recusada pelo fluxo normal; para recuperar apenas o checkout, siga as condições específicas da seção 7.
+
 ```bash
-# No VPS
-cd /opt/nxgestao
-git pull                      # puxa o novo código (senha/token via chave SSH do GitHub, ou https)
-./scripts/deploy.sh           # build + up -d + prune de imagens órfãs
+# No host operacional, após escolher um SHA completo e validado:
+SHA=COLE_O_SHA_VALIDADO_DE_40_CARACTERES
+MODO=staging  # production apenas após staging para o mesmo SHA
+(
+  set -euo pipefail
+  cd /opt/nxgestao
+  [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]
+  exec 9>"$(git rev-parse --git-path nxgest-deploy.lock)"
+  flock -n 9
+  git fetch --no-tags origin "$SHA"
+  git show "$SHA:scripts/deploy-bootstrap.sh" | bash -s -- "$MODO" "$SHA"
+)
 ```
+
+O lock deve ser mantido durante fetch, checkout e deploy. Ele serializa apenas entradas que o utilizem: antes da primeira transição, o operador deve assegurar que não há scripts legados, outros comandos Git ou deploys externos concorrentes no checkout; não os encerre automaticamente. Interromper após o checkout pode deixar o HEAD no SHA alvo, sem construir; antes de repetir, verificar o estado e o backup. `.env`, `.env.staging`, dados, volumes e configurações operacionais permanecem externos ao Git. O marcador de staging fica no diretório Git e é invalidado antes de cada tentativa; não prova sozinho a saúde atual do serviço.
 
 O `scripts/deploy.sh`:
 1. Exige `.env` presente (senão aborta)
-2. **Backup pré-deploy OBRIGATÓRIO** — chama `/opt/scripts/backup-nxgest.sh` (`pg_dump -Fc`, ver seção 5.0); **aborta o deploy** se o script não existir ou falhar — escape explícito apenas com `NXGEST_SKIP_BACKUP=1`.
+2. **Backup e preflight obrigatórios** — exige script instalado idêntico ao versionado, conjunto íntegro e evidências de imagem/configuração/schema e decisão aprovadas; falha fechada, sem bypass automático. Ver seção 5 e [procedimento de recuperação](09-BACKUP-ROLLBACK.md).
 3. **Gates de UI** — roda `audit:ui`, `audit:styles` e `audit:modules` via `docker run node:20-slim` (o host não tem node no PATH); **aborta o deploy se qualquer gate falhar**
 4. `docker compose --project-directory . -f infra/docker-compose.prod.yml build app`
 5. `docker compose --project-directory . -f infra/docker-compose.prod.yml up -d`
-6. `docker image prune -f`
+6. A imagem anterior recebe tag dedicada; não há prune automático.
 
 **Dados:** o volume `nxgestao_nxgestao_data` sobrevive a builds e `up`/`down` — o banco não é recriado.
 
 **Validação pós-deploy:**
 
 ```bash
-curl -s https://nxgestao.duckdns.org/api/health
+curl -s https://nxgest.com.br/api/health
 # → {"status":"ok","db":"connected",...}
 ```
 
@@ -120,60 +134,9 @@ curl -s https://nxgestao.duckdns.org/api/health
 
 ## 5. Backup
 
-> **Backup (vigente):** o backup é **`pg_dump`** (container `nxgest-postgres`). Não há mais SQLite — PostgreSQL é o único banco desde o PLAN-070.
+### 5.0 — PostgreSQL e anexos associados
 
-### 5.0 — PostgreSQL: `pg_dump`
-
-**Script de referência** (`/opt/scripts/backup-nxgest.sh`, no VPS — **instalar**: cópia corrigida e testada em `scripts/backup-nxgest.sh` do repo):
-
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Backup do banco PostgreSQL (NX Gest) + anexos.
-# Instalar em /opt/scripts/backup-nxgest.sh (VPS) — chamado pelo deploy.sh
-# (gate pré-deploy) e recomendado no cron 2x/dia.
-# Requer acesso a /opt/nxgestao/.env (PG_USER/PG_DB/PG_PASSWORD).
-
-STAMP=$(date +%Y%m%d-%H%M%S)
-BACKUP_DIR=/opt/backups
-CONTAINER=nxgest-postgres
-APP=nxgestao-app-1
-ENV_FILE=/opt/nxgestao/.env
-
-[ -f "$ENV_FILE" ] || { echo "ERRO: $ENV_FILE não encontrado"; exit 1; }
-set -a; source "$ENV_FILE"; set +a
-: "${PG_USER:?PG_USER ausente em $ENV_FILE}"
-: "${PG_DB:?PG_DB ausente em $ENV_FILE}"
-
-mkdir -p "$BACKUP_DIR"
-OUT="$BACKUP_DIR/pg-${STAMP}.dump"
-OUT_UPLOADS="$BACKUP_DIR/uploads-${STAMP}.tar.gz"
-
-echo "==> pg_dump -Fc ($PG_DB)"
-docker exec -e PGPASSWORD="$PG_PASSWORD" "$CONTAINER" pg_dump -U "$PG_USER" -d "$PG_DB" -Fc -f /tmp/backup.dump
-docker cp "$CONTAINER:/tmp/backup.dump" "$OUT"
-docker exec "$CONTAINER" rm -f /tmp/backup.dump
-docker cp "$OUT" "$CONTAINER:/tmp/verify.dump"
-docker exec "$CONTAINER" pg_restore -l /tmp/verify.dump >/dev/null || { echo "ERRO: dump inválido ($OUT)"; docker exec "$CONTAINER" rm -f /tmp/verify.dump; exit 1; }
-docker exec "$CONTAINER" rm -f /tmp/verify.dump
-
-echo "==> anexos (uploads)"
-docker exec "$APP" sh -c "cd /data && tar czf /tmp/uploads.tgz uploads 2>/dev/null || tar czf /tmp/uploads.tgz --files-from /dev/null" || true
-docker cp "$APP:/tmp/uploads.tgz" "$OUT_UPLOADS" || true
-docker exec "$APP" rm -f /tmp/uploads.tgz || true
-
-echo "==> retenção 14 dias"
-find "$BACKUP_DIR" -name "pg-*.dump" -mtime +14 -delete
-find "$BACKUP_DIR" -name "uploads-*.tar.gz" -mtime +14 -delete
-ls -lh "$BACKUP_DIR" | tail -4
-echo "OK: $OUT"
-```
-
-- **Restauração:** `docker exec nxgest-postgres pg_restore -U "$PG_USER" -d "$PG_DB" --clean --if-exists < dump` (com o container de app parado), depois validar `SELECT COUNT(*) FROM usuarios` > 0 e o health.
-- **Validação do backup:** `pg_restore -l pg-<DATA>.dump` lista os objetos (dump vazio/corrompido falha aqui).
-- **Pré-deploy:** o `deploy.sh` chama este script — cada deploy gera `pg-<DATA>.dump` antes do build.
-- **Cópia off-site (recomendado ao menos semanal):** baixar `pg-<DATA>.dump` + `uploads-<DATA>.tar.gz` via `bash scripts/pull-backup.sh` (ou `scp`) para `~/.config/nxgestao/backups/`. Contém dados pessoais/financeiros (LGPD) — **criptografar** (`gpg --symmetric --cipher-algo AES256`) antes de deixar em armazenamento externo; a senha vai em `~/.config/nxgestao/ACESSOS.md` (fora do repo). Se o VPS for perdido por completo, a cópia off-site é a única via de recuperação (ver guia de Disaster Recovery em [`08-SETUP-NOVA-MAQUINA.md §7`](08-SETUP-NOVA-MAQUINA.md#7-backups-off-site-e-plano-de-recuperao-de-desastres-drp)).
+O candidato versionado `scripts/backup-nxgest.sh` cria um conjunto associado, conserva a imagem anterior e falha fechado diante de ausência ou erro dos componentes. A instalação operacional real não foi verificada nesta entrega. Consulte [Backup e retorno do serviço](09-BACKUP-ROLLBACK.md) para formato, integridade, cópia off-site, evidências e limites de restauração. Hashes e listagem do dump não demonstram restore real.
 
 ---
 
@@ -193,22 +156,32 @@ echo "OK: $OUT"
 
 ## 7. Rollback de emergência
 
+Antes de um rollback que possa tocar dados, faça e verifique um backup conforme a seção 5. Após aprovação operacional, selecione um SHA de recuperação com CI válido, promova-o para staging e use o bootstrap por SHA da seção 4 para produção. O fluxo exige o mesmo SHA em staging e não descarta alterações no checkout. Um SHA histórico sem bootstrap ou dependências compatíveis exige plano de recuperação específico e revisão antes de qualquer operação.
+
+Se apenas o processo travou e a imagem atual permanece válida, um operador autorizado pode avaliar o reinício do serviço `app` pelo Compose de produção, sem trocar a revisão ou recriar dados. Verifique o health e preserve os logs para diagnóstico.
+
+### Recuperação do checkout legado após a primeira transição
+
+Este procedimento recupera **somente os arquivos Git** de um SHA legado, sem executar seus scripts nem trocar imagens, containers, volumes ou dados. Ele foi testado com repositórios e backup sintéticos; **não foi testado em servidor real e não comprova rollback do serviço**. Antes de qualquer operação real, obtenha autorização, confirme backup recuperável, compatibilidade de schema e efeitos de bind mounts: a troca de arquivos pode remover caminhos usados por mounts (por exemplo `infra/Caddyfile`); não reinicie nem recrie serviços sem um plano próprio. Confirme que não há deploy legado ou Git fora do lock em andamento e que o checkout está limpo.
+
+Escolha um SHA controlador **confiável que contenha** `scripts/deploy-recover-legacy.sh` e um SHA legado completo conhecido com Compose/Caddy na raiz. O arquivo de controle é lido do controlador, mesmo depois que o checkout muda. Ambos devem estar disponíveis no remoto. Nenhuma credencial ou conteúdo de env deve aparecer no registro da operação.
+
 ```bash
-# Opção 1 — reverter o código para um commit anterior e redeployar
-cd /opt/nxgestao
-git checkout <commit-anterior> -- src/ frontend/
-./scripts/deploy.sh
-
-# Opção 2 — reiniciar o container (se travou, mas a imagem ainda serve)
-docker compose --project-directory /opt/nxgestao -f /opt/nxgestao/infra/docker-compose.prod.yml restart app
-
-# Opção 3 — reconstruir do zero (sem perder dados — volume persiste)
-cd /opt/nxgestao
-git reset --hard <commit-bom>   # cuidado: descarta mudanças locais no repo
-./scripts/deploy.sh
+CONTROLADOR=COLE_O_SHA_CONTROLADOR_DE_40_CARACTERES
+LEGADO=COLE_O_SHA_LEGADO_DE_40_CARACTERES
+(
+  set -euo pipefail
+  cd /opt/nxgestao
+  [[ "$CONTROLADOR" =~ ^[0-9a-f]{40}$ && "$LEGADO" =~ ^[0-9a-f]{40}$ ]]
+  exec 9>"$(git rev-parse --git-path nxgest-deploy.lock)"
+  flock -n 9
+  git fetch --no-tags origin "$CONTROLADOR"
+  git fetch --no-tags origin "$LEGADO"
+  git show "$CONTROLADOR:scripts/deploy-recover-legacy.sh" | bash -s -- "$LEGADO"
+)
 ```
 
-> Antes de qualquer rollback que possa tocar o banco, executar um backup manual (seção 5).
+A recuperação verifica o layout legado e a árvore limpa, exige `/opt/scripts/backup-nxgest.sh` executável e bem-sucedido, invalida o marcador de staging e usa checkout sem sobrescrever ignorados. Falha de backup, conflito ou ausência dos objetos interrompe sem descartar trabalho; se o checkout falhar após o backup, o marcador fica invalidado. Env e dados ficam externos ao Git. Verifique o SHA e o estado após o comando sem exibir envs. Para efetivamente voltar o serviço a uma imagem anterior, é necessário identificar uma imagem preservada, compatibilidade de dados e um procedimento de restauração testado e autorizado; esta rotina **não executa nem garante** esse rollback. Para voltar ao fluxo novo, repita o bootstrap da seção 4 para staging com SHA validado.
 
 ---
 
@@ -310,10 +283,18 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
 - **Propagação** — NS em transição pode levar horas; re-verifique depois.
 - **Proxy status** — TXT/MX devem estar **DNS only** (cinza), não Proxied.
 
+### Inventário e confirmação operacional antes de publicar
+
+Responsável: operador autorizado do domínio; o estado abaixo é documentação histórica, **não foi auditado no painel nesta revisão**. Registrar data, responsável e resultado sem copiar credenciais. Recuperar acesso pelo cofre autorizado e pelos canais do provedor; não guardar códigos de recuperação no repositório.
+
+- Confirmar no registrador os NS delegados e no Cloudflare o domínio ativo, os registros A/CNAME do site e o estado do proxy.
+- Confirmar modo TLS Full (strict), validade da origem e os registros de envio Resend (DKIM, SPF, MX `send`) e DMARC; conferir também MX da raiz antes de habilitar recebimento.
+- Comparar painel com DNS público e verificar HTTPS/health e envio somente quando autorizado. Health HTTP isolado não comprova DNS, TLS de origem ou entrega de e-mail.
+
 ### Notas
 
 - **`APP_URL`** — produção aponta para `https://nxgest.com.br`; staging usa `https://nxgestao.duckdns.org` (`.env.staging`). Links de convite/reset refletem o ambiente de cada stack.
-- Já existem **A record** `nxgest.com.br → 172.245.152.223` (VPS, Proxied) e `www` CNAME → raiz. Na migração (PLAN-068): SSL mode **Full (strict)** no Cloudflare + decidir proxy vs DNS-only.
+- Já existem **A record** `nxgest.com.br → 172.245.152.223` (VPS, Proxied) e `www` CNAME → raiz. O registro histórico indica proxy para o site e SSL **Full (strict)**; confirmar o estado atual no painel antes de publicação.
 - Modo dev **nunca envia e-mail real** (regra dura, PLAN-071) — mesmo com `RESEND_API_KEY` configurada, usa `ConsoleMailer` e loga o link no console.
 - **Caixa corporativa (ponto de atenção — futuro):** o Cloudflare tem **MX nulo na raiz** (`nxgest.com.br MX → .`) = "não recebe e-mail" (proposital). Quando quiser `rafael@nxgest.com.br` (inbox/webmail): contratar provedor de caixa (Zoho Mail free / Google Workspace / M365) e **substituir o MX nulo** pelo MX real + SPF/DKIM dele. **Não conflita com o Resend** (que usa `send.nxgest.com.br`).
 - **Fail-closed de e-mail:** em **produção sem `RESEND_API_KEY`** (ou com domínio não verificado) os endpoints de e-mail devolvem **503 `EMAIL_UNAVAILABLE`** (`forgot`/`reconfirmar`/convite/lead) — **nunca mentem o 200 "verde"**. Em dev, o link é logado no console (não quebra). Validar antes do go-live com: `npm run mail:test -- <email>` (usa `RESEND_API_KEY`/`MAIL_FROM_*` do ambiente).
@@ -353,3 +334,18 @@ O **registro.br não permite criar registros TXT** no painel ("Configurar endere
 ## Contrato de configuração por ambiente
 
 O único modelo versionado é `.env.example`, com valores locais de desenvolvimento. Nunca copie valores de desenvolvimento para produção. No ambiente operacional, configure separadamente domínio, CORS e APP_URL HTTPS, segredos JWT, senhas fortes de seed e PostgreSQL; ajuste `PG_DB`, `PG_USER` e `PG_PASSWORD` para a instalação existente. O Compose constrói `DATABASE_URL` interna a partir de `PG_*`. Configure `MAIL_PROVIDER=resend`, `RESEND_API_KEY` e remetente verificado quando desejado; `GITHUB_TOKEN` é opcional. Staging usa arquivo próprio `.env.staging`, força mailer console e gera segredos novos apenas se o arquivo não existir. `MAIL_FROM_NAME` pode conter espaços; o leitor não executa comandos do arquivo. `LOGIN_RATE_LIMIT_MAX`, `USER_RATE_LIMIT_MAX` e demais limites seguem defaults da aplicação quando não propagados. Valores do pool e `PUBLICO_RATE_LIMIT_MAX`/`LEADS_RATE_LIMIT_MAX` exigem passagem explícita pelo Compose para alterar defaults no container. Nunca compartilhe envs reais.
+
+
+### Staging com artifact verificado — fluxo local em revisão
+
+O workflow `Staging verificado` depende do CI concluído com sucesso em main/push/primeira tentativa. O runner valida política e atestações, transmite o mesmo tar por SSH com chave de host previamente fixada e chama o bootstrap pelo SHA sob o lock. O host confere o hash, carrega a imagem e usa Compose `--no-build --pull never`; verifica a imagem efetiva e health de aplicação/DB antes de produzir recibo. A política-base controlada de build fixa previamente o SHA candidato e o SHA do signer; o evento CI e a API autenticada selecionam run e artifact únicos, sem preenchimento manual de IDs por run. Hash da política e referência são fornecidos separadamente pelo ambiente do workflow; o host não precisa de Node ou GH. A chave pública em `infra/staging-known-hosts` deve corresponder à fingerprint `SHA256:9mo2a7iYwuHEHlO7SyeHFhwatAv6Hf0yY4yUDhpbPrc`; não se aceita descoberta automática da chave. Não alterar `.env.staging`: sua ausência bloqueia este fluxo.
+
+A tag temporária do tar não pode existir antes do load; colisão falha sem sobrescrever. Falha após load pode deixá-la presente e exigir investigação/limpeza específica autorizada; não usar prune. Essa implementação e o recibo foram exercitados apenas com dublês locais; GitHub Actions, transporte, Compose e saúde reais ainda exigem validação independente. Produção/rollback permanecem NO-GO até seus gates próprios.
+
+O controlador de staging valida a política-base com `expiresAt` UTC antes de qualquer tentativa. Sob o mesmo lock, uma seleção concluída e ainda autorizada só retorna `STAGING_RETRY` após comparar SHA, run/tentativa, artifact, digests, marker, imagem efetiva e health/DB; não executa novo load ou Compose. Estado incompleto, pendência, seleção divergente ou candidato antigo bloqueiam. Se houver `staging-app` sem estado controlado, o fluxo não presume que a entrada seja inicial: exige procedimento de recuperação próprio revisado. Falha após início pode deixar pendência e exige investigação; não removê-la automaticamente.
+
+### jq portátil para o checkout de implantação
+
+O host não precisa ter `jq` no PATH. Antes de habilitar a implantação, a Coordenação provisiona o binário oficial jq 1.8.2 Linux AMD64 em `$(git rev-parse --absolute-git-dir)/nxgest-tools/jq`, dentro do checkout de implantação. O arquivo e o diretório `nxgest-tools` devem pertencer ao usuário operador, não ser links simbólicos, e não permitir escrita de grupo ou outros; o arquivo precisa ser executável. O helper confere também que ambos são objetos regulares/diretório apropriados e que o SHA-256 do arquivo é `b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f`, antes de usar seu caminho absoluto. Ausência, divergência ou permissões inadequadas interrompem antes do carregamento de imagem ou subida do serviço. Não há download automático, instalação global nem inclusão do binário no Git. A custódia do checkout e do operador é pressuposto; a verificação não oferece defesa contra substituição concorrente por esse mesmo usuário.
+
+O staging legado observado sem marcador continua requerendo plano de adoção revisado: instalar o jq não autoriza recriar o serviço nem contorna o lock ou os marcadores. A verificação de retorno de rollback permanece separadamente bloqueada por seus gates pendentes e ainda precisa ter sua dependência `jq` adaptada antes de qualquer uso operacional.

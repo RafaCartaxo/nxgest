@@ -11,4 +11,4 @@
 const { runMigrations, seedBasico } = await import("../src/database.js")
 await runMigrations()
 await seedBasico()
-console.log(`Schema criado/atualizado em ${process.env.DATABASE_URL ?? "(DATABASE_URL default)"}`)
+console.log("Schema criado/atualizado")

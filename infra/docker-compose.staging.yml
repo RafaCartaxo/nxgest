@@ -8,9 +8,7 @@ name: nxgestao
 
 services:
   staging-app:
-    build:
-      context: .
-      dockerfile: infra/Dockerfile
+    image: ${NXGEST_STAGING_IMAGE:?imagem de staging verificada obrigatória}
     container_name: staging-app
     restart: unless-stopped
     environment:
