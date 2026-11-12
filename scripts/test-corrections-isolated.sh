@@ -7,6 +7,11 @@ root=$(cd "$(dirname "$0")/.." && pwd -P)
 command -v bwrap >/dev/null || fail 'instale bubblewrap (bwrap) com namespaces de usuário e rede permitidos'
 command -v node >/dev/null || fail 'requer Node.js >=20'
 node_path=$(readlink -f "$(command -v node)")
+# Resolver somente a implementação awk conhecida; não montar /etc/alternatives.
+[[ -x /usr/bin/awk ]] || fail 'awk indisponível'
+awk_path=$(readlink -f /usr/bin/awk) || fail 'não foi possível resolver awk'
+case "$awk_path" in /usr/bin/awk|/usr/bin/gawk|/usr/bin/mawk|/usr/bin/nawk) ;; *) fail 'implementação awk fora da allowlist' ;; esac
+[[ -f "$awk_path" && -x "$awk_path" ]] || fail 'implementação awk inválida'
 major=$(node -p 'Number(process.versions.node.split(".")[0])')
 [[ $major =~ ^[0-9]+$ && $major -ge 20 ]] || fail 'requer Node.js >=20'
 for cmd in docker curl ssh scp; do
@@ -16,7 +21,9 @@ done
 stage=$(mktemp -d "$root/.nxg035-fixture-XXXXXXXX") || fail 'não foi possível criar fixture'
 trap 'rm -rf -- "$stage"' EXIT
 mkdir -p "$stage/scripts" "$stage/.maestro/coord-qa/ct011-policies" "$stage/docs/engineering"
-mkdir -p "$stage/infra" "$stage/.github/workflows"
+mkdir -p "$stage/infra" "$stage/.github/workflows" "$stage/ubuntu-layout"
+# Reproduz o link Ubuntu que exige /etc/alternatives, ausente no sandbox.
+ln -s /etc/alternatives/awk "$stage/ubuntu-layout/awk"
 cp "$root/infra/docker-compose.staging.yml" "$root/infra/docker-compose.prod.yml" "$root/infra/Caddyfile" "$root/infra/staging-known-hosts" "$stage/infra/"
 cp "$root/.github/workflows/ci.yml" "$root/.github/workflows/cd.yml" "$root/.github/workflows/staging.yml" "$stage/.github/workflows/"
 cp "$root/docs/engineering/06-PRODUCAO.md" "$root/docs/engineering/08-SETUP-NOVA-MAQUINA.md" "$stage/docs/engineering/"
@@ -35,13 +42,14 @@ bwrap --unshare-user --unshare-net --unshare-pid --die-with-parent \
   --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --symlink usr/sbin /sbin \
   --proc /proc --dev /dev --tmpfs /tmp --dir /runtime \
   --ro-bind "$node_path" /runtime/node \
+  --ro-bind "$awk_path" /runtime/awk \
   --ro-bind "$root/scripts/guards" /guard \
   --ro-bind "$root/scripts/guards/docker" /usr/bin/docker \
   --ro-bind "$root/scripts/guards/curl" /usr/bin/curl \
   --ro-bind "$root/scripts/guards/ssh" /usr/bin/ssh \
   --ro-bind "$root/scripts/guards/scp" /usr/bin/scp \
   --bind "$stage" /work --chdir /work --clearenv \
-  --setenv PATH /guard:/usr/bin --setenv HOME /nonexistent --setenv DOCKER_HOST unix:///nao-existe \
+  --setenv PATH /guard:/runtime:/usr/bin --setenv HOME /nonexistent --setenv DOCKER_HOST unix:///nao-existe \
   -- /bin/bash -c '
     for cmd in docker curl ssh scp; do
       [ "$(command -v "$cmd")" = "/guard/$cmd" ] || exit 80
@@ -50,6 +58,12 @@ bwrap --unshare-user --unshare-net --unshare-pid --die-with-parent \
     done
     /runtime/node -e '\''const {spawnSync}=require("node:child_process");for(const c of ["docker","curl","ssh","scp"])if(spawnSync("/usr/bin/"+c,["__probe__"]).status!==97)process.exit(1)'\'' || exit 83
     printf "GUARDAS E SUBPROCESSOS CONFIRMADOS; rede isolada\n"
+    [ ! -e /work/ubuntu-layout/awk ] || exit 86
+    [ "$(PATH=/work/ubuntu-layout:/runtime:/usr/bin command -v awk)" = /runtime/awk ] || exit 90
+    [ "$(command -v awk)" = /runtime/awk ] || exit 87
+    [ "$(awk "BEGIN { print 42 }")" = 42 ] || exit 88
+    [ "$(/runtime/awk "BEGIN { print 42 }")" = 42 ] || exit 89
+    printf "AWK CONTROLADO CONFIRMADO; link Ubuntu sem /etc isolado\n"
     /runtime/node --test scripts/host-jq.check.mjs scripts/corrections.check.mjs scripts/baseline-synthetic.check.mjs scripts/rehearsal-postgres.check.mjs scripts/build-attestation.check.mjs scripts/build-provider.check.mjs scripts/build-zip.check.mjs scripts/verify-build-artifact.check.mjs scripts/load-verified-image.check.mjs scripts/deploy-transition.check.mjs scripts/initial-baseline.check.mjs scripts/container-health.check.mjs scripts/verify-staging-receipt.check.mjs scripts/backup-recovery.check.mjs
     status=$?
     [ "$(cat /work/.maestro/QA-SENTINELA)" = sentinel-sintetica ] || exit 84
