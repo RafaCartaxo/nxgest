@@ -37,7 +37,7 @@ export async function runRecurring(options,deps={}){
  if(!['staging','production','finalize'].includes(kind)||!/^\d{1,20}$/.test(options.runId||'')||options.runAttempt!==1||!/^[a-f0-9]{40}$/.test(options.controllerSha||''))throw Error('controle recusado')
  const spawn=deps.spawn||spawnSync
  const sourceDiagnostic=(phase,event,error)=>{
-  if(!['SOURCE_POLICY','SOURCE_SELECTION','SOURCE_METADATA','SOURCE_ZIP','SOURCE_RECEIPT','SOURCE_FILES','SOURCE_GH_EXECUTABLE','SOURCE_ATTESTATION','SOURCE_REHASH','SOURCE_VERIFY_CLEANUP'].includes(phase)||!['START','SUCCESS','FAILURE'].includes(event))throw Error('diagnóstico recusado')
+  if(!['SOURCE_POLICY_TOKEN','SOURCE_POLICY_PATH','SOURCE_POLICY_CUSTODY','SOURCE_POLICY_PERMISSIONS','SOURCE_POLICY_HASH','SOURCE_POLICY_JSON','SOURCE_POLICY_DECISION','SOURCE_POLICY_SCHEMA','SOURCE_POLICY_VALIDITY','SOURCE_POLICY_EVENT','SOURCE_POLICY_UNKNOWN','SOURCE_POLICY','SOURCE_SELECTION','SOURCE_METADATA','SOURCE_ZIP','SOURCE_RECEIPT','SOURCE_FILES','SOURCE_GH_EXECUTABLE','SOURCE_ATTESTATION','SOURCE_REHASH','SOURCE_VERIFY_CLEANUP'].includes(phase)||!['START','SUCCESS','FAILURE'].includes(event))throw Error('diagnóstico recusado')
   diagnostic(phase,event,error)
  }
  const git=spawn('/usr/bin/git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8',timeout:10000,maxBuffer:4096,env:{PATH:'/usr/bin:/bin',HOME:'/nonexistent'}})

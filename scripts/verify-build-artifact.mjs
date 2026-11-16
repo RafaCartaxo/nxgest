@@ -9,37 +9,64 @@ import {verifyBuildAttestation,buildAttestationFailurePhase} from './build-attes
 import {extractBuildZip} from './build-zip.mjs'
 const root=realpathSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'))
 const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex')
+// Diagnostic provenance belongs to this verifier, never to exception text/properties.
+const policyFailures=new WeakMap()
 export function readPolicy(file,approvedHash,decision) {
- if(!path.isAbsolute(file||'')||path.normalize(file)!==file||path.dirname(file)!==path.join(root,'.maestro','coord-qa','build-policies')||!/^[-A-Za-z0-9_]+\.json$/.test(path.basename(file))||!/^sha256:[a-f0-9]{64}$/.test(approvedHash||'')||!/^[-A-Za-z0-9_./:]{1,160}$/.test(decision||''))throw Error('política inválida')
+ let category='SOURCE_POLICY_PATH'
+ try{
+ if(!path.isAbsolute(file||'')||path.normalize(file)!==file||path.dirname(file)!==path.join(root,'.maestro','coord-qa','build-policies')||!/^[-A-Za-z0-9_]+\.json$/.test(path.basename(file)))throw Error('política inválida')
+ category='SOURCE_POLICY_HASH'
+ if(!/^sha256:[a-f0-9]{64}$/.test(approvedHash||''))throw Error('política inválida')
+ category='SOURCE_POLICY_DECISION'
+ if(!/^[-A-Za-z0-9_./:]{1,160}$/.test(decision||''))throw Error('política inválida')
+ category='SOURCE_POLICY_CUSTODY'
  let current='/',fileStat;const uid=process.geteuid()
  for(const part of file.slice(1).split('/')){current=path.join(current,part);const st=lstatSync(current),inside=current===root||current.startsWith(root+'/');if(st.isSymbolicLink()||(inside?st.uid!==uid:st.uid!==0&&st.uid!==uid)||(st.mode&0o022)||(current===file?!st.isFile():!st.isDirectory()))throw Error('custódia inválida');if(current===file)fileStat=st}
+ category='SOURCE_POLICY_PERMISSIONS'
  if(fileStat.mode&0o077)throw Error('permissão inválida')
- const fd=openSync(file,constants.O_RDONLY|constants.O_NOFOLLOW);try{const st=fstatSync(fd);if(!st.isFile()||st.uid!==uid||(st.mode&0o077)||st.dev!==fileStat.dev||st.ino!==fileStat.ino||st.size>8192)throw Error('política insegura');const data=readFileSync(fd);if(hash(data)!==approvedHash)throw Error('hash da política divergente');const p=JSON.parse(data);if(p.decision!==decision)throw Error('decisão divergente');return p}finally{closeSync(fd)}
+ category='SOURCE_POLICY_CUSTODY'
+ const fd=openSync(file,constants.O_RDONLY|constants.O_NOFOLLOW);try{const st=fstatSync(fd);if(!st.isFile()||st.uid!==uid||(st.mode&0o077)||st.dev!==fileStat.dev||st.ino!==fileStat.ino||st.size>8192)throw Error('política insegura');const data=readFileSync(fd);category='SOURCE_POLICY_HASH';if(hash(data)!==approvedHash)throw Error('hash da política divergente');category='SOURCE_POLICY_JSON';const p=JSON.parse(data);category='SOURCE_POLICY_DECISION';if(p.decision!==decision)throw Error('decisão divergente');return p}finally{try{closeSync(fd)}catch(error){if(error!==null&&(typeof error==='object'||typeof error==='function'))policyFailures.set(error,'SOURCE_POLICY_CUSTODY');throw error}}
+ }catch(error){if(error!==null&&(typeof error==='object'||typeof error==='function')){if(!policyFailures.has(error))policyFailures.set(error,category)};throw error}
 }
 export async function verifyBuildArtifact(options,deps={}) {
  const fixture=Object.keys(deps).length!==0
  const {policyPath,policyHash,decision,token,eventRunId,eventSha}=options||{}
- let phase='SOURCE_POLICY',reported=false
+ let phase='SOURCE_POLICY',reported=false,policyCategory='SOURCE_POLICY_TOKEN'
  const emit=typeof options?.diagnostic==='function'?options.diagnostic:()=>{}
  const checkpoint=(label,event,error)=>{phase=label;emit(label,event,error)}
  checkpoint(phase,'START')
  try{
  if(typeof token!=='string'||!token||/[\r\n]/.test(token))throw Error('credencial ausente')
+ policyCategory='SOURCE_POLICY_UNKNOWN'
  const policy=(deps.readPolicy||readPolicy)(policyPath,policyHash,decision)
+ policyCategory='SOURCE_POLICY_SCHEMA'
  if(options?.requireRecurring===true&&policy.version!=='nxg-build-recurring-v1')throw Error('política recorrente obrigatória')
  const {workflowId,ghPath,ghSha256}=policy
  const recurring=policy.version==='nxg-build-recurring-v1'
  const sourceSha=recurring?eventSha:policy.sourceSha
  const signerSha=recurring?eventSha:policy.signerSha
- if(policy.decision!==decision||policy.repo!=='RafaCartaxo/nxgest'||!/^\d{1,20}$/.test(workflowId||'')||!/^([a-f0-9]{40})$/.test(sourceSha||'')||!/^([a-f0-9]{40})$/.test(signerSha||'')||!path.isAbsolute(ghPath||'')||!/^sha256:[a-f0-9]{64}$/.test(ghSha256||''))throw Error('política recusada')
+ policyCategory='SOURCE_POLICY_DECISION'
+ if(policy.decision!==decision)throw Error('política recusada')
+ policyCategory='SOURCE_POLICY_SCHEMA'
+ if(policy.repo!=='RafaCartaxo/nxgest'||!/^\d{1,20}$/.test(workflowId||''))throw Error('política recusada')
+ policyCategory=recurring?'SOURCE_POLICY_EVENT':'SOURCE_POLICY_SCHEMA'
+ if(!/^([a-f0-9]{40})$/.test(sourceSha||'')||!/^([a-f0-9]{40})$/.test(signerSha||''))throw Error('política recusada')
+ policyCategory='SOURCE_POLICY_SCHEMA'
+ if(!path.isAbsolute(ghPath||'')||!/^sha256:[a-f0-9]{64}$/.test(ghSha256||''))throw Error('política recusada')
  let selection
  if(policy.version==='nxg-build-base-v1'||recurring) {
   const fields=recurring?'decision,expiresAt,ghPath,ghSha256,repo,signerRule,version,workflowId':'decision,expiresAt,ghPath,ghSha256,repo,signerSha,sourceSha,version,workflowId'
-  if(Object.keys(policy).sort().join(',')!==fields||(recurring&&policy.signerRule!=='ci-push-source')||typeof policy.expiresAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(policy.expiresAt)||!Number.isFinite(Date.parse(policy.expiresAt))||new Date(policy.expiresAt).toISOString()!==policy.expiresAt||Date.parse(policy.expiresAt)<=Date.now()||eventSha!==sourceSha||!/^\d{1,20}$/.test(eventRunId||''))throw Error('evento não autorizado')
+  if(Object.keys(policy).sort().join(',')!==fields||(recurring&&policy.signerRule!=='ci-push-source'))throw Error('evento não autorizado')
+  policyCategory='SOURCE_POLICY_VALIDITY'
+  if(typeof policy.expiresAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(policy.expiresAt)||!Number.isFinite(Date.parse(policy.expiresAt))||new Date(policy.expiresAt).toISOString()!==policy.expiresAt||Date.parse(policy.expiresAt)<=Date.now())throw Error('evento não autorizado')
+  policyCategory='SOURCE_POLICY_EVENT'
+  if(eventSha!==sourceSha||!/^\d{1,20}$/.test(eventRunId||''))throw Error('evento não autorizado')
   checkpoint('SOURCE_POLICY','SUCCESS');checkpoint('SOURCE_SELECTION','START')
   selection=await (deps.resolve||resolveBuildSelection)({runId:eventRunId,sha:sourceSha,workflowId},token)
  } else if(policy.version==='nxg-build-v1') {
+  policyCategory='SOURCE_POLICY_EVENT'
   if(eventRunId!==undefined||eventSha!==undefined)throw Error('evento exige política-base')
+  policyCategory='SOURCE_POLICY_SCHEMA'
   const {runId,attempt,artifactId}=policy
   if(!/^\d{1,20}$/.test(runId||'')||attempt!==1||!/^\d{1,20}$/.test(artifactId||''))throw Error('política recusada')
   checkpoint('SOURCE_POLICY','SUCCESS');checkpoint('SOURCE_SELECTION','START')
@@ -82,7 +109,10 @@ export async function verifyBuildArtifact(options,deps={}) {
   }
  }
  }catch(error){
-  if(!reported)checkpoint(phase,'FAILURE',error)
+  if(!reported){
+   if(phase==='SOURCE_POLICY')emit(policyFailures.get(error)||policyCategory,'FAILURE',error)
+   checkpoint(phase,'FAILURE',error)
+  }
   throw error
  }
 }
