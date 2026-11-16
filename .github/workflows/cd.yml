@@ -45,6 +45,7 @@ jobs:
           BUILD_POLICY_HASH: ${{ vars.CT011_BUILD_POLICY_SHA256 }}
           BUILD_DECISION: ${{ vars.CT011_BUILD_POLICY_DECISION }}
           STAGING_RUN: ${{ inputs.staging_run || github.event.workflow_run.id }}
+          PRODUCTION_MODE: ${{ vars.CT011_PRODUCTION_MODE }}
         run: |
           set -euo pipefail
           [[ "$CONTROLLER_SHA" =~ ^[a-f0-9]{40}$ && "$(git rev-parse HEAD)" == "$CONTROLLER_SHA" && "$STAGING_RUN" =~ ^[0-9]+$ ]]
@@ -53,6 +54,14 @@ jobs:
           printf %s "$STAGING_POLICY" > .maestro/coord-qa/build-policies/staging.json
           printf %s "$BUILD_POLICY" > .maestro/coord-qa/build-policies/build.json
           unset STAGING_POLICY BUILD_POLICY
+          if [[ "${PRODUCTION_MODE:-}" == production-recurring ]]; then exit 0; fi
+          if [[ "${PRODUCTION_MODE:-production-initial}" == production-post-baseline || "${PRODUCTION_MODE:-production-initial}" == production-preclients ]]; then
+            node scripts/production-post-baseline-source.mjs select "$PWD/.maestro/coord-qa/build-policies/staging.json" "$STAGING_POLICY_HASH" "$STAGING_DECISION" "$STAGING_RUN" "$PWD/.maestro/coord-qa/build-policies/build.json" "$BUILD_POLICY_HASH" "$BUILD_DECISION" > post-verified.json
+            jq -e '.verified == true and .fixture == false and .operationalReady == false' post-verified.json >/dev/null
+            printf 'path=%s\n' "$(jq -er .imagePath post-verified.json)" >> "$GITHUB_OUTPUT"
+            for item in sha ciRun artifact zip tar image stagingRun; do printf '%s=%s\n' "$item" "$(jq -er --arg item "$item" '.[$item]' post-verified.json)" >> "$GITHUB_OUTPUT"; done
+            exit 0
+          fi
           node scripts/verify-staging-receipt.mjs verify "$PWD/.maestro/coord-qa/build-policies/staging.json" "$STAGING_POLICY_HASH" "$STAGING_DECISION" "$STAGING_RUN" > staging-verified.json
           jq -e '.verified == true and .fixture == false' staging-verified.json >/dev/null
           CI_RUN=$(jq -er .ciRun staging-verified.json)
@@ -61,7 +70,49 @@ jobs:
           jq -e --slurpfile stage staging-verified.json '.verified == true and .fixture == false and .runId == $stage[0].ciRun and .sourceSha == $stage[0].sha and .artifactId == $stage[0].artifact and .zipSha256 == $stage[0].zip and .imageSha256 == $stage[0].tar' build-verified.json >/dev/null
           printf 'path=%s\n' "$(jq -er .imagePath build-verified.json)" >> "$GITHUB_OUTPUT"
           for item in sha ciRun artifact zip tar image stagingRun; do printf '%s=%s\n' "$item" "$(jq -er --arg item "$item" '.[$item]' staging-verified.json)" >> "$GITHUB_OUTPUT"; done
+      - name: Seleciona a modalidade de produção
+        shell: bash
+        env:
+          PRODUCTION_MODE: ${{ vars.CT011_PRODUCTION_MODE }}
+        run: |
+          set -euo pipefail
+          case "${PRODUCTION_MODE:-production-initial}" in
+            production-initial) ;;
+            production-preclients|production-recurring) echo 'Modo pré-clientes: recuperação integral adiada' ;;
+            production-post-baseline) echo 'Preflight de produção posterior obrigatório' >&2 ;;
+            *) echo 'Modalidade de produção inválida' >&2; exit 1 ;;
+          esac
+      - name: Preflight de produção posterior sob lock
+        if: ${{ vars.CT011_PRODUCTION_MODE == 'production-post-baseline' }}
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+          POLICY_HASH: ${{ vars.CT011_PRODUCTION_POST_POLICY_SHA256 }}
+          DECISION: ${{ vars.CT011_PRODUCTION_POST_DECISION }}
+          POLICY_HOST: ${{ vars.CT011_PRODUCTION_POST_HOST }}
+          IMAGE_PATH: ${{ steps.verified.outputs.path }}
+          SOURCE_SHA: ${{ steps.verified.outputs.sha }}
+          CI_RUN: ${{ steps.verified.outputs.ciRun }}
+          ARTIFACT_ID: ${{ steps.verified.outputs.artifact }}
+          ZIP_DIGEST: ${{ steps.verified.outputs.zip }}
+          TAR_DIGEST: ${{ steps.verified.outputs.tar }}
+          STAGING_IMAGE: ${{ steps.verified.outputs.image }}
+          STAGING_RUN: ${{ steps.verified.outputs.stagingRun }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -m 700 ssh-private
+          trap 'rm -f -- ssh-private/key ssh-private/known_hosts; rmdir ssh-private' EXIT
+          printf '%s\n' "$VPS_KEY" > ssh-private/key
+          cp infra/staging-known-hosts ssh-private/known_hosts
+          unset VPS_KEY
+          bash scripts/staging-transport.sh "$IMAGE_PATH" "$SOURCE_SHA" "$TAR_DIGEST" "$ZIP_DIGEST" "$CI_RUN" 1 "$ARTIFACT_ID" "$VPS_HOST" "$VPS_USER" "$PWD/ssh-private/key" "$PWD/ssh-private/known_hosts" production-post-baseline "$STAGING_RUN" "$STAGING_IMAGE" "$POLICY_HASH" "$DECISION" "$POLICY_HOST"
+          echo 'NO-GO: preflight não deve autorizar promoção sem BA10' >&2
+          exit 1
       - name: Materializa primeira baseline sob lock
+        if: ${{ vars.CT011_PRODUCTION_MODE != 'production-post-baseline' && vars.CT011_PRODUCTION_MODE != 'production-preclients' && vars.CT011_PRODUCTION_MODE != 'production-recurring' }}
         shell: bash
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -88,6 +139,63 @@ jobs:
           EXPECTED="PRODUCTION_BASELINE sha=$SOURCE_SHA tar=$TAR_DIGEST image=$STAGING_IMAGE"
           grep -Fx "$EXPECTED" production-remote.txt >/dev/null
           jq -n --arg sha "$SOURCE_SHA" --arg ci "$CI_RUN" --arg artifact "$ARTIFACT_ID" --arg zip "$ZIP_DIGEST" --arg tar "$TAR_DIGEST" --arg image "$STAGING_IMAGE" --arg staging "$STAGING_RUN" --arg run "$GITHUB_RUN_ID" '{version:"nxg-production-baseline-v1",sha:$sha,ciRun:$ci,artifact:$artifact,zip:$zip,tar:$tar,image:$image,stagingRun:$staging,productionRun:$run}' > production-receipt.json
+      - name: Promove mesmo artefato em modo pré-clientes
+        if: ${{ vars.CT011_PRODUCTION_MODE == 'production-preclients' }}
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+          POLICY_HASH: ${{ vars.CT011_PRECLIENTS_POLICY_SHA256 }}
+          DECISION: ${{ vars.CT011_PRECLIENTS_DECISION }}
+          POLICY_HOST: ${{ vars.CT011_PRECLIENTS_HOST }}
+          IMAGE_PATH: ${{ steps.verified.outputs.path }}
+          SOURCE_SHA: ${{ steps.verified.outputs.sha }}
+          CI_RUN: ${{ steps.verified.outputs.ciRun }}
+          ARTIFACT_ID: ${{ steps.verified.outputs.artifact }}
+          ZIP_DIGEST: ${{ steps.verified.outputs.zip }}
+          TAR_DIGEST: ${{ steps.verified.outputs.tar }}
+          STAGING_IMAGE: ${{ steps.verified.outputs.image }}
+          STAGING_RUN: ${{ steps.verified.outputs.stagingRun }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -m 700 ssh-private
+          trap 'rm -f -- ssh-private/key ssh-private/known_hosts; rmdir ssh-private' EXIT
+          printf '%s\n' "$VPS_KEY" > ssh-private/key
+          cp infra/staging-known-hosts ssh-private/known_hosts
+          unset VPS_KEY
+          bash scripts/staging-transport.sh "$IMAGE_PATH" "$SOURCE_SHA" "$TAR_DIGEST" "$ZIP_DIGEST" "$CI_RUN" 1 "$ARTIFACT_ID" "$VPS_HOST" "$VPS_USER" "$PWD/ssh-private/key" "$PWD/ssh-private/known_hosts" production-preclients "$STAGING_RUN" "$STAGING_IMAGE" "$POLICY_HASH" "$DECISION" "$POLICY_HOST" > production-remote.txt
+          line=$(grep -E '^PRECLIENTS_APPLIED sha=[a-f0-9]{40} tar=sha256:[a-f0-9]{64} image=sha256:[a-f0-9]{64} container=[a-f0-9]{64}$' production-remote.txt)
+          [[ "$line" == "PRECLIENTS_APPLIED sha=$SOURCE_SHA tar=$TAR_DIGEST image=$STAGING_IMAGE container="* ]]
+          container=${line##*container=}
+          jq -n --arg sha "$SOURCE_SHA" --arg ci "$CI_RUN" --arg artifact "$ARTIFACT_ID" --arg zip "$ZIP_DIGEST" --arg tar "$TAR_DIGEST" --arg image "$STAGING_IMAGE" --arg staging "$STAGING_RUN" --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" --arg container "$container" '{version:"nxg-production-preclients-v1",mode:"preclients",status:"applied_pending_finalization",sha:$sha,ciRun:$ci,ciAttempt:1,artifact:$artifact,zip:$zip,tar:$tar,image:$image,stagingRun:$staging,stagingAttempt:1,productionRun:$run,productionAttempt:$attempt,container:$container,migrations:"boot_completed",health:"ok",db:"connected"}' > production-receipt.json
+      - name: Verifica origem e promove pelo controlador recorrente
+        if: ${{ vars.CT011_PRODUCTION_MODE == 'production-recurring' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONTROLLER_SHA: ${{ vars.CT011_CONTROLLER_SHA }}
+          BUILD_POLICY_PATH: ${{ github.workspace }}/.maestro/coord-qa/build-policies/build.json
+          BUILD_POLICY_HASH: ${{ vars.CT011_BUILD_POLICY_SHA256 }}
+          BUILD_DECISION: ${{ vars.CT011_BUILD_POLICY_DECISION }}
+          STAGING_POLICY_PATH: ${{ github.workspace }}/.maestro/coord-qa/build-policies/staging.json
+          STAGING_POLICY_HASH: ${{ vars.CT011_STAGING_POLICY_SHA256 }}
+          STAGING_DECISION: ${{ vars.CT011_STAGING_POLICY_DECISION }}
+          STAGING_RUN: ${{ inputs.staging_run || github.event.workflow_run.id }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          RECURRING_KEY: ${{ secrets.VPS_PRODUCTION_RECURRING_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -m 700 recurring-private
+          trap 'rm -f -- recurring-private/key recurring-private/known_hosts; rmdir recurring-private' EXIT
+          printf '%s\n' "$RECURRING_KEY" > recurring-private/key
+          cp infra/staging-known-hosts recurring-private/known_hosts
+          unset RECURRING_KEY
+          export RECURRING_KEY_PATH="$PWD/recurring-private/key" RECURRING_KNOWN_HOSTS="$PWD/recurring-private/known_hosts"
+          node scripts/recurring-runner.mjs production
       - name: Atesta recibo de produção
         uses: actions/attest-build-provenance@v2
         with:
@@ -99,3 +207,55 @@ jobs:
           path: production-receipt.json
           if-no-files-found: error
           retention-days: 14
+      - name: Conclui pending após publicação do recibo
+        if: ${{ vars.CT011_PRODUCTION_MODE == 'production-preclients' }}
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+          IMAGE_PATH: ${{ steps.verified.outputs.path }}
+          SOURCE_SHA: ${{ steps.verified.outputs.sha }}
+          CI_RUN: ${{ steps.verified.outputs.ciRun }}
+          ARTIFACT_ID: ${{ steps.verified.outputs.artifact }}
+          ZIP_DIGEST: ${{ steps.verified.outputs.zip }}
+          TAR_DIGEST: ${{ steps.verified.outputs.tar }}
+          STAGING_IMAGE: ${{ steps.verified.outputs.image }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -m 700 ssh-private
+          trap 'rm -f -- ssh-private/key ssh-private/known_hosts; rmdir ssh-private' EXIT
+          printf '%s\n' "$VPS_KEY" > ssh-private/key
+          cp infra/staging-known-hosts ssh-private/known_hosts
+          unset VPS_KEY
+          digest=$(sha256sum production-receipt.json); digest=sha256:${digest%% *}
+          bash scripts/staging-transport.sh "$IMAGE_PATH" "$SOURCE_SHA" "$TAR_DIGEST" "$ZIP_DIGEST" "$CI_RUN" 1 "$ARTIFACT_ID" "$VPS_HOST" "$VPS_USER" "$PWD/ssh-private/key" "$PWD/ssh-private/known_hosts" production-preclients-finalize "$GITHUB_RUN_ID" "$STAGING_IMAGE" "$digest" > production-finalized.txt
+          grep -Fx "PRECLIENTS_FINALIZED sha=$SOURCE_SHA image=$STAGING_IMAGE" production-finalized.txt >/dev/null
+
+      - name: Finaliza transação recorrente após atestar e publicar
+        if: ${{ vars.CT011_PRODUCTION_MODE == 'production-recurring' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONTROLLER_SHA: ${{ vars.CT011_CONTROLLER_SHA }}
+          BUILD_POLICY_PATH: ${{ github.workspace }}/.maestro/coord-qa/build-policies/build.json
+          BUILD_POLICY_HASH: ${{ vars.CT011_BUILD_POLICY_SHA256 }}
+          BUILD_DECISION: ${{ vars.CT011_BUILD_POLICY_DECISION }}
+          STAGING_POLICY_PATH: ${{ github.workspace }}/.maestro/coord-qa/build-policies/staging.json
+          STAGING_POLICY_HASH: ${{ vars.CT011_STAGING_POLICY_SHA256 }}
+          STAGING_DECISION: ${{ vars.CT011_STAGING_POLICY_DECISION }}
+          STAGING_RUN: ${{ inputs.staging_run || github.event.workflow_run.id }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          RECURRING_KEY: ${{ secrets.VPS_PRODUCTION_RECURRING_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -m 700 recurring-private
+          trap 'rm -f -- recurring-private/key recurring-private/known_hosts; rmdir recurring-private' EXIT
+          printf '%s\n' "$RECURRING_KEY" > recurring-private/key
+          cp infra/staging-known-hosts recurring-private/known_hosts
+          unset RECURRING_KEY
+          export RECURRING_KEY_PATH="$PWD/recurring-private/key" RECURRING_KNOWN_HOSTS="$PWD/recurring-private/known_hosts"
+          node scripts/recurring-runner.mjs finalize

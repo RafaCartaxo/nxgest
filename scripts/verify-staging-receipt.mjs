@@ -12,17 +12,24 @@ export async function verifyStagingReceipt(options,deps={}) {
  const fixture=Object.keys(deps).length>0,{policyPath,policyHash,decision,runId,token}=options||{}
  if(!/^\d{1,20}$/.test(runId||'')||typeof token!=='string'||!token||/[\r\n]/.test(token))throw Error('seleção inválida')
  const p=(deps.readPolicy||readPolicy)(policyPath,policyHash,decision)
- if(!p||Object.keys(p).sort().join(',')!=='candidateSha,decision,ghPath,ghSha256,signerSha,sourceSha,version,workflowId'||p.version!=='nxg-staging-policy-v1'||p.decision!==decision||!/^\d{1,20}$/.test(p.workflowId||'')||![p.candidateSha,p.signerSha,p.sourceSha].every(x=>/^[a-f0-9]{40}$/.test(x||''))||!path.isAbsolute(p.ghPath||'')||!/^sha256:[a-f0-9]{64}$/.test(p.ghSha256||''))throw Error('política staging inválida')
- const meta=await (deps.inspect||inspectStagingRun)({runId,workflowId:p.workflowId,sourceSha:p.sourceSha},token),zip=await (deps.download||downloadBuildZip)(meta.artifactId,token)
+ if(options?.requireRecurring===true&&p.version!=='nxg-staging-recurring-v2')throw Error('política recorrente obrigatória')
+ const dynamicSigner=p?.version==='nxg-staging-recurring-v2'
+ const recurring=p?.version==='nxg-staging-recurring-v1'||dynamicSigner
+ const fields=dynamicSigner?'decision,expiresAt,ghPath,ghSha256,repo,signerRule,version,workflowId':recurring?'decision,expiresAt,ghPath,ghSha256,repo,signerSha,version,workflowId':'candidateSha,decision,ghPath,ghSha256,signerSha,sourceSha,version,workflowId'
+ if(!p||Object.keys(p).sort().join(',')!==fields||(!recurring&&p.version!=='nxg-staging-policy-v1')||p.decision!==decision||!/^\d{1,20}$/.test(p.workflowId||'')||(dynamicSigner?p.signerRule!=='staging-run-source':!/^[a-f0-9]{40}$/.test(p.signerSha||''))||(!recurring&&![p.candidateSha,p.sourceSha].every(x=>/^[a-f0-9]{40}$/.test(x||'')))||(recurring&&(p.repo!=='RafaCartaxo/nxgest'||typeof p.expiresAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(p.expiresAt)||!Number.isFinite(Date.parse(p.expiresAt))||new Date(p.expiresAt).toISOString()!==p.expiresAt||Date.parse(p.expiresAt)<=Date.now()))||!path.isAbsolute(p.ghPath||'')||!/^sha256:[a-f0-9]{64}$/.test(p.ghSha256||''))throw Error('política staging inválida')
+ const meta=await (deps.inspect||inspectStagingRun)(recurring?{runId,workflowId:p.workflowId,deriveSource:true}:{runId,workflowId:p.workflowId,sourceSha:p.sourceSha},token)
+ const sourceSha=recurring?meta.sourceSha:p.sourceSha,candidateSha=recurring?meta.sourceSha:p.candidateSha
+ if(!/^[a-f0-9]{40}$/.test(sourceSha||''))throw Error('source staging inválida')
+ const zip=await (deps.download||downloadBuildZip)(meta.artifactId,token)
  if(!Buffer.isBuffer(zip)||hash(zip)!==meta.digestZip)throw Error('ZIP staging divergente')
  const {receipt}=(deps.extract||extractBuildZip)(zip,['staging-receipt.json']);if(!Buffer.isBuffer(receipt)||receipt.length>8192)throw Error('recibo staging inválido')
  const work=mkdtempSync(path.join(root,'.nxg-stage-receipt-')),st=lstatSync(work)
  try{
   const file=path.join(work,'staging-receipt.json');writeFileSync(file,receipt,{flag:'wx',mode:0o600})
-  const policy={repo:'RafaCartaxo/nxgest',signerWorkflow:'RafaCartaxo/nxgest/.github/workflows/staging.yml',issuer:'https://token.actions.githubusercontent.com',sourceRef:'refs/heads/main',sourceSha:p.sourceSha,signerSha:p.signerSha,runId,attempt:1,ghPath:p.ghPath,ghSha256:p.ghSha256}
+  const policy={repo:'RafaCartaxo/nxgest',signerWorkflow:'RafaCartaxo/nxgest/.github/workflows/staging.yml',issuer:'https://token.actions.githubusercontent.com',sourceRef:'refs/heads/main',sourceSha,signerSha:dynamicSigner?sourceSha:p.signerSha,runId,attempt:1,ghPath:p.ghPath,ghSha256:p.ghSha256}
   if(!(deps.attest||verifyBuildAttestation)(file,policy).attestationValid)throw Error('atestação staging inválida')
   let r;try{r=JSON.parse(receipt.toString('utf8'))}catch{throw Error('recibo inválido')}
-  if(!r||Object.keys(r).sort().join(',')!=='artifact,ciAttempt,ciRun,db,health,image,sha,stagingAttempt,stagingRun,tar,version,zip'||r.version!=='nxg-staging-v1'||r.sha!==p.candidateSha||r.stagingRun!==runId||r.stagingAttempt!==1||r.ciAttempt!==1||!/^\d{1,20}$/.test(r.ciRun||'')||!/^\d{1,20}$/.test(r.artifact||'')||![r.image,r.tar,r.zip].every(x=>/^sha256:[a-f0-9]{64}$/.test(x||''))||r.health!=='ok'||r.db!=='connected')throw Error('recibo staging divergente')
+  if(!r||Object.keys(r).sort().join(',')!=='artifact,ciAttempt,ciRun,db,health,image,sha,stagingAttempt,stagingRun,tar,version,zip'||r.version!=='nxg-staging-v1'||!/^[a-f0-9]{40}$/.test(r.sha||'')||(!dynamicSigner&&r.sha!==candidateSha)||r.stagingRun!==runId||r.stagingAttempt!==1||r.ciAttempt!==1||!/^\d{1,20}$/.test(r.ciRun||'')||!/^\d{1,20}$/.test(r.artifact||'')||![r.image,r.tar,r.zip].every(x=>/^sha256:[a-f0-9]{64}$/.test(x||''))||r.health!=='ok'||r.db!=='connected')throw Error('recibo staging divergente')
   return Object.freeze({verified:true,fixture,...r})
  }finally{const now=lstatSync(work);if(!now.isDirectory()||now.isSymbolicLink()||now.dev!==st.dev||now.ino!==st.ino)throw Error('limpeza recusada');rmSync(work,{recursive:true})}
 }

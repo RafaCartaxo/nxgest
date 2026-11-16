@@ -45,10 +45,11 @@ export async function resolveBuildSelection(event,token,{fetcher=fetch}={}) {
 }
 
 export async function inspectStagingRun(selection,token,{fetcher=fetch}={}) {
- const {runId,workflowId,sourceSha}=selection||{}
- if(!/^\d{1,20}$/.test(runId||'')||!/^\d{1,20}$/.test(workflowId||'')||!/^[a-f0-9]{40}$/.test(sourceSha||'')||typeof token!=='string'||!token||/[\r\n]/.test(token))throw Error('seleção staging inválida')
+ const {runId,workflowId,deriveSource}=selection||{};let {sourceSha}=selection||{}
+ if(!/^\d{1,20}$/.test(runId||'')||!/^\d{1,20}$/.test(workflowId||'')||!(deriveSource===true&&sourceSha===undefined)&&!/^[a-f0-9]{40}$/.test(sourceSha||'')||typeof token!=='string'||!token||/[\r\n]/.test(token))throw Error('seleção staging inválida')
  const [repo,run,workflow,listing]=await Promise.all([jsonGet(`${api}/repositories/1304448439`,token,fetcher),jsonGet(`${api}/repos/RafaCartaxo/nxgest/actions/runs/${runId}`,token,fetcher),jsonGet(`${api}/repos/RafaCartaxo/nxgest/actions/workflows/${workflowId}`,token,fetcher),jsonGet(`${api}/repos/RafaCartaxo/nxgest/actions/runs/${runId}/artifacts?per_page=100`,token,fetcher)])
- if(repo.id!==1304448439||repo.full_name?.toLowerCase()!=='rafacartaxo/nxgest'||String(run.id)!==runId||String(run.workflow_id)!==workflowId||run.run_attempt!==1||run.status!=='completed'||run.conclusion!=='success'||run.event!=='workflow_run'||run.head_branch!=='main'||run.head_sha!==sourceSha||String(workflow.id)!==workflowId||workflow.path!=='.github/workflows/staging.yml'||!Array.isArray(listing.artifacts)||listing.total_count!==listing.artifacts.length||listing.total_count>100)throw Error('run staging divergente')
+ if(deriveSource===true&&sourceSha===undefined)sourceSha=run.head_sha
+ if(!/^[a-f0-9]{40}$/.test(sourceSha||'')||repo.id!==1304448439||repo.full_name?.toLowerCase()!=='rafacartaxo/nxgest'||String(run.id)!==runId||String(run.workflow_id)!==workflowId||run.run_attempt!==1||run.status!=='completed'||run.conclusion!=='success'||run.event!=='workflow_run'||run.head_branch!=='main'||run.head_sha!==sourceSha||String(workflow.id)!==workflowId||workflow.path!=='.github/workflows/staging.yml'||!Array.isArray(listing.artifacts)||listing.total_count!==listing.artifacts.length||listing.total_count>100)throw Error('run staging divergente')
  const matching=listing.artifacts.filter(x=>x.name===`nxgest-staging-${runId}-1`)
  if(matching.length!==1||!Number.isSafeInteger(matching[0].id)||matching[0].id<=0)throw Error('recibo staging ambíguo')
  const artifact=await jsonGet(`${api}/repos/RafaCartaxo/nxgest/actions/artifacts/${matching[0].id}`,token,fetcher)

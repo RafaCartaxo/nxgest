@@ -3,7 +3,7 @@
 set -euo pipefail
 mode=${1:-}
 sha=${2:-}
-[[ "$mode" == staging || "$mode" == staging-adoption || "$mode" == production || "$mode" == production-initial ]] || { echo 'Modo inválido' >&2; exit 1; }
+[[ "$mode" == staging || "$mode" == staging-adoption || "$mode" == production || "$mode" == production-initial || "$mode" == production-preclients ]] || { echo 'Modo inválido' >&2; exit 1; }
 [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo 'SHA inválido' >&2; exit 1; }
 # O lock é herdado pelo descritor 9 da entrada automatizada ou manual.
 flock -n 9 || { echo 'Lock do deploy ausente ou ocupado' >&2; exit 1; }
@@ -18,8 +18,18 @@ marker=$(git rev-parse --git-path nxgest-staging-sha)
 state=$(git rev-parse --git-path nxgest-staging-selection)
 pending=$(git rev-parse --git-path nxgest-staging-pending)
 [ ! -e "$pending" ] && [ ! -L "$pending" ] || { echo 'Staging pendente exige recuperação' >&2; exit 1; }
-if [[ "$mode" = production || "$mode" = production-initial ]]; then
+if [[ "$mode" = production || "$mode" = production-initial || "$mode" = production-preclients ]]; then
   [ -f "$marker" ] && [ ! -L "$marker" ] && [ "$(cat "$marker")" = "$sha" ] || { echo 'SHA não validado no staging; produção bloqueada' >&2; exit 1; }
+fi
+if [[ "$mode" = production-preclients ]]; then
+  artifact=${3:-}; tar=${4:-}; zip=${5:-}; run=${6:-}; attempt=${7:-}; artifact_id=${8:-}; staging=${9:-}; image=${10:-}; policy_hash=${11:-}; decision=${12:-}; host=${13:-}
+  [[ -f $artifact && ! -L $artifact && $attempt == 1 ]] || exit 1
+  git show "$sha:scripts/production-preclients-policy.sh" | bash -s -- "$policy_hash" "$decision" "$sha" "$run" "$attempt" "$artifact_id" "$zip" "$tar" "$image" "$staging" "$host" >/dev/null || exit 1
+  [[ $(git show "$sha:scripts/load-verified-image.sh" | bash -s -- "$artifact" "$tar" "$sha" --preflight) == "$image" ]] || exit 1
+  git checkout --detach --no-overwrite-ignore "$sha"
+  [[ $(git rev-parse HEAD) == "$sha" ]] || exit 1
+  export NXGEST_DEPLOY_MODE=production-preclients NXGEST_DEPLOY_SHA="$sha"
+  exec bash scripts/production-preclients.sh "$sha" "$artifact" "$tar" "$zip" "$run" "$attempt" "$artifact_id" "$staging" "$image" "$policy_hash" "$decision" "$host"
 fi
 if [ "$mode" = staging-adoption ]; then
   artifact=${3:-}; image_digest=${4:-}; zip_digest=${5:-}; run_id=${6:-}; attempt=${7:-}; artifact_id=${8:-}; adoption_hash=${9:-}; adoption_decision=${10:-}; adoption_host=${11:-}
@@ -28,6 +38,7 @@ if [ "$mode" = staging-adoption ]; then
   [ ! -e "$state" ] && [ ! -L "$state" ] && [ ! -e "$marker" ] && [ ! -L "$marker" ] || { echo 'Estado staging já existe' >&2; exit 1; }
   git cat-file -e "$sha:scripts/staging-adoption-policy.sh" || exit 1
   git show "$sha:scripts/staging-adoption-policy.sh" | bash -s -- "$adoption_hash" "$adoption_decision" "$sha" "$run_id" "$attempt" "$artifact_id" "$zip_digest" "$image_digest" "$adoption_host" || exit 1
+  git show "$sha:scripts/load-verified-image.sh" | bash -s -- "$artifact" "$image_digest" "$sha" --preflight >/dev/null || exit 1
   git checkout --detach --no-overwrite-ignore "$sha"
   [ "$(git rev-parse HEAD)" = "$sha" ] || exit 1
   bash scripts/staging-adoption-policy.sh "$adoption_hash" "$adoption_decision" "$sha" "$run_id" "$attempt" "$artifact_id" "$zip_digest" "$image_digest" "$adoption_host" || exit 1
@@ -63,6 +74,7 @@ if [ "$mode" = staging ]; then
     existing=$(docker ps -aq --no-trunc --filter 'name=^/staging-app$') || { echo 'Estado do serviço indisponível' >&2; exit 1; }
     [ -z "$existing" ] || { echo 'Serviço existente sem estado controlado' >&2; exit 1; }
   fi
+  git show "$sha:scripts/load-verified-image.sh" | bash -s -- "$artifact" "$image_digest" "$sha" --preflight >/dev/null || exit 1
   (umask 077; set -C; printf 'pending=%s\n' "$sha" > "$pending") || { echo 'Não foi possível reservar staging' >&2; exit 1; }
 fi
 # --no-overwrite-ignore impede sobrescrever também arquivos ignorados, inclusive envs.

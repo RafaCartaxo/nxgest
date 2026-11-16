@@ -40,6 +40,7 @@ proxy=$(docker ps -q --filter label=com.docker.compose.project=nxgestao --filter
 [[ "$proxy" =~ ^[a-f0-9]{12,64}$ && "$(docker inspect --format '{{.State.Status}}' "$proxy")" == running ]] || fail_stage
 image_id=$(bash scripts/load-verified-image.sh "$NXGEST_IMAGE_TAR" "$NXGEST_IMAGE_DIGEST" "$NXGEST_DEPLOY_SHA")
 temporary_tag="nxgest-build:$NXGEST_DEPLOY_SHA"
+bash scripts/retain-verified-image.sh "$NXGEST_DEPLOY_SHA" "$image_id" || { erro "Retenção não comprovada"; exit 1; }
 export NXGEST_STAGING_IMAGE="$image_id"
 # Não cria redes nem busca imagens; dependências devem estar disponíveis.
 docker compose $COMPOSE up -d --no-deps --no-build --pull never staging-app >&2
@@ -51,7 +52,5 @@ bash scripts/container-health.sh "$container_id" "$image_id" --wait || { erro "H
 curl -fsS --max-time 5 https://nxgestao.duckdns.org/api/health | "$NXGEST_JQ" -e 'type == "object" and .status == "ok" and .db == "connected"' >/dev/null || { erro "Health público staging indisponível"; exit 1; }
 # Revalidar tag e container sob o mesmo lock depois do health.
 [[ "$(docker inspect --format '{{.Id}}' staging-app)" == "$container_id" && "$(docker image inspect --format '{{.Id}}' "$NXGEST_STAGING_IMAGE")" == "$image_id" && "$(docker inspect --format '{{.Image}}' staging-app)" == "$image_id" ]] || { erro "Imagem alterada durante staging"; exit 1; }
-# Remove apenas a tag temporária criada por este load, após confirmar identidade.
-[[ "$(docker image inspect --format '{{.Id}}' "$temporary_tag")" == "$image_id" ]] || { erro "Tag temporária divergente"; exit 1; }
-docker image rm "$temporary_tag" >&2
+[[ "$(docker image inspect --format '{{.Id}}' "nxgest-retained:$NXGEST_DEPLOY_SHA")" == "$image_id" ]] || { erro "Pin divergente"; exit 1; }
 printf '%s\n' "$image_id"

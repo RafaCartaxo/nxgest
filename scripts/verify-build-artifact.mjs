@@ -21,11 +21,16 @@ export async function verifyBuildArtifact(options,deps={}) {
  const {policyPath,policyHash,decision,token,eventRunId,eventSha}=options||{}
  if(typeof token!=='string'||!token||/[\r\n]/.test(token))throw Error('credencial ausente')
  const policy=(deps.readPolicy||readPolicy)(policyPath,policyHash,decision)
- const {sourceSha,signerSha,workflowId,ghPath,ghSha256}=policy
+ if(options?.requireRecurring===true&&policy.version!=='nxg-build-recurring-v1')throw Error('política recorrente obrigatória')
+ const {workflowId,ghPath,ghSha256}=policy
+ const recurring=policy.version==='nxg-build-recurring-v1'
+ const sourceSha=recurring?eventSha:policy.sourceSha
+ const signerSha=recurring?eventSha:policy.signerSha
  if(policy.decision!==decision||policy.repo!=='RafaCartaxo/nxgest'||!/^\d{1,20}$/.test(workflowId||'')||!/^([a-f0-9]{40})$/.test(sourceSha||'')||!/^([a-f0-9]{40})$/.test(signerSha||'')||!path.isAbsolute(ghPath||'')||!/^sha256:[a-f0-9]{64}$/.test(ghSha256||''))throw Error('política recusada')
  let selection
- if(policy.version==='nxg-build-base-v1') {
-  if(Object.keys(policy).sort().join(',')!=='decision,expiresAt,ghPath,ghSha256,repo,signerSha,sourceSha,version,workflowId'||typeof policy.expiresAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(policy.expiresAt)||!Number.isFinite(Date.parse(policy.expiresAt))||new Date(policy.expiresAt).toISOString()!==policy.expiresAt||Date.parse(policy.expiresAt)<=Date.now()||eventSha!==sourceSha||!/^\d{1,20}$/.test(eventRunId||''))throw Error('evento não autorizado')
+ if(policy.version==='nxg-build-base-v1'||recurring) {
+  const fields=recurring?'decision,expiresAt,ghPath,ghSha256,repo,signerRule,version,workflowId':'decision,expiresAt,ghPath,ghSha256,repo,signerSha,sourceSha,version,workflowId'
+  if(Object.keys(policy).sort().join(',')!==fields||(recurring&&policy.signerRule!=='ci-push-source')||typeof policy.expiresAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(policy.expiresAt)||!Number.isFinite(Date.parse(policy.expiresAt))||new Date(policy.expiresAt).toISOString()!==policy.expiresAt||Date.parse(policy.expiresAt)<=Date.now()||eventSha!==sourceSha||!/^\d{1,20}$/.test(eventRunId||''))throw Error('evento não autorizado')
   selection=await (deps.resolve||resolveBuildSelection)({runId:eventRunId,sha:sourceSha,workflowId},token)
  } else if(policy.version==='nxg-build-v1') {
   if(eventRunId!==undefined||eventSha!==undefined)throw Error('evento exige política-base')
@@ -34,7 +39,7 @@ export async function verifyBuildArtifact(options,deps={}) {
   selection={runId,attempt,artifactId,sha:sourceSha,workflowId}
  } else throw Error('política recusada')
  const {runId,attempt,artifactId}=selection
- if((policy.version==='nxg-build-base-v1'&&selection.runId!==eventRunId)||selection.sha!==sourceSha||selection.workflowId!==workflowId||selection.attempt!==1||!/^\d{1,20}$/.test(selection.runId||'')||!/^\d{1,20}$/.test(selection.artifactId||''))throw Error('seleção divergente')
+ if(((policy.version==='nxg-build-base-v1'||recurring)&&selection.runId!==eventRunId)||selection.sha!==sourceSha||selection.workflowId!==workflowId||selection.attempt!==1||!/^\d{1,20}$/.test(selection.runId||'')||!/^\d{1,20}$/.test(selection.artifactId||''))throw Error('seleção divergente')
  const metadata=await (deps.inspect||inspectBuildRun)(selection,token),zip=await (deps.download||downloadBuildZip)(artifactId,token)
  if(!Buffer.isBuffer(zip)||hash(zip)!==metadata.digestZip)throw Error('digest ZIP divergente')
  const {image,receipt}=(deps.extract||extractBuildZip)(zip)
