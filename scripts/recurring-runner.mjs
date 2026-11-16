@@ -10,6 +10,17 @@ import {verifyBuildArtifact} from './verify-build-artifact.mjs'
 import {verifyProductionSource} from './production-post-baseline-source.mjs'
 const root=realpathSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'))
 const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex')
+// Only static labels and bounded categories cross the diagnostic boundary.
+function diagnostic(phase,event,error,response){
+ const code=['ENOENT','EACCES','ETIMEDOUT','ENOSPC','EEXIST','ENOTEMPTY'].includes(error?.code)?error.code:'UNKNOWN'
+ let line=`RECURRING_DIAG_V1 phase=${phase} event=${event} reason=${event==='FAILURE'?code:'NONE'}`
+ if(phase==='TRANSPORT'&&event!=='START'){
+  const exit=response?.status===null||response?.status===undefined?'NONE':[0,1,2,126,127,255].includes(response.status)?String(response.status):'OTHER'
+  const signal=response?.signal===null||response?.signal===undefined?'NONE':['SIGTERM','SIGKILL','SIGINT','SIGABRT'].includes(response.signal)?response.signal:'OTHER'
+  line+=` exit=${exit} signal=${signal} timeout=${response?.error?.code==='ETIMEDOUT'?'YES':'NO'}`
+ }
+ console.error(line)
+}
 function privateFile(file){const s=lstatSync(file);if(!s.isFile()||s.isSymbolicLink()||s.uid!==process.geteuid()||(s.mode&0o077))throw Error('custódia recusada');return s}
 function cleanup(result){
  const dir=path.dirname(result.imagePath)
@@ -19,6 +30,9 @@ function cleanup(result){
  unlinkSync(result.imagePath);unlinkSync(result.receiptPath);rmdirSync(dir)
 }
 export async function runRecurring(options,deps={}){
+ let phase='CONTROL',reported=false,response
+ diagnostic(phase,'START')
+ try{
  const fixture=Object.keys(deps).length>0,kind=options?.kind
  if(!['staging','production','finalize'].includes(kind)||!/^\d{1,20}$/.test(options.runId||'')||options.runAttempt!==1||!/^[a-f0-9]{40}$/.test(options.controllerSha||''))throw Error('controle recusado')
  const spawn=deps.spawn||spawnSync
@@ -28,14 +42,18 @@ export async function runRecurring(options,deps={}){
  const tracked=spawn('/usr/bin/git',['ls-files','--error-unmatch','--',...controlled],{cwd:root,encoding:'utf8',timeout:10000,maxBuffer:8192,env:{PATH:'/usr/bin:/bin',HOME:'/nonexistent'}})
  const unchanged=spawn('/usr/bin/git',['diff','--quiet',options.controllerSha,'--',...controlled],{cwd:root,encoding:'utf8',timeout:10000,maxBuffer:8192,env:{PATH:'/usr/bin:/bin',HOME:'/nonexistent'}})
  if(tracked.status!==0||unchanged.status!==0)throw Error('bytes do controlador divergentes')
+ diagnostic('CONTROL','SUCCESS')
  let verified
  try{
+  phase='SOURCE';diagnostic(phase,'START')
   if(kind==='staging'){
    verified=await verifyBuildArtifact({...options.build,requireRecurring:true,eventRunId:options.eventRunId,eventSha:options.eventSha},deps.buildDeps||{})
   }else{
    verified=await verifyProductionSource({stage:{...options.stage,runId:options.stageRun,requireRecurring:true},build:{...options.build,requireRecurring:true}},{...(deps.stageDeps?{stageDeps:deps.stageDeps}:{}),...(deps.buildDeps?{buildDeps:deps.buildDeps}:{})})
   }
   if(!verified.verified||verified.fixture!==fixture)throw Error('origem recusada')
+  diagnostic(phase,'SUCCESS')
+  phase='PRE_TRANSPORT';diagnostic(phase,'START')
   const s=kind==='staging'?{sha:verified.sourceSha,ciRun:verified.runId,artifact:verified.artifactId,zip:verified.zipSha256,tar:verified.imageSha256}:verified
   // These files are read only after origin verification; values never enter logs.
   privateFile(options.key);const keyIdentity=lstatSync(options.key)
@@ -54,8 +72,12 @@ export async function runRecurring(options,deps={}){
   args.push(options.controllerSha)
   args.push(options.build.policyHash,kind==='staging'?'none':options.stage.policyHash)
   const before=lstatSync(options.key);if(before.ino!==keyIdentity.ino||before.dev!==keyIdentity.dev)throw Error('credencial alterada')
-  const response=spawn('/bin/bash',args,{cwd:root,encoding:'utf8',timeout:900000,maxBuffer:65536,env:{PATH:'/usr/bin:/bin',HOME:'/nonexistent'}})
+  diagnostic('PRE_TRANSPORT','SUCCESS')
+  phase='TRANSPORT';diagnostic(phase,'START')
+  response=spawn('/bin/bash',args,{cwd:root,encoding:'utf8',timeout:900000,maxBuffer:65536,env:{PATH:'/usr/bin:/bin',HOME:'/nonexistent'}})
   if(response.error||response.status!==0)throw Error('execução remota falhou; revisar estado parcial')
+  diagnostic(phase,'SUCCESS',undefined,response)
+  phase='RESPONSE';diagnostic(phase,'START')
   const out=response.stdout.trim()
   let result
   if(kind==='staging'){
@@ -68,11 +90,30 @@ export async function runRecurring(options,deps={}){
    result={version:'nxg-production-preclients-v1',mode:'preclients',status:'applied_pending_finalization',sha:s.sha,ciRun:s.ciRun,ciAttempt:1,artifact:s.artifact,zip:s.zip,tar:s.tar,image:s.image,stagingRun:s.stagingRun,stagingAttempt:1,productionRun:options.runId,productionAttempt:1,container:m[4],migrations:'boot_completed',health:'ok',db:'connected'}
   }else{
    if(out!==`PRECLIENTS_FINALIZED sha=${s.sha} image=${s.image}`)throw Error('finalização divergente')
+   diagnostic(phase,'SUCCESS')
    return {finalized:true,fixture,operationalReady:false,sha:s.sha,image:s.image}
   }
-  if(options.receiptPath){writeFileSync(options.receiptPath,JSON.stringify(result)+'\n',{flag:'wx',mode:0o600})}
+  diagnostic(phase,'SUCCESS')
+  if(options.receiptPath){
+   phase='RECEIPT_WRITE';diagnostic(phase,'START')
+   writeFileSync(options.receiptPath,JSON.stringify(result)+'\n',{flag:'wx',mode:0o600})
+   diagnostic(phase,'SUCCESS')
+  }
   return {fixture,operationalReady:false,...result}
- }finally{if(verified?.imagePath&&verified?.receiptPath)cleanup(verified)}
+ }catch(error){
+  diagnostic(phase,'FAILURE',phase==='TRANSPORT'?response?.error||error:error,phase==='TRANSPORT'?response:undefined)
+  reported=true;throw error
+ }finally{
+  if(verified?.imagePath&&verified?.receiptPath){
+   phase='CLEANUP';diagnostic(phase,'START')
+   try{cleanup(verified)}catch(error){diagnostic(phase,'FAILURE',error);reported=true;throw error}
+   diagnostic(phase,'SUCCESS')
+  }
+ }
+ }catch(error){
+  if(!reported)diagnostic(phase,'FAILURE',error)
+  throw error
+ }
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const kind=process.argv[2]
