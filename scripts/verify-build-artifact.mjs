@@ -5,7 +5,7 @@ import {lstatSync,openSync,closeSync,fstatSync,readFileSync,writeFileSync,mkdtem
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {inspectBuildRun,downloadBuildZip,resolveBuildSelection} from './build-provider.mjs'
-import {verifyBuildAttestation} from './build-attestation.mjs'
+import {verifyBuildAttestation,buildAttestationFailurePhase} from './build-attestation.mjs'
 import {extractBuildZip} from './build-zip.mjs'
 const root=realpathSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'))
 const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex')
@@ -19,6 +19,11 @@ export function readPolicy(file,approvedHash,decision) {
 export async function verifyBuildArtifact(options,deps={}) {
  const fixture=Object.keys(deps).length!==0
  const {policyPath,policyHash,decision,token,eventRunId,eventSha}=options||{}
+ let phase='SOURCE_POLICY',reported=false
+ const emit=typeof options?.diagnostic==='function'?options.diagnostic:()=>{}
+ const checkpoint=(label,event,error)=>{phase=label;emit(label,event,error)}
+ checkpoint(phase,'START')
+ try{
  if(typeof token!=='string'||!token||/[\r\n]/.test(token))throw Error('credencial ausente')
  const policy=(deps.readPolicy||readPolicy)(policyPath,policyHash,decision)
  if(options?.requireRecurring===true&&policy.version!=='nxg-build-recurring-v1')throw Error('política recorrente obrigatória')
@@ -31,30 +36,55 @@ export async function verifyBuildArtifact(options,deps={}) {
  if(policy.version==='nxg-build-base-v1'||recurring) {
   const fields=recurring?'decision,expiresAt,ghPath,ghSha256,repo,signerRule,version,workflowId':'decision,expiresAt,ghPath,ghSha256,repo,signerSha,sourceSha,version,workflowId'
   if(Object.keys(policy).sort().join(',')!==fields||(recurring&&policy.signerRule!=='ci-push-source')||typeof policy.expiresAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(policy.expiresAt)||!Number.isFinite(Date.parse(policy.expiresAt))||new Date(policy.expiresAt).toISOString()!==policy.expiresAt||Date.parse(policy.expiresAt)<=Date.now()||eventSha!==sourceSha||!/^\d{1,20}$/.test(eventRunId||''))throw Error('evento não autorizado')
+  checkpoint('SOURCE_POLICY','SUCCESS');checkpoint('SOURCE_SELECTION','START')
   selection=await (deps.resolve||resolveBuildSelection)({runId:eventRunId,sha:sourceSha,workflowId},token)
  } else if(policy.version==='nxg-build-v1') {
   if(eventRunId!==undefined||eventSha!==undefined)throw Error('evento exige política-base')
   const {runId,attempt,artifactId}=policy
   if(!/^\d{1,20}$/.test(runId||'')||attempt!==1||!/^\d{1,20}$/.test(artifactId||''))throw Error('política recusada')
+  checkpoint('SOURCE_POLICY','SUCCESS');checkpoint('SOURCE_SELECTION','START')
   selection={runId,attempt,artifactId,sha:sourceSha,workflowId}
  } else throw Error('política recusada')
  const {runId,attempt,artifactId}=selection
  if(((policy.version==='nxg-build-base-v1'||recurring)&&selection.runId!==eventRunId)||selection.sha!==sourceSha||selection.workflowId!==workflowId||selection.attempt!==1||!/^\d{1,20}$/.test(selection.runId||'')||!/^\d{1,20}$/.test(selection.artifactId||''))throw Error('seleção divergente')
- const metadata=await (deps.inspect||inspectBuildRun)(selection,token),zip=await (deps.download||downloadBuildZip)(artifactId,token)
+ checkpoint('SOURCE_SELECTION','SUCCESS');checkpoint('SOURCE_METADATA','START')
+ const metadata=await (deps.inspect||inspectBuildRun)(selection,token)
+ checkpoint('SOURCE_METADATA','SUCCESS');checkpoint('SOURCE_ZIP','START')
+ const zip=await (deps.download||downloadBuildZip)(artifactId,token)
  if(!Buffer.isBuffer(zip)||hash(zip)!==metadata.digestZip)throw Error('digest ZIP divergente')
+ checkpoint('SOURCE_ZIP','SUCCESS');checkpoint('SOURCE_RECEIPT','START')
  const {image,receipt}=(deps.extract||extractBuildZip)(zip)
  if(!Buffer.isBuffer(image)||!Buffer.isBuffer(receipt)||receipt.length>8192)throw Error('artifact inválido')
  let info;try{info=JSON.parse(receipt.toString('utf8'))}catch{throw Error('recibo inválido')}
  if(!info||Object.keys(info).sort().join(',')!=='attempt,imageSha256,imageSize,platform,runId,sourceSha,version'||info.version!=='nxg-build-receipt-v1'||info.runId!==runId||info.attempt!==attempt||info.sourceSha!==sourceSha||info.platform!=='linux/amd64'||info.imageSize!==image.length||info.imageSha256!==hash(image))throw Error('recibo divergente')
+ checkpoint('SOURCE_RECEIPT','SUCCESS');checkpoint('SOURCE_FILES','START')
  const work=mkdtempSync(path.join(root,'.nxg-build-verified-')),identity=lstatSync(work)
  let success=false
  try {
   const imagePath=path.join(work,'image.tar'),receiptPath=path.join(work,'receipt.json');writeFileSync(imagePath,image,{flag:'wx',mode:0o600});writeFileSync(receiptPath,receipt,{flag:'wx',mode:0o600})
+  checkpoint('SOURCE_FILES','SUCCESS');checkpoint('SOURCE_ATTESTATION','START')
   const attestPolicy={repo:policy.repo,signerWorkflow:'RafaCartaxo/nxgest/.github/workflows/ci.yml',issuer:'https://token.actions.githubusercontent.com',sourceRef:'refs/heads/main',sourceSha,signerSha,runId,attempt,ghPath,ghSha256}
   for(const file of [imagePath,receiptPath])if(!(deps.attest||verifyBuildAttestation)(file,attestPolicy).attestationValid)throw Error('atestação inválida')
+  checkpoint('SOURCE_ATTESTATION','SUCCESS');checkpoint('SOURCE_REHASH','START')
   if(hash(readFileSync(imagePath))!==info.imageSha256||hash(readFileSync(receiptPath))!==hash(receipt))throw Error('arquivos alterados')
+  checkpoint('SOURCE_REHASH','SUCCESS')
   success=true;return Object.freeze({verified:true,fixture,runId,attempt,artifactId,sourceSha,zipSha256:metadata.digestZip,imageSha256:info.imageSha256,imagePath,receiptPath})
- } finally {if(!success){const st=lstatSync(work);if(!st.isDirectory()||st.isSymbolicLink()||st.dev!==identity.dev||st.ino!==identity.ino)throw Error('limpeza recusada');rmSync(work,{recursive:true})}}
+ }catch(error){
+  checkpoint(phase==='SOURCE_ATTESTATION'?buildAttestationFailurePhase(error)||phase:phase,'FAILURE',error)
+  reported=true;throw error
+ }finally{
+  if(!success){
+   checkpoint('SOURCE_VERIFY_CLEANUP','START')
+   try{
+    const st=lstatSync(work);if(!st.isDirectory()||st.isSymbolicLink()||st.dev!==identity.dev||st.ino!==identity.ino)throw Error('limpeza recusada');rmSync(work,{recursive:true})
+   }catch(error){checkpoint('SOURCE_VERIFY_CLEANUP','FAILURE',error);reported=true;throw error}
+   checkpoint('SOURCE_VERIFY_CLEANUP','SUCCESS')
+  }
+ }
+ }catch(error){
+  if(!reported)checkpoint(phase,'FAILURE',error)
+  throw error
+ }
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const a=process.argv.slice(2)
