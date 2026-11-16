@@ -24,6 +24,10 @@ mkdir -p "$stage/scripts" "$stage/.maestro/coord-qa/ct011-policies" "$stage/docs
 mkdir -p "$stage/infra" "$stage/.github/workflows" "$stage/ubuntu-layout"
 # Reproduz o link Ubuntu que exige /etc/alternatives, ausente no sandbox.
 ln -s /etc/alternatives/awk "$stage/ubuntu-layout/awk"
+# Em hosts com awk direto, impedir fallback que esconderia o defeito Ubuntu.
+# Apenas a cópia em /runtime fica executável como awk; nenhum /etc é montado.
+printf '#!/bin/sh\necho "awk: command not found (fixture Ubuntu alternatives)" >&2\nexit 127\n' > "$stage/ubuntu-layout/awk-unavailable"
+chmod 700 "$stage/ubuntu-layout/awk-unavailable"
 cp "$root/infra/docker-compose.staging.yml" "$root/infra/docker-compose.prod.yml" "$root/infra/Caddyfile" "$root/infra/staging-known-hosts" "$stage/infra/"
 cp "$root/.github/workflows/ci.yml" "$root/.github/workflows/cd.yml" "$root/.github/workflows/staging.yml" "$stage/.github/workflows/"
 cp "$root/docs/engineering/06-PRODUCAO.md" "$root/docs/engineering/08-SETUP-NOVA-MAQUINA.md" "$stage/docs/engineering/"
@@ -43,6 +47,7 @@ bwrap --unshare-user --unshare-net --unshare-pid --die-with-parent \
   --proc /proc --dev /dev --tmpfs /tmp --dir /runtime \
   --ro-bind "$node_path" /runtime/node \
   --ro-bind "$awk_path" /runtime/awk \
+  --ro-bind "$stage/ubuntu-layout/awk-unavailable" "$awk_path" \
   --ro-bind "$root/scripts/guards" /guard \
   --ro-bind "$root/scripts/guards/docker" /usr/bin/docker \
   --ro-bind "$root/scripts/guards/curl" /usr/bin/curl \
@@ -64,7 +69,9 @@ bwrap --unshare-user --unshare-net --unshare-pid --die-with-parent \
     [ "$(command -v awk)" = /runtime/awk ] || exit 87
     [ "$(awk "BEGIN { print 42 }")" = 42 ] || exit 88
     [ "$(/runtime/awk "BEGIN { print 42 }")" = 42 ] || exit 89
-    printf "AWK CONTROLADO CONFIRMADO; link Ubuntu sem /etc isolado\n"
+    PATH=/usr/bin:/bin awk "BEGIN { print 42 }" >/dev/null 2>&1; [ "$?" = 127 ] || exit 91
+    /runtime/node -e '\''const {spawnSync}=require("node:child_process");const r=spawnSync("awk",["BEGIN {print 42}"],{env:{PATH:"/usr/bin:/bin"}});if(!(r.status===127||r.error?.code==="ENOENT"))process.exit(1)'\'' || exit 92
+    printf "AWK CONTROLADO CONFIRMADO; PATH restrito sem awk reproduz Ubuntu; /etc ausente\n"
     /runtime/node --test scripts/repair-baseline-fixture.check.mjs scripts/retain-verified-image.check.mjs scripts/staging-adoption-capsule.check.mjs scripts/host-jq.check.mjs scripts/corrections.check.mjs scripts/baseline-synthetic.check.mjs scripts/rehearsal-postgres.check.mjs scripts/build-attestation.check.mjs scripts/build-provider.check.mjs scripts/build-zip.check.mjs scripts/verify-build-artifact.check.mjs scripts/load-verified-image.check.mjs scripts/deploy-transition.check.mjs scripts/initial-baseline.check.mjs scripts/container-health.check.mjs scripts/verify-staging-receipt.check.mjs scripts/backup-recovery.check.mjs
     status=$?
     [ "$(cat /work/.maestro/QA-SENTINELA)" = sentinel-sintetica ] || exit 84
