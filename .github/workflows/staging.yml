@@ -37,6 +37,7 @@ jobs:
           CI_RUN: ${{ github.event.workflow_run.id }}
           CI_SHA: ${{ github.event.workflow_run.head_sha }}
           CONTROLLER_SHA: ${{ vars.CT011_CONTROLLER_SHA }}
+          STAGING_MODE: ${{ vars.CT011_STAGING_MODE }}
         run: |
           set -euo pipefail
           [[ "$CONTROLLER_SHA" =~ ^[a-f0-9]{40}$ && "$(git rev-parse HEAD)" == "$CONTROLLER_SHA" ]]
@@ -44,6 +45,7 @@ jobs:
           mkdir -p .maestro/coord-qa/build-policies
           printf %s "$CONTROLLED_POLICY" > .maestro/coord-qa/build-policies/staging.json
           unset CONTROLLED_POLICY
+          if [[ "${STAGING_MODE:-}" == staging-recurring-v2 ]]; then exit 0; fi
           node scripts/verify-build-artifact.mjs verify-event "$PWD/.maestro/coord-qa/build-policies/staging.json" "$POLICY_SHA256" "$POLICY_DECISION" "$CI_RUN" "$CI_SHA" > verified.json
           jq -e --arg run "$CI_RUN" --arg sha "$CI_SHA" '.verified == true and .fixture == false and .runId == $run and .attempt == 1 and .sourceSha == $sha' verified.json >/dev/null
           printf 'path=%s\n' "$(jq -er .imagePath verified.json)" >> "$GITHUB_OUTPUT"
@@ -51,6 +53,7 @@ jobs:
           printf 'zip=%s\n' "$(jq -er .zipSha256 verified.json)" >> "$GITHUB_OUTPUT"
           printf 'artifact=%s\n' "$(jq -er .artifactId verified.json)" >> "$GITHUB_OUTPUT"
       - name: Envia bytes e executa bootstrap sob lock
+        if: ${{ vars.CT011_STAGING_MODE != 'staging-recurring-v2' }}
         shell: bash
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -66,6 +69,9 @@ jobs:
           ADOPTION_POLICY_HASH: ${{ vars.CT011_ADOPTION_POLICY_SHA256 }}
           ADOPTION_DECISION: ${{ vars.CT011_ADOPTION_DECISION }}
           ADOPTION_HOST: ${{ vars.CT011_ADOPTION_HOST }}
+          POST_POLICY_HASH: ${{ vars.CT011_POST_POLICY_SHA256 }}
+          POST_DECISION: ${{ vars.CT011_POST_DECISION }}
+          POST_HOST: ${{ vars.CT011_POST_HOST }}
         run: |
           set -euo pipefail
           umask 077
@@ -77,6 +83,7 @@ jobs:
           case "${STAGING_MODE:-staging}" in
             staging) adoption_args=(staging) ;;
             staging-adoption) adoption_args=(staging-adoption "$ADOPTION_POLICY_HASH" "$ADOPTION_DECISION" "$ADOPTION_HOST") ;;
+            staging-post-baseline) adoption_args=(staging-post-baseline "$POST_POLICY_HASH" "$POST_DECISION" "$POST_HOST") ;;
             *) exit 1 ;;
           esac
           bash scripts/staging-transport.sh "$IMAGE_PATH" "$SOURCE_SHA" "$TAR_DIGEST" "$ZIP_DIGEST" "$CI_RUN" 1 "$ARTIFACT_ID" "$VPS_HOST" "$VPS_USER" "$PWD/ssh-private/key" "$PWD/ssh-private/known_hosts" "${adoption_args[@]}" > staging-remote.txt
@@ -85,6 +92,30 @@ jobs:
           [[ "${BASH_REMATCH[1]}" == "$SOURCE_SHA" && "${BASH_REMATCH[2]}" == "$CI_RUN" && "${BASH_REMATCH[3]}" == "$ARTIFACT_ID" && "${BASH_REMATCH[4]}" == "$ZIP_DIGEST" && "${BASH_REMATCH[5]}" == "$TAR_DIGEST" ]]
           IMAGE_ID=${BASH_REMATCH[6]}
           jq -n --arg sha "$SOURCE_SHA" --arg run "$CI_RUN" --arg artifact "$ARTIFACT_ID" --arg zip "$ZIP_DIGEST" --arg tar "$TAR_DIGEST" --arg image "$IMAGE_ID" --arg staging_run "$GITHUB_RUN_ID" --argjson staging_attempt "$GITHUB_RUN_ATTEMPT" '{version:"nxg-staging-v1",sha:$sha,ciRun:$run,ciAttempt:1,artifact:$artifact,zip:$zip,tar:$tar,image:$image,stagingRun:$staging_run,stagingAttempt:$staging_attempt,health:"ok",db:"connected"}' > staging-receipt.json
+      - name: Verifica origem e envia pelo controlador recorrente
+        if: ${{ vars.CT011_STAGING_MODE == 'staging-recurring-v2' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONTROLLER_SHA: ${{ vars.CT011_CONTROLLER_SHA }}
+          BUILD_POLICY_PATH: ${{ github.workspace }}/.maestro/coord-qa/build-policies/staging.json
+          BUILD_POLICY_HASH: ${{ vars.CT011_BUILD_POLICY_SHA256 }}
+          BUILD_DECISION: ${{ vars.CT011_BUILD_POLICY_DECISION }}
+          CI_RUN: ${{ github.event.workflow_run.id }}
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          RECURRING_KEY: ${{ secrets.VPS_STAGING_RECURRING_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -m 700 recurring-private
+          trap 'rm -f -- recurring-private/key recurring-private/known_hosts; rmdir recurring-private' EXIT
+          printf '%s\n' "$RECURRING_KEY" > recurring-private/key
+          cp infra/staging-known-hosts recurring-private/known_hosts
+          unset RECURRING_KEY
+          export RECURRING_KEY_PATH="$PWD/recurring-private/key" RECURRING_KNOWN_HOSTS="$PWD/recurring-private/known_hosts"
+          node scripts/recurring-runner.mjs staging
       - name: Atesta recibo do staging
         uses: actions/attest-build-provenance@v2
         with:

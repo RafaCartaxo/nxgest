@@ -19,6 +19,8 @@ mapfile -t lines < "$policy"
 [ ! -e "$marker" ] && [ ! -L "$marker" ] && [ ! -e "$pending" ] && [ ! -L "$pending" ] && [ ! -e "$saved" ] && [ ! -L "$saved" ] || fail
 [ -f "$tarfile" ] && [ ! -L "$tarfile" ] || fail
 actual=$(sha256sum -- "$tarfile");actual=${actual%% *};[[ "sha256:$actual" == "$tarhash" ]] || fail
+preflight=$(bash scripts/load-verified-image.sh "$tarfile" "$tarhash" "$sha" --preflight) || fail
+[[ "$preflight" == "$image" ]] || fail
 # Staging continua na imagem/health aprovados imediatamente antes da troca.
 [[ "$(docker inspect --format '{{.Image}}' staging-app)" == "$image" ]] || fail
 staging_id=$(docker inspect --format '{{.Id}}' staging-app)
@@ -32,10 +34,13 @@ proxy=$(docker ps -q --filter label=com.docker.compose.project=nxgestao --filter
 [[ "$proxy" =~ ^[a-f0-9]{12,64}$ && "$(docker inspect --format '{{.State.Status}}' "$proxy")" == running ]] || fail
 # Marcar antes de mutar serviço: falha/interrupção bloqueia repetição automática.
 (umask 077; set -C; printf 'pending sha=%s\n' "$sha" > "$pending") || fail
+[[ -f "$pending" && ! -L "$pending" && "$(stat -c %u "$pending")" == "$(id -u)" && "$(stat -c %a "$pending")" == 600 ]] || fail
+pending_identity=$(stat -c '%d:%i' "$pending") || fail
 (umask 077; set -C; cat -- "$tarfile" > "$saved") || fail
 actual=$(sha256sum -- "$saved");actual=${actual%% *};[[ "sha256:$actual" == "$tarhash" ]] || fail
 loaded=$(bash scripts/load-verified-image.sh "$saved" "$tarhash" "$sha")
 [[ "$loaded" == "$image" ]] || fail
+bash scripts/retain-verified-image.sh "$sha" "$loaded" || fail
 export NXGEST_PROD_IMAGE="$loaded"
 docker compose --project-directory . -f infra/docker-compose.prod.yml up -d --no-deps --no-build --pull never app >&2
 container=$(docker compose --project-directory . -f infra/docker-compose.prod.yml ps -q app)
@@ -44,8 +49,18 @@ container_id=$(docker inspect --format '{{.Id}}' "$container")
 [[ "$container_id" =~ ^[a-f0-9]{64}$ ]] || fail
 bash scripts/container-health.sh "$container_id" "$loaded" --wait || fail
 curl -fsS --max-time 5 https://nxgest.com.br/api/health | "$NXGEST_JQ" -e 'type == "object" and .status == "ok" and .db == "connected"' >/dev/null || fail
-[[ "$(docker compose --project-directory . -f infra/docker-compose.prod.yml ps -q app)" == "$container" && "$(docker inspect --format '{{.Id}}' "$container")" == "$container_id" && "$(docker inspect --format '{{.Image}}' "$container_id")" == "$loaded" && "$(docker image inspect --format '{{.Id}}' "nxgest-build:$sha")" == "$loaded" ]] || fail
-# Só remove a tag recém-criada por este load; nenhum volume ou dado é removido.
-docker image rm "nxgest-build:$sha" >&2
-(umask 077; set -C; printf 'version=first-baseline-v1\nsha=%s\ntar=%s\nzip=%s\nci_run=%s\nartifact=%s\nstaging_run=%s\nimage=%s\n' "$sha" "$tarhash" "$ziphash" "$run" "$artifact" "$staging" "$loaded" > "$marker") || fail
+[[ "$(docker compose --project-directory . -f infra/docker-compose.prod.yml ps -q app)" == "$container" && "$(docker inspect --format '{{.Id}}' "$container")" == "$container_id" && "$(docker inspect --format '{{.Image}}' "$container_id")" == "$loaded" && "$(docker image inspect --format '{{.Id}}' "nxgest-retained:$sha")" == "$loaded" ]] || fail
+actual=$(sha256sum -- "$saved"); actual=${actual%% *}; [[ "sha256:$actual" == "$tarhash" ]] || fail
+[[ "$(docker image inspect --format '{{.Id}}' "nxgest-retained:$sha")" == "$loaded" ]] || fail
+completed=$(git rev-parse --git-path nxgest-baseline-pending-completed)
+[ ! -e "$completed" ] && [ ! -L "$completed" ] || fail
+marker_tmp="${marker}.tmp.$$"
+(umask 077; set -C; printf 'version=first-baseline-v1\nsha=%s\ntar=%s\nzip=%s\nci_run=%s\nartifact=%s\nstaging_run=%s\nimage=%s\n' "$sha" "$tarhash" "$ziphash" "$run" "$artifact" "$staging" "$loaded" > "$marker_tmp") || fail
+ln -- "$marker_tmp" "$marker" || fail
+rm -- "$marker_tmp" || fail
+[[ -f "$pending" && ! -L "$pending" && "$(stat -c '%d:%i' "$pending")" == "$pending_identity" && "$(stat -c %u "$pending")" == "$(id -u)" && "$(stat -c %a "$pending")" == 600 && "$(cat "$pending")" == "pending sha=$sha" ]] || fail
+ln -- "$pending" "$completed" || fail
+[[ "$(stat -c '%d:%i' "$pending")" == "$(stat -c '%d:%i' "$completed")" ]] || fail
+rm -- "$pending" || fail
+[ -f "$completed" ] && [ ! -L "$completed" ] && [ ! -e "$pending" ] && [ ! -L "$pending" ] || fail
 printf 'PRODUCTION_BASELINE sha=%s tar=%s image=%s\n' "$sha" "$tarhash" "$loaded"

@@ -63,6 +63,8 @@ recover(){
   journal legacy-restarted
 }
 trap recover EXIT
+journal untag-requested
+bash "$(dirname "$0")/retain-verified-image.sh" "$sha" "$image" || fail
 journal stop-requested
 stopped=1
 timeout 30s docker --host unix:///var/run/docker.sock stop "$legacy" >/dev/null 2>&1 || fail
@@ -82,11 +84,7 @@ timeout 20s docker --host unix:///var/run/docker.sock start "$new" >/dev/null 2>
 bash "$(dirname "$0")/container-health.sh" "$new" "$image" --wait || fail
 curl --silent --show-error --fail --max-time 5 https://nxgestao.duckdns.org/api/health | "$NXGEST_JQ" -e 'type=="object" and .status=="ok" and .db=="connected"' >/dev/null || fail
 [[ "$(inspect '{{.Id}}' staging-app)" == "$new" && "$(inspect '{{.Image}}' "$new")" == "$image" && "$(inspect '{{.Id}}' "$retained")" == "$legacy" ]] || fail
-# Remove somente a tag temporária do tar carregado por este controlador.
-tag=nxgest-build:$sha
-[[ "$(timeout 10s docker --host unix:///var/run/docker.sock image inspect --format '{{.Id}}' "$tag" 2>/dev/null)" == "$image" ]] || fail
-journal untag-requested
-timeout 10s docker --host unix:///var/run/docker.sock image rm "$tag" >/dev/null 2>&1 || fail
+[[ "$(timeout 10s docker --host unix:///var/run/docker.sock image inspect --format '{{.Id}}' "nxgest-retained:$sha" 2>/dev/null)" == "$image" ]] || fail
 bash "$(dirname "$0")/staging-adoption-policy.sh" "$approved" "$decision" "$sha" "$run" "$attempt" "$artifact" "$zip" "$tar" "$host" || fail
 journal publish-requested
 ( set -C; printf 'operation=%s\n' "$op" > "$consumed" ) || fail

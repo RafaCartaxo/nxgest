@@ -37,3 +37,19 @@ test('política-base aprova SHA e obtém IDs da API, rejeitando SHA não aprovad
  await assert.rejects(verifyBuildArtifact(opts,{...dep,resolve:async e=>({runId:'99',attempt:1,artifactId:'34',sha:e.sha,workflowId:e.workflowId})}))
  await assert.rejects(verifyBuildArtifact(opts,{...dep,readPolicy:()=>policy}))
 })
+
+test('política recorrente estável seleciona duas versões por API e vincula certificado ao evento',async()=>{
+ const base=Object.freeze({version:'nxg-build-recurring-v1',expiresAt:'2099-01-01T00:00:00.000Z',decision:policy.decision,repo:policy.repo,signerRule:'ci-push-source',workflowId:policy.workflowId,ghPath:policy.ghPath,ghSha256:policy.ghSha256})
+ const snapshots=JSON.stringify(base)
+ for(const [run,source] of [['12','a'.repeat(40)],['13','d'.repeat(40)]]){
+  let certs=0
+  const r=Buffer.from(JSON.stringify({version:'nxg-build-receipt-v1',runId:run,attempt:1,sourceSha:source,platform:'linux/amd64',imageSize:image.length,imageSha256:sha(image)}))
+  const deps=adapters({readPolicy:()=>base,resolve:async e=>({runId:e.runId,attempt:1,artifactId:run==='12'?'34':'35',sha:e.sha,workflowId:e.workflowId}),extract:()=>({image,receipt:r}),attest:(_file,p)=>{assert.equal(p.sourceSha,source);assert.equal(p.signerSha,source);assert.equal(p.runId,run);certs++;return {attestationValid:true}}})
+  const v=await verifyBuildArtifact({decision:base.decision,token:'fixture',eventRunId:run,eventSha:source},deps)
+  try{assert.equal(v.fixture,true);assert.equal(v.sourceSha,source);assert.equal(certs,2)}finally{rmSync(path.dirname(v.imagePath),{recursive:true})}
+  assert.equal(JSON.stringify(base),snapshots)
+ }
+ const bad=adapters({readPolicy:()=>({...base,signerRule:'untrusted'}),resolve:async()=>{throw Error('consulta inesperada')}})
+ await assert.rejects(verifyBuildArtifact({decision:base.decision,token:'fixture',eventRunId:'12',eventSha:'a'.repeat(40)},bad),/evento não autorizado/)
+ await assert.rejects(verifyBuildArtifact({decision:base.decision,token:'fixture',eventRunId:'12'},adapters({readPolicy:()=>base})))
+})
