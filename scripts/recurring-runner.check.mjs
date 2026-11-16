@@ -17,7 +17,7 @@ const digest=b=>'sha256:'+createHash('sha256').update(b).digest('hex')
 const sha='a'.repeat(40),controller='b'.repeat(40),image=Buffer.from('fixture image'),zip=Buffer.from('fixture zip')
 const policy={version:'nxg-build-recurring-v1',repo:'RafaCartaxo/nxgest',workflowId:'56',signerRule:'ci-push-source',decision:'fixture',expiresAt:'2099-01-01T00:00:00.000Z',ghPath:'/guard/gh',ghSha256:'sha256:'+'c'.repeat(64)}
 const receipt=Buffer.from(JSON.stringify({version:'nxg-build-receipt-v1',runId:'11',attempt:1,sourceSha:sha,platform:'linux/amd64',imageSize:image.length,imageSha256:digest(image)}))
-const allowed=/^RECURRING_DIAG_V2 phase=(CONTROL|SOURCE|SOURCE_POLICY|SOURCE_SELECTION|SOURCE_METADATA|SOURCE_ZIP|SOURCE_RECEIPT|SOURCE_FILES|SOURCE_GH_EXECUTABLE|SOURCE_ATTESTATION|SOURCE_REHASH|SOURCE_VERIFY_CLEANUP|PRE_TRANSPORT|TRANSPORT|RESPONSE|RECEIPT_WRITE|CLEANUP) event=(START|SUCCESS|FAILURE) reason=(NONE|UNKNOWN|ENOENT|EACCES|ETIMEDOUT|ENOSPC|EEXIST|ENOTEMPTY)( exit=(NONE|OTHER|0|1|2|126|127|255) signal=(NONE|OTHER|SIGTERM|SIGKILL|SIGINT|SIGABRT) timeout=(YES|NO))?$/
+const allowed=/^RECURRING_DIAG_V2 phase=(CONTROL|SOURCE|SOURCE_POLICY|SOURCE_POLICY_TOKEN|SOURCE_POLICY_PATH|SOURCE_POLICY_CUSTODY|SOURCE_POLICY_PERMISSIONS|SOURCE_POLICY_HASH|SOURCE_POLICY_JSON|SOURCE_POLICY_DECISION|SOURCE_POLICY_SCHEMA|SOURCE_POLICY_VALIDITY|SOURCE_POLICY_EVENT|SOURCE_POLICY_UNKNOWN|SOURCE_SELECTION|SOURCE_METADATA|SOURCE_ZIP|SOURCE_RECEIPT|SOURCE_FILES|SOURCE_GH_EXECUTABLE|SOURCE_ATTESTATION|SOURCE_REHASH|SOURCE_VERIFY_CLEANUP|PRE_TRANSPORT|TRANSPORT|RESPONSE|RECEIPT_WRITE|CLEANUP) event=(START|SUCCESS|FAILURE) reason=(NONE|UNKNOWN|ENOENT|EACCES|ETIMEDOUT|ENOSPC|EEXIST|ENOTEMPTY)( exit=(NONE|OTHER|0|1|2|126|127|255) signal=(NONE|OTHER|SIGTERM|SIGKILL|SIGINT|SIGABRT) timeout=(YES|NO))?$/
 const err=code=>Object.assign(new Error(secret),{code})
 function fixture(mode){
  const dir=mkdtempSync('/tmp/recurring-diagnostic-'),key=path.join(dir,'key'),known=path.join(dir,'known_hosts'),output=path.join(dir,'receipt.json')
@@ -132,6 +132,7 @@ async function observeSource(target,code){
    const reason=code===secret?'UNKNOWN':code
    const failures=logs.filter(x=>x.includes('event=FAILURE'))
    const expected=[`RECURRING_DIAG_V2 phase=${target} event=FAILURE reason=${reason}`,'RECURRING_DIAG_V2 phase=SOURCE event=FAILURE reason='+reason]
+   if(target==='SOURCE_POLICY')expected.unshift(`RECURRING_DIAG_V2 phase=SOURCE_POLICY_UNKNOWN event=FAILURE reason=${reason}`)
    if(target==='SOURCE_VERIFY_CLEANUP')expected.unshift('RECURRING_DIAG_V2 phase=SOURCE_ATTESTATION event=FAILURE reason=UNKNOWN')
    assert.deepEqual(failures,expected)
   }else{
@@ -150,3 +151,41 @@ async function observeSource(target,code){
 }
 for(const phase of subphases)for(const code of ['EACCES',secret])test(`SOURCE subdivision ${phase}: ${code===secret?'arbitrary error redacted':'allowlisted failure'}`,()=>observeSource(phase,code))
 test('SOURCE success uses actual verifier/attestation code with fixture providers, unchanged result and ordering',()=>observeSource(null,null))
+
+// Exercise policy predicates with synthetic private bytes, never installed policy data.
+async function observePolicy(mode,category){
+ const f=fixture('policy-category'),logs=[],original=console.error
+ const folder=path.join(root,'.maestro','coord-qa','build-policies')
+ fs.mkdirSync(folder,{recursive:true,mode:0o700})
+ const file=path.join(folder,'diagnostic-fixture.json')
+ const p={...policy}
+ if(mode==='decision')p.decision=secret
+ if(mode==='schema')p.version=secret
+ if(mode==='fields')p.extra=secret
+ if(mode==='validity')p.expiresAt='2000-01-01T00:00:00.000Z'
+ const bytes=Buffer.from(mode==='json'?secret:JSON.stringify(p))
+ writeFileSync(file,bytes,{mode:0o600})
+ const deps={...f.deps,buildDeps:{...f.deps.buildDeps}}
+ delete deps.buildDeps.readPolicy
+ let selection=0
+ deps.buildDeps.resolve=async()=>{selection++;throw err(secret)}
+ Object.assign(f.options.build,{policyPath:file,policyHash:digest(bytes)})
+ if(mode==='token')f.options.build.token=''
+ if(mode==='path')f.options.build.policyPath='/'+secret
+ if(mode==='custody')fs.chmodSync(file,0o666)
+ if(mode==='permissions')fs.chmodSync(file,0o644)
+ if(mode==='hash')f.options.build.policyHash='sha256:'+'e'.repeat(64)
+ if(mode==='event')f.options.eventRunId=secret
+ if(mode==='event-sha')f.options.eventSha=secret
+ if(mode==='unknown')deps.buildDeps.readPolicy=()=>{throw Object.assign(err(secret),{phase:'SOURCE_POLICY_TOKEN',reason:secret})}
+ let receiptExists
+ console.error=(...args)=>logs.push(args.join(' '))
+ try{await assert.rejects(runRecurring(f.options,deps));receiptExists=existsSync(f.output)}finally{console.error=original;fs.unlinkSync(file);rmSync(f.dir,{recursive:true,force:true})}
+ for(const line of logs){assert.match(line,allowed);for(const value of [secret,file,folder,digest(bytes),sha])assert.equal(line.includes(value),false)}
+ const failures=logs.filter(line=>line.includes('event=FAILURE'))
+ assert.deepEqual(failures,[`RECURRING_DIAG_V2 phase=SOURCE_POLICY_${category} event=FAILURE reason=UNKNOWN`,'RECURRING_DIAG_V2 phase=SOURCE_POLICY event=FAILURE reason=UNKNOWN','RECURRING_DIAG_V2 phase=SOURCE event=FAILURE reason=UNKNOWN'])
+ assert.equal(selection,0);assert.equal(f.calls(),0);assert.equal(receiptExists,false)
+ assert.equal(logs.some(line=>/phase=(PRE_TRANSPORT|TRANSPORT) /.test(line)),false)
+ assert.equal(logs.some(line=>/phase=SOURCE(?:_POLICY)? event=SUCCESS/.test(line)),false)
+}
+for(const [mode,category] of [['token','TOKEN'],['path','PATH'],['custody','CUSTODY'],['permissions','PERMISSIONS'],['hash','HASH'],['json','JSON'],['decision','DECISION'],['schema','SCHEMA'],['fields','SCHEMA'],['validity','VALIDITY'],['event','EVENT'],['event-sha','EVENT'],['unknown','UNKNOWN']])test(`SOURCE policy category ${mode}: fixed label, no leakage or transport`,()=>observePolicy(mode,category))
