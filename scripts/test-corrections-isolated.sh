@@ -33,7 +33,7 @@ cp "$root/.github/workflows/ci.yml" "$root/.github/workflows/cd.yml" "$root/.git
 cp "$root/docs/engineering/06-PRODUCAO.md" "$root/docs/engineering/08-SETUP-NOVA-MAQUINA.md" "$stage/docs/engineering/"
 printf %s sentinel-sintetica > "$stage/.maestro/QA-SENTINELA"
 printf %s politica-preexistente > "$stage/.maestro/coord-qa/ct011-policies/approved.json"
-for file in repair-baseline-fixture.check.mjs retain-verified-image.sh retain-verified-image.check.mjs staging-adoption-execute.sh staging-adoption-policy.sh staging-adoption-capsule.sh staging-adoption-capsule.check.mjs host-jq-fixture.mjs host-jq.check.mjs host-jq.sh corrections.check.mjs rollback-evidence-fixture.mjs pull-backup.sh verify-backup.sh baseline-synthetic.check.mjs baseline-evidence-fixture.mjs synthetic-safe-extract.mjs reconcile-fixture.mjs synthetic-rehearsal.mjs rehearsal-postgres-real.mjs rehearsal-postgres.check.mjs build-attestation.mjs build-attestation.check.mjs build-provider.mjs build-provider.check.mjs build-zip.mjs build-zip-fixture.mjs build-zip.check.mjs verify-build-artifact.mjs verify-build-artifact.check.mjs load-verified-image.sh load-verified-image.check.mjs deploy-transition.check.mjs deploy-bootstrap.sh deploy-staging.sh deploy.sh deploy-recover-legacy.sh staging-env.sh staging-transport.sh initial-baseline.sh initial-baseline.check.mjs container-health.sh container-health.check.mjs verify-staging-receipt.mjs verify-staging-receipt.check.mjs backup-recovery.check.mjs backup-nxgest.sh rollback-preflight.sh verify-rollback-return.sh; do
+for file in recurring-runner.mjs recurring-runner.check.mjs production-post-baseline-source.mjs repair-baseline-fixture.check.mjs retain-verified-image.sh retain-verified-image.check.mjs staging-adoption-execute.sh staging-adoption-policy.sh staging-adoption-capsule.sh staging-adoption-capsule.check.mjs host-jq-fixture.mjs host-jq.check.mjs host-jq.sh corrections.check.mjs rollback-evidence-fixture.mjs pull-backup.sh verify-backup.sh baseline-synthetic.check.mjs baseline-evidence-fixture.mjs synthetic-safe-extract.mjs reconcile-fixture.mjs synthetic-rehearsal.mjs rehearsal-postgres-real.mjs rehearsal-postgres.check.mjs build-attestation.mjs build-attestation.check.mjs build-provider.mjs build-provider.check.mjs build-zip.mjs build-zip-fixture.mjs build-zip.check.mjs verify-build-artifact.mjs verify-build-artifact.check.mjs load-verified-image.sh load-verified-image.check.mjs deploy-transition.check.mjs deploy-bootstrap.sh deploy-staging.sh deploy.sh deploy-recover-legacy.sh staging-env.sh staging-transport.sh initial-baseline.sh initial-baseline.check.mjs container-health.sh container-health.check.mjs verify-staging-receipt.mjs verify-staging-receipt.check.mjs backup-recovery.check.mjs backup-nxgest.sh rollback-preflight.sh verify-rollback-return.sh; do
   cp "$root/scripts/$file" "$stage/scripts/$file"
 done
 # Evitar mascarar /usr/bin quando /usr/sbin é um link para ele.
@@ -62,7 +62,8 @@ bwrap --unshare-user --unshare-net --unshare-pid --die-with-parent \
       "$cmd" __probe__ >/dev/null 2>&1; [ "$?" = 97 ] || exit 81
       "/usr/bin/$cmd" __probe__ >/dev/null 2>&1; [ "$?" = 97 ] || exit 82
     done
-    /runtime/node -e '\''const {spawnSync}=require("node:child_process");for(const c of ["docker","curl","ssh","scp","gh"])if(spawnSync("/usr/bin/"+c,["__probe__"]).status!==97)process.exit(1)'\'' || exit 83
+    /runtime/node -e '\''const {spawnSync}=require("node:child_process");for(const c of ["docker","curl","ssh","scp","gh"])if(spawnSync(c,["__probe__"]).status!==97||spawnSync("/usr/bin/"+c,["__probe__"]).status!==97)process.exit(1)'\'' || exit 83
+    [ ! -e /etc ] && [ ! -e /home ] && [ ! -e /var/run/docker.sock ] || exit 93
     printf "GUARDAS E SUBPROCESSOS CONFIRMADOS; rede isolada\n"
     [ ! -e /work/ubuntu-layout/awk ] || exit 86
     [ "$(PATH=/work/ubuntu-layout:/runtime:/usr/bin command -v awk)" = /runtime/awk ] || exit 90
@@ -74,6 +75,10 @@ bwrap --unshare-user --unshare-net --unshare-pid --die-with-parent \
     printf "AWK CONTROLADO CONFIRMADO; PATH restrito sem awk reproduz Ubuntu; /etc ausente\n"
     /runtime/node --test scripts/repair-baseline-fixture.check.mjs scripts/retain-verified-image.check.mjs scripts/staging-adoption-capsule.check.mjs scripts/host-jq.check.mjs scripts/corrections.check.mjs scripts/baseline-synthetic.check.mjs scripts/rehearsal-postgres.check.mjs scripts/build-attestation.check.mjs scripts/build-provider.check.mjs scripts/build-zip.check.mjs scripts/verify-build-artifact.check.mjs scripts/load-verified-image.check.mjs scripts/deploy-transition.check.mjs scripts/initial-baseline.check.mjs scripts/container-health.check.mjs scripts/verify-staging-receipt.check.mjs scripts/backup-recovery.check.mjs
     status=$?
+    # Processo separado: os mocks FS do check focal não alcançam as suítes anteriores.
+    printf %s guarded > /work/recurring-diagnostic-guard-confirmed
+    /runtime/node --test scripts/recurring-runner.check.mjs
+    [ "$?" = 0 ] || status=1
     [ "$(cat /work/.maestro/QA-SENTINELA)" = sentinel-sintetica ] || exit 84
     [ "$(cat /work/.maestro/coord-qa/ct011-policies/approved.json)" = politica-preexistente ] || exit 85
     printf "SENTINELA E POLÍTICA PREEXISTENTE PRESERVADAS\n"
