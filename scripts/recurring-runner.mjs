@@ -13,7 +13,7 @@ const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex')
 // Only static labels and bounded categories cross the diagnostic boundary.
 function diagnostic(phase,event,error,response){
  const code=['ENOENT','EACCES','ETIMEDOUT','ENOSPC','EEXIST','ENOTEMPTY'].includes(error?.code)?error.code:'UNKNOWN'
- let line=`RECURRING_DIAG_V1 phase=${phase} event=${event} reason=${event==='FAILURE'?code:'NONE'}`
+ let line=`RECURRING_DIAG_V2 phase=${phase} event=${event} reason=${event==='FAILURE'?code:'NONE'}`
  if(phase==='TRANSPORT'&&event!=='START'){
   const exit=response?.status===null||response?.status===undefined?'NONE':[0,1,2,126,127,255].includes(response.status)?String(response.status):'OTHER'
   const signal=response?.signal===null||response?.signal===undefined?'NONE':['SIGTERM','SIGKILL','SIGINT','SIGABRT'].includes(response.signal)?response.signal:'OTHER'
@@ -36,6 +36,10 @@ export async function runRecurring(options,deps={}){
  const fixture=Object.keys(deps).length>0,kind=options?.kind
  if(!['staging','production','finalize'].includes(kind)||!/^\d{1,20}$/.test(options.runId||'')||options.runAttempt!==1||!/^[a-f0-9]{40}$/.test(options.controllerSha||''))throw Error('controle recusado')
  const spawn=deps.spawn||spawnSync
+ const sourceDiagnostic=(phase,event,error)=>{
+  if(!['SOURCE_POLICY','SOURCE_SELECTION','SOURCE_METADATA','SOURCE_ZIP','SOURCE_RECEIPT','SOURCE_FILES','SOURCE_GH_EXECUTABLE','SOURCE_ATTESTATION','SOURCE_REHASH','SOURCE_VERIFY_CLEANUP'].includes(phase)||!['START','SUCCESS','FAILURE'].includes(event))throw Error('diagnóstico recusado')
+  diagnostic(phase,event,error)
+ }
  const git=spawn('/usr/bin/git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8',timeout:10000,maxBuffer:4096,env:{PATH:'/usr/bin:/bin',HOME:'/nonexistent'}})
  if(git.status!==0||git.stdout.trim()!==options.controllerSha)throw Error('controlador divergente')
  const controlled=['scripts/recurring-runner.mjs','scripts/staging-transport.sh','scripts/verify-build-artifact.mjs','scripts/verify-staging-receipt.mjs','scripts/production-post-baseline-source.mjs','scripts/build-provider.mjs','scripts/build-attestation.mjs','scripts/build-zip.mjs','infra/staging-known-hosts']
@@ -47,9 +51,9 @@ export async function runRecurring(options,deps={}){
  try{
   phase='SOURCE';diagnostic(phase,'START')
   if(kind==='staging'){
-   verified=await verifyBuildArtifact({...options.build,requireRecurring:true,eventRunId:options.eventRunId,eventSha:options.eventSha},deps.buildDeps||{})
+   verified=await verifyBuildArtifact({...options.build,diagnostic:sourceDiagnostic,requireRecurring:true,eventRunId:options.eventRunId,eventSha:options.eventSha},deps.buildDeps||{})
   }else{
-   verified=await verifyProductionSource({stage:{...options.stage,runId:options.stageRun,requireRecurring:true},build:{...options.build,requireRecurring:true}},{...(deps.stageDeps?{stageDeps:deps.stageDeps}:{}),...(deps.buildDeps?{buildDeps:deps.buildDeps}:{})})
+   verified=await verifyProductionSource({stage:{...options.stage,runId:options.stageRun,requireRecurring:true},build:{...options.build,diagnostic:sourceDiagnostic,requireRecurring:true}},{...(deps.stageDeps?{stageDeps:deps.stageDeps}:{}),...(deps.buildDeps?{buildDeps:deps.buildDeps}:{})})
   }
   if(!verified.verified||verified.fixture!==fixture)throw Error('origem recusada')
   diagnostic(phase,'SUCCESS')
