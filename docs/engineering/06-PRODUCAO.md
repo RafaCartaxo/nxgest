@@ -32,21 +32,21 @@
 
 ## 1.1 — Pipeline CI/CD (desde 11/08)
 
-| Etapa | Onde | Gatilho |
-|-------|------|---------|
-| **CI** (`.github/workflows/ci.yml`) | GitHub Actions | push/PR/manual |
-| — job `test` | tsc · build · check-dist · audit:ui/styles/modules · vitest (154) · coverage · docs:audit | — |
-| — job `smoke` | schema isolado → seed → smoke-api (278 cenários, DB/rate limits isolados) | — |
-| — job `deploy-staging` | SSH → VPS → `scripts/deploy-staging.sh` → **staging no ar** | merge/push à `main`, após test+smoke |
-| **CD** (`.github/workflows/cd.yml`) | GitHub Actions | `workflow_run` (CI concluído em main) + manual (`workflow_dispatch` com input `ref`) |
-| — job `validate` | CI verde do push + health do staging (gate de promoção) | — |
-| — job `deploy-prod` | environment `production` → SSH → `scripts/deploy.sh` → health pós-deploy | após `validate` |
+Fluxo versionado em `a9cd4fa2e59f28845a155ea39d598d888bb55dcf`; configuração observada em **2026-11-17**. Eventos encadeiam workflows, mas **os environments protegidos exigem aprovação humana** antes da execução de staging e produção.
 
-**Regra de promoção:** produção **só recebe código que passou CI e staging**. No automático, o CD é acionado pelo `workflow_run` do CI (que inclui o deploy-staging). No manual, `Actions → CD → Run workflow` com opção de escolher `ref` (branch/tag/commit) para deploy sob demanda ou rollback.
+| Etapa | Seleção e resultado exigidos | Gatilho / proteção |
+|---|---|---|
+| **CI** (`ci.yml`) | Qualidade, Smoke da API e Migração de schema; depois Build único, recibo CI e atestações da imagem/tar e do recibo | Push/PR/manual executam checks; **Build único e atestação somente em push para main**, após os três jobs |
+| **Staging verificado** (`staging.yml`) | Seleciona o artifact/recibo do CI, verifica origem e bytes; aplica o mesmo tar sem rebuild e atesta/publica `staging-receipt.json` após saúde válida | Workflow separado por `workflow_run` do CI; exige success, push/main, tentativa 1 e workflow CI esperado; environment `staging` com reviewer humano |
+| **CD** (`cd.yml`) | Verifica recibo staging atestado e sua correspondência com SHA, CI, artifact e digests; promove os mesmos bytes/imagem, verifica saúde e publica/finaliza recibo de produção | `workflow_run` de Staging verificado success/main/tentativa 1; environment `production` com aprovação humana própria |
 
-**Secrets usados:** `VPS_HOST` · `VPS_USER` · `VPS_SSH_KEY` (privada `id_ed25519` sem passphrase, do host dev).
+Staging não é um job de deploy dentro do CI. A serialização usa grupos separados `nxgest-staging` e `cd-prod`, sem cancelar automaticamente a execução anterior. Falha, skipped, recibo ausente/incompatível ou saúde recusada impedem promoção; CI verde ou health isolado não autenticam a origem.
 
-**Staging:** DB isolado + seed fake (200 clientes/29 usuários, senha `teste123!`). Seed aplicado **apenas na 1ª vez** (banco sem clientes). Produção nunca é tocada pelo deploy-staging.
+No modo `staging-recurring-v2` / `production-recurring`, `CT011_CONTROLLER_SHA` seleciona o controlador aprovado, separado do **SHA candidato** autenticado pelo CI e do **imageID/digest** confirmado pelo staging. O gateway exige pin, policy base e authority coerentes; merge em main não atualiza essa configuração. As chaves dedicadas restritas vêm de `VPS_STAGING_RECURRING_KEY` e `VPS_PRODUCTION_RECURRING_KEY`; policies aprovadas vêm de `CT011_BUILD_POLICY` e, na produção, `CT011_STAGING_POLICY`, com hashes/decisões controlados. O acesso administrativo das seções 2–3 não substitui essas credenciais do fluxo recorrente; não registrar valores de secrets nem copiar env/chaves para logs ou Git.
+
+**Fotografia de 2026-11-17:** staging tem controlador/policy base/authority **a9cd** provisionados e QA-aceitos; production mantém controlador/configuração **bc6** e **HOLD**. A primeira produção manual **bed9** continua sendo a baseline publicada. Ainda não foram comprovados consumer recorrente positivo, receipt/runtime ponta a ponta, dois deploys recorrentes sucessivos ou CD/deploy real em produção. O run staging `43981022654` permanece waiting/HOLD pelo gate de captura de vars; não o liberar por simples atualização da configuração. Estes registros datados não dispensam novo preflight.
+
+Fontes imutáveis: [CI/build e atestações](https://github.com/RafaCartaxo/nxgest/blob/a9cd4fa2e59f28845a155ea39d598d888bb55dcf/.github/workflows/ci.yml#L215-L286), [gates e recibo staging](https://github.com/RafaCartaxo/nxgest/blob/a9cd4fa2e59f28845a155ea39d598d888bb55dcf/.github/workflows/staging.yml#L1-L129), [gates, promoção e finalização CD](https://github.com/RafaCartaxo/nxgest/blob/a9cd4fa2e59f28845a155ea39d598d888bb55dcf/.github/workflows/cd.yml#L1-L261). Aprovações são gates operacionais adicionais; a existência de um trigger não concede autorização para executar.
 
 ---
 
@@ -92,43 +92,29 @@ As credenciais **não ficam no repositório**. Localização dos valores:
 
 ## 4. Deploy de atualizações (fluxo normal)
 
-O deploy automático obtém o SHA validado pelo CI, bloqueia o checkout compartilhado e carrega o bootstrap diretamente desse SHA antes de trocar arquivos. O staging só registra o SHA após concluir com sucesso; produção exige esse mesmo SHA e backup obrigatório. Uma tentativa concorrente falha sem alterar o checkout. O checkout com alterações rastreadas ou arquivos novos não ignorados é recusado; arquivos ignorados em conflito com o alvo também bloqueiam a troca. Nunca use `reset --hard` para contornar o bloqueio.
+### 4.1 — Decisão, origem e promoção recorrente
 
-Para operação manual **somente após autorização e validação do SHA no CI**, execute no checkout operacional. Use primeiro `staging`; produção só aceita o mesmo SHA registrado por staging. É necessário Git, Bash e `flock` (util-linux) no host; o helper e o script são carregados do SHA alvo. Ref antiga que não contém o bootstrap é recusada pelo fluxo normal; para recuperar apenas o checkout, siga as condições específicas da seção 7.
+1. Após revisão e autorização de integração, um push/merge em main produz **novo CI tentativa 1 e artifact do novo SHA**. Não reutilizar artifact de outro SHA, fabricar commit vazio ou repetir run falho para contornar gates. PR/feature CI sem Build/atestação não fornece imagem autenticada para promoção.
+2. Antes de liberar o staging correspondente, revalidar CI/build/atestação, identidade do candidato/artifact, controlador/policies/authority/validade, estado sem pending ambíguo e ausência de concorrência. Preservar reviewer e verificar a seleção efetiva prevista pelo workflow. O run antigo `43981022654` fica retido: a captura de vars durante waiting não foi comprovada; requer-se novo evento main elegível após configuração, por mudança material revisada.
+3. Somente com gate específico satisfeito, o responsável humano aprova **staging**. O runner verifica origem/recibo CI e bytes antes do transporte; o gateway restrito seleciona o controlador externo ao candidato, adquire lock e aplica o tar verificado. Saúde interna/pública e banco conectado devem passar antes do recibo staging ser aceito, atestado e publicado.
+4. Revisar independentemente o resultado staging e o recibo para o **mesmo SHA/artifact/tar/imagem**. O CD exige essa correspondência, além de sua seleção de origem; não rebuildar no host para alegar promoção do mesmo artifact. Alinhar configuração production somente por seu gate próprio; a fotografia bc6/HOLD de §1.1 não autoriza uso de staging a9cd para promover produção.
+5. Aprovação humana **production** é separada. No modo recorrente, o controlador mantém pending durante aplicação e publicação/atestação do recibo de produção; o passo `finalize` revalida e conclui a transação. Success de um passo intermediário não é conclusão do deploy. Falha/timeout/saída ambígua exige preservar pending, journal, recibos e recursos e interromper a progressão, sem retry/limpeza automática.
 
-```bash
-# No host operacional, após escolher um SHA completo e validado:
-SHA=COLE_O_SHA_VALIDADO_DE_40_CARACTERES
-MODO=staging  # production apenas após staging para o mesmo SHA
-(
-  set -euo pipefail
-  cd /opt/nxgestao
-  [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]
-  exec 9>"$(git rev-parse --git-path nxgest-deploy.lock)"
-  flock -n 9
-  git fetch --no-tags origin "$SHA"
-  git show "$SHA:scripts/deploy-bootstrap.sh" | bash -s -- "$MODO" "$SHA"
-)
-```
+O lock existente serializa entradas cooperativas, não substitui a verificação de outros operadores/processos. Não descartar WIP, `.env`, volumes, legado ou pending para vencer uma recusa; não usar reset/clean/stash como correção operacional. Fonte/candidato e controlador são identidades distintas: o runner confere HEAD/bytes do controlador, enquanto os verificadores correlacionam o artifact e o receipt da revisão promovida.
 
-O lock deve ser mantido durante fetch, checkout e deploy. Ele serializa apenas entradas que o utilizem: antes da primeira transição, o operador deve assegurar que não há scripts legados, outros comandos Git ou deploys externos concorrentes no checkout; não os encerre automaticamente. Interromper após o checkout pode deixar o HEAD no SHA alvo, sem construir; antes de repetir, verificar o estado e o backup. `.env`, `.env.staging`, dados, volumes e configurações operacionais permanecem externos ao Git. O marcador de staging fica no diretório Git e é invalidado antes de cada tentativa; não prova sozinho a saúde atual do serviço.
+Fontes: [runner e ordem antes do transporte](https://github.com/RafaCartaxo/nxgest/blob/a9cd4fa2e59f28845a155ea39d598d888bb55dcf/scripts/recurring-runner.mjs#L32-L127), [seleção conjunta staging/CI](https://github.com/RafaCartaxo/nxgest/blob/a9cd4fa2e59f28845a155ea39d598d888bb55dcf/scripts/production-post-baseline-source.mjs#L18-L31), [gateway, authority e lock](https://github.com/RafaCartaxo/nxgest/blob/a9cd4fa2e59f28845a155ea39d598d888bb55dcf/scripts/recurring-staging-gateway.sh#L1-L63). Configuração provisionada não comprova consumer nem recuperação de dados.
 
-O `scripts/deploy.sh`:
-1. Exige `.env` presente (senão aborta)
-2. **Backup e preflight obrigatórios** — exige script instalado idêntico ao versionado, conjunto íntegro e evidências de imagem/configuração/schema e decisão aprovadas; falha fechada, sem bypass automático. Ver seção 5 e [procedimento de recuperação](09-BACKUP-ROLLBACK.md).
-3. **Gates de UI** — roda `audit:ui`, `audit:styles` e `audit:modules` via `docker run node:20-slim` (o host não tem node no PATH); **aborta o deploy se qualquer gate falhar**
-4. `docker compose --project-directory . -f infra/docker-compose.prod.yml build app`
-5. `docker compose --project-directory . -f infra/docker-compose.prod.yml up -d`
-6. A imagem anterior recebe tag dedicada; não há prune automático.
+### 4.2 — Caminho manual e modos anteriores
 
-**Dados:** o volume `nxgestao_nxgestao_data` sobrevive a builds e `up`/`down` — o banco não é recriado.
+`CD → workflow_dispatch` existe **somente a partir de main**, com input obrigatório **`staging_run`** (ID exato), não `ref`. Continua no environment production protegido e sujeito aos verificadores/policies/mesmo artifact. Não cria staging elegível nem recibo válido e não constitui rollback simples por SHA. Dispatch manual de CI também não satisfaz o filtro staging, que exige evento push/main/tentativa 1; staging não oferece dispatch no YAML.
 
-**Validação pós-deploy:**
+Modos disponíveis são contratos distintos, nunca fallback automático: `staging-recurring-v2` usa gateway/chave dedicados; os caminhos `staging`, `staging-adoption` e `staging-post-baseline` são bootstrap/adoção/transição condicionados a suas policies e decisões. `production-initial` é primeira baseline (a baseline manual bed9 já foi concluída); `production-preclients` e `production-recurring` são modos pré-clientes explícitos, sem aprovação implícita de recuperação integral. `production-post-baseline` mantém preflight/NO-GO antes da troca sem BA10/rollback verificáveis. Não repetir primeira entrada, adoção ou reparo histórico para iniciar promoção recorrente.
 
-```bash
-curl -s https://nxgest.com.br/api/health
-# → {"status":"ok","db":"connected",...}
-```
+O bootstrap por SHA completo (`scripts/deploy-bootstrap.sh`) permanece apenas para operação manual/legada especificamente autorizada e validada, sob lock e condições de origem/backup/compatibilidade do modo escolhido. Não é a receita de rotina do recurring nem permissão para executar scripts candidatos, reconstruir imagem ou recuperar o serviço só trocando checkout. Ver [seleção de modos e manual CD](https://github.com/RafaCartaxo/nxgest/blob/a9cd4fa2e59f28845a155ea39d598d888bb55dcf/.github/workflows/cd.yml#L1-L113) e [ramos staging](https://github.com/RafaCartaxo/nxgest/blob/a9cd4fa2e59f28845a155ea39d598d888bb55dcf/.github/workflows/staging.yml#L50-L118).
+
+### 4.3 — Falhas e retorno operacional
+
+Antes de qualquer retorno da seção 7, exigir decisão operacional, evidências de imagem/configuração anterior, backup verificado e compatibilidade de schema/migrações; ver [Backup e retorno do serviço](09-BACKUP-ROLLBACK.md) e seção 5. A disponibilidade de SHA antigo, bootstrap ou health não demonstra rollback de aplicação nem restauração de banco/anexos. Recuperar apenas checkout legado tem limites próprios; não reiniciar legado após migração desconhecida. Se compatibilidade ou efeitos parciais forem desconhecidos, parar para plano específico, preservando dados/env/volumes/imagens e evidências. Não há rollback automático nem recuperação integral comprovada por este runbook; BA10/MEL-0009/CT-011 mantêm seu NO-GO separado do modo pré-clientes autorizado.
 
 ---
 
