@@ -51,7 +51,7 @@ Produção exige `DATABASE_URL`, `JWT_SECRET`, endereço público, CORS e config
 
 ### 4.1 — Decisão, origem e promoção recorrente
 
-O modo atual é pré-clientes. As authorities e policies em `.git/` fixam controlador, host, topologia, hashes das policies de runner e validade. Variáveis/Secrets dos environments precisam corresponder exatamente a essas fontes. Renovação exige alterar fontes, hashes e authorities de forma coordenada, sem operação ativa.
+O modo atual é pré-clientes. As authorities e policies em `.git/` fixam controlador, host, topologia, hashes das policies de runner e validade. Variáveis/Secrets dos environments precisam corresponder exatamente a essas fontes. Renovação exige alterar fontes, hashes e authorities de forma coordenada, sem operação ativa. Se o staging anterior foi aplicado sob outro hash, provisionar o registro privado `nxgest-staging-policy-transition-<hash-anterior>-<hash-novo>` em `.git/`: sete linhas exatas `version=staging-policy-transition-v1`, `environment=staging`, `from=sha256:<anterior>`, `to=sha256:<novo>`, `controller=<SHA completo>`, `decision=<decisão da policy nova>`, `expires_epoch=<validade da policy nova>`. Arquivo regular 0600 do operador. Conferir a policy anterior e seu journal antes de autorizar; não alterar o journal antigo. Ausência, divergência ou expiração bloqueiam a transição.
 
 O controlador é um commit completo previamente aprovado; não é automaticamente o HEAD do artifact. Promover uma nova aplicação não significa trocar o controlador em cada deploy. Atualizá-lo quando seus scripts mudarem, após validar os novos contratos.
 
