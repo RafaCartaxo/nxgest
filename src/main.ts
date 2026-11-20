@@ -4,7 +4,7 @@ import cors from "cors"
 import helmet from "helmet"
 import path from "path"
 import { fileURLToPath } from "url"
-import { runMigrations, seedBasico } from "./database.js"
+import { runMigrations, seedBasico, pool } from "./database.js"
 import { healthRoutes } from "./modules/health/presentation/routes/health.routes.js"
 import { authRoutes } from "./modules/auth/presentation/routes/auth.routes.js"
 import { authMiddleware } from "./shared/middleware/auth.middleware.js"
@@ -118,6 +118,25 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 const PORT = process.env.PORT ?? 3000
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`)
 })
+
+// Docker sends SIGTERM to PID 1. Close HTTP before its database pool so requests
+// already accepted can finish; enforce a deadline below docker stop's timeout.
+let shuttingDown = false
+function shutdown() {
+  if (shuttingDown) return
+  shuttingDown = true
+  const deadline = setTimeout(() => process.exit(1), 20_000)
+  deadline.unref()
+  server.close((error) => {
+    void pool.end().then(() => {
+      clearTimeout(deadline)
+      process.exit(error ? 1 : 0)
+    }, () => process.exit(1))
+  })
+  server.closeIdleConnections()
+}
+process.on("SIGTERM", shutdown)
+process.on("SIGINT", shutdown)

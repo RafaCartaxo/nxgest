@@ -5,6 +5,7 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 ## 20/11/2026 — consolidação operacional
 
 - Node 24 LTS alinhado em `.nvmrc`, engines, CI e Docker; removidos SQLite e sua cadeia nativa do lockfile. Imagem final inclui apenas o utilitário de seed utilizado.
+- Aplicação trata SIGTERM/SIGINT para encerrar HTTP/pool antes do limite do Docker, reduzindo o tempo de parada em manutenção.
 - Backup com aplicação parada por janela curta, dump/anexos associados, checksums e comparação em restauração isolada. `verify-backup.sh` e `backup:pull` reconhecem o novo formato sem remover suporte aos anteriores.
 - `f_unaccent` qualifica função/dicionário PostgreSQL para permitir reconstrução do índice no restore; o CI valida `search_path` vazio.
 - Download autenticado de anexos usa `UPLOADS_DIR` como raiz do sendFile, permitindo instalação em diretórios pais ocultos sem liberar traversal ou dotfiles internos.

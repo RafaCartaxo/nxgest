@@ -1,6 +1,6 @@
 # 09 — Backup e recuperação
 
-O procedimento atual usa PostgreSQL 16 e anexos do volume `/data`. O backup precisa representar o mesmo instante lógico para ambos. A estratégia é uma manutenção curta: interromper a aplicação, conferir ausência de outras conexões escritoras, copiar banco e anexos e retomar a mesma aplicação. O banco permanece ligado.
+O procedimento atual usa PostgreSQL 16 e anexos do volume `/data`. O backup precisa representar o mesmo instante lógico para ambos. A estratégia é uma manutenção curta: interromper a aplicação, conferir ausência de outras conexões escritoras, copiar banco e anexos e retomar a mesma aplicação. O banco permanece ligado. A aplicação trata SIGTERM/SIGINT, fecha o servidor HTTP antes do pool e limita o encerramento a 20 segundos, abaixo do prazo do docker stop.
 
 ## Backup atual
 
