@@ -16,7 +16,7 @@ O sistema combina **cinco** estilos para equilibrar simplicidade e evolução:
 | Use Case Driven | Cada operação de negócio é um **Use Case** (responsabilidade única) |
 | Ports & Adapters | Application depende de contratos (Ports); Infrastructure implementa |
 
-> **ADRs** (`docs/decisions/ADR-INDEX.md`): arquitetura base (ADR-001), frontend (ADR-002), auth (ADR-003), infra/deploy (ADR-004), governança de UI (ADR-005), module manifest (ADR-006).
+> **ADRs** (`docs/decisions/ADR-INDEX.md`): arquitetura base (ADR-001), frontend (ADR-002), auth (ADR-003), infra/deploy (ADR-004), governança de UI (ADR-005), module manifest (ADR-006) e identidade/plataforma (ADR-007).
 
 ---
 
@@ -24,7 +24,7 @@ O sistema combina **cinco** estilos para equilibrar simplicidade e evolução:
 
 Cada módulo é responsável exclusivamente pelo seu contexto:
 
-`admin` · `anexo` · `auth` · `caixa` · `cliente` · `contrato` · `gasto` · `health` · `leads` · `operacoes` · `pagamento`
+`admin` · `anexo` · `auth` · `caixa` · `cliente` · `contrato` · `devboard` · `gasto` · `health` · `insights` · `leads` · `operacoes` · `pagamento`
 
 Estrutura de cada módulo (Clean Architecture):
 

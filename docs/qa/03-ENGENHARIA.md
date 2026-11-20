@@ -23,7 +23,7 @@
 
 ### Autenticação e autorização
 
-- **JWT** (`src/shared/utils/jwt.ts`) — payload `{ userId, role, empresaId }`; **fail-closed**: sem `JWT_SECRET` lança erro (produção não inicia login).
+- **JWT** (`src/shared/utils/jwt.ts`) — payload `{ userId, role, empresaId }`; **fail-closed**: sem `JWT_SECRET`, assinatura/verificação falha em qualquer ambiente.
 - Middlewares: `auth` (decodifica JWT + valida usuário), `admin` (admin/super), `super-admin`, `module` (whitelabel), `capability` (recursos finos), `userRateLimit` (por usuário).
 
 ### Rate limits
@@ -56,7 +56,7 @@ Use Case = **uma** operação. Repositórios implementam Ports. Nunca regra de n
 
 ### Regra de ouro
 
-Frontend só renderiza/navega/valida formato — regra de negócio e cálculo financeiro **só no backend**.
+Backend é a autoridade para validação, cálculo e persistência. O frontend também possui previews de contrato e data final; esses espelhos devem manter a mesma matriz de testes e nunca substituir a validação do backend.
 
 ---
 
@@ -69,7 +69,7 @@ Frontend só renderiza/navega/valida formato — regra de negócio e cálculo fi
 | Empresa (tenant) | `empresas` (modulos/capacidades JSON, documento, ativa) |
 | Usuários | `usuarios` (role, empresaId, soft-delete) |
 | Operacional | `clientes`, `contratos`, `parcelas`, `pagamentos`, `pagamento_parcelas`, `movimentacoesFinanceiras`, `caixa_config`, `gastos`, `fechamentos_semanais`, `historico_operacional`, `snapshots_atraso` |
-| Suporte | `auth_tokens` (convite/reset), `anexos`, `leads`, `auditoria_modulos`, `auditoria_caixa`, `auditoria_estornos` |
+| Suporte | `auth_tokens` (tokens de conta), `convites` (convite/ativação), `anexos`, `leads`, `auditoria_modulos`, `auditoria_caixa`, `auditoria_estornos` |
 
 ### Integridade e regras-chave
 

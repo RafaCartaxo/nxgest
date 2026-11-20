@@ -1,6 +1,6 @@
 # QA — Material de Qualidade e Fonte de Estudo
 
-**Status:** Ativo (18/08/2026)
+**Status:** Ativo · revisão de pipeline/operação/testes: 20/11/2026; validações manuais históricas mantêm suas datas
 
 ---
 
@@ -28,6 +28,10 @@ Material de **Quality Assurance** e **fonte de estudo** do NX Gest: explica *com
 
 ---
 
+## Planos de teste específicos
+
+- [Board Dev — PLAN-078](devboard/CTs.md): critérios e testes manuais de runs/PRs/dependabot. Plano de teste não significa execução atual aprovada.
+
 ## Trilha de estudo recomendada
 
 ### Nível 1 — Visão geral (30–60 min)
@@ -45,7 +49,7 @@ Material de **Quality Assurance** e **fonte de estudo** do NX Gest: explica *com
 8. `04-TESTES.md` — camadas de teste e como rodar
 9. `docs/engineering/TESTES.md` + `docs/product/07-CASOS-DE-USO-API.md`
 10. `05-PIPELINE.md` — CI/CD completo
-11. `docs/engineering/06-PRODUCAO.md §1.1` + `.github/workflows/{ci,cd}.yml`
+11. `docs/engineering/06-PRODUCAO.md §1.1` + `.github/workflows/{ci,staging,cd}.yml`
 
 ### Nível 4 — Operação e segurança (1 h)
 12. `06-OPERACAO.md` + `docs/engineering/06-PRODUCAO.md`

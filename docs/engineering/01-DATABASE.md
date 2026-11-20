@@ -2,13 +2,15 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.4
+**Versão:** 1.5
 
-**Última atualização:** 12/08/2026
+**Última atualização:** 20/11/2026
 
 ---
 
-> **Modelo físico (PLAN-070):** implementado em **PostgreSQL 16**. Money = `NUMERIC(12,2)` (custom type drizzle `money`); datas date-only = `DATE`; timestamps (`createdAt`/`updatedAt`/`deletedAt`/tokens) = `TEXT` ISO; IDs = `text` UUID v4; **FKs** ativas nas relações conhecidas. Débitos conscientes: timestamps não tipados (`TIMESTAMPTZ` muda o formato de leitura) e colunas camelCase quotadas (herança do schema SQLite).
+> **Modelo físico atual:** PostgreSQL 16; tabelas/colunas em `snake_case`; valores monetários `NUMERIC(12,2)`; datas civis `DATE`; instantes `TIMESTAMPTZ`; IDs UUID representados como `TEXT`; FKs definidas em `src/database.ts`. As propriedades TypeScript continuam em camelCase e o tipo `ts` converte instantes para strings ISO na aplicação. Não há schema SQLite nem dívida atual de colunas camelCase/timestamps TEXT.
+>
+> As listas de atributos abaixo usam os nomes lógicos da aplicação. Para SQL físico, consultar `src/database.ts`; `scripts/valida-modelo.mjs` verifica snake_case, timestamps, valores monetários, FKs, índices e `public.f_unaccent` sob search_path vazio. A função qualifica a extensão/dicionário `public.unaccent` para ser restaurável pelo pg_restore.
 
 ---
 
@@ -80,7 +82,7 @@ O sistema adota o modelo de multi-tenant por empresa. O isolamento de dados é f
 |-------|------|-------------|-----------|
 | id | UUID v4 | Sim | Chave primária |
 | nome | TEXT | Sim | Nome da empresa |
-| createdAt | TEXT | Sim | Data de criação |
+| createdAt | TIMESTAMPTZ | Sim | Data de criação |
 | modulos | TEXT (JSON) | Não | Módulos ativos (whitelabel, BR-092). `null` = todos ativos |
 | capacidades | TEXT (JSON) | Não | Recursos finos (BR-104). `null` = todas ativas; `[]` = nenhuma |
 | documento | TEXT | Não | CPF/CNPJ (dígitos) |
@@ -98,7 +100,7 @@ O sistema adota o modelo de multi-tenant por empresa. O isolamento de dados é f
 | antes / depois | TEXT (JSON) | Valor antes/depois (`null` = ausente) |
 | force | INTEGER | 1 se a desativação foi forçada |
 | motivo | TEXT | Motivo do `force` (obrigatório quando force) |
-| createdAt | TEXT | Data/hora |
+| createdAt | TIMESTAMPTZ | Data/hora |
 
 ## Isolamento por empresaId
 
@@ -200,8 +202,8 @@ Configuração operacional do caixa por usuário. PK = `userId`.
 | Campo | Tipo | Observação |
 |-------|------|------------|
 | `userId` | TEXT PK | Dono do caixa |
-| `caixaBase` | REAL | Base do caixa (registro, não movimentação) |
-| `updatedAt` | TEXT | Última alteração |
+| `caixaBase` | NUMERIC(12,2) | Base do caixa (registro, não movimentação) |
+| `updatedAt` | TIMESTAMPTZ | Última alteração |
 
 ### `auditoria_caixa`
 
@@ -212,11 +214,11 @@ Registro de todo ajuste manual do Caixa Base (BR-088, PLAN-026). Tabela **separa
 | `id` | TEXT PK | UUID |
 | `operadorId` | TEXT | Alvo do ajuste |
 | `adminId` | TEXT | Responsável autenticado (quem ajustou) |
-| `valorAnterior` | REAL | Base antes do ajuste |
-| `valorNovo` | REAL | Base depois do ajuste |
+| `valorAnterior` | NUMERIC(12,2) | Base antes do ajuste |
+| `valorNovo` | NUMERIC(12,2) | Base depois do ajuste |
 | `motivo` | TEXT | Obrigatório (≤200) |
-| `data` | TEXT | Data local do ajuste |
-| `createdAt` | TEXT | Timestamp ISO |
+| `data` | DATE | Data local do ajuste |
+| `createdAt` | TIMESTAMPTZ | Timestamp ISO |
 
 Índices: `idx_auditoria_caixa_operador` (operadorId), `idx_auditoria_caixa_data` (data).
 

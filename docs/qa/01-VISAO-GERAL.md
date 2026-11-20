@@ -45,14 +45,14 @@ O **NX Gest** é uma **plataforma modular de gestão operacional** (whitelabel m
 ## Como rodar localmente
 
 ```bash
-npm install          # workspaces: instala backend + frontend
+npm ci               # workspaces: instala backend + frontend
 npm run dev          # backend (:3000) + frontend (Vite HMR)
 npm run build        # tsc (backend) + vite build (frontend)
 npm test             # vitest (unit + UI)
 npm run smoke:api    # smoke API (requer instância isolada — ver 04-TESTES.md)
 ```
 
-Pré-requisitos: Node.js 20+ · npm 9+.
+Pré-requisitos: Node.js 24 LTS · npm da distribuição oficial.
 
 ---
 

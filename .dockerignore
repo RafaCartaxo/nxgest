@@ -20,3 +20,15 @@ coverage/
 .obsidian/
 .git/
 docs/
+
+# Estado local e resíduos gerados por verificadores/testes
+.maestro/
+.nxg-build-verified-*/
+.nxg035-fixture-*/
+.ba10-fixture-*/
+
+.cache/
+
+.tmp/
+
+.backup-maintenance-test-*/

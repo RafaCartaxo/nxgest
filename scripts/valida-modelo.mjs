@@ -36,6 +36,21 @@ if (fks < 16) falhas.push(`FKs insuficientes: ${fks}`)
 const idx = Number((await q("SELECT COUNT(*)::int c FROM pg_indexes WHERE indexname = 'idx_parcelas_venc_partial'"))[0].c)
 if (idx !== 1) falhas.push("índice parcial idx_parcelas_venc_partial ausente")
 
+// pg_restore clears search_path before rebuilding functional indexes.
+// Keep the same condition here so a non-portable function blocks publication.
+const client = await pool.connect()
+try {
+  await client.query("BEGIN READ ONLY")
+  await client.query("SET LOCAL search_path = ''")
+  const result = await client.query("SELECT public.f_unaccent('ação') = 'acao' AS portable")
+  if (!result.rows[0]?.portable) falhas.push("f_unaccent não normaliza acentos")
+} catch (error) {
+  falhas.push(`f_unaccent incompatível com restauração: ${error.message}`)
+} finally {
+  await client.query("ROLLBACK")
+  client.release()
+}
+
 if (falhas.length > 0) {
   console.error("✗ MODELO INVÁLIDO:")
   for (const f of falhas) console.error(`  - ${f}`)

@@ -109,4 +109,13 @@ describe("criarMailer (política de envio dev/staging/prod — PLAN-071)", () =>
     const mailer = new ResendMailer("re_123", '"NX Gest" <no-reply@nxgest.com.br>')
     await expect(mailer.send(msg)).rejects.toBeInstanceOf(EmailEnvioFalhouError)
   })
+  it("ResendMailer limita prazo e converte falha de rede em erro de envio", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error("private transport diagnostic"))
+    vi.stubGlobal("fetch", fetchMock)
+    const mailer = new ResendMailer("re_test", "NX Gest <no-reply@nxgest.com.br>")
+    await expect(mailer.send(msg)).rejects.toBeInstanceOf(EmailEnvioFalhouError)
+    expect(fetchMock.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal)
+    await expect(mailer.send(msg)).rejects.not.toThrow("private transport diagnostic")
+  })
+
 })

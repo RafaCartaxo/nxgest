@@ -6,7 +6,7 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 
 **NX Gest** (`nxgest`) — **plataforma modular de gestão operacional**; o primeiro vertical é o **crédito em campo** (credores, contratos, parcelas, pagamentos, caixa). Backend Node.js + Express + TypeScript + **PostgreSQL** (pg + Drizzle `pg-core`); frontend React + Vite + TailwindCSS. (Migração SQLite→PG: PLAN-070 — **hoje só existe PostgreSQL**.)
 
-> **Node ≥20** (CI e `react-router@7` exigem; usar `nvm use 20`).
+> **Node 24 LTS** em desenvolvimento, CI e imagem de produção; usar `nvm use`.
 
 **Repo GitHub:** `RafaCartaxo/nxgest`
 
@@ -29,12 +29,12 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 - **Credenciais e acessos externos ficam fora do repo**, em `~/.config/nxgestao/`
   (ver `ACESSOS.md` lá — painel VPS, DuckDNS, GitHub, senhas do sistema).
 - O `.env` de produção vive no VPS (`/opt/nxgestao/.env`, chmod 600) — nunca copiar pro repo.
-- `JWT_SECRET` é obrigatório em produção (app falha ao iniciar sem ele).
+- `JWT_SECRET` é exigido pela assinatura/verificação de JWT em qualquer ambiente; sem ele a autenticação falha. Configurar antes de usar o sistema.
 
 ## Produção
 
 - **URL:** `https://nxgest.com.br` (oficial) · **Homologação:** `https://nxgestao.duckdns.org` (staging, desde 11/08)
-- **Pipeline:** merge/push à `main` → CI (test+smoke) → **deploy automático no staging** → CD (`workflow_run`) → **deploy automático em prod** (gate: staging saudável). Manual: `Actions → CD → Run workflow` com input `ref` (útil p/ rollback).
+- **Pipeline:** merge/push à `main` → CI (qualidade, smoke, migração e build único atestado) → workflow **Staging verificado** (`workflow_run` do CI aprovado) → workflow **CD** (`workflow_run` do staging aprovado). Staging e produção exigem aprovação dos respectivos environments; a promoção reutiliza a mesma imagem, sem rebuild. PRs executam checks, mas não publicam. Manual: `Actions → CD → Run workflow` com input `staging_run` (ID exato do staging aprovado), sujeito às mesmas verificações. Ver `docs/engineering/06-PRODUCAO.md` e `scripts/README.md`.
 - **VPS:** `172.245.152.223` (root, somente chave SSH), AlmaLinux 8.10, Docker + Compose
 - **Domínio:** `nxgest.com.br` — DNS no Cloudflare (proxied), SSL funcionando, **e-mail transacional ativo** (Resend, `no-reply@nxgest.com.br`); DuckDNS = staging
 - **Backup:** cron 2x/dia no VPS → `/opt/backups`; **host não tem snapshot** — nunca assumir recuperação pelo provedor

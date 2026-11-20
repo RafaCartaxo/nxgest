@@ -2,7 +2,7 @@
 /**
  * Orquestrador do smoke API — codifica as invariantes da execução isolada:
  *
- *  - Node ≥20 (guarda explícita — o projeto exige; `.nvmrc` = 20).
+ *  - Node 24 LTS (mesma versão de `.nvmrc`, CI e produção).
  *  - `create-schema.mjs` roda via `npx tsx` (importa TS de `src/database.js` — `node` puro falha).
  *  - DB recriado do zero por execução (rate limiters são em memória e tokens de lead são
  *    single-use — re-run no mesmo processo/DB polui: LD-06 token usado, LD-12 429).
@@ -215,7 +215,7 @@ async function main() {
   const { cmd, recreate } = parseArgs(process.argv.slice(2))
   if (cmd !== "down") validateTarget(DATABASE_URL)
   const nodeMajor = Number(process.versions.node.split(".")[0])
-  if (nodeMajor < 20) fail(`Node ${process.version} detectado — o projeto exige Node ≥20 (veja .nvmrc). Rode: source ~/.nvm/nvm.sh && nvm use`)
+  if (nodeMajor !== 24) fail(`Node ${process.version} detectado — o projeto exige Node 24 LTS (veja .nvmrc). Rode: source ~/.nvm/nvm.sh && nvm use`)
 
   if (cmd === "up") {
     try { await up(recreate) } catch (error) { if (ownedProcess) stopServer(); throw error }

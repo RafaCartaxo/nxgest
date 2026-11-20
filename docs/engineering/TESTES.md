@@ -20,7 +20,7 @@ npm run test:coverage # report v8 (reporta, NÃO bloqueia no início — meta so
 | Unit shared/segurança | `src/shared/utils/*.test.ts` | `scope` (resolveUsuarioAlvo), `foto` (magic bytes/sem SVG), `jwt` (fail-closed), `clientIp` (CF-Connecting-IP) |
 | Unit front lógica | `frontend/src/shared/**/*.test.ts` | `geo/alvo`, `modules`, `capacidades`, `geo/estadoGps` |
 | Component/UI | `frontend/src/**/*.test.tsx` (`// @vitest-environment jsdom`) | `LoginPage` (toggle senha UC-041, submit) — destrava P022 |
-| Integração API | `scripts/smoke-api.mjs` | 278 cenários (PostgreSQL isolado + seed) |
+| Integração API | `scripts/smoke-api.mjs` | cenários da revisão avaliada (PostgreSQL isolado + seed) |
 
 ## Convenções
 
@@ -34,17 +34,11 @@ npm run test:coverage # report v8 (reporta, NÃO bloqueia no início — meta so
 
 `npm run test:coverage` (v8, text+html). Meta inicial 0% **reportando**; subir gradual conforme a rotina amadurece. `AGENTS.md` lista `npm test` como obrigatório.
 
-## CI/CD (desde 11/08)
+## CI/CD — revisão de 20/11/2026
 
-**`.github/workflows/ci.yml`** (push/PR/manual) — gate de qualidade:
-- Job `test`: `npm ci` (workspaces) → `tsc --noEmit` → `npm run build` → `node scripts/check-dist.mjs` (PLAN-079) → `audit:ui/styles/modules` → `npm test` → `test:coverage` (+ artifact) → `docs:audit`.
-- Job `smoke`: `services: postgres` (GitHub Actions) → `scripts/create-schema.mjs` (schema isolado, sem boot) → `seed-demo` → **uma** instância com `DATABASE_URL` + `JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000` + `PUBLICO_RATE_LIMIT_MAX=100000` + `LEADS_RATE_LIMIT_MAX=100000` → `smoke-api` (278 cenários).
-- Job `deploy-staging` (push→main, `needs: [test, smoke]`): SSH → `scripts/deploy-staging.sh` → staging em `nxgestao.duckdns.org`.
+`ci.yml` executa qualidade, smoke e migração. Em push/main aprovado, gera imagem única, recibo e atestações. `staging.yml` é um workflow separado, disparado pelo CI elegível; `cd.yml` é disparado por Staging verificado aprovado. Ambos os environments exigem reviewers. CD manual usa `staging_run`; não há publicação por ref arbitrária.
 
-**`.github/workflows/cd.yml`** — promoção para produção:
-- Dispara por `workflow_run` (CI concluído em main) ou manual (`workflow_dispatch`, input `ref`).
-- `validate`: CI verde + health do staging (gate: prod só passa se staging passou).
-- `deploy-prod`: environment `production` → SSH → `scripts/deploy.sh` → health pós-deploy.
+Gates de qualidade incluem tipos/build, UI/estilos/módulos, unit/UI/cobertura, segurança, transição, backup/correções com fixtures, fingerprint, documentação e links. Ver [guia de pipeline](../qa/05-PIPELINE.md) para ordem e contratos e [status](../STATUS.md) para execução comprovada. Testes sintéticos de backup/manutenção não substituem restauração real isolada.
 
 **Infra de build:** o repo usa **npm workspaces** (`frontend/`) — uma única `node_modules` com React hoisted (evita dupla cópia de React nos testes de UI). Lockfile único na raiz.
 

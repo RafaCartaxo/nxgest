@@ -81,6 +81,8 @@ A verdade é decidida **no código**, e a documentação a espelha:
 
 ## 4.1 Script automático
 
+`npm run docs:audit` usa `--strict` por padrão desde a revisão de 20/11/2026, falhando se houver divergências. A chamada direta ao script abaixo permanece em modo relatório quando não recebe a flag. A auditoria é estrutural; não valida por si só a atualidade do runbook ou o comportamento de negócio.
+
 ```bash
 node scripts/audit-docs.mjs
 ```

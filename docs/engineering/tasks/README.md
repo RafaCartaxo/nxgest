@@ -26,6 +26,10 @@ tasks/
 
 | Data | Tarefa | Status |
 |------|--------|--------|
+| [20/11/2026](2026-11-20/CHECKLIST.md) | README, operação, QA e coerência de fluxos; distinção de BA10 | Revisão documental |
+| [07/08/2026 — rota](2026-08-07/ROTA-REGRESSAO-CT.md) | Casos de regressão da rota (PLAN-062) | Plano de teste histórico |
+| [13/08/2026 — handoff](2026-08-13/HANDOFF.md) | Transição PostgreSQL e e-mail | Histórico |
+| [18/08/2026 — PLAN-083](2026-08-18/CHECKLIST-PLAN083.md) | Checklist de otimização de consultas e busca | Registro histórico |
 | [02/07/2026](2026-07-02/CHECKLIST.md) | Componentização — preparação e checklist | Concluído |
 | [03/07/2026](2026-07-03/CHECKLIST-FASE3.md) | Fase 3 — Qualidade Técnica | Concluído |
 | [04/07/2026](2026-07-04/CHECKLIST-FASE4.md) | Fase 4 — ClienteCard | Concluído |

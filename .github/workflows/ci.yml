@@ -20,10 +20,10 @@ jobs:
     steps:
       - name: Prepara o código do repositório
         uses: actions/checkout@v7
-      - name: Configura Node.js (v20) com cache de dependências
+      - name: Configura Node.js (v24) com cache de dependências
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - name: Instala dependências (lockfile)
         run: npm ci
@@ -53,6 +53,8 @@ jobs:
         run: npm run test:deploy
       - name: Backup e retorno (fixtures com dublês)
         run: npm run test:backup
+      - name: Backup coerente com manutenção e retomada da aplicação
+        run: npm run test:backup:maintenance
       - name: Correções de backup (fixtures isoladas)
         run: npm run test:corrections
       - name: Cobertura de testes
@@ -146,10 +148,10 @@ jobs:
     steps:
       - name: Prepara o código do repositório
         uses: actions/checkout@v7
-      - name: Configura Node.js (v20) com cache de dependências
+      - name: Configura Node.js (v24) com cache de dependências
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - name: Instala dependências (lockfile)
         run: npm ci
@@ -194,10 +196,10 @@ jobs:
     steps:
       - name: Prepara o código do repositório
         uses: actions/checkout@v7
-      - name: Configura Node.js (v20) com cache de dependências
+      - name: Configura Node.js (v24) com cache de dependências
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - name: Instala dependências (lockfile)
         run: npm ci
@@ -229,10 +231,10 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
-      - name: Configura Node.js 20
+      - name: Configura Node.js 24
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
       - name: Metadados públicos do GH no runner de build
         shell: bash
         env:

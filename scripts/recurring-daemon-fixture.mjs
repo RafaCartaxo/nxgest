@@ -76,8 +76,9 @@ if(op==='ps'){
  ok(list.map(c=>c.Id).join('\n'))
 }
 if(op==='inspect'){
- const format=args[1]==='--format'?args[2]:null,obj=getContainer(args.at(-1));if(!obj)bad()
+ const format=args[1]==='--format'?args[2]:null,obj=getContainer(args.at(-1))||state.images[imageId(args.at(-1))];if(!obj)bad()
  if(!format)ok([obj])
+ if(format==='{{json .Config.Env}}')ok(JSON.stringify(obj.Config?.Env??[]))
  if(format==='{{.Id}}')ok(obj.Id)
  if(format==='{{.Image}}')ok(obj.Image)
  if(format==='{{.State.Status}}')ok(obj.State.Status)

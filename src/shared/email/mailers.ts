@@ -23,22 +23,28 @@ export class ResendMailer implements IMailer {
   ) {}
 
   async send({ to, subject, html, text, replyTo }: EmailMessage): Promise<void> {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: this.from,
-        to,
-        subject,
-        html,
-        text,
-        headers: { "List-Unsubscribe": "<mailto:rafael.cartaxo@hotmail.com>" },
-        ...(replyTo ? { reply_to: replyTo } : {}),
-      }),
-    })
+    let res: Response
+    try {
+      res = await fetch("https://api.resend.com/emails", {
+        signal: AbortSignal.timeout(10_000),
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: this.from,
+          to,
+          subject,
+          html,
+          text,
+          headers: { "List-Unsubscribe": "<mailto:rafael.cartaxo@hotmail.com>" },
+          ...(replyTo ? { reply_to: replyTo } : {}),
+        }),
+      })
+    } catch {
+      throw new EmailEnvioFalhouError("Serviço de e-mail indisponível ou prazo de envio excedido.")
+    }
     if (!res.ok) {
       // Ex.: domínio não verificado (403) / destinatário inválido (422). Causa vai pro log do controller.
       throw new EmailEnvioFalhouError(`Resend HTTP ${res.status}`)

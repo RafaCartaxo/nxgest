@@ -699,7 +699,7 @@ Contrato com periodicidade **alternada** (`alternada`) tem parcelas a cada **2 d
 
 ## BR-108 (PLAN-085)
 
-A data final do contrato (`dataFinal`) será calculada automaticamente como `dataInicio + quantidadeParcelas × intervalo`, onde `intervalo` é `1` (diária), `2` (alternada) ou `7` (semanal), ajustando para segunda-feira se o cálculo recair em um domingo (BR-042).
+A data final do contrato (`dataFinal`) é o vencimento da última parcela: a partir de `dataInicio`, avançar `intervalo` dias **para cada parcela** e, em cada avanço, deslocar domingo para segunda-feira (BR-042). O intervalo é `1` (diária), `2` (alternada) ou `7` (semanal). A soma simples `dataInicio + quantidadeParcelas × intervalo` não substitui esse cálculo quando há ajustes intermediários de domingo. Backend (`gerar-parcelas.ts`) e frontend (`calcularDataFinal.ts`) usam a mesma sequência. Exemplo: diária com início em 20/11/2026 e 3 parcelas vence em 21, 23 e 24/11; data final 24/11.
 
 > **Revoga a BR-042-A**, cuja fórmula enumerava apenas os intervalos `1` e `7`.
 

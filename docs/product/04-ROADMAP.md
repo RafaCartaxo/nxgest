@@ -4,7 +4,7 @@
 
 **Versão:** 2.7
 
-**Última atualização:** 03/08/2026
+**Revisão de inventário:** 20/11/2026 · **Matriz de fases:** planejamento histórico, sem reaprovação funcional nesta revisão
 
 ---
 
@@ -12,7 +12,7 @@
 
 Definir a ordem de implementação do projeto, organizando por fases com base no estado atual do sistema, bugs conhecidos, mapeamento de telas e gaps de design system.
 
-Este documento substitui a v0.1 e reflete o estado real do código + documentação.
+Este documento preserva a matriz de planejamento v2.7 e apresenta abaixo um inventário revisado. O estado operacional atual está em [STATUS.md](../STATUS.md); não inferir que todas as fases históricas foram revalidadas.
 
 ---
 
@@ -22,14 +22,15 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 
 | Camada | Qtde | Detalhes |
 |--------|------|----------|
-| Backend | 10 módulos | health, auth, admin, empresas, cliente, contrato, pagamento, operações, caixa, gasto |
-| Frontend | 18 telas | 7 módulos (operacoes, cliente, contrato, auth, admin, caixa, gasto) |
-| Shared Components | 15 | Button, Card, Carousel, ConfirmModal, ErrorBanner, ErrorBoundary, EstadoTela, KpiCard, Modal, Navbar, QuickActions, SearchBar, SectionHeader, StatusBadge, SuccessState (+ FeedbackOverlay em `shared/feedback`) |
-| Module Components | 25 | ClienteInfo, SaldoInfo, ContratoInfo, ParcelaList, CobrancaList, IndicadoresCards, RotaCobrancaSection, PagamentosHojeModal, PagamentoModal, CobrancaCard, ClienteCard, ContratoCard, GastoForm, GastoList, OperadoresList, OperadorForm, EquipeModal, ContribuicaoModal, EmpresaForm, EmpresaList, ContratosSemanaModal, GastosPeriodoModal, PagamentosPeriodoModal, ParcelasHojeModal, RouteProgress |
-| Documentação | ~55 arquivos | Foundation, Product, Engineering, Design, Plans, Skills, Tasks, Templates |
-| Design System | 6 docs | UX, DESIGN-SYSTEM, COMPONENT-ARCHITECTURE, UI-COMPONENTS, TOKEN, UI-PATTERNS |
+| Backend | 13 diretórios de módulos | admin (inclui empresas), anexo, auth, caixa, cliente, contrato, devboard, gasto, health, insights, leads, operacoes, pagamento |
+| Frontend | 29 rotas mapeadas | 11 diretórios de módulos; ver [mapeamento de telas](../engineering/05-MAPEAMENTO-TELAS.md) |
+| Shared Components | Catálogo em código | `frontend/src/shared/components/`; ver [UI-COVERAGE](../engineering/design/UI-COVERAGE.md) |
+| Module Components | Por módulo | `frontend/src/modules/*/components/`; contagem de arquivos não equivale à de componentes |
+| Design System | Documentos canônicos | Ver [índice de engenharia](../engineering/README.md) |
 
-## O que não existe (planejado)
+## Planejamento histórico de módulos
+
+As classificações abaixo pertencem ao planejamento original; PWA já tem entrega registrada. Não usar esta tabela como inventário atual.
 
 | Módulo | BRs | Depende de |
 |--------|-----|------------|
@@ -50,7 +51,9 @@ Este documento substitui a v0.1 e reflete o estado real do código + documentaç
 | Migração de URL para `nxgest.com.br` + e-mail em produção (Resend) | PLAN-068 |
 | Polimento de UI app-first (Config/Fechar caixa/Ajuste caixa; Admin pendente) | PLAN-069 |
 
-## O que está inconsistente
+## Achados históricos de UI
+
+Lista preservada da revisão original; não foi reproduzida integralmente em20/11/2026. Ver UI-COVERAGE para a referência atual.
 
 | Problema | Severidade | Detalhe |
 |----------|-----------|---------|

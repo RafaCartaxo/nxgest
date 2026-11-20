@@ -137,7 +137,9 @@ export class AnexoController {
       const ehPdf = anexo.mime === "application/pdf"
       res.setHeader("Content-Type", anexo.mime)
       res.setHeader("Content-Disposition", `${ehPdf ? "inline" : "inline"}; filename="${sanitizarNome(anexo.nomeOriginal)}"`)
-      res.sendFile(caminhoAbs)
+      // Treat the configured storage directory as root, including hidden parent directories.
+      // Express still rejects traversal and dotfiles inside the attachment path.
+      res.sendFile(anexo.caminho, { root: path.resolve(UPLOADS_DIR) })
     } catch (err) {
       console.error("Erro ao servir anexo:", err)
       res.status(500).json({ code: "INTERNAL_ERROR", message: "Erro interno ao servir anexo." })

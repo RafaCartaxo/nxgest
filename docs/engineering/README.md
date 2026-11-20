@@ -15,6 +15,7 @@ Documentos técnicos que definem a arquitetura, o banco de dados, a API, o front
 | [06-PRODUCAO.md](06-PRODUCAO.md) | Runbook de operação: acesso, deploy, backup, rollback, monitoramento | Aprovado |
 | [07-FORMS-INPUTS.md](07-FORMS-INPUTS.md) | Padrões de formulários e inputs (Field, validação, máscaras) | Aprovado |
 | [08-SETUP-NOVA-MAQUINA.md](08-SETUP-NOVA-MAQUINA.md) | Setup de nova máquina, portabilidade de SO e Disaster Recovery | Aprovado |
+| [09-BACKUP-ROLLBACK.md](09-BACKUP-ROLLBACK.md) | Backup com manutenção e restauração isolada | Scripts atuais; comprovação registrada no STATUS |
 | [TESTES.md](TESTES.md) | Estratégia de testes, rotina e convenções (PLAN-067) | Aprovado |
 | [SEGURANCA.md](SEGURANCA.md) | Postura de segurança, gaps e processos (PLAN-066) | Aprovado |
 

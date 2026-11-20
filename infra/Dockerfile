@@ -1,5 +1,4 @@
-FROM node:20-slim AS build
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
+FROM node:24-slim AS build
 WORKDIR /app
 COPY package*.json ./
 COPY frontend/package.json frontend/
@@ -13,7 +12,7 @@ COPY frontend/ ./frontend/
 WORKDIR /app/frontend
 RUN npx vite build
 
-FROM node:20-slim
+FROM node:24-slim
 WORKDIR /app
 COPY package*.json ./
 COPY frontend/package.json frontend/
@@ -22,8 +21,8 @@ RUN npm ci --omit=dev
 COPY --from=build /app/dist/ ./dist/
 COPY --from=build /app/frontend/dist/ ./frontend/dist/
 
-# Scripts utilitários (seed/schema p/ staging; bcryptjs é dependência de runtime)
-COPY scripts/ ./scripts/
+# Único utilitário chamado dentro da imagem; testes/deploy/legado ficam no runner/host.
+COPY scripts/seed-demo.mjs ./scripts/seed-demo.mjs
 
 EXPOSE 8080
 ENV NODE_ENV=production

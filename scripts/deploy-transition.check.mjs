@@ -25,7 +25,7 @@ function workflow(name) {
   return body
 }
 function recoveryInstructions() {
-  const doc = readFileSync(path.join(root, 'docs/engineering/06-PRODUCAO.md'), 'utf8')
+  const doc = readFileSync(path.join(root, 'docs/arquivo/2026-11-20-producao-runbook-anterior.md'), 'utf8')
   const body = doc.split('### Recuperação do checkout legado após a primeira transição')[1].split('```bash')[1].split('```')[0]
   return body.replace('CONTROLADOR=COLE_O_SHA_CONTROLADOR_DE_40_CARACTERES', 'CONTROLADOR="$TEST_SHA"').replace('LEGADO=COLE_O_SHA_LEGADO_DE_40_CARACTERES', 'LEGADO="$OLD_SHA"').replace('cd /opt/nxgestao', 'cd "$TEST_CHECKOUT"')
 }

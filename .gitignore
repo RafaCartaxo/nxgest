@@ -29,3 +29,11 @@ coverage/
 .cache/
 .tmp/
 .DS_Store
+
+# Estado local e resíduos gerados por verificadores/testes
+.maestro/
+.nxg-build-verified-*/
+.nxg035-fixture-*/
+.ba10-fixture-*/
+
+.backup-maintenance-test-*/
