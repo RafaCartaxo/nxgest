@@ -71,9 +71,9 @@
 | **Compose** | Docker Compose (prod/staging) |
 | **Volume** | Persistência Docker (`nxgestao_data`, `nxgestao_staging_data`) |
 | **Rede compartilhada** | `nxgestao_net` (external) — Caddy alcança os dois stacks |
-| **WAL** | SQLite Write-Ahead Log (modo de journal) |
+| **WAL** | Write-Ahead Log do PostgreSQL (registro transacional) |
 | **Backup off-site** | Cópia externa cifrada (gpg/age) |
-| **Rollback** | Reverter deploy para commit/tag anterior |
+| **Rollback** | Retornar a uma imagem compatível; recuperação de dados exige restore próprio |
 
 ---
 

@@ -43,7 +43,7 @@ npm run test:coverage  # cobertura v8 (report-only, meta sobe gradual)
 **Caminho recomendado (orquestrador — codifica todas as invariantes):**
 
 ```bash
-source ~/.nvm/nvm.sh && nvm use      # Node ≥20 (.nvmrc)
+source ~/.nvm/nvm.sh && nvm use      # Node 24 LTS (.nvmrc)
 SMOKE_DATABASE_URL=postgres://nxgest:nxgest-dev@localhost:55432/nxgest_smoke npm run smoke:local  # somente banco isolado; recria DB → schema → seed → sobe :3002 → roda o smoke → teardown
 ```
 
