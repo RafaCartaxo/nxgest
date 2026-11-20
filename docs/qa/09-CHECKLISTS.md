@@ -10,9 +10,9 @@
 
 - [ ] `npx tsc --noEmit` limpo (raiz + frontend)
 - [ ] `npm run build` verde
-- [ ] `npm test` verde (154 testes)
+- [ ] `npm test` verde, registrando total e revisão executados
 - [ ] Audits: `audit:ui` · `audit:styles` · `audit:modules` · `docs:audit`
-- [ ] Smoke (se tocou backend/API): 274/274 em instância isolada
+- [ ] Smoke (se tocou backend/API): todos os cenários da revisão avaliada em instância isolada
 - [ ] CI verde no push/PR
 - [ ] (se merge à main) staging no ar + prod sem regressão
 
@@ -31,17 +31,17 @@
 - [ ] Admin: operadores CRUD, auto-rebaixar/remover (403), equipe (Σ = totais), empresas (super), módulos/capacidades
 - [ ] Leads: criar público, duplicado, confirmar token (single-use), converter, descartar (LGPD)
 - [ ] Anexos: upload imagem/PDF, MIME real, limite, download autenticado, escopo (404 p/ outro operador)
-- [ ] Smoke 274/274
+- [ ] Smoke todos os cenários da revisão avaliada
 
 ---
 
 ## C. Release / QA pré-produção
 
 - [ ] Todas as seções A + B verdes
-- [ ] CI verde (test + smoke) na última `main`
+- [ ] CI verde (qualidade + smoke + migração + build/atestações) no SHA avaliado de `main`
 - [ ] **Staging** deployado e saudável (`https://nxgestao.duckdns.org/api/health`)
 - [ ] Validação manual no staging com seed `teste123!`
-- [ ] CD `validate` verde (staging saudável)
+- [ ] Aprovação dos environments, recibo staging atestado e CD verificando a mesma imagem
 - [ ] Deploy em prod + health pós-deploy (`https://nxgest.com.br/api/health`)
 - [ ] `docs:audit` 0 divergências
 - [ ] `STATUS.md`/`UPDATES.md` atualizados
@@ -62,9 +62,9 @@
 ## E. Incidente em produção
 
 - [ ] Confirmar health: `curl https://nxgest.com.br/api/health`
-- [ ] Logs do app: `docker compose -f /opt/nxgestao/docker-compose.prod.yml logs -f app`
+- [ ] Logs do app: `docker compose --project-directory /opt/nxgestao -f /opt/nxgestao/infra/docker-compose.prod.yml logs -f app`
 - [ ] Rodar backup manual antes de qualquer rollback
-- [ ] Rollback: `Actions → CD → Run workflow` (ref = commit bom) **ou** `git reset --hard` no VPS + `deploy.sh`
+- [ ] Retorno: procedimento específico do runbook com imagem/dados/compatibilidade e evidências; CD manual usa `staging_run`, não ref; preservar pending/active e não usar reset para contornar guardas
 - [ ] Validar prod novamente + registrar no `UPDATES.md`
 
 ---

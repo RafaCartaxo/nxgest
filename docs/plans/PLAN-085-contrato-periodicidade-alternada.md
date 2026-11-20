@@ -68,7 +68,7 @@ Adicionar `alternada` ao enum de `periodicidade`, com intervalo de **2 dias** e 
 ## Regras de negócio
 
 - **BR-107** (nova): `alternada` = intervalo 2, 1º vencimento `dataInicio+2`, sem restrição de dia de início — **estende a BR-039**.
-- **BR-108** (nova): `dataFinal = dataInicio + quantidadeParcelas × intervalo` com `intervalo` `1 | 2 | 7` — **revoga a BR-042-A**.
+- **BR-108** (nova): `dataFinal` como último vencimento, avançando `intervalo` `1 | 2 | 7` e ajustando domingo a cada parcela — **revoga a BR-042-A**.
 
 ---
 

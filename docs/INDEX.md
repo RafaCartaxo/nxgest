@@ -15,7 +15,7 @@
 
 - [00-PROJECT.md](product/00-PROJECT.md) — Visão do produto, escopo, funcionalidades e premissas
 - [01-DOMAIN.md](product/01-DOMAIN.md) — Entidades, responsabilidades, relacionamentos e estados
-- [02-BUSINESS-RULES.md](product/02-BUSINESS-RULES.md) — Regras de negócio (BR-001 a BR-090)
+- [02-BUSINESS-RULES.md](product/02-BUSINESS-RULES.md) — Catálogo de regras de negócio versionadas
 - [03-PRD.md](product/03-PRD.md) — Product Requirements Document
 - [04-ROADMAP.md](product/04-ROADMAP.md) — Roadmap do produto (v2.7, Fases 0-5)
 - [05-CONVENTIONS.md](product/05-CONVENTIONS.md) — Convenções de código e nomenclatura
@@ -34,6 +34,7 @@
 - [06-PRODUCAO.md](engineering/06-PRODUCAO.md) — Runbook de operação: acesso, deploy, backup, rollback
 - [07-FORMS-INPUTS.md](engineering/07-FORMS-INPUTS.md) — Padrões de formulários e inputs (Field, validação, máscaras)
 - [08-SETUP-NOVA-MAQUINA.md](engineering/08-SETUP-NOVA-MAQUINA.md) — Setup de nova máquina, portabilidade de SO e Disaster Recovery
+- [09-BACKUP-ROLLBACK.md](engineering/09-BACKUP-ROLLBACK.md) — Backup com manutenção, restauração isolada e recuperação
 - [TESTES.md](engineering/TESTES.md) — Estratégia de testes, rotina e convenções (PLAN-067)
 - [SEGURANCA.md](engineering/SEGURANCA.md) — Postura de segurança, gaps e processos (PLAN-066)
 
@@ -85,6 +86,8 @@ Consulte o [índice completo de planos](plans/README.md).
 - [SKILL-009 — Documentation Sync](skills/SKILL-009-documentation-sync.md) — fonte única de verdade + matriz de propagação (mantém docs sempre alinhadas)
 
 ## Scripts (ferramentas de apoio)
+
+Consulte o [guia de scripts](../scripts/README.md) para distinguir operação, regressões e histórico.
 
 | Script | npm | Finalidade |
 |--------|-----|------------|

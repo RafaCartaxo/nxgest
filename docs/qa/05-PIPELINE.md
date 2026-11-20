@@ -1,105 +1,46 @@
-# 05 — Pipeline (CI/CD)
+# 05 — Pipeline CI/CD
 
-**Status:** Ativo (18/08/2026) · **Fonte:** `.github/workflows/ci.yml` · `.github/workflows/cd.yml` · `docs/engineering/06-PRODUCAO.md §1.1`
+**Revisado:** 20/11/2026. Fonte: workflows da main publicada `f804aaf6` e [runbook](../engineering/06-PRODUCAO.md).
 
----
-
-## Visão de alto nível
+## Sequência vigente
 
 ```text
-push/PR → [CI] Qualidade (tsc+build+audits+unit) → Smoke da API → merge main
-                                                               ↓
-                    CI no push à main → Deploy em homologação (automático)
-                                                               ↓
-            [CD] Valida CI + staging (gate) → Deploy em produção (automático)
-                                                               ↓
-                                             health check pós-deploy
+push/PR → CI: qualidade + smoke + migração
+push main aprovado → build único + recibo e atestações
+                   → workflow Staging verificado → aprovação staging → aplicação/health/recibo atestado
+                   → workflow CD → aprovação production → mesma imagem/health/recibo/finalização
 ```
 
-**Regra de promoção:** produção **só recebe código que passou CI e staging**.
+Uma PR não publica. Staging não é um job de deploy dentro do CI. Os reviewers continuam exigidos; existir um trigger não elimina as aprovações do environment.
 
----
+## Contratos dos workflows
 
-## CI — `.github/workflows/ci.yml` (push/PR/manual)
-
-Jobs renomeados para leitura humana (nomes legíveis no run do GitHub):
-`Qualidade` · `Smoke da API` · `Migração de schema` · `Deploy em homologação`.
-
-### Job `Qualidade`
-`npm ci` → `tsc --noEmit` → `npm run build` → `check-dist` → `audit:ui` → `audit:styles` → `audit:modules` → `npm test` → `test:coverage` (+ artifact 14 dias) → `docs:audit` → `audit:links`.
-
-> **Legibilidade (logs):** cada step tem nome descritivo em português, `shell: bash`
-> (habilita `pipefail` — falha real quebra o job, sem falso verde) e o job termina
-> com um **resumo em markdown** (o que cada checagem valida + o que fazer se falhar).
-
-### Job `Smoke da API`
-`schema isolado` → `seed-demo` → **uma** instância (`JWT_SECRET` + `LOGIN_RATE_LIMIT_MAX=10000` + `USER_RATE_LIMIT_MAX=100000`) → `smoke-api` (278/278, resumo por seção).
-
-### Job `Migração de schema`
-`schema do modelo` → `migrate-modelo` (idempotente) → `valida-modelo` (invariantes).
-
-### Job `Deploy em homologação` (push→main, `needs: [Qualidade, Smoke da API]`)
-SSH (secrets `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY`) → `scripts/deploy-staging.sh <SHA do CI>` → staging em `nxgestao.duckdns.org` **no commit exato validado** (fetch + reset no SHA; nunca `git pull` solto na hora do deploy).
-
-### Hardening
-`permissions: contents: read` · `concurrency` (cancel-in-progress) · `timeout-minutes` · `workflow_dispatch`.
-
----
-
-## CD — `.github/workflows/cd.yml` (promoção para produção)
-
-| Gatilho | Quando |
+| Workflow | Gatilho e resultado |
 |---|---|
-| `workflow_run` | CI concluiu com **success** no push à main |
-| `workflow_dispatch` | Manual — input `ref` (branch/tag/commit) p/ deploy sob demanda ou **rollback** |
+| `ci.yml` | push/PR/manual executam checks; build atestado somente para push/main após qualidade, smoke e migração |
+| `staging.yml` | `workflow_run` do CI aprovado; exige push/main, tentativa 1 e workflow CI esperado; verifica origem e promove artefato antes de atestar/publicar recibo |
+| `cd.yml` | `workflow_run` de Staging verificado success/main/tentativa 1; manual exige `staging_run` em main; valida recibo e os mesmos bytes antes de promover/finalizar |
 
-### Jobs
+Os grupos de concorrência de staging e produção são separados e não cancelam automaticamente a execução anterior. Um run em espera pode ocupar seu grupo. Não aprovar ou repetir uma execução antiga sem conferir seleção e configuração efetivas.
 
-1. **`validate`** — garante CI verde (no automático) ou roda os **gates completos no manual** (tsc · build · check-dist · audit:ui/styles/modules · test · docs:audit · audit:links no ref escolhido — smoke fica de fora: ref de rollback já passou CI quando foi pushado) + **health do staging** (gate de promoção).
-2. **`deploy-prod`** — `environment: production` → SSH → `scripts/deploy.sh` (**backup pré-deploy obrigatório** + audits) → **health check pós-deploy** de `nxgest.com.br`.
+## Origem, configuração e efeitos
 
----
+O SHA do candidato, o controlador aprovado e o image ID têm papéis distintos. Verificadores correlacionam repo/workflow/evento/run/tentativa, atestações, recibos e digests. Policies e authorities externas fixam controlador, decisões, prazo e configuração; secrets não são conteúdo do artifact. O GH oficial é instalado por versão/hash aprovados nos consumidores, independentemente da versão pré-instalada no runner. A mesma imagem chega a staging e produção sem rebuild.
 
-## Ambientes
+Falha de origem, hash, política, lock, health ou identidade bloqueia a sequência. Falha após troca de imagem pode deixar serviço novo saudável e publicação pendente; health sozinho não comprova conclusão. Conferir recibo, marker, pending/active e passo de finalização. Preservar estado antes de qualquer reconciliação específica.
 
-| | Staging | Produção |
-|---|---|---|
-| Domínio | `nxgestao.duckdns.org` | `nxgest.com.br` |
-| Arquivo compose | `docker-compose.staging.yml` | `docker-compose.prod.yml` |
-| Serviço | `staging-app` (:8081) | `app` (:8080) + `caddy` |
-| Volume | `nxgestao_staging_data` | `nxgestao_data` |
-| Rede compartilhada | `nxgestao_net` (external) | `nxgestao_net` |
-| Caddyfile | `nxgestao.duckdns.org → staging-app:8081` | `nxgest.com.br → app:8080` |
-| Dados | Seed fake (teste123!) | Reais |
+## Evidência atual
 
----
+A cadeia [CI44764236119](https://github.com/RafaCartaxo/nxgest/actions/runs/44764236119) → [staging44765108964](https://github.com/RafaCartaxo/nxgest/actions/runs/44765108964) → [CD44765426852](https://github.com/RafaCartaxo/nxgest/actions/runs/44765426852) concluiu success em 20/11/2026, com mesma imagem e finalização conferidas. Estado e prazos: [STATUS](../STATUS.md).
 
-## Fluxo de um deploy completo
+## Backup e rollback
 
-1. `git push`/merge à `main`.
-2. CI roda `test` + `smoke` (gate de qualidade).
-3. CI `deploy-staging` publica o staging e valida health.
-4. CD dispara (`workflow_run`), `validate` confirma CI + staging, `deploy-prod` publica prod.
-5. Health check pós-deploy; em caso de falha, o job falha (visível na run).
+O deploy valida a promoção da imagem e a saúde do serviço. A recuperação de dados exige o procedimento de backup/restauração do runbook; não é demonstrada apenas pelo CD verde. O experimento BA10 foi arquivado em favor de manutenção curta explícita.
 
----
+CD manual não é rollback por SHA/ref arbitrária. Não usar reset, checkout parcial, build improvisado ou scripts avulsos para contornar políticas. Imagem preservada, compatibilidade de dados e procedimento validado são pré-condições de retorno; ver [operação](06-OPERACAO.md) e [backup/rollback](../engineering/09-BACKUP-ROLLBACK.md).
 
-## Rollback
+## Review e referência
 
-- **Manual:** `Actions → CD → Run workflow` → input `ref` = commit/tag anterior.
-- **No VPS:** `git reset --hard <commit>` + `bash scripts/deploy.sh` (ver `06-OPERACAO.md`).
+A branch main exige checks e revisão conforme a proteção efetiva do GitHub. Na execução registrada, os merges usaram a exceção administrativa existente, sem mudar as regras; isso é distinto dos reviewers de environments. Consultar a configuração atual antes de integrar ou liberar execução.
 
----
-
-## Branch protection (main)
-
-- Checks obrigatórios: `Qualidade` + `Smoke da API` (nomes legíveis — atualizado com a melhoria de logs).
-- Exige **1 review de PR** para merge.
-
----
-
-## Documentos relacionados
-
-- `docs/engineering/06-PRODUCAO.md §1.1` — pipeline e operação
-- `.github/workflows/ci.yml` · `.github/workflows/cd.yml` — definições reais
-- `scripts/deploy.sh` · `scripts/deploy-staging.sh` — scripts de deploy
+Definições versionadas: [CI](https://github.com/RafaCartaxo/nxgest/blob/f804aaf6702a00dab522afa88758e2b70e01a8dc/.github/workflows/ci.yml), [staging](https://github.com/RafaCartaxo/nxgest/blob/f804aaf6702a00dab522afa88758e2b70e01a8dc/.github/workflows/staging.yml), [CD](https://github.com/RafaCartaxo/nxgest/blob/f804aaf6702a00dab522afa88758e2b70e01a8dc/.github/workflows/cd.yml).

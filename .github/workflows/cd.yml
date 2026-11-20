@@ -31,7 +31,7 @@ jobs:
           ref: ${{ vars.CT011_CONTROLLER_SHA }}
       - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
       - name: Instala GH aprovado para verificar atestações
         shell: bash
         run: |

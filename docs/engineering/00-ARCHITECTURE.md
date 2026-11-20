@@ -4,7 +4,7 @@
 
 **Versão:** 1.2
 
-**Última atualização:** 31/07/2026
+**Base arquitetural:** 31/07/2026 · **Inventário revisado:** 20/11/2026
 
 ---
 
@@ -18,7 +18,7 @@ Este documento representa a referência arquitetural do sistema.
 
 # Arquitetura Adotada
 
-O sistema adotará uma arquitetura baseada em:
+O sistema adota uma arquitetura baseada em:
 
 - Modular Monolith
 - DDD Lite
@@ -52,20 +52,9 @@ O projeto será organizado por módulos de negócio.
 
 Cada módulo deverá ser responsável exclusivamente pelo seu próprio contexto.
 
-Exemplos:
+Inventário de diretórios em `src/modules/` (20/11/2026): `admin`, `anexo`, `auth`, `caixa`, `cliente`, `contrato`, `devboard`, `gasto`, `health`, `insights`, `leads`, `operacoes` e `pagamento`.
 
-- Cliente
-- Contrato
-- Parcela
-- Pagamento
-- Caixa
-- Gasto
-- Dashboard
-- Mapa
-- Admin (gestão de operadores, isolamento multi-tenant)
-- Empresa (gestão de empresas, acessível apenas por super_admin)
-
-Novos módulos poderão ser adicionados sem impactar os existentes.
+Empresa é um contexto atendido pelo módulo admin; parcelas pertencem ao contexto de contrato. Isso não exige um diretório próprio para cada entidade ou tela. Novos módulos devem declarar dependências e preservar contratos existentes; o inventário atual não é uma revalidação integral da arquitetura.
 
 ---
 

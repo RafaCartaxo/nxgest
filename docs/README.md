@@ -2,6 +2,12 @@
 
 Bem-vindo à documentação oficial da plataforma modular de gestão operacional NX Gest (primeiro vertical: crédito em campo).
 
+## Fontes e estado
+
+[STATUS](STATUS.md) registra a publicação comprovada e os limites atuais. O [runbook](engineering/06-PRODUCAO.md) e os workflows da main definem operação; o [guia de scripts](../scripts/README.md) diferencia ferramentas e experimentos. [Backup e recuperação](engineering/09-BACKUP-ROLLBACK.md) descreve a manutenção curta e o ensaio isolado; os protocolos experimentais foram arquivados. Datas e checklists históricos não significam validação funcional atual.
+
+A revisão de 20/11/2026 alinhou os guias de entrada/operação e o inventário de rotas, sem declarar todos os planos/fluxos revalidados. Auditoria de rotas e links verifica estrutura; instruções e estados exigem revisão semântica.
+
 ## Seções
 
 | Seção | Descrição |

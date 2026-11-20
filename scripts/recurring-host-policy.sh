@@ -85,16 +85,25 @@ nxgest_stage_network_hash(){
 # Env order and Compose replacement/source-path labels are volatile metadata.
 # Compose bytes, environment file, previous container ID and image have separate guards.
 nxgest_production_config_hash(){
-  "$NXGEST_JQ" -cS '{Config:(.[0].Config|del(.Image,.Cmd,.Entrypoint,.WorkingDir,.User,.Hostname)|.Env|=sort|.Labels|=del(."com.docker.compose.config-hash",."com.docker.compose.image",."com.docker.compose.project.config_files",."com.docker.compose.replace")),HostConfig:.[0].HostConfig}' "$1" | sha256sum
+  local defaults=${2:-'[]'}
+  # Image-owned defaults are authenticated by the exact image identity. Retain
+  # any runtime override that differs from that image (including PATH).
+  "$NXGEST_JQ" -ceS --argjson defaults "$defaults" '
+    if ($defaults|type)!="array" or (all($defaults[];type=="string")|not) then error("invalid image defaults") else
+    {Config:(.[0].Config|del(.Image,.Cmd,.Entrypoint,.WorkingDir,.User,.Hostname)|.Env|=(map(select(. as $value|$defaults|index($value)|not))|sort)|.Labels|=del(."com.docker.compose.config-hash",."com.docker.compose.image",."com.docker.compose.project.config_files",."com.docker.compose.replace")),HostConfig:.[0].HostConfig} end' "$1" | sha256sum
 }
 nxgest_production_topology(){
-  local expected=$1 tmp config mounts networks
+  local expected=$1 tmp config mounts networks image defaults
   "$NXGEST_JQ" -e '(.topology|keys|sort)==(["composeSha256","envSha256","configSha256","mountsSha256","networksSha256"]|sort) and all(.topology[];test("^[a-f0-9]{64}$"))' "$NXGEST_BASE_FILE" >/dev/null || return 1
   tmp=$(mktemp "$NXGEST_GITDIR/.nxgest-production-observe.XXXXXXXX") || return 1
   (ulimit -f 1024; timeout 10s docker --host unix:///var/run/docker.sock inspect "$expected" > "$tmp") || return 1
   nxgest_secure_file "$tmp" 1048576 || return 1
   "$NXGEST_JQ" -e --arg id "$expected" 'length==1 and .[0].Id==$id and .[0].Name=="/nxgestao-app-1" and .[0].State.Running==true' "$tmp" >/dev/null || return 1
-  config=$(nxgest_production_config_hash "$tmp"); mounts=$("$NXGEST_JQ" -cS '.[0].Mounts' "$tmp" | sha256sum); networks=$(nxgest_stage_network_hash "$tmp")
+  image=$("$NXGEST_JQ" -er '.[0].Image|select(test("^sha256:[a-f0-9]{64}$"))' "$tmp") || return 1
+  defaults=$(nxgest_inspect '{{json .Config.Env}}' "$image") || return 1
+  [[ $defaults != null ]] || defaults='[]'
+  config=$(nxgest_production_config_hash "$tmp" "$defaults") || return 1
+  mounts=$("$NXGEST_JQ" -cS '.[0].Mounts' "$tmp" | sha256sum); networks=$(nxgest_stage_network_hash "$tmp")
   [[ ${config%% *} == "$("$NXGEST_JQ" -r '.topology.configSha256' "$NXGEST_BASE_FILE")" && ${mounts%% *} == "$("$NXGEST_JQ" -r '.topology.mountsSha256' "$NXGEST_BASE_FILE")" && ${networks%% *} == "$("$NXGEST_JQ" -r '.topology.networksSha256' "$NXGEST_BASE_FILE")" ]] || return 1
   rm -- "$tmp"
 }

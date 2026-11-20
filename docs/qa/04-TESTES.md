@@ -11,7 +11,7 @@
                Unit lógica frontend
             Unit shared/segurança
          Unit use-case (backend)
-      Smoke API (integração, 278 cenários)
+      Smoke API (integração, contagem registrada no CI)
     CI/CD (gates automáticos) · Cobertura
 ```
 
@@ -21,7 +21,7 @@
 | Unit shared/segurança | `src/shared/utils/*.test.ts` | `scope`, `foto`, `jwt`, `clientIp`, `env` | Helpers críticos e segurança |
 | Unit lógica front | `frontend/src/shared/**/*.test.ts` | `geo/alvo`, `modules`, `capacidades`, `estadoGps` | Lógica pura do frontend |
 | Component/UI | `frontend/src/**/*.test.tsx` (jsdom) | `LoginPage` | Interação de UI (renders, submit, toggle) |
-| Integração API | `scripts/smoke-api.mjs` | 278 cenários (DB isolado + seed) | Endpoints + coerência de retornos |
+| Integração API | `scripts/smoke-api.mjs` | contagem registrada no CI (DB isolado + seed) | Endpoints + coerência de retornos |
 
 ---
 
@@ -36,7 +36,7 @@ npm run test:watch     # watch
 npm run test:coverage  # cobertura v8 (report-only, meta sobe gradual)
 ```
 
-### Smoke API (integração — 278 cenários)
+### Smoke API (integração — contagem registrada no CI)
 
 > **Regra de ouro:** o smoke **não é idempotente** — rate limiters vivem em memória e tokens de lead são single-use. **Cada execução exige DB novo + processo novo.** Re-run no mesmo processo polui (LD-06 token já usado, LD-12 429) e dá falsos negativos.
 
@@ -49,23 +49,7 @@ SMOKE_DATABASE_URL=postgres://nxgest:nxgest-dev@localhost:55432/nxgest_smoke npm
 
 Configure uma instância PostgreSQL exclusiva na porta indicada e `SMOKE_DATABASE_URL` explícita (host local, porta explícita diferente de 5432 e 5433, URL sem parâmetros e banco `nxgest_smoke` ou `nxgest_smoke_sufixo`). A variável `DATABASE_URL` não autoriza o alvo. `--no-recreate` ainda executa schema/seed e exige banco de teste. O `scripts/smoke.mjs` faz: `DROP/CREATE` do banco alvo (nunca o dev), `create-schema` via `npx tsx`, `seed-demo`, sobe o servidor em `SMOKE_PORT` (3002) com rate limits ampliados (`LOGIN_RATE_LIMIT_MAX`/`USER_RATE_LIMIT_MAX`/`PUBLICO_RATE_LIMIT_MAX`/`LEADS_RATE_LIMIT_MAX`) e derruba no fim (PID em `.smoke.pid`). Subcomandos: `npm run smoke:up` (só sobe a pilha) · `npm run smoke:down` (derruba) · `node scripts/smoke.mjs --no-recreate` (depuração).
 
-**Manual (equivalente ao job smoke do CI, `ci.yml`):**
-
-```bash
-# instância isolada (nunca usar o dev/3000) — DB próprio, NUNCA o banco de desenvolvimento
-export DATABASE_URL=postgres://nxgest:nxgest-dev@localhost:5433/nxgest_smoke
-docker exec nxgest-pg-dev psql -U nxgest -d nxgest -c "DROP DATABASE IF EXISTS nxgest_smoke WITH (FORCE); CREATE DATABASE nxgest_smoke;"
-npx tsx scripts/create-schema.mjs   # schema sem boot (precisa tsx — importa TS de src/database.js)
-node scripts/seed-demo.mjs          # seed (senha teste123!)
-PORT=3002 LOGIN_RATE_LIMIT_MAX=10000 USER_RATE_LIMIT_MAX=100000 \
-  PUBLICO_RATE_LIMIT_MAX=100000 LEADS_RATE_LIMIT_MAX=100000 JWT_SECRET=ci-smoke-secret npx tsx src/main.ts &
-sleep 6
-node scripts/smoke-api.mjs --baseUrl http://127.0.0.1:3002
-```
-
-> **Por que `create-schema.mjs`?** O smoke costumava subir o servidor 2× (boot pra criar tabelas + boot real) — causava `EADDRINUSE`. Agora o schema é criado sem abrir porta.
-> **Por que ampliar os rate limits?** O smoke dispara o mesmo IP muitas vezes (lead público, login, ativação). Sem `PUBLICO_RATE_LIMIT_MAX`/`LEADS_RATE_LIMIT_MAX` ampliados, endpoints públicos estouram `429` no meio da bateria.
-> **Node ≥20:** os scripts de migração/schema carregam TS via `npx tsx`; rodar com Node 18 falha. O `.nvmrc` já fixa a versão — `nvm use` no diretório do repo.
+**Execução manual:** usar o orquestrador e o banco dedicado descritos acima. O CI prepara PostgreSQL efêmero no próprio job. Não copiar receitas antigas de DROP/CREATE para o banco de desenvolvimento, nem executar o smoke contra produção. Para anexos locais, configurar `UPLOADS_DIR` exclusivo do ambiente de teste.
 
 ---
 
@@ -90,12 +74,11 @@ node scripts/smoke-api.mjs --baseUrl http://127.0.0.1:3002
 
 ---
 
-## Estado atual (18/08)
+## Evidência publicada em 20/11/2026
 
-- **154 testes** verdes (33 arquivos) — unit + UI.
-- **Smoke 278/278** — integração API.
-- **Cobertura:** report-only (threshold 0) — meta sobe gradual com a rotina (PLAN-067 F4).
-- `docs:audit` 0 divergências (72 rotas = 72 endpoints = 72 UCs/CTs; 28 telas mapeadas).
+No [CI44764236119](https://github.com/RafaCartaxo/nxgest/actions/runs/44764236119), SHA f804: **215 testes unitários/UI em 46 arquivos** e **286/286 cenários de smoke**, além dos gates de segurança, transição, backup e correções. O teste novo de fingerprint passou 7/7. As contagens são daquela revisão; consultar o run da revisão avaliada em vez de usar um número fixo como critério.
+
+`docs:audit` local confere74 rotas/contratos API e29 rotas/telas frontend. Isso valida correspondência estrutural, não todos os comportamentos de negócio nem todas as descrições operacionais. O backup atual tem fixtures de manutenção/retomada; a recuperação exige também o ensaio real isolado descrito no runbook.
 
 ---
 
@@ -109,4 +92,4 @@ node scripts/smoke-api.mjs --baseUrl http://127.0.0.1:3002
 
 ## Correções de backup — gate isolado
 
-`npm run test:corrections` executa ambos os testes de `scripts/corrections.check.mjs` em uma cópia sintética, sem rede. Requer Linux, Node.js 20 ou superior, bubblewrap (`bwrap`), namespaces de usuário/PID/rede habilitados, os utilitários usuais e `/usr/bin/docker`, `/usr/bin/curl`, `/usr/bin/ssh` e `/usr/bin/scp` disponíveis para serem encobertos por guardas. Sem qualquer requisito, o runner falha antes dos testes; não há fallback sem isolamento. As guardas são sondadas por PATH, caminho absoluto e subprocesso. A execução do GitHub Actions e sua compatibilidade com esses requisitos não foram verificadas nesta entrega; não se infere operação real ou restore.
+`npm run test:corrections` executa a suíte de `scripts/corrections.check.mjs` em uma cópia sintética, sem rede. Requer Linux, Node.js 20 ou superior, bubblewrap (`bwrap`), namespaces de usuário/PID/rede habilitados, os utilitários usuais e `/usr/bin/docker`, `/usr/bin/curl`, `/usr/bin/ssh` e `/usr/bin/scp` disponíveis para serem encobertos por guardas. Sem qualquer requisito, o runner falha antes dos testes; não há fallback sem isolamento. As guardas são sondadas por PATH, caminho absoluto e subprocesso. A execução do gate em GitHub Actions foi comprovada no CI acima; isso não transforma fixtures de backup em prova de restore real.

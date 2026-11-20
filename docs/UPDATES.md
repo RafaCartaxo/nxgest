@@ -2,6 +2,23 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 20/11/2026 — consolidação operacional
+
+- Node 24 LTS alinhado em `.nvmrc`, engines, CI e Docker; removidos SQLite e sua cadeia nativa do lockfile. Imagem final inclui apenas o utilitário de seed utilizado.
+- Backup com aplicação parada por janela curta, dump/anexos associados, checksums e comparação em restauração isolada. `verify-backup.sh` e `backup:pull` reconhecem o novo formato sem remover suporte aos anteriores.
+- `f_unaccent` qualifica função/dicionário PostgreSQL para permitir reconstrução do índice no restore; o CI valida `search_path` vazio.
+- Download autenticado de anexos usa `UPLOADS_DIR` como raiz do sendFile, permitindo instalação em diretórios pais ocultos sem liberar traversal ou dotfiles internos.
+- Resend tem timeout explícito e erro de indisponibilidade sanitizado. Envio ao destinatário simulado oficial foi aceito pelo provedor.
+- BA10 e WIP anteriores preservados em snapshot externo; migrador SQLite retirado. Documentos de telas, fluxos e componentes preservados para evolução visual.
+
+## 20/11/2026 — publicação comprovada e revisão documental
+
+- Main f804: [CI44764236119](https://github.com/RafaCartaxo/nxgest/actions/runs/44764236119), [staging44765108964](https://github.com/RafaCartaxo/nxgest/actions/runs/44765108964) e [CD44765426852](https://github.com/RafaCartaxo/nxgest/actions/runs/44765426852) success; mesma imagem, saúde e finalização conferidas. Policies atuais válidas até 23/11/2026 23:59:59 UTC; approvals preservados. Isso não fecha recuperação integral BA10.
+- Revisão documental: README/STATUS/runbook/QA e índices alinhados ao pipeline; removidas receitas operacionais antigas de reset/deploy por ref; histórico de agosto preservado.
+- Corrigida a descrição de BR-108/domínio/PLAN-085 para ajuste de domingo parcela a parcela, sem alterar código de negócio. Testes existentes de contrato/data final/ativação passaram 37/37.
+- `npm run docs:audit` passa a usar `--strict`, aproveitando o verificador existente. Links/rotas não substituem revisão semântica.
+- O experimento BA10 foi arquivado fora da árvore ativa. O backup atual usa manutenção curta e restauração isolada. [Checklist da revisão](engineering/tasks/2026-11-20/CHECKLIST.md) e [status](STATUS.md).
+
 ## 29/08/2026 — Fix: foco no campo com erro ao salvar cliente (NXG-026)
 
 - **Bug resolvido (local, sem deploy)** — CPF/telefone inválido não levava a tela ao campo (`shouldFocusError` sem `ref` nos inputs controlados).

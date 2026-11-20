@@ -1,83 +1,46 @@
-# STATUS — Visão de relance
+# STATUS — situação conferida
 
-> **Regra:** atualizar a cada sessão de trabalho, junto com o `CHECKLIST` do dia (e o `UPDATES.md` quando houver entrega relevante). Fonte de verdade dos detalhes: planos e docs linkados.
+**Última revisão:** 20/11/2026. Este documento distingue operação comprovada, trabalho local e histórico. Não declara todos os fluxos de produto revalidados nesta data.
 
-**Última atualização:** 28/08/2026
+## Publicação comprovada
 
----
-
-## Em produção
-
-| Item | Valor |
+| Item | Evidência |
 |---|---|
-| URL produção | `https://nxgest.com.br` (PLAN-068) |
-| URL homologação | `https://nxgestao.duckdns.org` (**staging**, desde 11/08 — ex-transitório de prod, agora QA) |
-| VPS | `172.245.152.223` · repo `/opt/nxgestao` · vol prod `nxgestao_nxgestao_data` · vol staging `nxgestao_nxgestao_staging_data` |
-| E-mail | Resend ativo (`no-reply@nxgest.com.br`) — fail-closed (503 se indisponível) |
-| Deploy mais recente | **Automático via pipeline** — último commit da `main` (prod após staging saudável) |
-| CI/CD | **CI** (`.github/workflows/ci.yml`): tsc · build · check-dist · audits · test (181) · coverage · docs:audit + smoke isolado (278) + **deploy-staging** · **CD** (`.github/workflows/cd.yml`): validate (CI verde + staging) → **deploy-prod** automático/manual |
+| Produção | https://nxgest.com.br |
+| Staging | https://nxgestao.duckdns.org |
+| SHA publicado | `f804aaf6702a00dab522afa88758e2b70e01a8dc` |
+| CI/build único | [44764236119 — success](https://github.com/RafaCartaxo/nxgest/actions/runs/44764236119) |
+| Staging | [44765108964 — success](https://github.com/RafaCartaxo/nxgest/actions/runs/44765108964) |
+| CD e finalização | [44765426852 — success](https://github.com/RafaCartaxo/nxgest/actions/runs/44765426852) |
+| Imagem nos dois ambientes | `sha256:8da0c59a1aae20e2a61fec358c37edcd2ee6bf6a6994f497435be8700ec3e4bf` |
+| Resultado observado | health/DB conectados, recibos atestados e finalização sem pending/active |
+| Modo e aprovações | Pré-clientes; reviewers de staging e production preservados |
+| Prazo das policies vigentes | 23/11/2026 às 23:59:59 UTC; renovação exige fontes/hashes/autoridades coerentes |
 
-## Entregas recentes
+O gatilho do CD é o sucesso de `Staging verificado` em main, tentativa 1; staging é acionado pelo CI aprovado de um push em main. PR e CI manual não substituem esse evento. Detalhes: [pipeline](qa/05-PIPELINE.md) e [runbook](engineering/06-PRODUCAO.md).
 
-- **PLAN-080 — módulo Insights (F0+F1+F2, 28-29/08)** — whitelabel `insights` read-only: endpoint único `/api/insights/resumo` (classes 1+2) + `/api/insights/carteira` (classe 3 + gastos por categoria + contribuição); página `/insights` com gráficos Recharts (ChartCard + chartColors/useChartTheme + EstadoTela + a11y), manifest `dependsOn: []`, CTs 134-140 + smoke INS-01..05. **Fase 1.5 (item de nav) bloqueada no PLAN-081.** **Em produção.**
-- **PLAN-086 — identidade de plataforma (28/08)** — doc canônica (NORTH-STAR 1.1 · PROJECT 1.2 · PRD 1.1) em 2 níveis + **ADR-007** (3 níveis, critérios de admissão de vertical, `tipo_negocio` adiado com gatilhos A/B/C/D) + 4 strings user-facing (rodapé e-mail, manifest, `queroConhecerSubtitle`, `auth.loginSubtitle` nova). Zero BR · `auth.tagline` intacta.
-- **PLAN-087 — mensagens de falha de convite (28/08)** — incidente de produção resolvido: 6 códigos distintos na ativação (inclui `CONVITE_SUBSTITUIDO` para link trocado por reenvio), 6 chaves i18n órfãs ativadas, ação de saída no `AtivarPage`, e-mail com prazo real de 7 dias (3 idiomas), BR-109, 9 testes unitários novos + CTs.
-- **PLAN-085 — contrato com periodicidade alternada (27/08)** — 3º modelo (`alternada`, a cada 2 dias, default 10 parcelas): zero migração, BR-107/BR-108, espelho backend↔frontend sincronizado com testes-espelho, formulário `grid-cols-3` + lookup de defaults, badge por i18n. tsc · testes (19 novos no backend + 9 no frontend) · audits/docs verdes. **Em produção.**
-- **PLAN-076 + PLAN-077 + UI consolidada em produção (15/08)** — contrato com **periodicidade diária/semanal** (migração idempotente, BR-040-A); **performance**: pool PG com timeout, auth/módulo sem re-query (3→2 queries/request), `listarCobrancasDoDia` com `LATERAL`, N+1 em pagamentos, code-splitting frontend + GPS throttle; UI de Perfil/Operador/Admin consolidada. **Node 20 em todos os ambientes** (prod já era; dev migrado). Smoke **267/267** · testes **125/125** · CI/CD verdes · deploy prod ok.
-- **E-mail: identidade visual NX nos templates (13/08, PLAN-071 Fase 1b — em produção)** — `templates.ts` com layout único (marca "NX Gest" violeta · CTA `min-width` · rodapé institucional pt/en/es · cores da marca em hex). Os 3 templates (convite/reset/lead) usam o layout; textos preservados. Validado local (tsc/91 testes/render HTML).
-- **PLAN-070 concluído — PostgreSQL em produção (13/08)** — migração SQLite→PG concluída: `nxgest-postgres`/`staging-pg` healthy, cutover aplicado, débitos 1-3 resolvidos (TIMESTAMPTZ + snake_case + node 20). Otimização de queries/índices (PLAN-070 Fases B-I).
-- **Caixa: DRY + seções colapsáveis + movimentações sem truncate (12/08, em produção)** — componentes reutilizáveis (`CaixaKpis`, `AjusteHistorico`/`AjusteRow`, `MovimentacoesList`/`MovimentacaoRow`, `CollapsibleSection`) eliminam a duplicação entre CaixaPage e OperadorDetail; movimentações e histórico colapsáveis (limit 8 + "Ver mais"); movimentação em 2 blocos sem truncate. 1 fonte → 2 páginas.
-- **Cliente: lucro realizado (12/08, em produção)** — backend expõe `lucroRealizado` (Σ `valorFinal−valorBase` dos contratos `Finalizado`) via helper reutilizado; frontend mostra o KPI "Lucro realizado" (`sm:grid-cols-3`); BR-098, UC-071, API-CT-106 e smoke `CLI-011` atualizados.
-- **Caixa: título do ajuste contextual + label do motivo + reordenação (12/08, em produção)** — `AjustarCaixaModal` com `title` contextual (próprio: "Ajustar Caixa Total" · operador: "Ajustar caixa base do operador") · label do motivo corrigido ("Motivo do ajuste", era chave crua) · `OperadorDetail` reordenado (Dados → Caixa → Clientes → Contratos → Ajuste → Histórico) · `CaixaPage` reordenada (KPIs → Gasto → Movimentações → Ajustar → Histórico).
-- **Página do administrador: refinamento de identidade visual (12/08, em produção)** — título de seção "Ajuste de caixa" (sem repetição com o botão) · histórico de ajustes **unificado** (CaixaPage + OperadorDetail) com valor em destaque `value-lg` e autor ("por **Nome**") em bold · cards Contratos/Clientes do operador no **padrão canônico** (`Card.Indicators` + `Card.Actions` "Acessar", como a lista de operadores) · CTs atualizados (UC-028/028b).
-- **Página do administrador: hierarquia + histórico 2 colunas + contadores p/ listas (12/08, em produção)** — ajuste de caixa em modal único (CaixaPage + OperadorDetail) · botão separado dos KPIs · histórico de ajustes em **2 colunas** (alinhamento consistente) · motivo do ajuste **máx 100** · contratos/clientes do operador viram **contador + botão "Ver" → lista** escopada (`?usuarioId=`) · CTs documentados (UC-025/026/028/028b + hierarquia admin/sócio/super).
-- **Caixa operacional: ajuste unificado em modal + remoção do "Fechar caixa" da Central (12/08, em produção)** — `OperadorDetail` abre o mesmo `AjustarCaixaModal` da CaixaPage (`AjusteCaixaCard` inline removido) · `FecharCaixaModal` removido (repetia KPIs, não gerava dado; fechamento real só na CaixaPage "Liquidar") · botões Ajuste/Gasto padronizados (`primary`). Docs atualizados.
-- **Validações manuais em produção (12/08)** — GPS/localização (CT-GEO-01/02) · edição de endereço com teclado preservado (UC-080, fix `7d6060e`) · PWA ícone/nome/theme (CT-PWA-01) · anexos imagem + PDF (CT-ANX-02) · rota + contadores (CT-ROT-02) — **todos concluídos**.
-- **Fix teclado na edição de endereço (12/08, `7d6060e`)** — `EnderecoFields` movido p/ nível de módulo + `memo` (não remonta inputs → foco/teclado preservados ao editar endereço com localização). Regressão `ClienteForm.test.tsx` + CT no UC-080. **Em produção e staging.**
-- **Pacote QA + fonte de estudo (11/08)** — `docs/qa/` com 10 documentos: visão geral, arquitetura, engenharia, testes, pipeline (CI/CD), operação, segurança, glossário e checklists + trilha de estudo recomendada. Linkado no `INDEX.md`/`docs/README.md`/`engineering/README.md`.
-- **Pipeline CI/CD completo (11/08, green)** — CI corrigido (16 runs vermelhas → verde): frontend virou **npm workspace** (node_modules unificada, fix da dupla cópia de React) · `scripts/create-schema.mjs` (smoke sem duplo-boot, fim do `EADDRINUSE`) · `JWT_SECRET`/rate limits no runner. **Staging** de homologação no duckdns (compose/DB/Caddyfile próprios + seed fake) com **deploy automático** no merge à main. **CD** para produção com gate de promoção (**prod só passa se staging passou**) — automático via `workflow_run` + manual (`workflow_dispatch` com `ref` p/ rollback), environment `production`, health pós-deploy. **Secrets:** `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY`. **Deps:** dependabot (npm+actions) · react-router 7.18.2 (fix GHSA-337j/CVE-2025-68470; runtime prod 0 vulns).
-- **Fix anexos (11/08)** — imagem (`toBlob` elimina `fetch(dataUrl)` bloqueado pela CSP) · PDF mobile (botão "Baixar PDF"; desktop mantém iframe). **Validado em produção (12/08).**
-- **Pendentes do dia + performance (11/08)** — contadores dos chips (Todos/Vence hoje/Atrasado) corrigidos · **8 índices por `userId`** (P028) eliminam table scan do isolamento multi-tenant. **Follow-up:** reescrita da query de cobranças (ROADMAP 5.10 / BACKLOG P028). **Contadores validados em produção (12/08).**
-- **Ícone/logo v2 (10-11/08)** — favicon/PNGs/PWA com a **LOGO** (variante `sm`) · `sw.js` (só em produção) → PWA instalável no Android · manifest com `id`. **Ajuste de Caixa Base** no `FecharCaixaModal`. **Validado em produção (12/08).**
+## Validação e seus limites
 
-## Planos em aberto (próximas tarefas — não executadas)
+O CI acima registrou **215 testes unitários/UI em 46 arquivos** e **286/286 cenários de smoke**, além dos gates de segurança, deploy e backup com fixtures. O teste de fingerprint passou 7/7. Essas contagens pertencem ao SHA indicado, não são metas fixas para revisões futuras.
 
-| Plano | Status | Próximo passo |
-|---|---|---|
-| PLAN-072 (identidade visual autosserviço) | ⏳ Planejado (13/08) | Admin/sócio edita nomeFantasia/tema/logo/contato · super modera · seed na conversão de lead |
-| PLAN-073 (IA mestre) | ⏳ Planejado | F1 WhatsApp detalhada em PLAN-074 · F2-F5 como fases |
-| PLAN-074 (IA F1 — WhatsApp) | ⏳ Planejado | Endpoint `sugerir` (Gemini Flash-Lite) + fallback ao template |
-| PLAN-071 (e-mail) | 🔵 Fase 1+2 ✅ (11/08) | E-mail saindo do spam (display name "NX Gest" · DMARC rua→quarantine · assuntos) + política dev/staging/prod (`MAIL_PROVIDER`) · ⏳ DNS (Fase 3) e monitoramento (Fase 4) manuais |
-| PLAN-075 (cadastro/perfil/convites/segurança) | ✅ Implementado (14/08) | convites (ciclo próprio) · troca de e-mail com verificação · suspensão de usuário · admin nunca define senha · seed de contato na conversão · dedup global |
-| PLAN-069 (polimento UI) | 🔵 Parte 1 ✅ (08/08) | **Parte 2 — Admin** (filtro por papel `SegmentedControl` · "Recebido hoje" em destaque · "Meus dados" → Perfil) |
-| PLAN-067 (testes) | 🔵 F0+F1 parcial+F3-P022+CI (08/08) | F1 restante (financeiro/admin/operações) · F2 (AuthContext/ThemeProvider/api-client) · F3 telas críticas |
-| PLAN-066 (segurança) | 🔵 P0 ✅ · P1 parcial · P2 ⏳ | P1: timeouts Caddy (T-08) + **executar firewalld/fail2ban no VPS** · P2: JWT curto/revogação, Cloudflare WAF, 2FA, senha mín. 8 |
-| **PLAN-077 (performance)** | 🔵 F1-F4 ✅ (15/08) · em prod | Bulk insert e otimização adicional encaminhados no PLAN-083; manter medição com volume real como acompanhamento |
-| **PLAN-079 (estabilidade deploy)** | ✅ Implementado (18/08) · **em produção** | Fix erro "text/html MIME" pós-code-splitting: cache-busting do SW · fallback assets→404 · static imutável · check-dist no CI |
-| **PLAN-084 (organização do repositório)** | ✅ **Concluído (20/08)** | Blocos 1–5: sync factual, fronteira Git/Docker, staging organizado, `audit:links` no CI, SHA validado no staging, gates completos no CD manual, backup obrigatório no deploy. Novos planos: **PLAN-080/081/082** 📝 Planejado |
-| ~~PLAN-086 (identidade/posicionamento)~~ | ✅ **Implementado (28/08)** | Doc canônica em 2 níveis + **ADR-007** (critérios de admissão de vertical, `tipo_negocio` adiado) + 4 strings user-facing (inclui `auth.loginSubtitle` nova). Origem: vault `brainwork` |
-| ~~PLAN-087 (mensagens de falha de convite)~~ | ✅ **Implementado (28/08)** | Incidente de produção resolvido: códigos distintos na ativação + ação de saída + e-mail com prazo real. BR-109 |
+A auditoria documental local cruza 74 rotas/contratos de API e 29 rotas/telas frontend. Links e contagens coerentes não demonstram todos os comportamentos nem atualizam automaticamente instruções de operação. A revisão atual corrigiu README, pipeline, operação e a descrição iterativa de dataFinal; não repetiu uma regressão manual completa de UI.
 
-## Pendências (verificação/ações futuras)
+## Consolidação operacional em validação
 
-- [ ] **Cloudflare SSL Full (strict)** — recomendado (site já funcionando); ajuste de painel
-- [x] **E-mail no staging** — `MAIL_PROVIDER=console` (não envia de verdade; política atual)
-- [ ] Vulns dev-only restantes (`vite`/`vitest` — major bump, fora de escopo; monitorar via dependabot)
-- [x] **Node 20 no dev local** — instalado; usar `nvm use 20` antes de subir backend/vite
+- Instalação limpa por `npm ci` e build no Node 24 passaram; 216 testes unitários/UI passaram.
+- Resend aceitou um envio para o destinatário simulado oficial (`delivered@resend.dev`). Não foi usado destinatário humano.
+- Backup real de banco/anexos com retomada da aplicação concluído em 32 segundos. A primeira restauração revelou dependência de `search_path` em `f_unaccent`, corrigida no código e coberta pela validação de schema.
+- Publicação da consolidação e nova restauração no VPS permanecem em execução; não confundir com a publicação comprovada acima.
 
-## Backlog (próximos)
+## O que permanece separado
 
-| Item | Onde |
-|---|---|
-| P017 — Mensagens inteligentes do WhatsApp (sem plano ainda) | `docs/plans/BACKLOG.md` |
-| P021 — Pagamento a mais que o total (decisão de produto) | `docs/plans/BACKLOG.md` |
-| P023 — Validação manual fim de fluxo / empty states (T2) | `docs/plans/BACKLOG.md` |
-| P028 — Reescrita da query de cobranças (perf) — **✅ feita no PLAN-077 (15/08)** | `docs/plans/PLAN-077-performance-escalabilidade.md` |
-| P022 → PLAN-067 (em execução) | `docs/plans/PLAN-067-testes.md` |
+- **Recuperação:** o experimento BA10 foi arquivado fora da árvore ativa. A consolidação adota pausa controlada para backup associado e ensaio isolado; ver [backup e retorno](engineering/09-BACKUP-ROLLBACK.md). A restauração completa no VPS ainda precisa passar após publicação da correção de `f_unaccent`.
+- **Consolidação:** branch `chore/consolidacao-operacional-20261120`, baseada na main publicada. Todo WIP anterior foi copiado e verificado antes da retirada da árvore ativa. Runtime, CI e instalação passam a Node 24 LTS, sem dependências SQLite.
+- **Limpeza local:** removidos 112 PDFs sintéticos sem referência local e caches antigos (~345 MiB); 6 arquivos não sintéticos preservados; fixtures antigas em quarentena. Código/testes BA10 preservados em snapshot externo.
+- **Recuperação intermediária:** CD44761356067 permaneceu failure após aplicar uma imagem; a reconciliação manual preservou originais e foi registrada separadamente. O CD44765426852 posterior é a prova automática positiva.
 
-## Métricas de saúde
+## Histórico e planejamento
 
-- **Testes:** 195 verdes (40 arquivos) · smoke API **verde no CI (inclui INS-01..05)** · `docs:audit` 0 divergências (73 rotas = 73 telas · 29 telas front)
-- **Pipeline:** CI verde no push/PR · staging automático no merge à main · CD prod com gate de promoção (staging saudável) · `check-dist` (PLAN-079) garante consistência index.html ↔ chunks
-- **QA:** pacote `docs/qa/` (visão geral, arquitetura, engenharia, testes, pipeline, operação, segurança, glossário, checklists + trilha de estudo) · validações manuais de produção **concluídas (12/08)**
-- **Docs:** planos (incl. PLAN-070, PLAN-071) · 6 ADRs · 5 templates · skills SKILL-001..009
+O [snapshot de 28/08/2026](arquivo/STATUS-2026-08-28.md) preserva planos, métricas e entregas daquele período. Ele não é inventário atual de produção. O [roadmap](product/04-ROADMAP.md) mantém sua matriz histórica com inventário revisado; [índice de planos](plans/README.md) e [backlog](plans/BACKLOG.md) detalham frentes que exigem confirmação própria, sem presumir conclusão.
+
+Ver [atualizações](UPDATES.md) e [checklist de 20/11](engineering/tasks/2026-11-20/CHECKLIST.md).

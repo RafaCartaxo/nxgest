@@ -7,6 +7,20 @@
 
 ---
 
+## Caminho mínimo atual
+
+1. Instalar Git, Node 24 LTS e Docker com Compose. O host de produção precisa de Docker/Compose, Git, Bash, GNU coreutils/timeout, flock, curl e OpenSSH; Node roda dentro da imagem.
+2. Clonar o repositório; executar `nvm install` e `nvm use` (quando nvm estiver instalado), depois `npm ci` na raiz. O lockfile inclui o workspace frontend; não instalar dependências separadamente nele.
+3. Copiar `.env.example` para `.env`, gerar `JWT_SECRET` próprio (`node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"`) e configurar os valores locais. Não trazer `.env` de produção.
+4. Executar `npm run db:up` e `npm run dev`. PostgreSQL local: porta 5433; API: porta 3000; frontend: URL informada pelo Vite. O primeiro boot prepara schema e seed básico. Desenvolvimento usa ConsoleMailer, sem envio real.
+5. Conferir `http://localhost:3000/api/health`, autenticação e uma operação cliente→contrato→pagamento. Rodar `npm test`, `npm run build`, `npm run docs:audit` e `npm run audit:links`.
+
+Para smoke completo, criar PostgreSQL de teste dedicado em outra porta (por exemplo 55432), definir `SMOKE_DATABASE_URL` com banco `nxgest_smoke_<sufixo>` e `UPLOADS_DIR` temporário, então `npm run smoke:local`. O runner recria esse banco: não apontar para desenvolvimento ou produção. Executar separado de `test:safety`, que exercita o mesmo arquivo PID do runner.
+
+Para reconstruir VPS, seguir o [runbook](06-PRODUCAO.md): DNS/TLS, volumes, PostgreSQL, `.env` privado, imagem atestada e políticas/chaves precisam ser provisionados para a nova identidade do host. Copiar apenas o repositório não transfere esses acessos nem autoriza reutilizar IDs/policies do servidor anterior. Conferir [backup/restauração](09-BACKUP-ROLLBACK.md) antes de recuperar dados. Não há SQLite nem Redis para instalar.
+
+As instruções por sistema abaixo detalham ferramentas; usar a versão de `.nvmrc` e os comandos do projeto como referência de execução.
+
 ## 1. Visão Geral e Filosofia de Portabilidade
 
 O **NX Gest** foi arquitetado para permitir que qualquer desenvolvedor com as devidas autorizações consiga **iniciar ou retomar o trabalho em um computador suportado**, com instruções para Fedora, Ubuntu, Debian, Arch Linux, macOS ou Windows via WSL2. A duração depende da máquina e da rede; 15 minutos é uma meta, não uma medida comprovada.
@@ -48,7 +62,7 @@ Para que essa portabilidade funcione sem imprevistos nem perda de dados em caso 
 
 Antes de clonar o projeto, sua nova máquina precisa de:
 * **Git** (controle de versão)
-* **Node.js 20+ LTS** (recomendado via `nvm`) e **npm 9+**
+* **Node.js 24 LTS LTS** (recomendado via `nvm`) e **npm 9+**
 * **Docker & Docker Compose** (para rodar o PostgreSQL 16 local de desenvolvimento)
 * **OpenSSH Client** (para conexão com a VPS e GitHub)
 
@@ -119,9 +133,9 @@ brew install --cask docker  # Instala o Docker Desktop para Mac
 
 ---
 
-## 3. Instalando o Node.js 20 (padrão em qualquer SO)
+## 3. Instalando o Node.js 24 (padrão em qualquer SO)
 
-Utilize o **`nvm`** (Node Version Manager) para garantir a versão exata do Node requerida pelo projeto (Node 20):
+Utilize o **`nvm`** (Node Version Manager) para garantir a versão exata do Node requerida pelo projeto (Node 24):
 
 ```bash
 # 1. Instalar NVM
@@ -131,13 +145,13 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-# 3. Instalar e fixar Node 20 LTS
-nvm install 20
-nvm use 20
-nvm alias default 20
+# 3. Instalar e fixar Node 24 LTS
+nvm install 24
+nvm use 24
+nvm alias default 24
 
 # Validar versões
-node -v   # Deve exibir v20.x.x
+node -v   # Deve exibir v24.x.x
 npm -v    # Deve exibir 9.x.x ou 10.x.x
 ```
 
@@ -378,7 +392,7 @@ Se a VPS original for destruída e você precisar subir uma nova máquina do zer
 Ao configurar um novo computador ou após formatar o sistema:
 
 - [ ] **1. Ferramentas base instaladas**: Git, OpenSSH, Docker e Docker Compose ativos.
-- [ ] **2. Node 20 LTS ativo**: `nvm use 20` (Node ≥20.x, npm ≥9.x).
+- [ ] **2. Node 24 LTS ativo**: `nvm use 24` (Node 24.x, npm da distribuição oficial).
 - [ ] **3. Repositório clonado**: `git clone https://github.com/RafaCartaxo/nxgest.git`.
 - [ ] **4. Dependências instaladas**: `npm ci` concluído sem erros.
 - [ ] **5. Arquivo `.env` de desenvolvimento**: `cp .env.example .env`.

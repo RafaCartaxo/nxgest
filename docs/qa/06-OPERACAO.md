@@ -1,97 +1,46 @@
 # 06 — Operação
 
-**Status:** Ativo · **Fonte:** `docs/engineering/06-PRODUCAO.md` (runbook completo)
+**Revisado:** 20/11/2026. Resumo do [runbook](../engineering/06-PRODUCAO.md); não duplica procedimentos de recuperação.
 
----
+## Ambientes
 
-## Ambientes e acesso
-
-| Item | Valor |
+| Item | Referência |
 |---|---|
-| Produção | `https://nxgest.com.br` |
-| Homologação | `https://nxgestao.duckdns.org` |
-| VPS | `172.245.152.223` (root, **somente chave SSH**) · AlmaLinux 8.10 · Docker + Compose |
-| Repo no VPS | `/opt/nxgestao` |
-| `.env` | `/opt/nxgestao/.env` (prod) · `/opt/nxgestao/.env.staging` (staging) — chmod 600 |
-| Banco | PostgreSQL 16 — prod `nxgestao_pgdata` · staging `nxgestao_staging_pgdata` |
-| Proxy/HTTPS | Caddy (Let's Encrypt automático) |
+| Produção | https://nxgest.com.br |
+| Staging | https://nxgestao.duckdns.org |
+| VPS | `172.245.152.223`, SSH por chave |
+| Checkout operacional | `/opt/nxgestao` |
+| Configuração privada | `.env` / `.env.staging` no host; não copiar para Git/logs |
+| Dados | PostgreSQL e uploads em volumes separados por ambiente |
+| Proxy | Caddy, rede compartilhada `nxgestao_net` |
 
-> **Alerta:** o provedor **não oferece snapshots**. Backup próprio (cron) + cópia off-site são obrigatórios.
+## Publicação normal
 
----
+Push/merge em main → CI/build atestado → Staging verificado → CD. Cada environment exige aprovação; recibos, origem, imagem, saúde e finalização fazem parte da prova. Ver [pipeline](05-PIPELINE.md) e [status publicado](../STATUS.md).
 
-## Deploy
+No manual GitHub, `CD → Run workflow` recebe `staging_run` e continua sujeito às mesmas verificações. Não há deploy livre por ref. Bootstrap/adoção/manutenção legados têm contratos e autorizações próprios no runbook; não usar `git pull` seguido de script avulso como receita de produção.
 
-### Produção (via pipeline — normal)
+## Incidente e retorno
 
-```text
-merge à main → CI verde → staging → CD → deploy-prod (automático)
-```
+1. Registrar run/SHA/imagem/container e verificar se a falha ocorreu antes ou depois de efeitos.
+2. Conferir health interno/público e estado de marker/selection/pending/active sem expor credenciais.
+3. Preservar imagem anterior, dados, env e registros. Não apagar pending para liberar outra tentativa.
+4. Se há efeito parcial, preparar reconciliação ou retorno específico, com lock, identidade/hash, backup/compatibilidade e resultado verificável.
+5. Distinguir recuperação manual de sucesso do workflow; validar nova cadeia antes de declarar o CD corrigido.
 
-### Manual (produção, sob demanda/rollback)
-
-- GitHub: `Actions → CD → Run workflow` (input `ref`).
-- Direto no VPS: `cd /opt/nxgestao && git pull && bash scripts/deploy.sh`.
-
-### Homologação (staging)
-
-- **Automático** no merge à main (job do CI).
-- Manual no VPS: `bash scripts/deploy-staging.sh` (faz build, up, seed se DB vazio, caddy reload, health).
-
-### `scripts/deploy.sh` (produção) — o que faz
-
-1. Exige `.env` presente.
-2. Garante a rede compartilhada `nxgestao_net`.
-3. **Backup pré-deploy** (`/opt/scripts/backup-nxgest.sh`).
-4. Gates de UI: `audit:ui`/`styles`/`modules` (aborta se falhar).
-5. `docker compose -f docker-compose.prod.yml build app` + `up -d` + `prune`.
-
----
+Não há receita genérica segura de reset/checkout parcial/rebuild para rollback. Ver [runbook §4 e §7](../engineering/06-PRODUCAO.md) e [backup/retorno](../engineering/09-BACKUP-ROLLBACK.md).
 
 ## Backup
 
-| Item | Valor |
-|---|---|
-| Automático | Cron 2x/dia no VPS (`/opt/scripts/backup-nxgest.sh`) |
-| Destino | `/opt/backups/pg-<data>.dump` + `uploads-<data>.tar.gz` |
-| Validação | `pg_restore -l` + verificação de usuários (dump inválido = falha) |
-| Retenção | 14 dias |
-| Off-site | Manual `scp` + **cifrar** (gpg/age) — LGPD |
+O candidato versionado cria um conjunto associado de banco/anexos/metadados/imagem e o verificador checa marcador/hashes/estrutura. Existir cron, dump ou tar não comprova restore nem consistência entre banco e arquivos. Instalação, capacidade, retenção e off-site devem ser conferidas na operação; não assumir que o código candidato seja a versão instalada. O provedor não oferece snapshot que substitua esse cuidado.
 
-> **Anexos (PLAN-042):** o backup inclui `/data/uploads` (tar.gz). Nunca restaurar só o `.db`.
+O experimento BA10 foi arquivado. O procedimento atual para backup consistente interrompe a aplicação por janela curta e verifica o conjunto em restauração isolada; conferir a evidência vigente no STATUS antes de declarar recuperação comprovada.
 
----
-
-## Rollback (emergência)
+## Observação somente leitura
 
 ```bash
-# 1) reverter código e redeployar
-cd /opt/nxgestao
-git checkout <commit-anterior> -- src/ frontend/
-bash scripts/deploy.sh
-
-# 2) ou reset + deploy
-git reset --hard <commit-bom>
-bash scripts/deploy.sh
+curl -fsS https://nxgest.com.br/api/health
+curl -fsS https://nxgestao.duckdns.org/api/health
 ```
 
-> Antes de qualquer rollback que toque o banco, rodar um backup manual. Restauração: ver `06-PRODUCAO.md §5.3`.
-
----
-
-## Monitoramento
-
-| O que | Comando/URL |
-|---|---|
-| Health remoto | `curl https://nxgest.com.br/api/health` (prod) · `https://nxgestao.duckdns.org/api/health` (staging) |
-| Logs do app | `docker compose -f /opt/nxgestao/docker-compose.prod.yml logs -f app` |
-| Logs do Caddy | idem, `logs -f caddy` |
-| Status/CPU/disco | `docker compose ps` · `docker stats` · `df -h` |
-
----
-
-## Documentos relacionados
-
-- `docs/engineering/06-PRODUCAO.md` — runbook completo (acesso, deploy, backup, rollback, monitoramento, e-mail, hardening)
-- `docs/plans/PLAN-018-deploy.md` — primeiro deploy
-- `docs/foundation/ADR-004-Infra-Deploy.md` — decisão de infra
+Logs e inspeções Docker são realizados no host autorizado, pelos caminhos do runbook; não imprimir env, conteúdo de anexos, senhas ou tokens. Para evidência de publicação, combinar saúde com origem/recibo/imagem e estado final, não apenas o HTTP200.

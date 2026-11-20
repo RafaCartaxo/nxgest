@@ -3,6 +3,12 @@
 set -euo pipefail
 bundle=${1:-}
 [[ -d "$bundle" && ! -L "$bundle" && -f "$bundle/COMPLETE" ]] || { echo 'Conjunto incompleto' >&2; exit 1; }
+if [[ -f "$bundle/metadata.txt" && ! -L "$bundle/metadata.txt" ]] && grep -qx 'mode=maintenance-v1' "$bundle/metadata.txt"; then
+  source "$(dirname "$0")/backup-maintenance-common.sh"
+  nxg_backup_verify "$bundle"
+  printf '%s\n' 'Integridade do conjunto maintenance-v1 verificada; restauração real não comprovada.'
+  exit 0
+fi
 id=$(cat "$bundle/COMPLETE")
 [[ "$id" =~ ^[0-9]{8}T[0-9]{6}Z-[0-9]+-[0-9]+$ && "$id" = "$(basename "$bundle")" ]] || { echo 'Identificador inválido' >&2; exit 1; }
 for f in database.dump uploads.tar.gz mounts.txt mount-sources.sha256 runtime-config.txt metadata.txt SHA256SUMS COMPLETE; do

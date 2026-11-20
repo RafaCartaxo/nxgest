@@ -111,3 +111,7 @@ Briefings para ferramentas de IA/Lovable e artefatos de referência — históri
 | [Lovable-Cadastro-Rota-NXGest.md](Lovable-Cadastro-Rota-NXGest.md) | Briefing Lovable: cadastro (cliente/contrato) + rota + botões na identidade Nexus | ✅ Histórico (portado em PLAN-055/056/062) |
 | [Lovable-NXGest.md](Lovable-NXGest.md) | Briefing original de identidade visual (pré-"Nexus") | ✅ Superseded (mantido como histórico) |
 | [Stitch-Nav-AppFirst-NXGest.md](Stitch-Nav-AppFirst-NXGest.md) | Briefing Lovable: navegação app-first (bottom tab bar + UserMenu + sidebar) | ✅ Histórico (implementado em 07/08, PLAN-060) |
+
+## Propostas arquivadas
+
+- [PLAN-005 — proposta original de apresentação de cliente](arquivo/PLAN-005-padronizacao-cliente-card-HISTORICO.md): duplicata histórica; a referência ativa é [PLAN-005-cliente-card](PLAN-005-cliente-card.md).
