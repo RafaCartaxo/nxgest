@@ -131,6 +131,18 @@ nxgest_participants(){
   [[ ${#records[@]} -gt 0 ]] || return 1
   printf '%s\n' "${records[@]}" | LC_ALL=C sort | sha256sum
 }
+# An operator-owned transition permits renewal without rewriting the prior journal.
+nxgest_staging_previous_base_allowed(){
+  local previous=$1 record
+  [[ $previous =~ ^sha256:[a-f0-9]{64}$ && $NXGEST_BASE_HASH =~ ^sha256:[a-f0-9]{64}$ ]] || return 1
+  [[ $previous != "$NXGEST_BASE_HASH" ]] || return 0
+  record=$NXGEST_GITDIR/nxgest-staging-policy-transition-${previous#sha256:}-${NXGEST_BASE_HASH#sha256:}
+  nxgest_secure_file "$record" 4096 || return 1
+  local -a transition; mapfile -t transition < "$record"
+  [[ ${#transition[@]} == 7 && ${transition[0]} == version=staging-policy-transition-v1 && ${transition[1]} == environment=staging && ${transition[2]} == "from=$previous" && ${transition[3]} == "to=$NXGEST_BASE_HASH" && ${transition[4]} == "controller=$NXGEST_APPROVED_CONTROLLER" && ${transition[5]} == "decision=$NXGEST_BASE_DECISION" && ${transition[6]} == "expires_epoch=$NXGEST_BASE_EXPIRY" ]] || return 1
+  local now;now=$(date +%s)
+  [[ $NXGEST_BASE_EXPIRY =~ ^[0-9]{10}$ ]] && (( 10#$NXGEST_BASE_EXPIRY > 10#$now ))
+}
 nxgest_prepare_operation(){
   local env=$1; shift
   local sha=$1 tar=$2 zip=$3 run=$4 attempt=$5 artifact=$6 image=${7:-} stage=${8:-}
@@ -166,7 +178,8 @@ nxgest_prepare_operation(){
       prior_digest=$(sha256sum -- "$prior_policy")
       [[ $(printf '%s\n' "${prior_loading[@]}" | grep -c '^operation_policy_sha256=') == 1 && $(printf '%s\n' "${prior_loading[@]}" | grep -c '^base_policy_sha256=') == 1 ]] || return 1
       printf '%s\n' "${prior_loading[@]}" | grep -Fx "operation_policy_sha256=sha256:${prior_digest%% *}" >/dev/null || return 1
-      printf '%s\n' "${prior_loading[@]}" | grep -Fx "base_policy_sha256=$NXGEST_BASE_HASH" >/dev/null || return 1
+      local previous_base; previous_base=$(printf '%s\n' "${prior_loading[@]}" | sed -n 's/^base_policy_sha256=//p')
+      nxgest_staging_previous_base_allowed "$previous_base" || return 1
     fi
     snapshot=$NXGEST_GITDIR/nxgest-recurring-observation-$op.json
     (umask 077; set -C; ulimit -f 1024; timeout 10s docker --host unix:///var/run/docker.sock inspect "$current" > "$snapshot") || return 1
