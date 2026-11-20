@@ -50,6 +50,16 @@ Fontes imutáveis: [CI/build e atestações](https://github.com/RafaCartaxo/nxge
 
 ---
 
+
+### Preservação dos bytes das políticas de deploy
+
+O hash aprovado identifica os **bytes completos** da política, inclusive a quebra de linha final. No GitHub CLI v2.94.0, `gh secret set` lendo stdin remove CR/LF finais (`getBody`, `bytes.TrimRight`). Portanto, esse caminho não preserva uma política cujo hash inclui LF final. Não alterar o hash aprovado para acomodar essa transformação.
+
+Para cadastrar essas políticas, ler e validar a fonte canônica privada (owner/permissão, tamanho, hash, decisão e validade), cifrar seus bytes completos com sealed-box usando a chave pública do environment e enviar `encrypted_value`/`key_id` à API de secrets do GitHub. O plaintext deve permanecer fora de argv, logs e arquivos do repositório. Validar a preservação com dados sintéticos antes da operação; o secret remoto não oferece leitura de plaintext ou rollback byte a byte.
+
+Em **20/11/2026**, o secret `CT011_BUILD_POLICY` do environment staging foi reconciliado por esse método: fonte aprovada de 319 bytes com LF final, hash existente preservado e PUT confirmado. A operação não comprova publicação: exigir nova cadeia CI → staging, origem/recibo atestados e saúde antes da promoção. Produção continua condicionada a seu próprio preflight e aprovação. Referência do comportamento do CLI: [fonte v2.94.0](https://github.com/cli/cli/blob/v2.94.0/pkg/cmd/secret/set/set.go).
+
+
 ## 2. Acesso SSH
 
 - Acesso root **somente por chave SSH** (senha desabilitada).
