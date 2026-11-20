@@ -21,6 +21,8 @@ done
 stage=$(mktemp -d "$root/.nxg035-fixture-XXXXXXXX") || fail 'não foi possível criar fixture'
 trap 'rm -rf -- "$stage"' EXIT
 mkdir -p "$stage/scripts" "$stage/.maestro/coord-qa/ct011-policies" "$stage/docs/engineering"
+mkdir -p "$stage/docs/arquivo"
+cp "$root/docs/arquivo/2026-11-20-producao-runbook-anterior.md" "$stage/docs/arquivo/"
 mkdir -p "$stage/infra" "$stage/.github/workflows" "$stage/ubuntu-layout"
 # Reproduz o link Ubuntu que exige /etc/alternatives, ausente no sandbox.
 ln -s /etc/alternatives/awk "$stage/ubuntu-layout/awk"
