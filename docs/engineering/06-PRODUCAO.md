@@ -51,6 +51,10 @@ Fontes imutáveis: [CI/build e atestações](https://github.com/RafaCartaxo/nxge
 ---
 
 
+### Executável fixado para verificar atestações
+
+Os workflows staging e CD instalam o GitHub CLI oficial v2.103.3, cujo executável corresponde ao hash já aprovado nas políticas. O pacote é baixado por HTTPS e seu SHA-256 é conferido antes da extração; o binário também é conferido antes e depois da instalação em `/usr/bin/gh`. Divergência interrompe o job. A versão pré-instalada em `ubuntu-latest` pode mudar e não é fonte de identidade confiável para esse contrato. A instalação acontece somente no runner efêmero, antes da leitura das políticas e do uso das credenciais de deploy; não instala ferramentas no VPS.
+
 ### Preservação dos bytes das políticas de deploy
 
 O hash aprovado identifica os **bytes completos** da política, inclusive a quebra de linha final. No GitHub CLI v2.94.0, `gh secret set` lendo stdin remove CR/LF finais (`getBody`, `bytes.TrimRight`). Portanto, esse caminho não preserva uma política cujo hash inclui LF final. Não alterar o hash aprovado para acomodar essa transformação.
