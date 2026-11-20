@@ -32,6 +32,21 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 20
+      - name: Instala GH aprovado para verificar atestações
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          tool_dir=$(mktemp -d "$RUNNER_TEMP/nxgest-gh.XXXXXXXX")
+          trap 'rm -f -- "$tool_dir/gh.tar.gz" "$tool_dir/gh"; rmdir -- "$tool_dir"' EXIT
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 120 \
+            https://github.com/cli/cli/releases/download/v2.103.3/gh_2.103.3_linux_amd64.tar.gz -o "$tool_dir/gh.tar.gz"
+          printf '%s  %s\n' 4c806978ffce1cec70853302a56d70ac6da4f19bae7adca4e1a8ab00633dd91d "$tool_dir/gh.tar.gz" | sha256sum --check --status
+          tar -xOzf "$tool_dir/gh.tar.gz" gh_2.103.3_linux_amd64/bin/gh > "$tool_dir/gh"
+          printf '%s  %s\n' b768184570b12536be4ac1528893f6340d1c6a7b40b56ad45bca9cd0e87ad34d "$tool_dir/gh" | sha256sum --check --status
+          sudo install -m 0755 "$tool_dir/gh" /usr/bin/gh
+          printf '%s  %s\n' b768184570b12536be4ac1528893f6340d1c6a7b40b56ad45bca9cd0e87ad34d /usr/bin/gh | sha256sum --check --status
+          /usr/bin/gh --version
       - name: Verifica staging atestado e artifact CI idêntico
         id: verified
         shell: bash
