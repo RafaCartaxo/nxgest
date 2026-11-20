@@ -82,8 +82,10 @@ nxgest_stage_config_hash(){
 nxgest_stage_network_hash(){
   "$NXGEST_JQ" -cS '.[0].NetworkSettings.Networks|with_entries(.value|={NetworkID,Aliases,IPAMConfig:(.IPAMConfig//null),Links:(.Links//null),DriverOpts:(.DriverOpts//null)})' "$1" | sha256sum
 }
+# Env order and Compose replacement/source-path labels are volatile metadata.
+# Compose bytes, environment file, previous container ID and image have separate guards.
 nxgest_production_config_hash(){
-  "$NXGEST_JQ" -cS '{Config:(.[0].Config|del(.Image,.Cmd,.Entrypoint,.WorkingDir,.User,.Hostname)|.Labels|=del(."com.docker.compose.config-hash",."com.docker.compose.image")),HostConfig:.[0].HostConfig}' "$1" | sha256sum
+  "$NXGEST_JQ" -cS '{Config:(.[0].Config|del(.Image,.Cmd,.Entrypoint,.WorkingDir,.User,.Hostname)|.Env|=sort|.Labels|=del(."com.docker.compose.config-hash",."com.docker.compose.image",."com.docker.compose.project.config_files",."com.docker.compose.replace")),HostConfig:.[0].HostConfig}' "$1" | sha256sum
 }
 nxgest_production_topology(){
   local expected=$1 tmp config mounts networks

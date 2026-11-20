@@ -51,6 +51,10 @@ Fontes imutáveis: [CI/build e atestações](https://github.com/RafaCartaxo/nxge
 ---
 
 
+### Identidade estável da configuração de produção
+
+A projeção de configuração ordena `Config.Env` e desconsidera somente as labels Compose de hash/imagem, caminho do arquivo temporário e container substituído. A ordem do ambiente e esses metadados mudam na recriação sem alterar a configuração operacional. Os valores de ambiente, demais labels e todo `HostConfig` continuam protegidos; Compose, `.env`, imagem, identidade anterior, volumes e rede têm verificações próprias. A migração de uma política com hash antigo exige conferência semântica e reprovisionamento explícito da autoridade; não ajustar hashes automaticamente após falha. Uma troca seguida de falha de registro mantém pending/active para reconciliação documentada, sem repetir o deploy.
+
 ### Executável fixado para verificar atestações
 
 Os workflows staging e CD instalam o GitHub CLI oficial v2.103.3, cujo executável corresponde ao hash já aprovado nas políticas. O pacote é baixado por HTTPS e seu SHA-256 é conferido antes da extração; o binário também é conferido antes e depois da instalação em `/usr/bin/gh`. Divergência interrompe o job. A versão pré-instalada em `ubuntu-latest` pode mudar e não é fonte de identidade confiável para esse contrato. A instalação acontece somente no runner efêmero, antes da leitura das políticas e do uso das credenciais de deploy; não instala ferramentas no VPS.
