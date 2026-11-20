@@ -47,6 +47,8 @@ jobs:
         shell: bash
       - name: Segurança dos scripts de staging e smoke
         run: npm run test:safety
+      - name: Fingerprint estável de configuração de produção
+        run: node --test scripts/production-config-fingerprint.check.mjs
       - name: Transição segura de deploy (fixtures isoladas)
         run: npm run test:deploy
       - name: Backup e retorno (fixtures com dublês)
