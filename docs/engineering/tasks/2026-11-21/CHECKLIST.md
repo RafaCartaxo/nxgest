@@ -40,3 +40,5 @@ O instalador operacional aceita o checkout detached mantido pelo CD e continua e
 - [ ] ALERT-01: destinatário/canal oficial e ponto de emissão independente ainda indefinidos; cron MAILTO=root sem sendmail não prova entrega. Não criar automação nem alterar configuração de produção fora do CD para contornar.
 
 As lacunas UI-01 (cliente em falha de carga), UI-02 (submit sem disabled), UI-03 (sem404 interna), NAV-01 (Insights sem menu) e a validação visual estão descritas na matriz. Elas não foram corrigidas como comportamento nesta revisão documental. Dono da execução: NX Gest–Solucionador, por delegação do condutor nesta conversa; isso não designa donos permanentes dos serviços.
+
+- [ ] MON-01: comprovar primeiro evento schedule do monitor já existente; API mostrou workflow active/default main, mas somente run manual44916487132. Novo disparo manual não satisfaz este aceite.
