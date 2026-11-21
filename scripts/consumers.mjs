@@ -1,52 +1,22 @@
-/**
- * Lista os arquivos que importam um componente/arquivo compartilhado (PLAN-044).
- *
- * Uso: node scripts/consumers.mjs <nome-do-componente>
- * Ex.: node scripts/consumers.mjs PageHeader   → lista quem usa o PageHeader
- *      node scripts/consumers.mjs Field         → lista quem usa o Field
- *      node scripts/consumers.mjs Card          → lista quem usa o Card
- *
- * Serve ao protocolo "mudou componente compartilhado → varre consumidores no
- * mesmo PR" (ver docs/engineering/design/02-DESIGN-SYSTEM.md / AGENTS.md).
- */
-import { readdirSync, readFileSync } from "node:fs"
+/** Direct consumers of imported UI symbols; shared source walker. */
+import { readdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
-import { dirname, join, relative } from "node:path"
-
-const here = dirname(fileURLToPath(import.meta.url))
-const root = join(here, "..")
-const srcDir = join(root, "frontend", "src")
-
-const target = process.argv[2]
-if (!target) {
-  console.error("Uso: node scripts/consumers.mjs <componente>")
-  process.exit(1)
+import path from "node:path"
+export function walkSourceFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
+    const file = path.join(directory, entry.name)
+    return entry.isDirectory() ? walkSourceFiles(file) : entry.isFile() ? [file] : []
+  }).sort()
 }
-
-function walk(dir, acc = []) {
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name)
-    if (entry.isDirectory()) walk(full, acc)
-    else if (/\.(ts|tsx)$/.test(entry.name)) acc.push(full)
-  }
-  return acc
-}
-
-const files = walk(srcDir)
-const hits = []
-
-for (const file of files) {
-  const src = readFileSync(file, "utf8")
-  // import { X } from "..."; / import X from "..."
-  if (src.includes(`} from`)) {
-    const re = new RegExp(`\\b${target}\\b`)
-    if (re.test(src) && /^import/m.test(src)) hits.push(relative(root, file))
+async function main() {
+  const target = process.argv[2]
+  if (!target) { console.error("Uso: node scripts/consumers.mjs <componente>"); process.exitCode = 1 }
+  else {
+    const { buildInventory } = await import("./ui-inventory.mjs")
+    const hits = buildInventory().files.filter(file => file.imports.some(item => item.symbols.some(symbol => symbol.imported === target || symbol.local === target)))
+    console.log(`Consumidores diretos de "${target}" (${hits.length}):`)
+    for (const file of hits) console.log(`  ${file.path}`)
   }
 }
 
-if (hits.length === 0) {
-  console.log(`Nenhum consumidor de "${target}".`)
-  process.exit(0)
-}
-console.log(`Consumidores de "${target}" (${hits.length}):`)
-for (const h of hits) console.log(`  ${h}`)
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(error => { console.error(error.message); process.exitCode = 1 })

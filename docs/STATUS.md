@@ -43,3 +43,9 @@ A validação local do fechamento registrou **218 testes unitários/UI em 47 arq
 Todo WIP anterior foi preservado com hashes fora da árvore ativa antes da consolidação. BA10 e migrador SQLite foram retirados do produto atual. Scripts de segurança, deploy e recuperação ainda usados permanecem; registros operacionais referenciados pelo controlador não são resíduos.
 
 [Telas](engineering/05-MAPEAMENTO-TELAS.md), [fluxos de uso](product/06-CASOS-DE-USO.md), [API](product/07-CASOS-DE-USO-API.md), [componentes](engineering/design/04-UI-COMPONENTS.md) e [cobertura visual](engineering/design/UI-COVERAGE.md) foram preservados para a repaginação. [Atualizações](UPDATES.md) e [checklist](engineering/tasks/2026-11-20/CHECKLIST.md) registram a consolidação; o [snapshot antigo](arquivo/STATUS-2026-08-28.md) é histórico.
+
+## Inventário visual e backup periódico — revisão21/11
+
+O inventário agora é derivado do código e distingue29 rotas concretas,28 arquivos de página, shell autenticado e ContaSuspensaScreen. Há118 arquivos com JSX,135 declarações com JSX e1.872 ocorrências; não são135 telas nem aprovação visual. O comando docs:visual reconcilia os artefatos e o gate documental detecta alterações não regeneradas. [Inventário completo](engineering/design/UI-INVENTORY.md).
+
+O job real das02hUTC criou o conjunto20261121T020001Z-1098303-1910 e seu restore foi conferido (20 tabelas,9 anexos, sem divergências). O ensaio semanal usa backup-verify-latest.sh; os detalhes de implantação e limites estão no [runbook de backup](engineering/09-BACKUP-ROLLBACK.md). Off-site periódico e alertas externos ainda exigem destino/canal definidos.

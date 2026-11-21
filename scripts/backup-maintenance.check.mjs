@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {mkdtempSync,mkdirSync,writeFileSync,copyFileSync,readFileSync,readdirSync,rmSync,existsSync} from 'node:fs'
+import {mkdtempSync,mkdirSync,writeFileSync,copyFileSync,readFileSync,readdirSync,rmSync,existsSync,symlinkSync} from 'node:fs'
 import {spawnSync} from 'node:child_process'
 import path from 'node:path'
 import {createHash} from 'node:crypto'
@@ -72,5 +72,20 @@ for(const mode of ['original','imported','tampered','ambiguous'])test(`restore i
   const r=spawnSync('/bin/bash',['-c','source "$1"; NXGEST_JQ=$(command -v jq); nxg_backup_restore_image "$2" "$3" "$4"','fixture',path.join(root,'scripts/backup-maintenance-common.sh'),expected,candidate,checked],{env:{...process.env,PATH:bin+':'+process.env.PATH,FIXTURE_IMAGE:candidate,FIXTURE_ARCHIVE:archive},encoding:'utf8'})
   if(['original','imported'].includes(mode)){assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),candidate);assert.equal(existsSync(checked),false)}
   else assert.notEqual(r.status,0,'different configuration or ambiguous export must not authorize an image')
+ }finally{rmSync(dir,{recursive:true,force:true})}
+})
+
+for(const mode of ['newest','empty','symlink','corrupt-newest'])test(`periodic restore selection ${mode}: complete immutable names only, no hidden fallback`,()=>{
+ const dir=mkdtempSync(path.join(root,'.backup-maintenance-test-'))
+ try{
+  const older='20260101T020001Z-1-1',newer='20260102T020001Z-2-2'
+  function bundle(id,marker=id){mkdirSync(path.join(dir,id));writeFileSync(path.join(dir,id,'COMPLETE'),marker)}
+  if(mode!=='empty')bundle(older)
+  if(mode==='newest'||mode==='corrupt-newest')bundle(newer,mode==='corrupt-newest'?'bad':newer)
+  if(mode==='symlink')symlinkSync(path.join(dir,older),path.join(dir,newer))
+  mkdirSync(path.join(dir,'.partial-20270101'));writeFileSync(path.join(dir,'.partial-20270101/COMPLETE'),'unpublished')
+  const r=spawnSync('/bin/bash',['-c','source "$1"; BACKUP_DIR=$2; nxg_backup_latest','fixture',path.join(root,'scripts/backup-maintenance-common.sh'),dir],{encoding:'utf8'})
+  if(mode==='empty')assert.notEqual(r.status,0)
+  else{assert.equal(r.status,0,r.stderr);assert.equal(path.basename(r.stdout.trim()),['newest','corrupt-newest'].includes(mode)?newer:older)}
  }finally{rmSync(dir,{recursive:true,force:true})}
 })

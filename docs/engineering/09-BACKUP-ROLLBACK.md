@@ -1,6 +1,22 @@
 # 09 — Backup e recuperação
 
-O procedimento atual usa PostgreSQL 16 e anexos do volume `/data`. O backup precisa representar o mesmo instante lógico para ambos. A estratégia é uma manutenção curta: interromper a aplicação, conferir ausência de outras conexões escritoras, copiar banco e anexos e retomar a mesma aplicação. O banco permanece ligado. A aplicação trata SIGTERM/SIGINT, fecha o servidor HTTP antes do pool e limita o encerramento a 20 segundos, abaixo do prazo do docker stop.
+O procedimento atual usa PostgreSQL 16 e anexos do volume `/data`. O backup precisa representar o mesmo instante lógico para ambos. A estratégia é uma manutenção curta: interromper a aplicação, conferir ausência de outras conexões escritoras, copiar banco e anexos e retomar a mesma aplicação. O banco permanece ligado. O [pg_dump](https://www.postgresql.org/docs/16/app-pgdump.html) já produz um snapshot consistente do banco; a pausa existe para associar também os arquivos externos de anexos ao mesmo estado, não por uma exigência do dump isolado. A aplicação trata SIGTERM/SIGINT, fecha o servidor HTTP antes do pool e limita o encerramento a 20 segundos, abaixo do prazo do docker stop.
+
+## Rotina aplicada e limites
+
+| Item | Aplicação atual |
+|---|---|
+| Criação automática | cron `/etc/cron.d/nxgest-backup`, todos os dias às02h/14hUTC |
+| Conteúdo | PostgreSQL + anexos associados, inventário e checksums; manutenção curta da aplicação |
+| RPO local nominal | até12h, condicionado ao sucesso do último job; conferir log/COMPLETE |
+| Prova do agendamento | backup `20261121T020001Z-1098303-1910` foi criado pelo cron e restaurado:20 tabelas/9 anexos, sem divergências |
+| Ensaio periódico | `backup-verify-latest.sh`: seleciona o último conjunto publicado e executa restore real isolado, sem parar a aplicação |
+| Agenda do ensaio | domingo03h30UTC; timeout15min; log privado separado |
+| Cópia externa | cópia privada da consolidação já restaurada em outra máquina; repetição automática ainda sem destino configurado |
+| Retenção | formato atual não elimina conjuntos automaticamente; política proposta de30dias só deve ser automatizada junto de verificação/cópia externa e proteção do último restore válido |
+| Alertas | falhas retornam código não-zero e ficam no log; não há canal externo de notificação configurado |
+
+A referência [3-2-1 da CISA](https://www.cisa.gov/sites/default/files/publications/data_backup_options.pdf) recomenda manter três cópias em pelo menos dois meios/domínios de falha, uma externa, e validar restauração periodicamente. O cron sozinho não atende perda do VPS. Ainda falta escolher o destino externo e o canal de alerta para completar essa automação. Não se promete RPO externo de12h enquanto a cópia externa permanecer manual. RTO de recuperação real não foi medido; os6s observados são a pausa do backup, não o tempo total de recuperação de um incidente.
 
 ## Backup atual
 
@@ -13,6 +29,8 @@ Cada diretório completo em `/opt/backups/<id>` contém dump custom do PostgreSQ
 bash /opt/scripts/nxgest/backup-maintenance.sh
 bash /opt/scripts/nxgest/backup-restore-check.sh /opt/backups/ID-EXATO
 ```
+
+`backup-verify-latest.sh` usa o mesmo lock e chama o restore existente. Não há fallback silencioso para um conjunto antigo quando o último publicado está corrompido.
 
 Os scripts precisam permanecer juntos com `backup-maintenance-common.sh`, `host-jq.sh` e `container-health.sh`. Usam `PROJECT_DIR=/opt/nxgestao`, `BACKUP_DIR=/opt/backups` e os containers de produção por padrão. Não dependem de Node no host: executam o runtime da imagem aprovada.
 
