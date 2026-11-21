@@ -6,8 +6,10 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { createRequire } from "node:module"
 import { walkSourceFiles } from "./consumers.mjs"
+import tailwindConfig from "../frontend/tailwind.config.js"
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const postcss = createRequire(path.join(ROOT, "frontend/package.json"))("postcss")
+const resolveTailwind = createRequire(path.join(ROOT, "frontend/package.json"))("tailwindcss/resolveConfig")
 const clean = text => text.replace(/\s+/g, " ").trim()
 const hash = bytes => createHash("sha256").update(bytes).digest("hex")
 const relative = file => path.relative(ROOT, file).split(path.sep).join("/")
@@ -25,8 +27,9 @@ function componentSignature(node, source) {
 }
 export function analyzeFile(text, filename) {
   const source = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true, filename.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS)
-  const result = { path: filename, sha256: hash(text), imports: [], components: [], contracts: [], recipes: [], elements: [], texts: [], portals: [], exports: [], navigation: [], translations: [], domCalls: [] }
+  const result = { path: filename, sha256: hash(text), imports: [], components: [], contracts: [], recipes: [], elements: [], texts: [], portals: [], exports: [], navigation: [], translations: [], domCalls: [], stateEvidence: [], responsiveEvidence: [] }
   const line = node => source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1
+  const signal = (state, node, evidence) => result.stateEvidence.push({ state, line: line(node), evidence: clean(evidence) })
   const exported = node => node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)
   function visit(node) {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
@@ -62,6 +65,36 @@ export function analyzeFile(text, filename) {
         parent = parent.parent
       }
       result.elements.push({ tag: node.tagName.getText(source), line: line(node), column: source.getLineAndCharacterOfPosition(node.getStart(source)).character + 1, attributes, conditions: uniq(conditions) })
+      const tag = node.tagName.getText(source)
+      for (const attribute of attributes) {
+        if (["loading", "isLoading", "isPending"].includes(attribute.name) && !/^(?:\{)?false(?:\})?$/.test(attribute.value)) signal("loading", node, `${tag}.${attribute.name}=${attribute.value}`)
+        if (attribute.name === "empty" && !/^(?:\{)?false(?:\})?$/.test(attribute.value)) signal("vazio", node, `${tag}.empty=${attribute.value}`)
+        if (["error", "erro"].includes(attribute.name) && !/^(?:\{)?(?:false|null)(?:\})?$/.test(attribute.value)) signal("erro", node, `${tag}.${attribute.name}=${attribute.value}`)
+        if (["disabled", "aria-disabled"].includes(attribute.name) && !/^(?:\{)?false(?:\})?$/.test(attribute.value)) signal("desabilitado", node, `${tag}.${attribute.name}=${attribute.value}`)
+      }
+      if (tag === "ErrorBanner") signal("erro", node, `${tag}: ${attributes.find(attribute => attribute.name === "message")?.value ?? "conferir props"}`)
+      if (tag === "SuccessState") signal("sucesso", node, `${tag}: conferir contexto (também usado para vazio/conclusão)`)
+      for (const condition of uniq(conditions)) {
+        if (/\b(?:loading|carregando|isLoading|isPending|saving\w*|salvando|operando|reenviando)\b/i.test(condition)) signal("loading", node, `guarda ${condition}`)
+        if (/\b(?:erro\w*|error\w*|isError)\b/i.test(condition)) signal("erro", node, `guarda ${condition}`)
+        if (/\.length\s*===?\s*0\b|\b(?:isEmpty|carteiraEmpty)\b/.test(condition)) signal("vazio", node, `guarda ${condition}`)
+        if (/\b(?:feito|enviado|reenviado)\b|\.fase\s*===\s*["']sucesso["']/.test(condition)) signal("sucesso", node, `guarda ${condition}`)
+      }
+    }
+    if (ts.isCallExpression(node) && /\bfeedback\.(?:run|show)$/.test(node.expression.getText(source)) && ts.isObjectLiteralExpression(node.arguments[0] ?? source)) {
+      for (const property of node.arguments[0].properties) if (ts.isPropertyAssignment(property)) {
+        const name = property.name.getText(source).replace(/["']/g, "")
+        if (["loading", "success", "error"].includes(name)) signal({ loading: "loading", success: "sucesso", error: "erro" }[name], property, `${node.expression.getText(source)}.${name}: ${property.initializer.getText(source)}`)
+        if (name === "status" && ts.isStringLiteral(property.initializer) && ["error", "success", "loading"].includes(property.initializer.text)) signal({ loading: "loading", success: "sucesso", error: "erro" }[property.initializer.text], property, `feedback.show status=${property.initializer.text}`)
+      }
+    }
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateExpression(node)) {
+      const literal = node.getText(source)
+      const breakpoints = uniq([...literal.matchAll(/(?:^|[\s"'`])((?:(?:max-)?(?:sm|md|lg|xl|2xl)|(?:min|max)-\[[^\]]+\])):/g)].map(match => match[1]))
+      if (breakpoints.length) result.responsiveEvidence.push({ line: line(node), breakpoints, evidence: clean(literal) })
+    }
+    if (ts.isCallExpression(node) && /(?:^|\.)matchMedia$/.test(node.expression.getText(source)) && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) {
+      result.responsiveEvidence.push({ line: line(node), breakpoints: [], mediaQuery: node.arguments[0].text, evidence: clean(node.getText(source)) })
     }
     if (ts.isJsxText(node) && clean(node.text)) result.texts.push({ line: line(node), text: clean(node.text) })
     if (ts.isCallExpression(node) && /(?:^|\.)createPortal$/.test(node.expression.getText(source))) result.portals.push({ line: line(node), source: clean(node.getText(source)) })
@@ -72,7 +105,9 @@ export function analyzeFile(text, filename) {
     if (ts.isCallExpression(node) && /(?:^|\.)createElement(?:NS)?$/.test(node.expression.getText(source))) result.domCalls.push({ line: line(node), source: clean(node.getText(source)) })
     ts.forEachChild(node, visit)
   }
-  visit(source); return result
+  visit(source)
+  result.stateEvidence = result.stateEvidence.filter((item, position, items) => items.findIndex(other => other.state === item.state && other.line === item.line && other.evidence === item.evidence) === position)
+  return result
 }
 function resolveImport(file, specifier) {
   if (!specifier.startsWith(".")) return null
@@ -152,8 +187,70 @@ export function buildInventory() {
   return { version: 1, source: "frontend/src + frontend/public; análise AST estática", counts: { routes: routes.length, concreteRoutes: routes.filter(route => route.path !== "*").length, pageFiles: uniq(routes.map(route => route.file).filter(Boolean)).length, jsxFiles: files.length, sharedJsxFiles: files.filter(file => file.path.includes("/shared/")).length, moduleJsxFiles: files.filter(file => file.path.includes("/modules/")).length, componentDeclarations: files.flatMap(file => file.components).length, jsxElements: files.flatMap(file => file.elements).length, resources: resources.length }, routes, files, supportFiles: all.filter(file => !files.includes(file)), resources }
 }
 const inlineCode = text => String.fromCharCode(96) + text + String.fromCharCode(96)
-const escape = text => String(text).replace(/\|/g, "\\|").replace(/\n/g, " ")
+const escape = text => String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\|/g, "\\|").replace(/\n/g, " ")
 const link = file => `[${file}](../../../${file})`
+const evidenceLink = item => `[${item.file}:${item.line}](../../../${item.file}#L${item.line}) — ${escape(item.evidence)}`
+function checkedReference(file, needle) {
+  const text = readFileSync(path.join(ROOT, file), "utf8"), position = text.indexOf(needle)
+  if (position < 0) throw Error(`Evidência removida: ${file}: ${needle}`)
+  return { file, line: text.slice(0, position).split("\n").length, evidence: needle }
+}
+export function routeStateRows(inventory) {
+  const notes = JSON.parse(readFileSync(path.join(ROOT, "docs/engineering/design/ui-route-notes.json"), "utf8"))
+  const routes = inventory.routes.filter(route => route.file), files = [...inventory.files, ...inventory.supportFiles], index = new Map(files.map(file => [file.path, file]))
+  const ids = [...readFileSync(path.join(ROOT, "docs/product/06-CASOS-DE-USO.md"), "utf8").matchAll(/^### (UC-\d+[a-z]?)\b/gm)].map(match => match[1])
+  if (new Set(ids).size !== ids.length) throw Error("IDs de UC duplicados em 06-CASOS-DE-USO.md")
+  if (JSON.stringify(Object.keys(notes).sort()) !== JSON.stringify(routes.map(route => route.path).sort())) throw Error("Notas visuais sem cobertura exata das rotas atuais")
+  function reachable(file, found = new Set()) { if (!file || found.has(file)) return found;found.add(file);for (const item of index.get(file)?.imports ?? []) if (item.resolved) reachable(item.resolved, found);return found }
+  const rows = []
+  for (const route of routes) {
+    const note = notes[route.path], page = index.get(route.file), dependencies = [...reachable(route.file)].map(file => index.get(file)).filter(Boolean)
+    if (!note.visual?.trim()) throw Error(`Descrição visual ausente: ${route.path}`)
+    for (const id of note.useCases) if (!ids.includes(id)) throw Error(`UC inexistente: ${route.path}: ${id}`)
+    const moduleFiles = [page, ...dependencies.filter(file => file !== page && file.path.includes("/modules/"))]
+    for (const state of ["loading", "vazio", "erro", "sucesso", "desabilitado"]) {
+      const matches = moduleFiles.flatMap(file => file.stateEvidence.filter(item => item.state === state).map(item => ({ ...item, file: file.path })))
+      const evidence = matches.slice(0, 5)
+      if (state === "sucesso") evidence.unshift({ file: route.file, line: page.components.find(component => component.name === route.component)?.line ?? 1, evidence: note.visual })
+      const shared = state === "loading" ? [checkedReference("frontend/src/App.tsx", "<Suspense fallback=")] : []
+      rows.push({ route: route.path, state, evidence: [...evidence, ...shared], evidenceCount: matches.length, note: state === "sucesso" ? "Referência visual descritiva do conteúdo pronto; sucesso de mutação só quando há sinal específico abaixo." : "Sinais locais/compostos; guardas não provam execução do ramo.", gap: note.gaps?.[state] ?? (!matches.length && state !== "sucesso" ? `SEM EVIDÊNCIA ESPECÍFICA de ${state} na página/composição; não inferir a partir da API genérica de componentes compartilhados. ` : "") + "Sem captura/validação funcional deste estado nesta revisão." })
+    }
+    const responsiveFiles = [...dependencies, ...(route.access !== "público" ? [index.get("frontend/src/shared/layout/AppLayout.tsx"), index.get("frontend/src/shared/layout/BottomTabBar.tsx")] : [])].filter(Boolean)
+    const responsive = responsiveFiles.flatMap(file => file.responsiveEvidence.map(item => ({ ...item, file: file.path })))
+    rows.push({ route: route.path, state: "responsividade", evidence: [...responsive.filter(item => item.mediaQuery), ...responsive.filter(item => !item.mediaQuery)].slice(0, 5), note: `Página: ${uniq(page.responsiveEvidence.flatMap(item => item.breakpoints)).join(", ") || "sem prefixo explícito"}; composição/shell: ${uniq(responsive.flatMap(item => item.breakpoints)).join(", ") || "sem prefixo explícito"}. Consultas runtime: ${uniq(responsive.map(item => item.mediaQuery).filter(Boolean)).join(", ") || "nenhuma identificada na composição"}. Valores resolvidos na tabela de breakpoints abaixo.`, gap: note.gaps?.responsividade ?? "Sem medição em viewport: testar375/768/1280px e ambos os lados dos breakpoints usados, zoom200%, teclado e safe-area." })
+    const tags = new Set(page.elements.map(element => element.tag.split(".")[0]))
+    const components = page.imports.flatMap(item => item.resolved ? item.symbols.filter(symbol => tags.has(symbol.local)).map(symbol => ({ file: page.path, line: item.line, evidence: `${symbol.local} → ${item.resolved}` })) : [])
+    rows.push({ route: route.path, state: "componentes reutilizados", evidence: components, note: "Imports efetivamente usados no JSX da página; dependências transitivas e declarações locais no inventário completo.", gap: "Conferir variantes/overlays e todos os consumidores na repaginação; import não prova renderização simultânea." })
+    const nav = note.navigation ? [checkedReference(note.navigation.file, note.navigation.needle)] : files.flatMap(file => file.navigation.filter(item => item.literal === route.path).map(item => ({ file: file.path, line: item.line, evidence: item.target })))
+    rows.push({ route: route.path, state: "navegação", evidence: nav.slice(0, 5), note: note.navigation?.description ?? "Referências literais (menu, link ou redirecionamento); conferir perfil/módulo na origem.", gap: note.gaps?.navegação ?? (!nav.length ? "SEM ENTRADA IDENTIFICADA: conferir acesso direto/dinâmico." : "Validar retorno, parâmetros e gating com os perfis indicados em App.tsx.") })
+    route.visualReview = { description: note.visual, useCases: note.useCases, navigation: note.navigation ?? null, explicitGaps: note.gaps ?? {} }
+  }
+  return rows
+}
+function statesMarkdown(inventory) {
+  const rows = inventory.stateMatrix, screens = inventory.breakpoints
+  const out = ["# Matriz visual e de estados por rota", "", "Gerada por `npm run docs:visual` a partir do AST, imports/reexports, configuração Tailwind e [notas revisadas](ui-route-notes.json). Não editar a tabela manualmente. Cada rota tem oito eixos; ausência de sinal é lacuna explícita, não prova de ausência do comportamento. Descrição é referência visual permitida; **não foram produzidas capturas nem aprovação de responsividade/estados nesta revisão**.", "", "## Fonte e critérios", "", "- [Rotas/elementos/recursos](UI-INVENTORY.md) e [JSON](ui-inventory.json): linhas, hashes e sinais completos; [componentes](04-UI-COMPONENTS.md).", "- [Casos de uso](../../product/06-CASOS-DE-USO.md), [tokens](05-TOKEN.md) e [padrões](06-UI-PATTERNS.md): contratos para a repaginação. UC vinculado é referência de fluxo, não cobertura integral da rota.", "- Sinais são da página e arquivos de módulos alcançados. Props genéricas de Button/Field não contam como binding concreto de disabled. Suspense é fallback de chunk, distinto do fetch da página. Dependência condicional não significa que todos os seus estados sejam visíveis juntos.", "", "## Breakpoints e cenários", "", "Fonte: `resolveConfig(frontend/tailwind.config.js)` com a versão Tailwind do lockfile. O projeto não sobrescreve screens; os valores abaixo são resolvidos da configuração efetiva, não assumidos.", "", "| Prefixo | Configuração efetiva |", "|---|---|", ...Object.entries(screens).map(([name, value]) => `| ${name} | ${escape(typeof value === "string" ? value : JSON.stringify(value))} |`), "", "Mobile base sem prefixo; shell usa lg para sidebar versus topo/tab bar. Modal usa sm para bottom-sheet versus diálogo central. Verificar375/768/1280px, bordas dos breakpoints usados, zoom200%, temas e teclado; valores configurados não equivalem a QA visual.", "", "## Rota × estado × evidência × lacuna", "", "| Rota | Estado / eixo | Evidência verificável e descrição | Lacuna / validação necessária |", "|---|---|---|---|"]
+  for (const row of rows) out.push(`| \`${row.route}\` | ${row.state} | ${escape(row.note)}<br>${row.evidence.map(evidenceLink).join("<br>") || "Nenhum sinal específico extraído."} | ${escape(row.gap)} |`)
+  out.push("", "## Vínculo com casos de uso", "", "| Rota | UC explicitamente relacionado | Lacuna |", "|---|---|---|")
+  for (const route of inventory.routes.filter(route => route.file)) out.push(`| \`${route.path}\` | ${route.visualReview.useCases.join(", ") || "SEM UC ESPECÍFICO vinculado"} | ${route.visualReview.useCases.length ? "Executar conferências do UC; vínculo não é teste aprovado." : "Formalizar fluxo específico antes de declarar cobertura funcional."} |`)
+  out.push("", "## Superfícies condicionais e globais", "", "| Superfície | Estado / condição | Evidência | Lacuna |", "|---|---|---|---|")
+  const surfaces = [
+    ["Todas as rotas lazy", "Chunk pendente / spinner", "frontend/src/App.tsx", "<Suspense fallback=", "Fallback de chunk não cobre erro de fetch da página; captura pendente."],
+    ["ProtectedRoute", "Sessão carregando; token ausente", "frontend/src/shared/auth/ProtectedRoute.tsx", "if (loading)", "Validar restauração de sessão/retorno à URL; sem captura."],
+    ["ContaSuspensaScreen", "user.status suspenso; preserva sessão e oferece sair", "frontend/src/shared/auth/ProtectedRoute.tsx", 'user?.status === "suspenso"', "Sem URL própria; testar usuário suspenso, logout e teclado."],
+    ["AdminRoute / SuperAdminRoute", "Perfil sem acesso → redirecionamento", "frontend/src/shared/auth/AdminRoute.tsx", 'user?.role !== "admin"', "Conferir cada perfil e escopo de empresa; não há página dedicada de acesso negado nesse guard."],
+    ["RequireModule", "Módulo desligado", "frontend/src/shared/auth/RequireModule.tsx", "<Navigate", "Validar gating com sessão ativa; UX não substitui enforcement backend UC-080."],
+    ["ErrorBoundary", "Exceção de renderização no shell autenticado", "frontend/src/shared/components/ErrorBoundary.tsx", "if (this.state.hasError)", "Rotas públicas estão fora desse boundary em App.tsx; falha de chunk/render pública requer cobertura explícita."],
+    ["Modal", "open, foco/teclado e sm bottom-sheet/diálogo", "frontend/src/shared/components/Modal/Modal.tsx", 'role="dialog"', "Validar foco, Escape, scroll e contraste em cada composição; não presumir aprovação por aria-modal."],
+    ["FeedbackOverlay", "loading/success/error/warning/info ou hidden; faixa fixa superior", "frontend/src/shared/feedback/FeedbackOverlay.tsx", 'fixed top-0', "Não bloqueia toda a tela nem desabilita submit; UI-02 nos formulários sem binding."],
+    ["PreferenciasModal / tema", "Paleta, light/dark/system", "frontend/src/shared/theme/ThemeProvider.tsx", 'root.dataset.theme', "Conferir cinco paletas e contraste; screenshot pendente."],
+    ["Avatar / lightbox", "Iniciais ou foto; foto pode abrir Modal", "frontend/src/shared/components/Avatar/Avatar.tsx", 'open={aberto}', "Conferir erro de imagem, iniciais, ampliação, teclado e fechamento; sem captura."],
+    ["Anexos / PDF", "pointer:coarse escolhe download; outro ponteiro permite iframe", "frontend/src/modules/cliente/components/AnexosSection.tsx", 'window.matchMedia("(pointer: coarse)")', "Não equivaler coarse a largura de tela; testar toque/ponteiro e PDF/imagem no modal."],
+    ["URL autenticada desconhecida (*)", "Shell sem Route interna de fallback", "frontend/src/App.tsx", '<Route path="*"', "UI-03: nenhuma página404 interna encontrada; não descrever shell como tela404 implementada."],
+  ]
+  for (const [name, state, file, needle, gap] of surfaces) out.push(`| ${name} | ${escape(state)} | ${evidenceLink(checkedReference(file, needle))} | ${escape(gap)} |`)
+  return out.join("\n") + "\n"
+}
 function markdown(inventory) {
   const lines = ["# Inventário visual derivado do código", "", "Gerado por `npm run docs:visual`. Não editar manualmente. `npm run docs:audit` recusa inventário divergente. Não é atestado de revisão visual, responsividade ou acessibilidade.", "", `**Escopo:** ${inventory.counts.concreteRoutes} rotas concretas + catch-all autenticado; ${inventory.counts.pageFiles} arquivos de página; ${inventory.counts.jsxFiles} arquivos com JSX; ${inventory.counts.componentDeclarations} declarações de componentes; ${inventory.counts.jsxElements} ocorrências JSX.`, "", "O [JSON](ui-inventory.json) contém cada elemento com arquivo/linha, atributos, condições de renderização, textos, interfaces/types, receitas de variantes e imports. Componentes locais, HTML, SVG, ícones e portais estão incluídos; nomes dinâmicos/estados em runtime exigem inspeção visual.", "", "## Rotas e superfícies", "", "| Rota | Página / shell | Acesso | Módulo | Fonte |", "|---|---|---|---|---|"]
   for (const route of inventory.routes) lines.push(`| \`${route.path}\` | ${route.component} | ${route.access} | ${route.module ?? "—"} | ${route.file ? link(route.file) : link("frontend/src/App.tsx")} |`)
@@ -202,7 +299,11 @@ function mappingMarkdown(inventory) {
 }
 export function synchronizeInventory(write = false) {
   const inventory = buildInventory(), stale = []
-  for (const [file, content] of [["docs/engineering/05-MAPEAMENTO-TELAS.md", mappingMarkdown(inventory)], ["docs/engineering/design/ui-inventory.json", JSON.stringify(inventory, null, 2) + "\n"], ["docs/engineering/design/UI-INVENTORY.md", markdown(inventory)], ["docs/engineering/design/UI-COVERAGE.md", coverageMarkdown(inventory)], ["docs/engineering/design/04-UI-COMPONENTS.md", catalogMarkdown(inventory)]]) {
+  inventory.version = 2
+  inventory.breakpoints = resolveTailwind(tailwindConfig).theme.screens
+  inventory.stateMatrix = routeStateRows(inventory)
+  const stateReference = "\n\n[Estados por rota, referências visuais e lacunas](UI-STATES.md).\n"
+  for (const [file, content] of [["docs/engineering/05-MAPEAMENTO-TELAS.md", mappingMarkdown(inventory) + "\n[Matriz de estados e evidências](design/UI-STATES.md).\n"], ["docs/engineering/design/ui-inventory.json", JSON.stringify(inventory, null, 2) + "\n"], ["docs/engineering/design/UI-INVENTORY.md", markdown(inventory) + stateReference], ["docs/engineering/design/UI-COVERAGE.md", coverageMarkdown(inventory) + stateReference], ["docs/engineering/design/04-UI-COMPONENTS.md", catalogMarkdown(inventory) + stateReference], ["docs/engineering/design/UI-STATES.md", statesMarkdown(inventory)]]) {
     const target = path.join(ROOT, file)
     if (!existsSync(target) || readFileSync(target, "utf8") !== content) { stale.push(file); if (write) writeFileSync(target, content) }
   }

@@ -2,6 +2,8 @@
 
 O procedimento atual usa PostgreSQL 16 e anexos do volume `/data`. O backup precisa representar o mesmo instante lógico para ambos. A estratégia é uma manutenção curta: interromper a aplicação, conferir ausência de outras conexões escritoras, copiar banco e anexos e retomar a mesma aplicação. O banco permanece ligado. O [pg_dump](https://www.postgresql.org/docs/16/app-pgdump.html) já produz um snapshot consistente do banco; a pausa existe para associar também os arquivos externos de anexos ao mesmo estado, não por uma exigência do dump isolado. A aplicação trata SIGTERM/SIGINT, fecha o servidor HTTP antes do pool e limita o encerramento a 20 segundos, abaixo do prazo do docker stop.
 
+Pendências formais: [B2-01, ALERT-01 e OWN-01](10-MAPA-OPERACIONAL.md). B2 é pendência não bloqueante, com gatilho/aceite explícitos; não suspender as demais atividades aguardando conta.
+
 ## Rotina aplicada e limites
 
 | Item | Aplicação atual |

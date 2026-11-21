@@ -168,4 +168,6 @@ Executa os **cenários da `07-CASOS-DE-USO-API.md`** (fluxos reais do front + to
 
 ## Inventário visual derivado do código
 
-Ao mudar frontend, executar `npm run docs:visual` para reconciliar os cinco artefatos gerados (MAPEAMENTO, catálogo, cobertura, UI-INVENTORY e JSON). O gate `docs:audit` usa AST para rotas e recusa arquivos de inventário divergentes; avisos documentais também falham em modo strict. Props, variantes, componentes inline, consumidores, ícones, traduções e recursos ficam vinculados à fonte. Nunca converter inventário estático em aprovação visual automática.
+Ao mudar frontend, executar `npm run docs:visual` para reconciliar os seis artefatos gerados (MAPEAMENTO, catálogo, cobertura, UI-INVENTORY, UI-STATES e JSON). O gate `docs:audit` usa AST para rotas e recusa arquivos de inventário divergentes; avisos documentais também falham em modo strict. Props, variantes, componentes inline, consumidores, ícones, traduções e recursos ficam vinculados à fonte. Nunca converter inventário estático em aprovação visual automática.
+
+Descrições visuais, vínculos de UCs e entradas parametrizadas/token são revisados em `docs/engineering/design/ui-route-notes.json`. A matriz exige cobertura exata das rotas, UCs existentes/únicos e referências que permaneçam no código. O mapa canônico de operação/donos/pendências fica em `docs/engineering/10-MAPA-OPERACIONAL.md`; nunca preencher dono humano por inferência.

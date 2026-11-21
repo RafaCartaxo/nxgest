@@ -32,7 +32,7 @@ Princípios: **defense in depth** · **menor privilégio** · **fail-closed**.
 | Expiração/reenvio de tokens de conta | ⚠️ P1 (CTs A-07/A-09) |
 | Rate limit global/por usuário · DDoS L7 | ⚠️ P1/P2 |
 | Firewall/fail2ban no VPS | ⚠️ P1 (verificar/documentar) |
-| Backup off-site criptografado | ⚠️ P1 |
+| Backup off-site criptografado | ⚠️ P1 — [B2-01](10-MAPA-OPERACIONAL.md), integração preparada, conta/bucket pendentes; não bloqueia as demais atividades |
 | Timeouts no Caddy (slowloris) | ⚠️ P1 (syntax do `servers` block a validar) |
 | JWT localStorage + 7d sem revogação | ⚠️ P2 (decisão) |
 | Dependências (`npm audit`) | ⚠️ rotina |

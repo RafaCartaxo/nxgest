@@ -1,0 +1,283 @@
+{
+  "/login": {
+    "visual": "Marca e apresentação ao lado do cartão de login no desktop; formulário de e-mail/senha, alternância da senha e links de recuperação/interesse.",
+    "useCases": [
+      "UC-039",
+      "UC-040",
+      "UC-041"
+    ]
+  },
+  "/recuperar-senha": {
+    "visual": "PublicPageShell com formulário de e-mail; após envio troca o formulário por SuccessState.",
+    "useCases": [
+      "UC-084"
+    ]
+  },
+  "/resetar-senha": {
+    "visual": "PublicPageShell com validação do token, senha e confirmação; erro de token ou sucesso substituem o formulário.",
+    "useCases": [
+      "UC-084"
+    ],
+    "navigation": {
+      "description": "Link transacional por e-mail com token; não é item do menu.",
+      "file": "src/modules/auth/application/use-cases/EsquecerSenha/EsquecerSenhaUseCase.ts",
+      "needle": "/resetar-senha?token="
+    }
+  },
+  "/ativar": {
+    "visual": "PublicPageShell com definição de senha e confirmação; token inválido e ativação concluída têm superfícies próprias.",
+    "useCases": [
+      "UC-083"
+    ],
+    "navigation": {
+      "description": "Link transacional por e-mail com token; não é item do menu.",
+      "file": "src/modules/auth/application/use-cases/Convidar/ConvidarUseCase.ts",
+      "needle": "/ativar?token="
+    }
+  },
+  "/verificar-email": {
+    "visual": "PublicPageShell com processamento do token, erro ou SuccessState e ação de retorno.",
+    "useCases": [
+      "UC-090"
+    ],
+    "navigation": {
+      "description": "Link transacional por e-mail com token; não é item do menu.",
+      "file": "src/modules/auth/application/use-cases/TrocarEmail/TrocarEmailUseCase.ts",
+      "needle": "/verificar-email?token="
+    }
+  },
+  "/quero-conhecer": {
+    "visual": "Marca e formulário de interesse; tela enviada/existente/reenviada usa SuccessState.",
+    "useCases": [
+      "UC-085"
+    ]
+  },
+  "/quero-conhecer/confirmar": {
+    "visual": "PublicPageShell com fases loading, token ausente, sucesso e erro; formulário de reenvio quando necessário.",
+    "useCases": [
+      "UC-086"
+    ],
+    "navigation": {
+      "description": "Link transacional por e-mail com token; não é item do menu.",
+      "file": "src/modules/leads/application/use-cases/CriarLead/CriarLeadUseCase.ts",
+      "needle": "/quero-conhecer/confirmar?token="
+    }
+  },
+  "/": {
+    "visual": "PageHeader, KPIs e ações rápidas; pendentes em Carousel, conclusão em SuccessState e modais de detalhes financeiros.",
+    "useCases": [
+      "UC-001",
+      "UC-020",
+      "UC-081"
+    ]
+  },
+  "/rota": {
+    "visual": "PageHeader e progresso; Carousel de CobrancaCard, ações operacionais, pagamento, promessa, comprovante e conclusão.",
+    "useCases": [
+      "UC-002",
+      "UC-003",
+      "UC-004",
+      "UC-005",
+      "UC-006",
+      "UC-019"
+    ]
+  },
+  "/cobrancas": {
+    "visual": "PageHeader, filtros, resumo e lista de cobranças; conclusão/erro aparecem junto da composição da lista.",
+    "useCases": [
+      "UC-009",
+      "UC-038"
+    ]
+  },
+  "/atendidos": {
+    "visual": "PageHeader, filtros por resultado e listas de atendimentos/pagamentos; mensagem quando nenhum registro.",
+    "useCases": [
+      "UC-010",
+      "UC-021",
+      "UC-036"
+    ]
+  },
+  "/clientes": {
+    "visual": "PageHeader com ação de cadastro, SearchBar e ClienteCard em lista dentro de EstadoTela.",
+    "useCases": [
+      "UC-015"
+    ]
+  },
+  "/clientes/novo": {
+    "visual": "PageHeader seguido do ClienteForm com identificação, endereços, GPS e ações de salvar/cancelar.",
+    "useCases": [
+      "UC-015",
+      "UC-089"
+    ],
+    "gaps": {
+      "desabilitado": "UI-02: submissões dos formulários não ligam disabled ao estado pendente; FeedbackOverlay é faixa no topo, não bloqueio da tela. Verificar múltiplo envio/teclado antes de repaginar."
+    }
+  },
+  "/clientes/:id": {
+    "visual": "PageHeader, ClienteInfo, ações, contratos, situação financeira e anexos condicionados por módulo/capacidade.",
+    "useCases": [
+      "UC-017",
+      "UC-048",
+      "UC-071"
+    ],
+    "navigation": {
+      "description": "Entrada dinâmica parametrizada; ausência de literal /:id não significa rota órfã.",
+      "file": "frontend/src/modules/cliente/pages/ClienteList.tsx",
+      "needle": "/clientes/${cliente.id}"
+    }
+  },
+  "/clientes/:id/editar": {
+    "visual": "PageHeader, skeleton inicial e ClienteForm preenchido com dados do cliente.",
+    "useCases": [
+      "UC-047",
+      "UC-089"
+    ],
+    "navigation": {
+      "description": "Entrada dinâmica parametrizada; ausência de literal /:id não significa rota órfã.",
+      "file": "frontend/src/modules/cliente/pages/ClienteDetail.tsx",
+      "needle": "/clientes/${cliente.id}/editar"
+    },
+    "gaps": {
+      "vazio": "UI-01: após falha de carga, carregando=false permite ClienteForm initial=null; falta superfície dedicada de não encontrado.",
+      "erro": "UI-01: feedback de erro existe, mas não bloqueia o formulário inicial vazio.",
+      "responsividade": "VIS-01: conferir skeleton w-96 em viewport estreito; largura efetiva não medida.",
+      "desabilitado": "UI-02: submissões dos formulários não ligam disabled ao estado pendente; FeedbackOverlay é faixa no topo, não bloqueio da tela. Verificar múltiplo envio/teclado antes de repaginar."
+    }
+  },
+  "/contratos": {
+    "visual": "PageHeader, filtro de clientes, EstadoTela, ContratoCard e paginação.",
+    "useCases": [
+      "UC-017",
+      "UC-072"
+    ]
+  },
+  "/contratos/novo": {
+    "visual": "PageHeader e ContratoForm: cliente, valores, juros, periodicidade, datas e prévia de parcelas.",
+    "useCases": [
+      "UC-016"
+    ],
+    "gaps": {
+      "desabilitado": "UI-02: submissões dos formulários não ligam disabled ao estado pendente; FeedbackOverlay é faixa no topo, não bloqueio da tela. Verificar múltiplo envio/teclado antes de repaginar."
+    }
+  },
+  "/contratos/:id": {
+    "visual": "PageHeader, ContratoInfo, parcelas, pagamentos/estornos, confirmação, pagamento e comprovante; escopo admin altera ações.",
+    "useCases": [
+      "UC-017",
+      "UC-030",
+      "UC-050"
+    ],
+    "navigation": {
+      "description": "Entrada dinâmica parametrizada; ausência de literal /:id não significa rota órfã.",
+      "file": "frontend/src/modules/contrato/pages/ContratoList.tsx",
+      "needle": "/contratos/${c.id}"
+    }
+  },
+  "/contratos/:id/editar": {
+    "visual": "Bloqueio explícito quando há pagamentos; caso contrário, EstadoTela e ContratoForm de edição.",
+    "useCases": [
+      "UC-049"
+    ],
+    "navigation": {
+      "description": "Entrada dinâmica parametrizada; ausência de literal /:id não significa rota órfã.",
+      "file": "frontend/src/modules/contrato/pages/ContratoDetail.tsx",
+      "needle": "/contratos/${contrato.id}/editar"
+    },
+    "gaps": {
+      "desabilitado": "UI-02: submissões dos formulários não ligam disabled ao estado pendente; FeedbackOverlay é faixa no topo, não bloqueio da tela. Verificar múltiplo envio/teclado antes de repaginar."
+    }
+  },
+  "/caixa": {
+    "visual": "PageHeader e CaixaKpis, navegação de semanas, seções recolhíveis de movimentos/ajustes e modais financeiros.",
+    "useCases": [
+      "UC-012",
+      "UC-013",
+      "UC-014",
+      "UC-051"
+    ]
+  },
+  "/gastos": {
+    "visual": "PageHeader, informação de total do dia e GastoForm com valor, categoria, data e observação.",
+    "useCases": [
+      "UC-011"
+    ],
+    "gaps": {
+      "desabilitado": "UI-02: submissões dos formulários não ligam disabled ao estado pendente; FeedbackOverlay é faixa no topo, não bloqueio da tela. Verificar múltiplo envio/teclado antes de repaginar."
+    }
+  },
+  "/insights": {
+    "visual": "PageHeader e SegmentedControl de período; ChartCard organiza gráficos de tendência, previsto/recebido e carteira.",
+    "useCases": [
+      "UC-088"
+    ],
+    "navigation": {
+      "description": "SEM ENTRADA DE NAVEGAÇÃO: acesso por URL é declarado; menu Mais pertence a etapa futura.",
+      "file": "frontend/src/App.tsx",
+      "needle": "sem item de nav"
+    },
+    "gaps": {
+      "navegação": "NAV-01: decidir quando disponibilizar entrada no menu; não criar durante o inventário."
+    }
+  },
+  "/perfil": {
+    "visual": "PageHeader e cards de dados/avatar, e-mail e senha; indicadores de verificação e modais de alteração.",
+    "useCases": [
+      "UC-042"
+    ]
+  },
+  "/devboard": {
+    "visual": "PageHeader, KPIs de execução e seções RunsList, PRsList e DependabotList para super admin.",
+    "useCases": [
+      "UC-091"
+    ]
+  },
+  "/admin": {
+    "visual": "PageHeader, KPIs e equipe; busca/lista de operadores, formulário, reassociação, contribuição e confirmações.",
+    "useCases": [
+      "UC-023",
+      "UC-024",
+      "UC-027",
+      "UC-053"
+    ]
+  },
+  "/admin/operadores/:id": {
+    "visual": "PageHeader com Avatar e estado do operador, cards/KPIs de caixa, ajustes e modais de edição/reassociação.",
+    "useCases": [
+      "UC-025",
+      "UC-026",
+      "UC-028",
+      "UC-046"
+    ],
+    "navigation": {
+      "description": "Entrada dinâmica parametrizada; ausência de literal /:id não significa rota órfã.",
+      "file": "frontend/src/modules/admin/components/OperadoresList.tsx",
+      "needle": "/admin/operadores/${op.id}"
+    }
+  },
+  "/admin/empresas": {
+    "visual": "PageHeader, KPIs e EmpresaList; modais de criação/edição, módulos, capacidades e impacto de suspensão.",
+    "useCases": [
+      "UC-032",
+      "UC-052",
+      "UC-055"
+    ]
+  },
+  "/admin/empresas/:id": {
+    "visual": "AdminPage reutilizada no escopo de empresa: KPIs, equipe, operadores e modais sob acesso super admin.",
+    "useCases": [
+      "UC-032",
+      "UC-067"
+    ],
+    "navigation": {
+      "description": "Entrada dinâmica parametrizada; ausência de literal /:id não significa rota órfã.",
+      "file": "frontend/src/modules/admin/components/EmpresaList.tsx",
+      "needle": "/admin/empresas/${empresa.id}"
+    }
+  },
+  "/admin/leads": {
+    "visual": "PageHeader, busca/filtros, EstadoTela e cards de leads; paginação, confirmação e motivo de descarte.",
+    "useCases": [
+      "UC-087"
+    ]
+  }
+}

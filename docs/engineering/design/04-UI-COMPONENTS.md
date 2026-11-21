@@ -3205,3 +3205,6 @@ interface ThemeProviderProps {
 ## Recursos complementares
 
 AvatarField usa o processador compartilhado de imagens (MAX_LADO=640), não uma constante de200px do catálogo anterior. Seletores CSS, pseudo-elementos, declarações, media/keyframes e os elementos dos SVG locais são extraídos no JSON. Ícones lucide/SVG locais, mapas, gráficos Recharts, favicon/PWA, fontes, CSS, paletas e traduções estão localizados no inventário e em supportFiles do JSON. Props dinâmicas, componentes de bibliotecas e aparência efetiva exigem revisão no navegador.
+
+
+[Estados por rota, referências visuais e lacunas](UI-STATES.md).

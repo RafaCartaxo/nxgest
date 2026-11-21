@@ -81,6 +81,13 @@ for (const file of sourceFiles) {
       }
     }
     if (anchorPart && !normalizeAnchor(anchorPart).length) return
+    // GitHub source-line anchors are not Markdown headings. Validate their range.
+    if (anchorPart && !targetFile.endsWith(".md") && /^L\d+(?:-L\d+)?$/.test(anchorPart)) {
+      const [first, last = first] = anchorPart.split("-L").map(part => Number(part.replace(/^L/, "")))
+      const lines = readFileSync(targetFile, "utf8").split("\n").length
+      if (first < 1 || last < first || last > lines) report("error", `${relative(root, file)} -> linha de evidência inexistente: ${raw}`)
+      return
+    }
     const anchors = isAnchorOnly ? headersOf(file) : headersOf(targetFile)
     if (anchorPart && !anchors.includes(normalizeAnchor(anchorPart))) {
       report("error", `${relative(root, file)} -> âncora não encontrada: ${raw}`)

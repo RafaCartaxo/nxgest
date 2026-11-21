@@ -26,7 +26,7 @@ tasks/
 
 | Data | Tarefa | Status |
 |------|--------|--------|
-| [21/11/2026](2026-11-21/CHECKLIST.md) | Inventário visual derivado do código, higiene de branches e verificação periódica de backup | Em execução |
+| [21/11/2026](2026-11-21/CHECKLIST.md) | Inventário visual/estados, mapa operacional, higiene e backup | Entregas anteriores concluídas; B2-01 e ALERT-01 explícitos |
 | [20/11/2026](2026-11-20/CHECKLIST.md) | README, operação, QA e coerência de fluxos; distinção de BA10 | Revisão documental |
 | [07/08/2026 — rota](2026-08-07/ROTA-REGRESSAO-CT.md) | Casos de regressão da rota (PLAN-062) | Plano de teste histórico |
 | [13/08/2026 — handoff](2026-08-13/HANDOFF.md) | Transição PostgreSQL e e-mail | Histórico |

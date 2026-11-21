@@ -95,3 +95,5 @@ Para compilar e servir uma instância configurada, `npm run build` e `npm start`
 ## Contribuição e estado local
 
 Seguir [AGENTS.md](AGENTS.md), [contratos de agentes](agents/README.md) e [guia de contribuição](docs/CONTRIBUTING.md). Comparar o branch/diff local com a revisão publicada antes de declarar algo entregue. Trabalho não commitado e experimentos locais não fazem parte automaticamente da main ou da produção.
+
+Fontes operacionais e responsáveis: [mapa canônico](docs/engineering/10-MAPA-OPERACIONAL.md). Estados e referências para repaginar: [matriz por rota](docs/engineering/design/UI-STATES.md).

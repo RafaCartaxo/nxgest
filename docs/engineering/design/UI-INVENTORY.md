@@ -927,3 +927,6 @@ Fonte: [frontend/src/shared/theme/ThemeProvider.tsx](../../../frontend/src/share
 3. Alterar componentes compartilhados junto de seus consumidores: `node scripts/consumers.mjs Nome`.
 4. Regenerar `npm run docs:visual`; executar auditorias UI/estilos/módulos/documentação e testes relevantes.
 5. Registrar evidência visual antes de marcar uma superfície como revisada. O inventário não declara aprovação visual de todas as telas.
+
+
+[Estados por rota, referências visuais e lacunas](UI-STATES.md).

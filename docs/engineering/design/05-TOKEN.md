@@ -1,136 +1,57 @@
-# TOKENS
+# Tokens implementados
 
-**Status:** Aprovado
+Reconciliado em21/11/2026 com o código. Fontes canônicas: [index.css](../../../frontend/src/index.css), [Tailwind](../../../frontend/tailwind.config.js), [paletas](../../../frontend/src/shared/theme/themes.ts) e [ThemeProvider](../../../frontend/src/shared/theme/ThemeProvider.tsx). Este documento localiza os contratos; o valor efetivo depende de paleta, modo e eventual variável de tenant. A tabela antiga de cores hex fixas e o ID `aurora` não representavam a implementação atual.
 
-**Versão:** 1.2
+## Tipografia e escalas
 
-**Última atualização:** 11/07/2026
+| Contrato / utilitário real | Configuração | Evidência / limite |
+|---|---|---|
+| `--font-sans`, font-sans | Inter com fallbacks de sistema | index.css e theme.extend.fontFamily.sans |
+| `--font-display`, font-display | Sora com fallback Inter/sistema | index.css e theme.extend.fontFamily.display |
+| text-3xl | 1.875rem (30px com base16px) | Escala padrão Tailwind; não significa que todo título use esse tamanho |
+| text-xl | 1.25rem (20px com base16px) | Títulos22px usam classe arbitrária text-[22px], como páginas públicas |
+| text-lg / text-2xl | 1.125rem / 1.5rem | Tailwind; tamanhos efetivos por componente no [catálogo](04-UI-COMPONENTS.md) |
+| text-base / text-sm / text-xs | 1rem / 0.875rem / 0.75rem | Rem acompanha a base e preferências; não atesta contraste ou zoom |
+| font-normal / medium / semibold / bold | 400 / 500 / 600 / 700 | Utilitários Tailwind; composição depende do elemento |
+| p-1 / p-2 / p-3 / p-4 | 0.25rem / 0.5rem / 0.75rem / 1rem | Escala de espaçamento; não existem variáveis CSS spacing-xxs etc. no contrato atual |
+| p-6 / p-8 / p-10 / p-12 | 1.5rem / 2rem / 2.5rem / 3rem | Tailwind padrão |
+| rounded-sm / rounded-md / rounded-lg / rounded-xl | 0.125rem / 12px / 0.5rem / 0.75rem | Somente md é sobrescrito no Tailwind; não usar o antigo lg=16px como verdade |
+| `--radius` | 0.75rem | Variável em index.css; utilitário só a usa quando explicitamente ligado a ela |
+| shadow-sm / shadow-lg | Escalas padrão Tailwind | Não há token CSS chamado shadow-card; conferir uso concreto |
 
----
+As classes arbitrárias, clamp(), variantes e receitas por componente estão no [inventário](UI-INVENTORY.md). Não criar nomes de tokens que não existam no código.
 
-# Objetivo
+## Cores e aliases semânticos
 
-Definir os Design Tokens oficiais do projeto conforme implementado no código.
+| Uso | Alias do Tailwind/CSS | Fonte efetiva |
+|---|---|---|
+| Primária | `--color-primary` → `--primary` | base usa `--brand-1`; dark/tema alteram os valores |
+| Hover primário | `--color-primary-hover` → `--primary-hover` | base usa `--brand-2`; fórmulas próprias no modo dark |
+| Fundo primário suave | `--color-primary-light` → `--primary-soft` | color-mix no espaço oklab |
+| Texto primário da paleta | `--color-primary-text` → `--primary-text` | fórmula dependente da marca e modo |
+| Superfície | `--color-surface` → `--surface` | OKLCH, sobrescrito no dark |
+| Superfície secundária | `--color-surface-secondary` → `--muted` | Alias real; não fixar um gray-50 na documentação |
+| Texto principal | `--color-text-primary` → `--foreground` | Base/dark em index.css |
+| Borda | `--color-border` → `--border` | Base/dark em index.css |
+| Success/danger/warning/info | Família `--color-*` ligada às variáveis semânticas | Valores e variantes reais extraídos no JSON, inclusive overrides de tema/mode |
+| Focus/ring | ring e cores semânticas do Tailwind | Usar o contrato do componente; audit:styles recusa cores fixas da paleta |
 
-# Tipografia
+Cores efetivas não são equivalentes constantes hex em todos os temas. Valores, seletores e declarações completas: recurso `frontend/src/index.css` em [ui-inventory.json](ui-inventory.json).
 
-| Token | Valor | Tailwind |
-|-------|-------|----------|
-| `font-family-base` | `Inter` | `font-sans` |
-| `font-size-page-title` | `28px` | `text-3xl` |
-| `font-size-section-title` | `22px` | `text-xl` |
-| `font-size-card-title` | `18px` | `text-lg` |
-| `font-size-financial-value` | `24px` | `text-2xl` |
-| `font-size-body` | `16px` | `text-base` |
-| `font-size-input` | `16px` | `text-base` |
-| `font-size-button` | `16px` | `text-base` |
-| `font-size-auxiliary` | `14px` | `text-sm` |
-| `font-size-caption` | `12px` | `text-xs` |
-| `font-size-badge` | `12px` | `text-xs` |
-| `font-weight-regular` | `400` | `font-normal` |
-| `font-weight-medium` | `500` | `font-medium` |
-| `font-weight-semibold` | `600` | `font-semibold` |
-| `font-weight-bold` | `700` | `font-bold` |
+## Paletas, modo e gradientes
 
-# Espaçamento
+| Contrato | Configuração verificável |
+|---|---|
+| IDs atuais de paleta | default, violeta, ocean, grape, sunset — THEMES em themes.ts e seletores data-theme em index.css |
+| Modo | light, dark ou system; ThemeProvider acompanha prefers-color-scheme e aplica classe dark |
+| Persistência | nxgest_palette e nxgest_mode no localStorage; não é configuração do banco |
+| Override de tenant | `--tenant-primary` é seam CSS opcional no tema default; sua existência não prova provisionamento por empresa |
+| Fundo da página | `--gradient-page`, classe bg-gradient-page |
+| Marca/acento | `--gradient-brand` / `--gradient-accent`, classes bg-gradient-brand / bg-gradient-accent |
+| Mesh / texto | `--gradient-mesh` / `--gradient-text`, classes bg-mesh / text-gradient; text-brand-gradient também está no CSS |
 
-| Token | Valor | Tailwind |
-|-------|-------|----------|
-| `spacing-xxs` | `4px` | `p-1` |
-| `spacing-xs` | `8px` | `p-2` |
-| `spacing-sm` | `12px` | `p-3` |
-| `spacing-md` | `16px` | `p-4` |
-| `spacing-lg` | `24px` | `p-6` |
-| `spacing-xl` | `32px` | `p-8` |
-| `spacing-xxl` | `40px` | `p-10` |
-| `spacing-xxxl` | `48px` | `p-12` |
+## Responsividade e revisão
 
-# Border Radius
+[UI-STATES](UI-STATES.md) resolve a configuração Tailwind e registra prefixos/evidências por rota: sm640px, md768px, lg1024px, xl1280px e2xl1536px. [AppLayout](../../../frontend/src/shared/layout/AppLayout.tsx) muda de topo/tab bar para sidebar em lg; [Modal](../../../frontend/src/shared/components/Modal/Modal.tsx) muda em sm. A ausência de prefixo numa página pode significar layout fluido; não certifica responsividade.
 
-| Token | Valor | Tailwind |
-|-------|-------|----------|
-| `radius-sm` | `4px` | `rounded-sm` |
-| `radius-md` | `12px` | `rounded-md` |
-| `radius-lg` | `16px` | `rounded-lg` |
-| `radius-full` | `9999px` | `rounded-full` |
-
-# Cores
-
-## Cores Semânticas (Estados)
-
-| Token | Valor | Tailwind |
-|-------|-------|----------|
-| `color-primary` | `#2563EB` | `blue-600` |
-| `color-primary-hover` | `#1D4ED8` | `blue-700` |
-| `color-primary-light` | `#DBEAFE` | `blue-100` |
-| `color-primary-text` | `#1E40AF` | `blue-800` |
-| `color-success` | `#16A34A` | `green-600` |
-| `color-success-hover` | `#15803D` | `green-700` |
-| `color-success-light` | `#DCFCE7` | `green-100` |
-| `color-success-text` | `#166534` | `green-800` |
-| `color-success-border` | `#BBF7D0` | `green-200` |
-| `color-warning` | `#CA8A04` | `yellow-600` |
-| `color-warning-light` | `#FEF9C3` | `yellow-100` |
-| `color-warning-text` | `#854D0E` | `yellow-800` |
-| `color-danger` | `#DC2626` | `red-600` |
-| `color-danger-hover` | `#B91C1C` | `red-700` |
-| `color-danger-light` | `#FEE2E2` | `red-100` |
-| `color-danger-text` | `#991B1B` | `red-800` |
-| `color-info` | `#2563EB` | `blue-600` |
-| `color-info-light` | `#DBEAFE` | `blue-100` |
-| `color-info-text` | `#1E40AF` | `blue-800` |
-| `color-secondary` | `#6B7280` | `gray-500` |
-| `color-secondary-light` | `#F9FAFB` | `gray-50` |
-
-## Cores Estruturais (Superfície / Texto / Borda)
-
-| Token | Valor | Tailwind |
-|-------|-------|----------|
-| `color-surface` | `#FFFFFF` | `bg-surface` |
-| `color-surface-secondary` | `#F9FAFB` | `bg-surface-secondary` |
-| `color-surface-hover` | `#F3F4F6` | `bg-surface-hover` |
-| `color-text-primary` | `#1F2937` | `text-text-primary` |
-| `color-text-secondary` | `#6B7280` | `text-text-secondary` |
-| `color-text-muted` | `#9CA3AF` | `text-text-muted` |
-| `color-border` | `#D1D5DB` | `border-border` |
-| `color-border-light` | `#E5E7EB` | `border-border-light` |
-
-## Dark Mode (`.dark`)
-
-Todas as cores são definidas como CSS custom properties no `index.css`, com
-sobrescrita no bloco `.dark { }`. O toggle é feito via classe `dark` no `<html>`,
-gerenciada pelo `ThemeProvider` (`shared/theme/`).
-
-# Sombras
-
-| Token | Valor | Tailwind |
-|-------|-------|----------|
-| `shadow-card` | `0 1px 3px 0 rgb(0 0 0 / 0.1)` | `shadow-sm` |
-| `shadow-dropdown` | `0 10px 15px -3px rgb(0 0 0 / 0.1)` | `shadow-lg` |
-
----
-
-# Temas e Gradientes (PLAN-031)
-
-O tema é **100% dirigido por CSS variables** (`--color-*`, mapeadas no Tailwind). Cada tema é um bloco `[data-theme="<id>"]` (light) + `[data-theme="<id>"].dark` no `index.css`.
-
-| Token | Uso | Tailwind |
-|-------|-----|----------|
-| `--gradient-page` | Fundo ambiente da página (body) | `.bg-gradient-page` |
-| `--gradient-accent` | Acentos (botão primário "brand", sidebar ativo) | `.bg-gradient-accent` |
-| `--gradient-text` | Texto em gradiente (títulos) | `.text-gradient` |
-
-> **Foco de input (PLAN-035):** usar `focus:ring-primary` / `focus:border-primary` — o anel segue a paleta, não azul fixo.
-> **Cores fixas da paleta são proibidas** em `frontend/src` — ver `02-DESIGN-SYSTEM.md` (checado por `npm run audit:styles`).
-
-## Paletas (temas)
-
-| Tema | Primary | Gradiente |
-|------|---------|-----------|
-| `default` | azul `#2563EB` | azul → violeta |
-| `aurora` | violeta `#7C3AED` | índigo → violeta → rosa |
-| `ocean` | teal `#0D9488` | azul → teal |
-| `grape` | violeta `#6D28D9` | violeta → fúcsia |
-| `sunset` | laranja `#EA580C` | laranja → rosa |
-
-> **Seam de whitelabel:** o tema vem da preferência do usuário (localStorage). No futuro, `empresa.tema` aplica a paleta do cliente a todos os usuários do tenant (Fase 5.10).
+Revisão para repaginação:375/768/1280px, lados de cada breakpoint usado, zoom200%, teclado, safe-area, cinco paletas e claro/escuro. Aparência efetiva exige render; esta reconciliação documental não marca esses ensaios como executados.

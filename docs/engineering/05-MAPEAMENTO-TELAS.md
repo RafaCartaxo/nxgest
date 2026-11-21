@@ -283,3 +283,5 @@ ContaSuspensaScreen, Suspense, ErrorBoundary, FeedbackProvider, navegação, pre
 # Referências
 
 [Componentes](design/04-UI-COMPONENTS.md) · [Cobertura](design/UI-COVERAGE.md) · [Fluxos de uso](../product/06-CASOS-DE-USO.md) · [Registro anterior no Git](https://github.com/RafaCartaxo/nxgest/blob/e929d1ce32c550361c369491d45eaf04eb2bf9ea/docs/engineering/05-MAPEAMENTO-TELAS.md).
+
+[Matriz de estados e evidências](design/UI-STATES.md).

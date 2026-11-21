@@ -20,6 +20,8 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 | Planos de implementação | `docs/plans/README.md` |
 | Decisões arquiteturais (ADRs) | `docs/decisions/ADR-INDEX.md` |
 | **Produção / operação (runbook)** | `docs/engineering/06-PRODUCAO.md` |
+| Fontes, configuração, donos e gatilhos de pendências | `docs/engineering/10-MAPA-OPERACIONAL.md` |
+| Estados e referências da repaginação | `docs/engineering/design/UI-STATES.md` |
 | Deploy do primeiro cliente | `docs/plans/PLAN-018-deploy.md` |
 | **O que é este produto?** | `docs/foundation/00-NORTH-STAR.md` (o que somos) → `docs/foundation/ADR-007-Identidade-Plataforma.md` (o que aceita entrar) → `docs/product/08-UC-MODULOS.md` (como plugar) |
 

@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 21/11/2026 — fontes operacionais e matriz de estados
+
+- Mapa canônico item/documento/configuração/dono, com ausência de dono humano explícita e gatilhos/aceites B2-01, ALERT-01 e DNS-01; B2 não bloqueia os demais trabalhos.
+- Matriz de29 rotas × oito eixos (232 linhas),12 superfícies globais/condicionais, descrições visuais, componentes e breakpoints resolvidos; distingue navegação por token, links parametrizados e Insights por URL. Não concede aprovação visual nem declara estados ausentes como implementados.
+- Inventário existente estendido com sinais AST de estado, seis artefatos gerados, notas revisadas de rota e11 testes. Auditoria de links aceita âncoras de código somente se a linha existir.
+- Tokens/paletas e padrões reconciliados, backup antigo do contrato ops corrigido, índices e backlog alinhados. Colisão UC-080 resolvida: endereço/GPS agora UC-089; criados UC-090 (verificação de e-mail) e UC-091 (DevBoard) para fluxos existentes.
+- Resend do runtime publicado aceitou teste controlado no sink oficial; transporte funciona, mas destinatário humano e integração de alerta autônomo ainda não estão definidos. Sem MTA nem novo scheduler/workflow instalado; nenhuma configuração de produção alterada fora do CD.
+
 ## 21/11/2026 — monitoramento e proteção do backup
 
 - Recibo privado de restore publicado apenas após restauração e limpeza; monitor externo verifica aplicação, banco, frescor do backup e prova de restore por chave SSH somente leitura.
