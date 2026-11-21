@@ -27,3 +27,16 @@ Validação local adicional: 24 testes de backup, incluindo roundtrip real Resti
 Revisão adicional: falhas de credenciais/preflight são registradas antes de qualquer parada da aplicação. O teste dedicado comprova o marcador de erro e ausência de docker stop nessa situação.
 
 O instalador operacional aceita o checkout detached mantido pelo CD e continua exigindo o SHA exato aprovado, lock livre e ausência de deploy ativo/pendente. Conferência realizada diretamente na VPS antes da instalação.
+
+## Delegação do condutor — mapa operacional e estados
+
+- [x] Partir de STATUS e registrar fontes/configurações/donos em [10-MAPA-OPERACIONAL](../../10-MAPA-OPERACIONAL.md), sem inferir responsável humano.
+- [x] Formalizar B2-01 com gatilho e aceite, como pendência não bloqueante; registrar DNS-01/OWN-01 e ALERT-01 separadamente.
+- [x] Corrigir caminho legado de backup no contrato ops, índices, claim de off-site concluído no backlog e valores/paletas desatualizados de tokens.
+- [x] Verificar transporte Resend pelo mailer compilado: HTTP200,2026-11-21T18:36:29.188Z, sink oficial; nenhum destinatário humano ou alerta automático declarado como validado.
+- [x] Cobrir29 rotas × oito eixos na [matriz](../../design/UI-STATES.md), com referências descritivas, evidências AST,12 superfícies condicionais e lacunas explícitas.
+- [x] Reconciliar UC-080 duplicado: endereço/GPS→UC-089; registrar UC-090/091 para telas de verificação de e-mail e DevBoard existentes.
+- [x] Validar11 testes do inventário e auditorias docs/links. Conferências visuais/funcionais por viewport não foram executadas.
+- [ ] ALERT-01: destinatário/canal oficial e ponto de emissão independente ainda indefinidos; cron MAILTO=root sem sendmail não prova entrega. Não criar automação nem alterar configuração de produção fora do CD para contornar.
+
+As lacunas UI-01 (cliente em falha de carga), UI-02 (submit sem disabled), UI-03 (sem404 interna), NAV-01 (Insights sem menu) e a validação visual estão descritas na matriz. Elas não foram corrigidas como comportamento nesta revisão documental. Dono da execução: NX Gest–Solucionador, por delegação do condutor nesta conversa; isso não designa donos permanentes dos serviços.

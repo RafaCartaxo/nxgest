@@ -1,5 +1,7 @@
 # 06 — Produção (Runbook de Operação)
 
+Fontes, configurações, donos e pendências com gatilho: [mapa operacional](10-MAPA-OPERACIONAL.md).
+
 ## 1. Visão geral do ambiente
 
 | Componente | Configuração atual |
@@ -88,12 +90,14 @@ O cron está em `/etc/cron.d/nxgest-backup`: criação às 02h/14h UTC e ensaio 
 
 ```bash
 cd /opt/nxgestao
-docker compose -f infra/docker-compose.prod.yml ps
+docker ps -a --filter label=com.docker.compose.project=nxgestao
 docker logs --tail 100 nxgestao-app-1
 docker logs --tail 100 nxgest-postgres
 curl -fsS https://nxgest.com.br/api/health
 curl -fsS https://nxgestao.duckdns.org/api/health
 ```
+
+Para diagnóstico de leitura, os comandos acima não dependem de interpolar NXGEST_PROD_IMAGE. O Compose de produção exige essa identidade verificada, fornecida pelo controlador; não inventar uma tag só para executar ps/logs.
 
 Health exige `status=ok` e `db=connected`. Logs da aplicação podem conter dados pessoais/tokens de desenvolvimento: não publicar dumps de logs nem env completos. Diagnóstico de frontend deve conferir HTML, assets e versão da imagem.
 
@@ -121,3 +125,27 @@ Validar pelo mailer compilado da própria imagem publicada. Para diagnóstico se
 ## 11. Hardening do host
 
 Manter SSH por chave, portas do banco fechadas, segredos privados e gateways restritos. Backup e deploy compartilham lock. Para outra máquina/VPS, seguir [setup](08-SETUP-NOVA-MAQUINA.md), provisionar identidades e acessos próprios e validar restauração antes de assumir continuidade operacional.
+
+### Canal independente de alerta — conferência21/11
+
+Transporte Resend existente verificado pelo mailer compilado da imagem publicada, com destinatário simulado oficial e HTTP200; evidência/ID no [mapa operacional](10-MAPA-OPERACIONAL.md). Esse teste não registra entrega humana. O cron tem MAILTO=root, mas sendmail não foi encontrado; backup-monitor só reporta no GitHub. Destinatário e integração de alerta autônomo não estão definidos: ALERT-01. Não instalar canal ou alterar produção fora do CD para contornar a pendência.
+
+Repetir o diagnóstico controlado pelo mailer existente, sem copiar código candidato ao container:
+
+```bash
+ssh root@172.245.152.223 'docker exec -i nxgestao-app-1 node --input-type=module' <<'JS'
+import { criarMailer } from '/app/dist/shared/email/mailers.js'
+if (process.env.MAIL_PROVIDER !== 'resend' || !process.env.RESEND_API_KEY) {
+  throw Error('Transporte Resend real não configurado')
+}
+await criarMailer().send({
+  to: 'delivered@resend.dev',
+  subject: 'NX Gest — teste controlado do transporte',
+  text: 'Diagnóstico manual autorizado; não é alerta de incidente.',
+  html: '<p>Diagnóstico manual autorizado; não é alerta de incidente.</p>',
+})
+console.log('RESEND_TRANSPORT_ACCEPTED human_delivery_verified=false')
+JS
+```
+
+O comando não publica configuração, não escolhe destinatário operacional e não cria rotina de notificação. Para confirmar entrega humana, primeiro definir canal/destinatário em ALERT-01 e registrar retorno/evento do provedor. Segredos nunca são impressos.

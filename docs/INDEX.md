@@ -35,6 +35,7 @@
 - [07-FORMS-INPUTS.md](engineering/07-FORMS-INPUTS.md) — Padrões de formulários e inputs (Field, validação, máscaras)
 - [08-SETUP-NOVA-MAQUINA.md](engineering/08-SETUP-NOVA-MAQUINA.md) — Setup de nova máquina, portabilidade de SO e Disaster Recovery
 - [09-BACKUP-ROLLBACK.md](engineering/09-BACKUP-ROLLBACK.md) — Backup com manutenção, restauração isolada e recuperação
+- [10-MAPA-OPERACIONAL.md](engineering/10-MAPA-OPERACIONAL.md) — Registro canônico item → documento → configuração → dono; pendências com gatilho
 - [TESTES.md](engineering/TESTES.md) — Estratégia de testes, rotina e convenções (PLAN-067)
 - [SEGURANCA.md](engineering/SEGURANCA.md) — Postura de segurança, gaps e processos (PLAN-066)
 
@@ -47,6 +48,8 @@
 - [05-TOKEN.md](engineering/design/05-TOKEN.md) — Design tokens implementados no código
 - [06-UI-PATTERNS.md](engineering/design/06-UI-PATTERNS.md) — Padrões de composição, templates de tela e anti-patterns
 - [UI-COVERAGE.md](engineering/design/UI-COVERAGE.md) — Inventário de cobertura da UI por tela/componente (PLAN-044)
+- [UI-STATES.md](engineering/design/UI-STATES.md) — Matriz rota × estado × evidência × lacuna, responsividade, componentes e referência visual descritiva
+- [ui-route-notes.json](engineering/design/ui-route-notes.json) — Fonte revisada de descrições/UCs e navegação dinâmica ou por token
 
 ## Decisions
 

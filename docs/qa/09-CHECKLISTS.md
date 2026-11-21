@@ -54,7 +54,7 @@
 - [x] CT-ROT-02 — rota concluída/parcial: contadores e empty state
 - [x] CT-PWA-01 — reinstalar o app instalado e conferir ícone/nome/theme
 - [x] CT-GEO-01/02 — capturar localização → campos preenchem + navegar disponível
-- [x] UC-080 edição — endereço com localização descarta coords + teclado permanece aberto (fix `7d6060e`)
+- [x] UC-089 edição — endereço com localização descarta coords + teclado permanece aberto (fix `7d6060e`)
 - [ ] Cloudflare SSL Full (strict)
 
 ---

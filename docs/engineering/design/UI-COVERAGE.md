@@ -59,3 +59,6 @@ O [inventário completo](UI-INVENTORY.md) localiza os 118 arquivos com JSX e sua
 - [ ] Atualizar consumidores ao alterar um componente compartilhado.
 - [ ] Executar docs:visual, docs:audit, audit:ui, audit:styles, audit:modules e testes relevantes.
 - [ ] Registrar capturas e resultado da revisão visual; nenhum check AST concede aprovação visual.
+
+
+[Estados por rota, referências visuais e lacunas](UI-STATES.md).

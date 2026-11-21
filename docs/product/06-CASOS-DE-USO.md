@@ -1593,7 +1593,9 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 
 ---
 
-### UC-080 — Endereço, localização (GPS) e navegação do cliente
+### UC-089 — Endereço, localização (GPS) e navegação do cliente
+
+**Identidade reconciliada em21/11/2026:** este fluxo usava UC-080 em registros antigos; UC-080 permanece exclusivo do enforcement com sessão ativa. Referências históricas datadas a UC-080 de GPS/endereço correspondem agora a UC-089.
 
 **Ator:** operador (cadastro) e operador em campo (navegação)
 
@@ -1754,3 +1756,35 @@ Este documento serve de base para validar o sistema: cada caso pode ser conferid
 - `07-CASOS-DE-USO-API.md` — casos de uso e cenários de teste da API (nível request/response)
 - PLANs de implementação (PLAN-020 a PLAN-028) — origem das funcionalidades
 - PLAN-029 — mostrar/ocultar senha, troca de senha e "Meus dados" (UC-041, UC-042)
+
+### UC-090 — Confirmar a troca do próprio e-mail
+
+**Ator:** usuário com sessão e token de confirmação recebido por e-mail.
+
+**Ação:** abrir `/verificar-email?token=...`. A página espera a sessão; sem usuário redireciona para login preservando o destino. Com token válido, chama verificarEmail, atualiza `/me` e apresenta SuccessState com retorno a `/perfil`.
+
+**Conferências (não executadas nesta revisão documental):**
+
+- [ ] Loading de sessão e processamento visíveis; token ausente mostra erro?
+- [ ] TOKEN_EXPIRED/TOKEN_INVALID apresentam mensagem e retorno ao perfil?
+- [ ] Token válido atualiza o usuário e mostra conclusão; login preserva a query do destino?
+
+**Evidência:** [VerificarEmailPage](../../frontend/src/modules/auth/pages/VerificarEmailPage.tsx) e [serviço de autenticação](../../frontend/src/modules/auth/services/auth.service.ts). Não implica envio automático de alertas operacionais.
+
+### UC-091 — Consultar o painel técnico
+
+**Ator:** super_admin; demais perfis passam pelo SuperAdminRoute.
+
+**Ação:** abrir `/devboard`, consultar KPIs e seções de execuções, PRs e Dependabot. Cada seção recebe loading, erro e dados de seus hooks e usa EstadoTela para vazio/retry.
+
+**Conferências (não executadas nesta revisão documental):**
+
+- [ ] Perfil não permitido é redirecionado pelo guard?
+- [ ] Cada seção mostra loading/vazio/erro/sucesso de leitura, independentemente das demais?
+- [ ] Falha na consulta GitHub não aparece como lista vazia bem-sucedida?
+
+**Evidência:** [DevBoardPage](../../frontend/src/modules/devboard/pages/DevBoardPage.tsx), [RunsList](../../frontend/src/modules/devboard/components/RunsList.tsx), [API](../engineering/02-API.md). É uma consulta; não cria deploy nem altera PRs.
+
+## Evidência visual por rota
+
+A [matriz rota × estado × evidência × lacuna](../engineering/design/UI-STATES.md) liga estes UCs às fontes das páginas e composições atuais. Inventário estático não marca as conferências funcionais deste documento como aprovadas.

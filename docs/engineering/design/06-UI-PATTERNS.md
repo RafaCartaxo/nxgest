@@ -2,11 +2,15 @@
 
 **Status:** Aprovado
 
-**Versão:** 1.0
+**Versão:** 1.1
 
-**Última atualização:** 01/07/2026
+**Última atualização:** 21/11/2026
 
 ---
+
+# Estado implementado e escopo
+
+A [matriz por rota](UI-STATES.md) é a referência de estados e lacunas observados no código, com descrições visuais e linhas de evidência. As diretrizes abaixo não constituem aprovação de todas as telas. Componentes reais: [catálogo](04-UI-COMPONENTS.md); valores: [tokens](05-TOKEN.md). O shell atual usa PageHeader no conteúdo, AppLayout/BottomTabBar no mobile e sidebar em lg; não há componente AppBar a ser criado para cumprir o diagrama conceitual.
 
 # Objetivo
 
@@ -16,10 +20,10 @@ Este documento estabelece como componentes devem ser organizados para formar tel
 
 Ele complementa:
 
-- DESIGN-SYSTEM.md
-- UI-COMPONENTS.md
-- COMPONENT-ARCHITECTURE.md
-- UX.md
+- [Design System](02-DESIGN-SYSTEM.md)
+- [UI Components](04-UI-COMPONENTS.md)
+- [Component Architecture](03-COMPONENT-ARCHITECTURE.md)
+- [UX](01-UX.md)
 
 Enquanto o Design System define a aparência e o UI Components define a biblioteca de componentes, este documento define como esses componentes trabalham juntos.
 
@@ -335,7 +339,7 @@ Toda tela deverá prever os seguintes estados:
 
 ## Loading
 
-Representado preferencialmente por Skeleton.
+Atualmente EstadoTela renderiza spinner e mensagem; páginas como ClienteEdit têm skeleton local e o carregamento de chunks usa Suspense. Preferir skeleton quando apropriado é diretriz de evolução, não um componente Skeleton global implementado. Evidências por rota em UI-STATES.
 
 ---
 
@@ -357,9 +361,13 @@ Botão para tentar novamente.
 
 ## Success
 
-Representado através do Feedback Global.
+Atualmente feedback.run/show usa FeedbackOverlay (faixa fixa superior); páginas públicas e fluxos concluídos também usam SuccessState. Listas prontas exibem seu conteúdo normal. Não confundir cor success, leitura concluída e confirmação de mutação.
 
 ---
+
+## Desabilitado e repetição de ações
+
+Binding disabled precisa existir no callsite. A API de Button aceitar disabled não prova que formulários o usam. FeedbackOverlay não bloqueia toda a tela: a matriz registra UI-02 onde faltou binding nos formulários de cliente/contrato/gasto. Validar cliques repetidos, teclado e semântica antes de repaginar; não declarar essa lacuna corrigida por documentação.
 
 # Navegação
 
@@ -463,7 +471,7 @@ Exemplos:
 Não será permitido:
 
 - múltiplas ações principais na mesma tela;
-- scroll horizontal;
+- scroll horizontal acidental da página (Carousel é uma superfície intencional, que exige teste próprio);
 - modal dentro de modal;
 - listas extensas sem busca;
 - filtros difíceis de limpar;
@@ -497,10 +505,11 @@ Sempre que um padrão existente puder ser reutilizado, sua reutilização dever�
 
 # Referências
 
-- NORTH-STAR.md
-- UX.md
-- DESIGN-SYSTEM.md
-- UI-COMPONENTS.md
-- COMPONENT-ARCHITECTURE.md
-- TOKEN.md
-- MAPEAMENTO-TELAS.md
+- [North Star](../../foundation/00-NORTH-STAR.md)
+- [UX](01-UX.md)
+- [Design System](02-DESIGN-SYSTEM.md)
+- [Componentes](04-UI-COMPONENTS.md)
+- [Arquitetura de componentes](03-COMPONENT-ARCHITECTURE.md)
+- [Tokens](05-TOKEN.md)
+- [Mapeamento](../05-MAPEAMENTO-TELAS.md)
+- [Estados e lacunas](UI-STATES.md)

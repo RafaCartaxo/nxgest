@@ -384,7 +384,7 @@ Hoje `npm test` roda **154 testes verdes** (vitest unit + UI RTL) e o CI valida 
 > **Em execução (08/08):** `PLAN-066-hardening-seguranca.md` — **P0+P1 implementados** (trust proxy + `CF-Connecting-IP` · helmet/CSP · CORS fail-closed · HSTS · rate limit por usuário · deps/drizzle · backup cripto · firewall). Postura: `docs/engineering/SEGURANCA.md`. **P2 pendente.**
 
 - **P0 ✅:** `trust proxy` + `CF-Connecting-IP` (rate limit real atrás do Caddy/Cloudflare) · `helmet`/CSP/HSTS + headers no Caddy · CORS fail-closed.
-- **P1 ✅:** `npm audit` + `drizzle-orm` 0.45.2 · firewall/fail2ban no VPS (doc) · rate limit global/por usuário · backup off-site criptografado · timeouts no Caddy.
+- **P1 ✅:** `npm audit` + `drizzle-orm` 0.45.2 · firewall/fail2ban no VPS (doc) · rate limit global/por usuário · timeouts no Caddy. **Correção de estado21/11:** integração de backup cifrado preparada e cópia pontual externa validada; off-site contínuo não está ativo. Pendência não bloqueante [B2-01](../engineering/10-MAPA-OPERACIONAL.md), com gatilho de conta/bucket/credenciais e aceite de restore externo.
 - **P2 ⏳:** JWT mais curto/revogação · Cloudflare WAF (URL já migrada) · 2FA admin · senha mín. 8.
 - **CTs:** ~22 novos (T/A/I/D/P) + regressão referenciando os existentes no `07`.
 

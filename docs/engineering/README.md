@@ -16,6 +16,7 @@ Documentos técnicos que definem a arquitetura, o banco de dados, a API, o front
 | [07-FORMS-INPUTS.md](07-FORMS-INPUTS.md) | Padrões de formulários e inputs (Field, validação, máscaras) | Aprovado |
 | [08-SETUP-NOVA-MAQUINA.md](08-SETUP-NOVA-MAQUINA.md) | Setup de nova máquina, portabilidade de SO e Disaster Recovery | Aprovado |
 | [09-BACKUP-ROLLBACK.md](09-BACKUP-ROLLBACK.md) | Backup com manutenção e restauração isolada | Scripts atuais; comprovação registrada no STATUS |
+| [10-MAPA-OPERACIONAL.md](10-MAPA-OPERACIONAL.md) | Fonte de localização, donos e pendências operacionais com gatilho | Conferido; donos ausentes explícitos |
 | [TESTES.md](TESTES.md) | Estratégia de testes, rotina e convenções (PLAN-067) | Aprovado |
 | [SEGURANCA.md](SEGURANCA.md) | Postura de segurança, gaps e processos (PLAN-066) | Aprovado |
 
@@ -31,7 +32,9 @@ A subpasta [design/](design/) contém os documentos de identidade visual e exper
 | [04-UI-COMPONENTS.md](design/04-UI-COMPONENTS.md) | Catálogo oficial de componentes da UI | Aprovado |
 | [05-TOKEN.md](design/05-TOKEN.md) | Design tokens implementados no código | Aprovado |
 | [06-UI-PATTERNS.md](design/06-UI-PATTERNS.md) | Padrões de composição e anti-patterns | Aprovado |
-| [UI-COVERAGE.md](design/UI-COVERAGE.md) | Inventário de cobertura da UI por tela/componente (PLAN-044) | Aprovado |
+| [UI-COVERAGE.md](design/UI-COVERAGE.md) | Inventário de cobertura da UI por tela/componente | Gerado; não certifica QA visual |
+| [UI-INVENTORY.md](design/UI-INVENTORY.md) | Rotas, elementos, recursos e consumidores | Gerado do código |
+| [UI-STATES.md](design/UI-STATES.md) | Matriz de estados, navegação, breakpoints e lacunas | Gerado; revisão visual pendente |
 
 ## Ordem de leitura recomendada
 

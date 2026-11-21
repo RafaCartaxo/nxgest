@@ -8,6 +8,8 @@ Bem-vindo à documentação oficial da plataforma modular de gestão operacional
 
 A revisão de 20/11/2026 alinhou os guias de entrada/operação e o inventário de rotas, sem declarar todos os planos/fluxos revalidados. Auditoria de rotas e links verifica estrutura; instruções e estados exigem revisão semântica.
 
+Mapa de fontes, configurações e donos: [registro operacional](engineering/10-MAPA-OPERACIONAL.md). Preparação da repaginação: [matriz rota × estado × evidência × lacuna](engineering/design/UI-STATES.md).
+
 ## Seções
 
 | Seção | Descrição |

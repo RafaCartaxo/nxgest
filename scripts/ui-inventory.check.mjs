@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {analyzeFile,routesFromApp,buildInventory} from './ui-inventory.mjs'
+import {analyzeFile,routesFromApp,buildInventory,routeStateRows} from './ui-inventory.mjs'
 
 test('AST maps aliases, local components, intrinsic SVG, conditions, props and translation keys',()=>{
  const f=analyzeFile(`import {Modal as Dialog} from './Modal.js'; interface Props {open:boolean}; function Local(){return <svg><path d="x" /></svg>}; export const View=({open}:Props)=><>{open && <Dialog title={t('title')}><Local/><span role="status">Ready</span></Dialog>}</>;`,'fixture.tsx')
@@ -43,4 +43,30 @@ test('stylesheet rules, responsive/animation at-rules and SVG attributes are inv
  assert.ok(css.rules.some(r=>r.selector.includes('input')))
  assert.ok(css.atRules.some(r=>r.name==='layer'))
  assert.ok(i.resources.find(r=>r.path.endsWith('/favicon.svg')).svgElements.some(e=>e.tag==='svg'))
+})
+
+test('state evidence records bound props and feedback, not semantic colors or false flags; responsive strings exclude comments',()=>{
+ const f=analyzeFile(`// lg:flex is only a comment
+ export const View=()=>{feedback.run({loading:t('saving'),success:'saved',error:'failed',action:save});return <div className="bg-success sm:grid lg:flex"><Button disabled={pending}/><EstadoTela loading={false} error={null} empty={rows.length===0}/></div>}`,'fixture.tsx')
+ assert.ok(f.stateEvidence.some(e=>e.state==='desabilitado'&&e.evidence.includes('pending')))
+ assert.ok(f.stateEvidence.some(e=>e.state==='sucesso'&&e.evidence.includes('feedback.run.success')))
+ assert.equal(f.stateEvidence.some(e=>e.evidence.includes('bg-success')),false)
+ assert.equal(f.stateEvidence.some(e=>e.evidence.includes('loading={false}')),false)
+ assert.equal(f.responsiveEvidence.length,1);assert.deepEqual(f.responsiveEvidence[0].breakpoints,['lg','sm'])
+})
+test('route-state matrix covers every concrete route and distinguishes generic props from actual form bindings',()=>{
+ const inventory=buildInventory(),rows=routeStateRows(inventory),routes=inventory.routes.filter(r=>r.file)
+ assert.equal(rows.length,routes.length*8)
+ for(const route of routes)assert.equal(new Set(rows.filter(row=>row.route===route.path).map(row=>row.state)).size,8)
+ const disabled=rows.find(row=>row.route==='/clientes/novo'&&row.state==='desabilitado')
+ assert.equal(disabled.evidenceCount,0);assert.match(disabled.gap,/UI-02/)
+ assert.ok(rows.find(row=>row.route==='/ativar'&&row.state==='navegação').evidence.some(e=>e.file.startsWith('src/modules/auth/')))
+ assert.match(rows.find(row=>row.route==='/insights'&&row.state==='navegação').note,/SEM ENTRADA/)
+ assert.match(rows.find(row=>row.route==='/clientes/:id/editar'&&row.state==='erro').gap,/UI-01/)
+ assert.ok(rows.find(row=>row.route==='/clientes/:id'&&row.state==='navegação').evidence.length)
+ assert.ok(rows.find(row=>row.route==='/clientes/:id'&&row.state==='responsividade').evidence.some(e=>e.mediaQuery==='(pointer: coarse)'))
+})
+test('a new route cannot silently ship without reviewed visual/state notes',()=>{
+ const inventory=buildInventory();inventory.routes.push({path:'/unmapped',file:'frontend/src/App.tsx'})
+ assert.throws(()=>routeStateRows(inventory),/cobertura exata/)
 })
