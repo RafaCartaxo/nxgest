@@ -25,3 +25,5 @@ O backup agendado20261121T020001Z-1098303-1910 foi restaurado com20 tabelas/9 an
 Validação local adicional: 24 testes de backup, incluindo roundtrip real Restic 0.20.0 com repositório local cifrado usado como dublê do transporte remoto. Esse teste não comprova acesso a um bucket externo. O CI provisiona o binário Restic 0.20.0 com SHA256 fixado e executa também esses dois testes. Localmente, habilitar NXGEST_TEST_RESTIC_BIN para executá-los; não há dependência npm nova.
 
 Revisão adicional: falhas de credenciais/preflight são registradas antes de qualquer parada da aplicação. O teste dedicado comprova o marcador de erro e ausência de docker stop nessa situação.
+
+O instalador operacional aceita o checkout detached mantido pelo CD e continua exigindo o SHA exato aprovado, lock livre e ausência de deploy ativo/pendente. Conferência realizada diretamente na VPS antes da instalação.

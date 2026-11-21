@@ -36,7 +36,7 @@ Os scripts precisam permanecer juntos com `backup-maintenance-common.sh`, `host-
 
 ## Instalação operacional e monitoramento
 
-Depois da publicação pelo CD, executar como root no VPS `bash scripts/install-backup-jobs.sh <SHA-APROVADO>` a partir de `/opt/nxgestao`. O instalador exige main na revisão exata, lock livre e ausência de deploy pendente/ativo; salva os scripts e cron anteriores em `.git/nxgest-backup-install.*`, instala scripts dessa revisão, cron com timeout45min/15min e `infra/backup-logrotate.conf`. Logs600, rotação semanal, oito arquivos, compressão com atraso; não há limpeza automática dos diretórios parciais para diagnóstico.
+Depois da publicação pelo CD, executar como root no VPS `bash scripts/install-backup-jobs.sh <SHA-APROVADO>` a partir de `/opt/nxgestao`. O instalador exige a revisão exata publicada (aceita o checkout detached criado pelo CD), lock livre e ausência de deploy pendente/ativo; salva os scripts e cron anteriores em `.git/nxgest-backup-install.*`, instala scripts dessa revisão, cron com timeout45min/15min e `infra/backup-logrotate.conf`. Logs600, rotação semanal, oito arquivos, compressão com atraso; não há limpeza automática dos diretórios parciais para diagnóstico.
 
 O workflow `.github/workflows/backup-monitor.yml` executa a cada duas horas (minuto17 UTC) e manualmente. Usa os secrets existentes VPS_HOST/VPS_USER e `VPS_BACKUP_MONITOR_KEY`, exclusivo desse monitor. No authorized_keys, a chave precisa de `restrict,command="/bin/bash /opt/scripts/nxgest/backup-status.sh"`; não concede shell, upload ou alteração de backup. A identidade do host é conferida pelo arquivo já fixado `infra/staging-known-hosts` e seu alias, compartilhado pelo mesmo VPS. Nenhum segredo ou conteúdo do backup é impresso.
 

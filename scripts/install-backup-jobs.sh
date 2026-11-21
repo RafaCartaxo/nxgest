@@ -5,7 +5,7 @@ umask 077
 sha=${1:?approved source SHA required}
 [[ $sha =~ ^[a-f0-9]{40}$ && $(id -u) == 0 ]]
 cd /opt/nxgestao
-[[ $(git rev-parse HEAD) == "$sha" && $(git symbolic-ref --short HEAD) == main ]]
+[[ $(git rev-parse HEAD) == "$sha" ]]
 exec 9<>.git/nxgest-deploy.lock;flock -n 9
 [[ ! -e .git/nxgest-production-pending && ! -e .git/nxgest-recurring-production-active ]]
 snapshot=$(mktemp -d .git/nxgest-backup-install.XXXXXXXX)
