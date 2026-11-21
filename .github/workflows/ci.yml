@@ -55,7 +55,18 @@ jobs:
         run: npm run test:deploy
       - name: Backup e retorno (fixtures com dublês)
         run: npm run test:backup
-      - name: Backup coerente com manutenção e retomada da aplicação
+      - name: Prepara Restic fixado para roundtrip cifrado isolado
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/nxgest-restic.bz2"
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 120 --retry 2 \
+            https://github.com/restic/restic/releases/download/v0.20.0/restic_0.20.0_linux_amd64.bz2 -o "$archive"
+          printf '%s  %s\n' 0ccd9fa7885074a24603b051e01bf9bd8b5e45d6a1791e9d9887e9e9372107f7 "$archive" | sha256sum --check --status
+          python3 -c 'import bz2,os,pathlib;p=pathlib.Path(os.environ["RUNNER_TEMP"]);f=p/"nxgest-restic";f.write_bytes(bz2.decompress((p/"nxgest-restic.bz2").read_bytes()));f.chmod(0o700)'
+      - name: Backup coerente, monitor, retenção e roundtrip cifrado
+        env:
+          NXGEST_TEST_RESTIC_BIN: ${{ runner.temp }}/nxgest-restic
         run: npm run test:backup:maintenance
       - name: Correções de backup (fixtures isoladas)
         run: npm run test:corrections

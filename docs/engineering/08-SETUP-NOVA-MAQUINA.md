@@ -352,41 +352,19 @@ ssh nxgest-vps
 
 ### 7.1 — Cópia do conjunto de backup
 
-O formato associado é um diretório por ID. `scripts/pull-backup.sh <id> <destino-existente> <usuario@host> <chave>` copia o conjunto completo, verifica hashes e publica sem sobrescrever. A implementação foi exercitada somente com transporte dublado; origem, conectividade e recuperação reais continuam pendentes de autorização e validação. Falha ou ausência de conjunto não são sucesso. Os padrões legados `pg-*.dump` e `uploads-*.tar.gz` não comprovam cópia do conjunto atual. Consulte `09-BACKUP-ROLLBACK.md` antes de qualquer operação autorizada.
+O formato atual é um diretório por ID. `scripts/pull-backup.sh <id> <destino-existente> <usuario@host> <chave>` copia e verifica um conjunto sem sobrescrever. Uma cópia externa foi restaurada em outra máquina na consolidação; isso não significa transferência externa automática. Preservar também as imagens exatas da aplicação e PostgreSQL e a configuração privada de recuperação.
 
-### 7.2 — Recuperação legada (não validada para o conjunto atual)
+A automação preparada usa Restic e verifica o download completo do snapshot antes de registrar sucesso. Conta/bucket e credenciais externos ainda precisam ser provisionados. Instalação, senha de recuperação, retenção, monitoramento e limites: [backup e recuperação](09-BACKUP-ROLLBACK.md).
 
-> Os comandos abaixo descrevem o formato legado e não constituem procedimento validado para o conjunto atual nem autorização operacional.
+### 7.2 — Reconstrução em outra máquina
 
-Se a VPS original for destruída e você precisar subir uma nova máquina do zero:
+1. Provisionar Linux/Docker/Compose, checkout e ferramentas conforme este guia; conferir arquitetura da imagem.
+2. Recuperar configuração privada e conjunto completo, imagens exatas e checksums. Credenciais e senha Restic devem ter cópia independente da VPS.
+3. Executar o ensaio isolado documentado em [restaurar em outra máquina](09-BACKUP-ROLLBACK.md#restaurar-em-outra-máquina); conferir fingerprints, anexos e limpeza.
+4. Planejar a recuperação real com volumes de destino explícitos, aplicação parada e compatibilidade imagem/schema; preservar os volumes anteriores até validar o destino. O ensaio não publica dados nem substitui esse passo.
+5. Reprovisionar políticas e identidade do novo host, DNS/TLS e acessos; validar saúde, login, anexos e envio transacional antes de retomar uso.
 
-1. **Instale Docker e Docker Compose** no novo VPS.
-2. **Clone o repositório** em `/opt/nxgestao`.
-3. **Crie o arquivo `/opt/nxgestao/.env`** com as credenciais de produção e o `JWT_SECRET`.
-4. **Inicie os containers:**
-   ```bash
-   cd /opt/nxgestao
-   docker compose --project-directory . -f infra/docker-compose.prod.yml up -d postgres
-   ```
-5. **Restaure o dump do PostgreSQL:**
-   ```bash
-   # Envie o dump para o novo servidor:
-   scp ~/.config/nxgestao/backups/pg-ULTIMO.dump root@NOVO_IP:/tmp/restore.dump
-
-   # No novo servidor (use os valores de PG_USER/PG_DB do .env de produção):
-   #   source /opt/nxgestao/.env && docker exec -i nxgest-postgres pg_restore -U "$PG_USER" -d "$PG_DB" --clean --if-exists /tmp/restore.dump
-   docker exec -i nxgest-postgres pg_restore -U nxgest -d nxgest --clean --if-exists /tmp/restore.dump
-   ```
-6. **Restaure os uploads:**
-   ```bash
-   docker cp ~/.config/nxgestao/backups/uploads-ULTIMO.tar.gz nxgestao-app-1:/data/
-   docker exec nxgestao-app-1 tar -xzf /data/uploads-ULTIMO.tar.gz -C /data/
-   ```
-7. **Inicie a aplicação completa:**
-   ```bash
-   docker compose --project-directory . -f infra/docker-compose.prod.yml up -d
-   ```
-8. **Atualize o IP no Cloudflare** para apontar para o novo IP do servidor.
+O passo a passo antigo de dumps/uploads avulsos foi removido deste guia: não representa o formato atual nem uma recuperação integral validada. RTO real de desastre continua não medido.
 
 ---
 

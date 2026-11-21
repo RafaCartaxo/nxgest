@@ -1,0 +1,45 @@
+name: Monitor de backup
+on:
+  schedule:
+    - cron: '17 */2 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: backup-monitor
+  cancel-in-progress: false
+jobs:
+  monitor:
+    if: github.repository_id == '1304448439' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Saúde pública da aplicação e banco
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --proto '=https' --connect-timeout 10 --max-time 30 --retry 2 \
+            https://nxgest.com.br/api/health > health.json
+          node --input-type=module -e 'import fs from "node:fs";const h=JSON.parse(fs.readFileSync("health.json"));if(h.status!=="ok"||h.db!=="connected")process.exit(1)'
+      - name: Frescor do backup e evidência de restauração
+        if: always()
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          MONITOR_KEY: ${{ secrets.VPS_BACKUP_MONITOR_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          key=$(mktemp "$RUNNER_TEMP/nxgest-backup-monitor.XXXXXXXX")
+          trap 'rm -f -- "$key"' EXIT
+          printf '%s\n' "$MONITOR_KEY" > "$key"
+          unset MONITOR_KEY
+          ssh -F /dev/null -T -i "$key" -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=15 \
+            -o StrictHostKeyChecking=yes -o HostKeyAlias=nxgest-staging -o UserKnownHostsFile=infra/staging-known-hosts \
+            "$VPS_USER@$VPS_HOST" backup-status | tee backup-status.txt
+          if grep -q BACKUP_OFFSITE_NOT_CONFIGURED backup-status.txt;then
+            echo '::warning::Cópia externa automática aguarda configuração; cópia local não protege perda da VPS.'
+          fi
+          cat backup-status.txt >> "$GITHUB_STEP_SUMMARY"
