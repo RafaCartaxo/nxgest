@@ -24,6 +24,7 @@ if(a[0]==='inspect') {const f=a[2],target=a.at(-1),db=target==='nxgest-postgres'
 if(a[0]==='stop'){s.running=false;out()}if(a[0]==='start'){s.running=true;out()}
 if(a[0]==='image'){if(a[1]==='inspect'&&a.includes('--format'))out(I);out()}
 if(a[0]==='exec'){
+ if(a.includes('printenv')&&process.env.FAULT==='credentials'){fs.writeFileSync(d+'/state.json',JSON.stringify(s));process.exit(43)}
  if(a.includes('printenv'))out(a.at(-1)==='POSTGRES_USER'?'fixture':a.at(-1)==='POSTGRES_DB'?'fixture':'synthetic-password');
  if(a.includes('psql')){if(a.some(x=>x.includes('pg_stat_activity')))out(process.env.FAULT==='clients'?'1':'0');if(a.some(x=>x.includes('json_agg')))out('[]');out('fixture|1|hash\\n')}
  if(a.includes('pg_dump')){if(process.env.FAULT==='dump'){fs.writeFileSync(d+'/state.json',JSON.stringify(s));process.exit(43)}out('synthetic-dump')}
@@ -37,14 +38,16 @@ process.stderr.write('unexpected mock command');process.exit(97)
  const env={...process.env,PATH:bin+':'+process.env.PATH,FIXTURE:dir,NXGEST_PROJECT_DIR:dir,NXGEST_BACKUP_DIR:path.join(dir,'backups')}
  return {dir,scripts,env,state:()=>JSON.parse(readFileSync(path.join(dir,'state.json'),'utf8')),cleanup:()=>rmSync(dir,{recursive:true,force:true})}
 }
-for(const fault of ['', 'dump','clients'])test(`maintenance ${fault||'success'} resumes the same application and preserves source files`,()=>{
+for(const fault of ['', 'dump','clients','credentials'])test(`maintenance ${fault||'success'} resumes the same application and preserves source files`,()=>{
  const f=fixture();try{
   const r=spawnSync('/bin/bash',[path.join(f.scripts,'backup-maintenance.sh')],{env:{...f.env,FAULT:fault},encoding:'utf8',timeout:20000})
   if(fault)assert.notEqual(r.status,0,r.stderr);else assert.equal(r.status,0,r.stderr);assert.equal(f.state().running,true)
   assert.equal(readFileSync(path.join(f.dir,'data/uploads/proof.txt'),'utf8'),'fixture')
   const completed=readdirSync(path.join(f.dir,'backups')).filter(n=>!n.startsWith('.'))
   assert.equal(completed.length,fault?0:1)
-  const events=f.state().events;assert.ok(events.indexOf('stop --time')<events.indexOf('start '+'a'.repeat(64)))
+  const events=f.state().events;
+  if(fault==='credentials')assert.equal(events.some(e=>e.startsWith('stop ')),false);else assert.ok(events.indexOf('stop --time')<events.indexOf('start '+'a'.repeat(64)))
+  assert.equal(existsSync(path.join(f.dir,'backups/.state/create-error')),Boolean(fault))
   if(!fault){
    const bundle=path.join(f.dir,'backups',completed[0]);assert.match(r.stdout,/BACKUP_COMPLETE/)
    const verified=spawnSync('/bin/bash',[path.join(f.scripts,'verify-backup.sh'),bundle],{env:f.env,encoding:'utf8'})

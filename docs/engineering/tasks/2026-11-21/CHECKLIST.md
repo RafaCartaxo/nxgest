@@ -22,4 +22,6 @@ O backup agendado20261121T020001Z-1098303-1910 foi restaurado com20 tabelas/9 an
 - [x] Remover procedimento legado de recuperação do guia de nova máquina e apontar o procedimento associado atual.
 - [ ] Ativar destino externo: requer conta/bucket privado e credenciais; nenhum serviço pago foi contratado nem RPO externo prometido.
 
-Validação local adicional: 23 testes de backup, incluindo roundtrip real Restic 0.20.0 com repositório local cifrado usado como dublê do transporte remoto. Esse teste não comprova acesso a um bucket externo. O CI provisiona o binário Restic 0.20.0 com SHA256 fixado e executa também esses dois testes. Localmente, habilitar NXGEST_TEST_RESTIC_BIN para executá-los; não há dependência npm nova.
+Validação local adicional: 24 testes de backup, incluindo roundtrip real Restic 0.20.0 com repositório local cifrado usado como dublê do transporte remoto. Esse teste não comprova acesso a um bucket externo. O CI provisiona o binário Restic 0.20.0 com SHA256 fixado e executa também esses dois testes. Localmente, habilitar NXGEST_TEST_RESTIC_BIN para executá-los; não há dependência npm nova.
+
+Revisão adicional: falhas de credenciais/preflight são registradas antes de qualquer parada da aplicação. O teste dedicado comprova o marcador de erro e ausência de docker stop nessa situação.

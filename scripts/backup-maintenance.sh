@@ -6,21 +6,6 @@ base=$(cd "$(dirname "$0")" && pwd -P)
 source "$base/backup-maintenance-common.sh"
 nxg_backup_setup
 mkdir -p "$BACKUP_DIR";chmod 700 "$BACKUP_DIR"
-nxg_backup_db_credentials
-app_id=$(docker inspect --format '{{.Id}}' "$APP")
-image=$(docker inspect --format '{{.Image}}' "$app_id")
-db_id=$(docker inspect --format '{{.Id}}' "$DB")
-db_image=$(docker inspect --format '{{.Image}}' "$db_id")
-[[ $app_id =~ ^[a-f0-9]{64}$ && $db_id =~ ^[a-f0-9]{64}$ && $image =~ ^sha256:[a-f0-9]{64}$ && $db_image =~ ^sha256:[a-f0-9]{64}$ ]]
-[[ $(docker inspect --format '{{.State.Running}}' "$app_id") == true ]]
-# The DB must not publish a host port. This procedure assumes one app writer.
-[[ $(docker inspect --format '{{json .HostConfig.PortBindings}}' "$db_id") == '{}' || $(docker inspect --format '{{json .HostConfig.PortBindings}}' "$db_id") == null ]]
-volume=$(docker inspect --format '{{json .Mounts}}' "$app_id" | "$NXGEST_JQ" -er '[.[]|select(.Type=="volume" and .Destination=="/data" and .RW==true)]|if length==1 then .[0].Name else error("data volume") end')
-[[ $volume =~ ^[A-Za-z0-9][A-Za-z0-9_.-]+$ ]]
-id="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
-partial=$(mktemp -d "$BACKUP_DIR/.partial-$id.XXXXXXXX")
-final=$BACKUP_DIR/$id
-[[ ! -e $final && ! -L $final ]]
 resume_needed=false
 published=false
 finish(){
@@ -42,6 +27,21 @@ finish(){
 trap finish EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+nxg_backup_db_credentials
+app_id=$(docker inspect --format '{{.Id}}' "$APP")
+image=$(docker inspect --format '{{.Image}}' "$app_id")
+db_id=$(docker inspect --format '{{.Id}}' "$DB")
+db_image=$(docker inspect --format '{{.Image}}' "$db_id")
+[[ $app_id =~ ^[a-f0-9]{64}$ && $db_id =~ ^[a-f0-9]{64}$ && $image =~ ^sha256:[a-f0-9]{64}$ && $db_image =~ ^sha256:[a-f0-9]{64}$ ]]
+[[ $(docker inspect --format '{{.State.Running}}' "$app_id") == true ]]
+# The DB must not publish a host port. This procedure assumes one app writer.
+[[ $(docker inspect --format '{{json .HostConfig.PortBindings}}' "$db_id") == '{}' || $(docker inspect --format '{{json .HostConfig.PortBindings}}' "$db_id") == null ]]
+volume=$(docker inspect --format '{{json .Mounts}}' "$app_id" | "$NXGEST_JQ" -er '[.[]|select(.Type=="volume" and .Destination=="/data" and .RW==true)]|if length==1 then .[0].Name else error("data volume") end')
+[[ $volume =~ ^[A-Za-z0-9][A-Za-z0-9_.-]+$ ]]
+id="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
+partial=$(mktemp -d "$BACKUP_DIR/.partial-$id.XXXXXXXX")
+final=$BACKUP_DIR/$id
+[[ ! -e $final && ! -L $final ]]
 start=$(date +%s)
 resume_needed=true
 timeout --signal=TERM --kill-after=5s 45s docker stop --time 25 "$app_id" >/dev/null
