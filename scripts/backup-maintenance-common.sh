@@ -61,3 +61,22 @@ nxg_backup_verify(){
   tar -tvzf "$bundle/uploads.tar.gz" | awk 'substr($0,1,1)!="-" && substr($0,1,1)!="d"{exit 1}'
   [[ -s $bundle/database.dump && -s $bundle/database-fingerprint.tsv ]]
 }
+# Docker classic uses config digests as image IDs; containerd may expose manifest
+# digests. An explicit imported ID is accepted only after checking its exported
+# configuration against the source config digest, which also binds rootfs layers.
+nxg_backup_restore_image(){
+  local expected=$1 candidate=${2:-$1} archive=$3 actual config checksum
+  [[ -n $candidate ]] || candidate=$expected
+  [[ $expected =~ ^sha256:[a-f0-9]{64}$ && $candidate =~ ^sha256:[a-f0-9]{64}$ ]] || return 1
+  actual=$(docker image inspect --format '{{.Id}}' "$candidate") || return 1
+  [[ $actual == "$candidate" ]] || return 1
+  if [[ $candidate != "$expected" ]];then
+    (ulimit -f 2097152;timeout --signal=TERM --kill-after=5s 300s docker image save "$candidate" > "$archive") || return 1
+    config=$(tar -xOf "$archive" manifest.json | "$NXGEST_JQ" -er 'if type=="array" and length==1 then .[0].Config else error("ambiguous image") end') || return 1
+    [[ $config == "blobs/sha256/${expected#sha256:}" || $config == "${expected#sha256:}.json" ]] || return 1
+    checksum=$(tar -xOf "$archive" "$config" | sha256sum) || return 1
+    [[ sha256:${checksum%% *} == "$expected" ]] || return 1
+    rm -- "$archive"
+  fi
+  printf '%s\n' "$actual"
+}

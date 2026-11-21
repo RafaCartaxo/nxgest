@@ -12,7 +12,6 @@ nxg_backup_verify "$bundle"
 image=$(sed -n 's/^image=//p' "$bundle/metadata.txt")
 db_image=$(sed -n 's/^database_image=//p' "$bundle/metadata.txt")
 [[ $image =~ ^sha256:[a-f0-9]{64}$ && $db_image =~ ^sha256:[a-f0-9]{64}$ ]]
-docker image inspect "$image" "$db_image" >/dev/null
 nonce=$(openssl rand -hex 10)
 name=nxgest-restore-$nonce
 volume=nxgest-restore-data-$nonce
@@ -38,6 +37,8 @@ cleanup(){
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+image=$(nxg_backup_restore_image "$image" "${NXGEST_RESTORE_APP_IMAGE:-}" "$work/application-image-check.tar")
+db_image=$(nxg_backup_restore_image "$db_image" "${NXGEST_RESTORE_DB_IMAGE:-}" "$work/database-image-check.tar")
 POSTGRES_PASSWORD=$(openssl rand -hex 24);export POSTGRES_PASSWORD
 PGPASSWORD=$POSTGRES_PASSWORD;export PGPASSWORD
 PG_USER=restore_check;PG_DB=restore_check

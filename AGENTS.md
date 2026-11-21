@@ -37,7 +37,7 @@ Orientações para qualquer agente de IA trabalhando neste repositório.
 - **Pipeline:** merge/push à `main` → CI (qualidade, smoke, migração e build único atestado) → workflow **Staging verificado** (`workflow_run` do CI aprovado) → workflow **CD** (`workflow_run` do staging aprovado). Staging e produção exigem aprovação dos respectivos environments; a promoção reutiliza a mesma imagem, sem rebuild. PRs executam checks, mas não publicam. Manual: `Actions → CD → Run workflow` com input `staging_run` (ID exato do staging aprovado), sujeito às mesmas verificações. Ver `docs/engineering/06-PRODUCAO.md` e `scripts/README.md`.
 - **VPS:** `172.245.152.223` (root, somente chave SSH), AlmaLinux 8.10, Docker + Compose
 - **Domínio:** `nxgest.com.br` — DNS no Cloudflare (proxied), SSL funcionando, **e-mail transacional ativo** (Resend, `no-reply@nxgest.com.br`); DuckDNS = staging
-- **Backup:** cron 2x/dia no VPS → `/opt/backups`; **host não tem snapshot** — nunca assumir recuperação pelo provedor
+- **Backup:** cron às02h/14hUTC no VPS → `/opt/backups`, via `/opt/scripts/nxgest/backup-maintenance.sh`; restauração isolada validada e cópia externa operacional; **host não tem snapshot** — nunca assumir recuperação pelo provedor
 - Para operar (deploy, backup, logs, rollback, usuários): seguir `docs/engineering/06-PRODUCAO.md`
 - **Deploy manual autorizado:** seguir o bootstrap por SHA em `docs/engineering/06-PRODUCAO.md` §4; não chamar scripts diretamente nem descartar alterações do checkout.
 

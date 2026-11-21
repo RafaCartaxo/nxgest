@@ -2,6 +2,14 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 20/11/2026 — fechamento de recuperação e escopo de anexos
+
+- CI44838945789 → staging44839389817 → CD44839684929 concluídos com sucesso; Node24.22.3 nos dois ambientes, mesma imagem e assets públicos conferidos.
+- Backup com pausa de6s e restore real de20 tabelas/9 anexos no VPS e em outra máquina. Cron02h/14hUTC ativo; cópia externa privada com dump, uploads e imagens exatas da aplicação/PostgreSQL.
+- Restore aceita IDs importados Docker29 somente após conferir o config digest original; testes recusam configuração adulterada e exportação ambígua.
+- Renovação de policies até18/02/2027 exige registro explícito de transição para o hash anterior do staging, sem reescrever journals.
+- Download/exclusão de anexos vinculam o anexo ao cliente da URL. Dois testes reproduziram acesso indevido antes da correção;218 unitários/UI e286 cenários API passaram depois.
+
 ## 20/11/2026 — consolidação operacional
 
 - Node 24 LTS alinhado em `.nvmrc`, engines, CI e Docker; removidos SQLite e sua cadeia nativa do lockfile. Imagem final inclui apenas o utilitário de seed utilizado.
@@ -14,7 +22,7 @@ Registro resumido das alterações recentes — melhorias e correções, para ac
 
 ## 20/11/2026 — publicação comprovada e revisão documental
 
-- Main f804: [CI44764236119](https://github.com/RafaCartaxo/nxgest/actions/runs/44764236119), [staging44765108964](https://github.com/RafaCartaxo/nxgest/actions/runs/44765108964) e [CD44765426852](https://github.com/RafaCartaxo/nxgest/actions/runs/44765426852) success; mesma imagem, saúde e finalização conferidas. Policies atuais válidas até 23/11/2026 23:59:59 UTC; approvals preservados. Isso não fecha recuperação integral BA10.
+- Main f804: [CI44764236119](https://github.com/RafaCartaxo/nxgest/actions/runs/44764236119), [staging44765108964](https://github.com/RafaCartaxo/nxgest/actions/runs/44765108964) e [CD44765426852](https://github.com/RafaCartaxo/nxgest/actions/runs/44765426852) success; mesma imagem, saúde e finalização conferidas. Naquela publicação, as policies venciam em23/11/2026. A renovação e os ensaios de recuperação posteriores estão no fechamento acima.
 - Revisão documental: README/STATUS/runbook/QA e índices alinhados ao pipeline; removidas receitas operacionais antigas de reset/deploy por ref; histórico de agosto preservado.
 - Corrigida a descrição de BR-108/domínio/PLAN-085 para ajuste de domingo parcela a parcela, sem alterar código de negócio. Testes existentes de contrato/data final/ativação passaram 37/37.
 - `npm run docs:audit` passa a usar `--strict`, aproveitando o verificador existente. Links/rotas não substituem revisão semântica.

@@ -1,8 +1,9 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {mkdtempSync,mkdirSync,writeFileSync,copyFileSync,readFileSync,readdirSync,rmSync} from 'node:fs'
+import {mkdtempSync,mkdirSync,writeFileSync,copyFileSync,readFileSync,readdirSync,rmSync,existsSync} from 'node:fs'
 import {spawnSync} from 'node:child_process'
 import path from 'node:path'
+import {createHash} from 'node:crypto'
 const root=process.cwd()
 function fixture(){
  const dir=mkdtempSync(path.join(root,'.backup-maintenance-test-')),scripts=path.join(dir,'scripts'),bin=path.join(dir,'bin')
@@ -54,4 +55,22 @@ for(const fault of ['', 'dump','clients'])test(`maintenance ${fault||'success'} 
    assert.notEqual(bad.status,0);assert.equal(f.state().events.length,0,'tamper must fail before any Docker operation')
   }
  }finally{f.cleanup()}
+})
+
+for(const mode of ['original','imported','tampered','ambiguous'])test(`restore image identity ${mode}: binds imported image to source configuration`,()=>{
+ const dir=mkdtempSync(path.join(root,'.backup-maintenance-test-'))
+ try{
+  const bin=path.join(dir,'bin'),tree=path.join(dir,'tree');mkdirSync(bin);mkdirSync(tree)
+  const bytes=Buffer.from('{"rootfs":{"type":"layers","diff_ids":[]},"config":{"Env":["FIXTURE=only"]}}')
+  const expected='sha256:'+createHash('sha256').update(bytes).digest('hex'),candidate=mode==='original'?expected:'sha256:'+'f'.repeat(64)
+  const config='blobs/sha256/'+expected.slice(7);mkdirSync(path.dirname(path.join(tree,config)),{recursive:true})
+  writeFileSync(path.join(tree,config),mode==='tampered'?'changed configuration':bytes)
+  writeFileSync(path.join(tree,'manifest.json'),JSON.stringify(Array.from({length:mode==='ambiguous'?2:1},()=>({Config:config,RepoTags:[],Layers:[]}))))
+  const archive=path.join(dir,'export.tar');assert.equal(spawnSync('tar',['-cf',archive,'-C',tree,'manifest.json',config]).status,0)
+  writeFileSync(path.join(bin,'docker'),'#!/bin/sh\nif [ "$2" = inspect ];then printf "%s\\n" "$FIXTURE_IMAGE";elif [ "$2" = save ];then cat "$FIXTURE_ARCHIVE";else exit 97;fi\n',{mode:0o700})
+  const checked=path.join(dir,'check.tar')
+  const r=spawnSync('/bin/bash',['-c','source "$1"; NXGEST_JQ=$(command -v jq); nxg_backup_restore_image "$2" "$3" "$4"','fixture',path.join(root,'scripts/backup-maintenance-common.sh'),expected,candidate,checked],{env:{...process.env,PATH:bin+':'+process.env.PATH,FIXTURE_IMAGE:candidate,FIXTURE_ARCHIVE:archive},encoding:'utf8'})
+  if(['original','imported'].includes(mode)){assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),candidate);assert.equal(existsSync(checked),false)}
+  else assert.notEqual(r.status,0,'different configuration or ambiguous export must not authorize an image')
+ }finally{rmSync(dir,{recursive:true,force:true})}
 })

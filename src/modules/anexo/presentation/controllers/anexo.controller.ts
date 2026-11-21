@@ -125,7 +125,7 @@ export class AnexoController {
         return
       }
       const anexo = await this.repo.findById(getParam(req, "anexoId"))
-      if (!anexo) {
+      if (!anexo || anexo.clienteId !== getParam(req, "id")) {
         res.status(404).json({ code: "ANEXO_NOT_FOUND", message: "Anexo não encontrado." })
         return
       }
@@ -154,7 +154,7 @@ export class AnexoController {
         return
       }
       const anexo = await this.repo.findById(getParam(req, "anexoId"))
-      if (!anexo) {
+      if (!anexo || anexo.clienteId !== getParam(req, "id")) {
         res.status(404).json({ code: "ANEXO_NOT_FOUND", message: "Anexo não encontrado." })
         return
       }
