@@ -69,6 +69,8 @@ jobs:
           name: coverage
           path: coverage/
           retention-days: 14
+      - name: Parser e grafo do inventário visual
+        run: node --test scripts/ui-inventory.check.mjs
       - name: Auditoria de documentação (SKILL-009)
         run: npm run docs:audit 2>&1 | tee /tmp/docs-audit.log
         shell: bash

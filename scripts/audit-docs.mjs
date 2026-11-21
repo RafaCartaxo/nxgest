@@ -14,6 +14,7 @@
 import { readFileSync, readdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
+import { routesFromApp } from "./ui-inventory.mjs"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, "..")
@@ -135,12 +136,7 @@ function collectionRequests() {
 // ---------- 5. Rotas do frontend (App.tsx) ----------
 function frontRoutes() {
   const src = readFileSync(join(root, "frontend/src/App.tsx"), "utf8")
-  const out = new Set()
-  for (const m of src.matchAll(/<Route\s+path="([^"]+)"/g)) {
-    if (m[1] === "*") continue
-    out.add(norm(m[1]))
-  }
-  return [...out].sort()
+  return [...new Set(routesFromApp(src).filter(route => route.path !== "*").map(route => norm(route.path)))].sort()
 }
 
 // ---------- 6. Rotas no mapeamento de telas ----------
@@ -156,7 +152,7 @@ function mappingRoutes() {
 // ---------- Contagens ----------
 function screensInApp() {
   const routes = frontRoutes()
-  return routes.filter((r) => r !== "/login").length
+  return routes.length
 }
 // ---------- Execução ----------
 const back = realBackendRoutes()
@@ -184,7 +180,7 @@ for (const r of map) if (!front.includes(r)) report("error", `MAPEAMENTO COM TEL
 
 // 5) contagens
 const screenCount = screensInApp()
-const mapCount = map.filter((r) => r !== "/login").length
+const mapCount = map.length
 if (screenCount !== mapCount) {
   report("warn", `CONTAGEM DE TELAS DIVERGENTE: App.tsx=${screenCount} × 05-MAPEAMENTO=${mapCount}`)
 }
@@ -205,5 +201,5 @@ if (problems.length === 0) {
   const warns = problems.filter((p) => p.severity === "warn")
   for (const p of problems) console.log(`${p.severity === "error" ? "🔴" : "🟡"} [${p.severity.toUpperCase()}] ${p.msg}`)
   console.log(`\n${warns.length} avisos · ${errs.length} erros`)
-  if (strict && errs.length > 0) process.exit(1)
+  if (strict && problems.length > 0) process.exit(1)
 }

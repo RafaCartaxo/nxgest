@@ -80,3 +80,16 @@ nxg_backup_restore_image(){
   fi
   printf '%s\n' "$actual"
 }
+# Select the newest published bundle, never a partial set or a symlink. Integrity
+# is checked by the restore tool; a corrupt newest bundle must fail, not fall back.
+nxg_backup_latest(){
+  local directory id latest=
+  for directory in "$BACKUP_DIR"/*;do
+    [[ -d $directory && ! -L $directory && -f $directory/COMPLETE && ! -L $directory/COMPLETE ]] || continue
+    id=${directory##*/}
+    [[ $id =~ ^[0-9]{8}T[0-9]{6}Z-[0-9]+-[0-9]+$ ]] || continue
+    if [[ -z $latest || $id > ${latest##*/} ]];then latest=$directory;fi
+  done
+  [[ -n $latest ]] || { nxg_backup_fail no-complete-bundle;return 1; }
+  printf '%s\n' "$latest"
+}

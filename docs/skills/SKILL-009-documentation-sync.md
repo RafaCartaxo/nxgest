@@ -165,3 +165,7 @@ Executa os **cenários da `07-CASOS-DE-USO-API.md`** (fluxos reais do front + to
 - `scripts/smoke-api.mjs` — executável dos cenários da `07` (`npm run smoke:api`)
 - `agents/docs-sync.md` — agente que opera esta skill
 - `docs/INDEX.md` — porta de entrada única
+
+## Inventário visual derivado do código
+
+Ao mudar frontend, executar `npm run docs:visual` para reconciliar os cinco artefatos gerados (MAPEAMENTO, catálogo, cobertura, UI-INVENTORY e JSON). O gate `docs:audit` usa AST para rotas e recusa arquivos de inventário divergentes; avisos documentais também falham em modo strict. Props, variantes, componentes inline, consumidores, ícones, traduções e recursos ficam vinculados à fonte. Nunca converter inventário estático em aprovação visual automática.

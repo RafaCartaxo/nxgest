@@ -105,3 +105,8 @@ Consulte o [guia de scripts](../scripts/README.md) para distinguir operação, r
 ## Tasks
 
 Consulte o [histórico completo de tarefas](engineering/tasks/README.md).
+
+## Inventário visual atual
+
+- [UI-INVENTORY](engineering/design/UI-INVENTORY.md) — mapa derivado do código com todas as rotas, arquivos JSX, componentes locais/compartilhados, consumidores, elementos, estados, ícones e recursos.
+- [Catálogo gerado](engineering/design/04-UI-COMPONENTS.md) e [cobertura](engineering/design/UI-COVERAGE.md) — contratos e roteiro de validação da repaginação.

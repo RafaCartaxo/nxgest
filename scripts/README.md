@@ -24,7 +24,7 @@ Fonte operacional: [runbook](../docs/engineering/06-PRODUCAO.md). As condições
 | Publicação recorrente | `recurring-runner.mjs`, `recurring-staging-gateway.sh`, `recurring-production-entry.sh`, `recurring-host-policy.sh` | Runner, entrada SSH restrita e políticas do host |
 | Aplicação e finalização | `staging-post-baseline-*.sh`, `production-preclients*.sh`, `container-health.sh`, `load-verified-image.sh`, `retain-verified-image.sh` | Estado, imagem, saúde e finalização; não chamar avulsamente |
 | Bootstrap e recuperação | `deploy-bootstrap.sh`, `deploy*.sh`, `initial-baseline.sh`, `staging-adoption-*.sh` | Caminhos controlados de adoção/recuperação; não são lixo só por não serem o fluxo diário |
-| Backup atual | `backup-maintenance.sh`, `backup-restore-check.sh`, `backup-maintenance-common.sh` | Pausa curta, dump + anexos associados, retomada e restauração isolada verificável |
+| Backup atual | `backup-maintenance.sh`, `backup-restore-check.sh`, `backup-verify-latest.sh`, `backup-maintenance-common.sh` | Pausa curta, dump + anexos associados, retomada e restauração isolada verificável |
 | Recuperação e ferramentas anteriores | `backup-nxgest.sh`, `pull-backup.sh`, `verify-backup.sh`, `rollback*.sh`, `rehearsal*.mjs` | Compatibilidade com formatos anteriores; não misturar com o bundle maintenance-v1 |
 | Testes e guardas | `*.check.*`, `*fixture*`, `test-*-isolated.sh`, `guards/` | Dublês/isolamento; alguns cenários são opt-in |
 
@@ -39,3 +39,7 @@ O smoke gera um PDF sintético de521bytes (`%PDF-1.4` seguido de espaços), adeq
 ## Arquivo e experimentos
 
 O migrador SQLite e o experimento BA10 foram retirados da árvore ativa. O histórico Git e o snapshot operacional externo preservam o material; eles não são requisitos de instalação, publicação ou backup atual. Testes de segurança e recuperação que ainda verificam caminhos suportados permanecem no repositório.
+
+## Inventário visual reconciliável
+
+`npm run docs:visual` gera MAPEAMENTO, UI-COVERAGE, catálogo, UI-INVENTORY e JSON de todas as ocorrências JSX/contratos/consumidores/assets. `npm run docs:audit` falha quando esses artefatos divergem do código. `node scripts/consumers.mjs Nome` consulta imports reais, incluindo aliases. O parser tem testes próprios (`node --test scripts/ui-inventory.check.mjs`). Análise estática não aprova aparência nem comportamento visual em runtime.

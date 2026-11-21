@@ -2,6 +2,13 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 21/11/2026 — inventário visual reconciliável e backup periódico
+
+- MAPEAMENTO, UI-COVERAGE, catálogo e inventários Markdown/JSON derivados do código: rotas, componentes locais/compartilhados, consumidores, contratos, DOM/JSX, estados, navegação, traduções, CSS, SVG e assets. Contagens distintas:29 rotas concretas,28 arquivos de página,118 arquivos com JSX,135 declarações com JSX e1.872 ocorrências de elementos.
+- `docs:visual` reconcilia os cinco artefatos; `docs:audit` recusa divergências e avisos em modo strict. O parser tem oito testes, incluindo aliases, reexports, guardas e condições através de callbacks.
+- Restore do backup criado pelo cron às02hUTC passou com20 tabelas/9 anexos. Novo wrapper seleciona o último conjunto completo e serve ao ensaio semanal isolado. Destino off-site periódico, alertas e política de retenção automática são limites explícitos no runbook.
+- Branches antigas e propostas dispensadas arquivadas em bundle/patches antes da exclusão. Ícones/Qase não foram integrados. O histórico visual anterior permanece em Git e em arquivo operacional externo.
+
 ## 20/11/2026 — fechamento de recuperação e escopo de anexos
 
 - CI44838945789 → staging44839389817 → CD44839684929 concluídos com sucesso; Node24.22.3 nos dois ambientes, mesma imagem e assets públicos conferidos.

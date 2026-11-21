@@ -23,9 +23,9 @@ Este documento preserva a matriz de planejamento v2.7 e apresenta abaixo um inve
 | Camada | Qtde | Detalhes |
 |--------|------|----------|
 | Backend | 13 diretórios de módulos | admin (inclui empresas), anexo, auth, caixa, cliente, contrato, devboard, gasto, health, insights, leads, operacoes, pagamento |
-| Frontend | 29 rotas mapeadas | 11 diretórios de módulos; ver [mapeamento de telas](../engineering/05-MAPEAMENTO-TELAS.md) |
+| Frontend | Ver inventário gerado de rotas/páginas | 11 diretórios de módulos; ver [mapeamento de telas](../engineering/05-MAPEAMENTO-TELAS.md) |
 | Shared Components | Catálogo em código | `frontend/src/shared/components/`; ver [UI-COVERAGE](../engineering/design/UI-COVERAGE.md) |
-| Module Components | Por módulo | `frontend/src/modules/*/components/`; contagem de arquivos não equivale à de componentes |
+| Module Components | Ver inventário gerado | `frontend/src/modules/*/components/`; contagem de arquivos não equivale à de componentes |
 | Design System | Documentos canônicos | Ver [índice de engenharia](../engineering/README.md) |
 
 ## Planejamento histórico de módulos
@@ -756,3 +756,6 @@ A Fase 3 possui checklist próprio: `tasks/2026-07-03/CHECKLIST-FASE3.md`.
 - `plans/PLAN-015-autenticacao.md` — Plano de autenticação multi-usuário
 - `plans/PLAN-017-admin-panel.md` — Plano do painel de administração
 - `plans/PLAN-019-multi-tenant.md` — Plano multi-tenant
+## Inventário para repaginação
+
+A fonte atual de componentes e superfícies é o [inventário gerado](../engineering/design/UI-INVENTORY.md), reconciliado por `npm run docs:visual` e conferido pelo CI. As contagens antigas das fases abaixo são histórico de entregas, não censo atual de componentes.

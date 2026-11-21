@@ -14,6 +14,7 @@ Plataforma modular de gestão operacional. O primeiro vertical é crédito em ca
 | Publicação, acesso e incidentes | [Runbook de produção](docs/engineering/06-PRODUCAO.md) |
 | Finalidade e uso dos scripts | [Guia dos scripts](scripts/README.md) |
 | Backup e recuperação | [Limites de recuperação](docs/engineering/09-BACKUP-ROLLBACK.md) |
+| Inventário completo para repaginação | [Rotas, componentes, consumidores e elementos](docs/engineering/design/UI-INVENTORY.md) |
 | Telas e componentes para evolução visual | [Mapeamento de telas](docs/engineering/05-MAPEAMENTO-TELAS.md), [componentes](docs/engineering/design/04-UI-COMPONENTS.md) e [cobertura visual](docs/engineering/design/UI-COVERAGE.md) |
 | Navegação completa | [Documentação](docs/README.md) e [índice](docs/INDEX.md) |
 

@@ -1,0 +1,2 @@
+# Machine inventory is available by explicit path; avoid duplicating all UI source in searches.
+docs/engineering/design/ui-inventory.json

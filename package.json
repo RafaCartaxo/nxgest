@@ -15,7 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "docs:audit": "node scripts/audit-docs.mjs --strict",
+    "docs:audit": "node scripts/audit-docs.mjs --strict && node scripts/ui-inventory.mjs --check",
     "audit:styles": "node scripts/audit-styles.mjs",
     "audit:ui": "node scripts/audit-ui.mjs",
     "audit:modules": "node scripts/audit-modules.mjs",
@@ -34,7 +34,8 @@
     "test:deploy": "node --test scripts/deploy-transition.check.mjs",
     "test:backup": "node --test scripts/backup-recovery.check.mjs",
     "test:corrections": "bash scripts/test-corrections-isolated.sh",
-    "test:backup:maintenance": "node --test scripts/backup-maintenance.check.mjs"
+    "test:backup:maintenance": "node --test scripts/backup-maintenance.check.mjs",
+    "docs:visual": "node scripts/ui-inventory.mjs --write"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

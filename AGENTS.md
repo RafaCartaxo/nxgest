@@ -50,6 +50,7 @@ npm run dev:frontend     # só frontend (Vite)
 npm run build            # tsc (backend) + vite build (frontend)
 npm start                # produção local (Node serve API + frontend estático)
 npm test                 # vitest
+npm run docs:visual      # reconcilia rotas, componentes, consumidores, elementos e assets visuais
 npm run docs:audit       # auditoria de consistência da documentação (SKILL-009)
 npm run docs:collection  # regenera docs/api-collection.json
 npm run smoke:api        # executa os cenários da 07 (requer instância isolada; ver 07 "Como executar")
@@ -78,7 +79,7 @@ Bug reportado "em produção" nem sempre é bug de código. Antes de investigar,
 - Endpoints da API documentados em `docs/engineering/02-API.md` e `docs/api-collection.json`
 - Alterações de features seguem um plano em `docs/plans/` (padrão do projeto)
 - Registro diário de trabalho em `docs/engineering/tasks/YYYY-MM-DD/CHECKLIST.md` (usar `docs/templates/CHECKLIST.template.md` como base; catálogo de status ✅/🔵/⏳/🚨/❌ no próprio template)
-- **UI (PLAN-044/047):** novas telas/módulos usam **apenas componentes compartilhados** (PageHeader, Card, KpiCard, Field/FieldSelect/FieldTextarea, Modal com `title`, Tabs, Switch, QuickActions, Button, StatusBadge) e tokens — sem padrão legado (`rounded-md` em inputs/rows, `bg-secondary-light`, `border-l-*`, `variant="onDark"`, `RotaCobrancaSection`, `<select>`/`<textarea>` cru, `<Modal>` sem `title`, `role="tab"` fora do Tabs). Rodar `npm run audit:ui` + `npm run audit:styles` após qualquer mudança visual; atualizar `docs/engineering/design/UI-COVERAGE.md`.
+- **UI (PLAN-044/047):** novas telas/módulos usam **apenas componentes compartilhados** (PageHeader, Card, KpiCard, Field/FieldSelect/FieldTextarea, Modal com `title`, Tabs, Switch, QuickActions, Button, StatusBadge) e tokens — sem padrão legado (`rounded-md` em inputs/rows, `bg-secondary-light`, `border-l-*`, `variant="onDark"`, `RotaCobrancaSection`, `<select>`/`<textarea>` cru, `<Modal>` sem `title`, `role="tab"` fora do Tabs). Rodar `npm run audit:ui` + `npm run audit:styles` após qualquer mudança visual; executar `npm run docs:visual` para reconciliar cobertura/catálogo/mapeamento e registrar a revisão visual separadamente.
 - **Componente compartilhado mudou? (PLAN-044):** varrer TODOS os consumidores (`node scripts/consumers.mjs <componente>`) e atualizá-los **no mesmo PR**, com `audit:ui` limpo.
 
 ## Agentes do projeto
