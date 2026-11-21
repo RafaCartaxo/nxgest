@@ -7,6 +7,9 @@ BACKUP_DIR=${NXGEST_BACKUP_DIR:-/opt/backups}
 PROJECT_DIR=${NXGEST_PROJECT_DIR:-/opt/nxgestao}
 now=$(date +%s);failed=0
 problem(){ printf 'BACKUP_STATUS_ERROR %s\n' "$1";failed=1; }
+for kind in create restore;do
+ [[ ! -e $BACKUP_DIR/.state/$kind-error && ! -L $BACKUP_DIR/.state/$kind-error ]] || problem "$kind-last-attempt-failed"
+done
 bundle=$(nxg_backup_latest) || { printf 'BACKUP_STATUS_ERROR no-backup\n';exit 1; }
 id=${bundle##*/}
 [[ $(cat "$bundle/COMPLETE") == "$id" ]] || problem invalid-marker

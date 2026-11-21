@@ -5,6 +5,9 @@ umask 077
 base=$(cd "$(dirname "$0")" && pwd -P)
 source "$base/backup-maintenance-common.sh"
 nxg_backup_setup
+finish(){ local rc=$?;trap - EXIT;nxg_backup_job_result restore "$rc" || rc=1;exit "$rc"; }
+trap finish EXIT
+trap 'exit 130' INT;trap 'exit 143' TERM
 bundle=$(nxg_backup_latest)
 printf 'RESTORE_LATEST_SELECTED id=%s\n' "${bundle##*/}"
 /bin/bash "$base/backup-restore-check.sh" "$bundle"

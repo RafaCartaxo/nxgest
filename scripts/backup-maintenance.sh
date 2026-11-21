@@ -35,6 +35,7 @@ finish(){
     else rc=1; fi
   fi
   unset PGPASSWORD
+  nxg_backup_job_result create "$rc" || rc=1
   if [[ $rc != 0 ]]; then printf 'BACKUP_FAILED local_complete=%s service_restart_attempted=%s\n' "$published" "$restart_attempted" >&2; fi
   exit "$rc"
 }

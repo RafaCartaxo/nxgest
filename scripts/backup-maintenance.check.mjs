@@ -64,7 +64,7 @@ function receipt(f,kind,id){
  const r=spawnSync('/bin/bash',['-c','source "$1";nxg_backup_record "$2" "$3" "$4"','fixture',path.join(f.scripts,'backup-maintenance-common.sh'),kind,id,proof],{env:{...f.env,BACKUP_DIR:f.env.NXGEST_BACKUP_DIR},encoding:'utf8'})
  assert.equal(r.status,0,r.stderr)
 }
-for(const mode of ['healthy','missing-restore','stale-restore','modified-proof','offsite-missing','offsite-verified'])test(`backup monitor ${mode}`,()=>{
+for(const mode of ['healthy','missing-restore','stale-restore','modified-proof','offsite-missing','offsite-verified','failed-attempt','stale-backup'])test(`backup monitor ${mode}`,()=>{
  const f=fixture();try{
   const id=baseline(f)
   if(mode!=='missing-restore')receipt(f,'restore',id)
@@ -73,6 +73,10 @@ for(const mode of ['healthy','missing-restore','stale-restore','modified-proof',
   if(mode==='modified-proof')writeFileSync(path.join(f.env.NXGEST_BACKUP_DIR,id,'SHA256SUMS'),'changed')
   if(mode.startsWith('offsite-'))writeFileSync(path.join(f.dir,'.git/nxgest-offsite.env'),'# fixture only\n')
   if(mode==='offsite-verified')receipt(f,'offsite-'+id,id)
+  if(mode==='failed-attempt')writeFileSync(path.join(state,'create-error'),'fixture error\n')
+  if(mode==='stale-backup'){
+   const old='20200101T020001Z-1-1';cpSync(path.join(f.env.NXGEST_BACKUP_DIR,id),path.join(f.env.NXGEST_BACKUP_DIR,old),{recursive:true});rmSync(path.join(f.env.NXGEST_BACKUP_DIR,id),{recursive:true});writeFileSync(path.join(f.env.NXGEST_BACKUP_DIR,old,'COMPLETE'),old+'\n');receipt(f,'restore',old)
+  }
   const r=run(f,'backup-status.sh')
   assert.equal(r.status,['healthy','offsite-verified'].includes(mode)?0:1,r.stdout+r.stderr)
   if(mode==='healthy')assert.match(r.stdout,/BACKUP_OFFSITE_NOT_CONFIGURED/)
@@ -86,7 +90,7 @@ test('offsite refuses missing/private/local config without creating a success re
   writeFileSync(config,'RESTIC_REPOSITORY=/same-host/not-offsite\n',{mode:0o600})
   r=run(f,'backup-offsite.sh');assert.notEqual(r.status,0);assert.match(r.stderr,/remote-repository-required/)
   chmodSync(config,0o644);r=run(f,'backup-offsite.sh');assert.notEqual(r.status,0);assert.match(r.stderr,/not-private/)
-  assert.equal(existsSync(path.join(f.env.NXGEST_BACKUP_DIR,'.state')),false)
+  assert.equal(readdirSync(path.join(f.env.NXGEST_BACKUP_DIR,'.state')).some(n=>n.startsWith('offsite-')),false)
  }finally{f.cleanup()}
 })
 test('retention requires verified offsite and protects last restore, newest sets, unverified sets and partials',()=>{

@@ -102,3 +102,12 @@ nxg_backup_record(){
   printf '%s\t%s\t%s\n' "$(date +%s)" "$id" "$proof" > "$temporary"
   chmod 600 "$temporary";mv -T "$temporary" "$state/$kind"
 }
+nxg_backup_job_result(){
+  local kind=$1 rc=$2 state=$BACKUP_DIR/.state temporary
+  [[ $kind == create || $kind == restore ]];[[ $rc =~ ^[0-9]+$ ]]
+  [[ ! -L $state ]];mkdir -p "$state";chmod 700 "$state"
+  if [[ $rc == 0 ]];then rm -f -- "$state/$kind-error";return;fi
+  temporary=$(mktemp "$state/.error.XXXXXXXX")
+  printf '%s\t%s\n' "$(date +%s)" "$rc" > "$temporary"
+  chmod 600 "$temporary";mv -T "$temporary" "$state/$kind-error"
+}
