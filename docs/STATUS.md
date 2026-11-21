@@ -49,3 +49,9 @@ Todo WIP anterior foi preservado com hashes fora da árvore ativa antes da conso
 O inventário agora é derivado do código e distingue29 rotas concretas,28 arquivos de página, shell autenticado e ContaSuspensaScreen. Há118 arquivos com JSX,135 declarações com JSX e1.872 ocorrências; não são135 telas nem aprovação visual. O comando docs:visual reconcilia os artefatos e o gate documental detecta alterações não regeneradas. [Inventário completo](engineering/design/UI-INVENTORY.md).
 
 O job real das02hUTC criou o conjunto20261121T020001Z-1098303-1910 e seu restore foi conferido (20 tabelas,9 anexos, sem divergências). O ensaio semanal usa backup-verify-latest.sh; os detalhes de implantação e limites estão no [runbook de backup](engineering/09-BACKUP-ROLLBACK.md). Off-site periódico e alertas externos ainda exigem destino/canal definidos.
+
+## Monitoramento e cópia externa — complemento21/11
+
+Monitor externo pelo GitHub Actions a cada duas horas, com chave exclusiva e comando forçado somente leitura. Verifica health/DB públicos, conjunto local de até14h e restore comprovado de até9dias. O cron de restore publica recibo apenas após sucesso e cleanup. Logs têm rotação semanal (oito arquivos).
+
+A integração Restic foi preparada/testada com roundtrip cifrado local, sem afirmar conectividade externa. Não existe bucket remoto configurado. A cópia externa anterior é pontual. Retenção local de30dias está protegida por prova externa e último restore; sem configuração externa, ela não elimina nada. Ativação e recuperação da senha: [runbook de backup](engineering/09-BACKUP-ROLLBACK.md).

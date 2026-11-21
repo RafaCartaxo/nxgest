@@ -24,8 +24,8 @@ Fonte operacional: [runbook](../docs/engineering/06-PRODUCAO.md). As condições
 | Publicação recorrente | `recurring-runner.mjs`, `recurring-staging-gateway.sh`, `recurring-production-entry.sh`, `recurring-host-policy.sh` | Runner, entrada SSH restrita e políticas do host |
 | Aplicação e finalização | `staging-post-baseline-*.sh`, `production-preclients*.sh`, `container-health.sh`, `load-verified-image.sh`, `retain-verified-image.sh` | Estado, imagem, saúde e finalização; não chamar avulsamente |
 | Bootstrap e recuperação | `deploy-bootstrap.sh`, `deploy*.sh`, `initial-baseline.sh`, `staging-adoption-*.sh` | Caminhos controlados de adoção/recuperação; não são lixo só por não serem o fluxo diário |
-| Backup atual | `backup-maintenance.sh`, `backup-restore-check.sh`, `backup-verify-latest.sh`, `backup-maintenance-common.sh` | Pausa curta, dump + anexos associados, retomada e restauração isolada verificável |
-| Recuperação e ferramentas anteriores | `backup-nxgest.sh`, `pull-backup.sh`, `verify-backup.sh`, `rollback*.sh`, `rehearsal*.mjs` | Compatibilidade com formatos anteriores; não misturar com o bundle maintenance-v1 |
+| Backup atual | `backup-maintenance.sh`, `backup-restore-check.sh`, `backup-verify-latest.sh`, `backup-maintenance-common.sh`, `backup-offsite.sh`, `backup-retention.sh`, `backup-status.sh`, `install-backup-jobs.sh` | Pausa curta, dump/anexos, ensaio semanal com recibo, cópia criptografada com roundtrip, retenção protegida e monitor externo |
+| Recuperação e ferramentas anteriores | `backup-nxgest.sh`, `rollback*.sh`, `rehearsal*.mjs` | Compatibilidade com formatos anteriores; não misturar com o bundle maintenance-v1 |
 | Testes e guardas | `*.check.*`, `*fixture*`, `test-*-isolated.sh`, `guards/` | Dublês/isolamento; alguns cenários são opt-in |
 
 ## Uploads e temporários
@@ -43,3 +43,5 @@ O migrador SQLite e o experimento BA10 foram retirados da árvore ativa. O hist�
 ## Inventário visual reconciliável
 
 `npm run docs:visual` gera MAPEAMENTO, UI-COVERAGE, catálogo, UI-INVENTORY e JSON de todas as ocorrências JSX/contratos/consumidores/assets. `npm run docs:audit` falha quando esses artefatos divergem do código. `node scripts/consumers.mjs Nome` consulta imports reais, incluindo aliases. O parser tem testes próprios (`node --test scripts/ui-inventory.check.mjs`). Análise estática não aprova aparência nem comportamento visual em runtime.
+
+`pull-backup.sh` e `verify-backup.sh` suportam o conjunto atual maintenance-v1. A cópia manual verifica integridade; não substitui a automação externa nem o ensaio de restore. Instalação operacional por SHA e configuração Restic: [backup](../docs/engineering/09-BACKUP-ROLLBACK.md).

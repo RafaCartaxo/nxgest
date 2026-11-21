@@ -82,7 +82,7 @@ bash /opt/scripts/nxgest/backup-maintenance.sh
 bash /opt/scripts/nxgest/backup-restore-check.sh /opt/backups/ID-EXATO
 ```
 
-O cron está em `/etc/cron.d/nxgest-backup`, às02h/14hUTC, com caminho absoluto e log privado em `/var/log/backup-nxgest.log`. Cópia externa: transferir o diretório completo e preservar a imagem de origem exportada ou recuperável. `backup:pull` valida integridade, mas não executa restauração.
+O cron está em `/etc/cron.d/nxgest-backup`: criação às 02h/14h UTC e ensaio isolado domingo 03h30 UTC. `scripts/install-backup-jobs.sh <SHA-APROVADO>` instala os scripts da revisão publicada, jobs com timeout e rotação semanal de logs privados. O workflow `Monitor de backup` consulta saúde e evidências somente leitura a cada duas horas; falhas aparecem no GitHub Actions. Cópia externa automática exige configuração privada Restic; ainda não há bucket provisionado. Detalhes e limites no [guia de backup](09-BACKUP-ROLLBACK.md).
 
 ## 6. Logs e monitoramento
 

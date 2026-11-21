@@ -93,3 +93,12 @@ nxg_backup_latest(){
   [[ -n $latest ]] || { nxg_backup_fail no-complete-bundle;return 1; }
   printf '%s\n' "$latest"
 }
+# Private evidence, published atomically only after a completed verification.
+nxg_backup_record(){
+  local kind=$1 id=$2 proof=$3 state=$BACKUP_DIR/.state temporary
+  [[ $kind =~ ^(restore|offsite-[0-9]{8}T[0-9]{6}Z-[0-9]+-[0-9]+)$ && $id =~ ^[0-9]{8}T[0-9]{6}Z-[0-9]+-[0-9]+$ && $proof =~ ^[a-f0-9]{64}$ ]]
+  [[ ! -L $state ]];mkdir -p "$state";chmod 700 "$state"
+  temporary=$(mktemp "$state/.receipt.XXXXXXXX")
+  printf '%s\t%s\t%s\n' "$(date +%s)" "$id" "$proof" > "$temporary"
+  chmod 600 "$temporary";mv -T "$temporary" "$state/$kind"
+}

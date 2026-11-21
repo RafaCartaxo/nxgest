@@ -2,6 +2,13 @@
 
 Registro resumido das alterações recentes — melhorias e correções, para acompanhamento. Detalhes completos nos PLANs linkados.
 
+## 21/11/2026 — monitoramento e proteção do backup
+
+- Recibo privado de restore publicado apenas após restauração e limpeza; monitor externo verifica aplicação, banco, frescor do backup e prova de restore por chave SSH somente leitura.
+- Integração Restic preparada para bucket remoto: dump, uploads, imagens e configuração são cifrados e baixados para conferência completa antes do recibo. Conta/bucket e credenciais ainda não estão configurados.
+- Retenção local de30 dias protege os dois conjuntos mais novos, último restore e cópias sem recibo externo; sem off-site saudável, não apaga conjuntos. Logs têm rotação semanal privada.
+- Guia de nova máquina deixa de apresentar comandos legados de recuperação e aponta o procedimento associado atual. Checklist anterior reconciliado com a limpeza de branches/worktrees já concluída.
+
 ## 21/11/2026 — inventário visual reconciliável e backup periódico
 
 - MAPEAMENTO, UI-COVERAGE, catálogo e inventários Markdown/JSON derivados do código: rotas, componentes locais/compartilhados, consumidores, contratos, DOM/JSX, estados, navegação, traduções, CSS, SVG e assets. Contagens distintas:29 rotas concretas,28 arquivos de página,118 arquivos com JSX,135 declarações com JSX e1.872 ocorrências de elementos.

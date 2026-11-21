@@ -22,17 +22,20 @@ partial=$(mktemp -d "$BACKUP_DIR/.partial-$id.XXXXXXXX")
 final=$BACKUP_DIR/$id
 [[ ! -e $final && ! -L $final ]]
 resume_needed=false
+published=false
 finish(){
   local rc=$?
+  local restart_attempted=false
   trap - EXIT
   if $resume_needed; then
+    restart_attempted=true
     if [[ $(docker inspect --format '{{.Id}}|{{.Image}}' "$APP" 2>/dev/null) == "$app_id|$image" ]]; then
       docker start "$app_id" >/dev/null || rc=1
       bash "$base/container-health.sh" "$app_id" "$image" --wait || rc=1
     else rc=1; fi
   fi
   unset PGPASSWORD
-  if [[ $rc != 0 ]]; then printf 'BACKUP_FAILED partial_preserved=true service_restart_attempted=true\n' >&2; fi
+  if [[ $rc != 0 ]]; then printf 'BACKUP_FAILED local_complete=%s service_restart_attempted=%s\n' "$published" "$restart_attempted" >&2; fi
   exit "$rc"
 }
 trap finish EXIT
@@ -71,4 +74,9 @@ for f in "$partial"/*;do sync -f "$f";done
 mv -T -- "$partial" "$final"
 sync -f "$BACKUP_DIR"
 nxg_backup_verify "$final"
+published=true
 printf 'BACKUP_COMPLETE id=%s maintenance_seconds=%s\n' "$id" "$((end-start))"
+if [[ -f $PROJECT_DIR/.git/nxgest-offsite.env ]];then
+  bash "$base/backup-offsite.sh"
+  bash "$base/backup-retention.sh" --apply
+else printf 'BACKUP_OFFSITE_NOT_CONFIGURED automatic_external_copy=false\n';fi
