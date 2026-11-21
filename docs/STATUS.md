@@ -1,46 +1,45 @@
-# STATUS — situação conferida
+# STATUS — consolidação operacional
 
-**Última revisão:** 20/11/2026. Este documento distingue operação comprovada, trabalho local e histórico. Não declara todos os fluxos de produto revalidados nesta data.
+**Conferência:** 20/11/2026. Os runs abaixo identificam a validação da infraestrutura. Para a revisão atualmente publicada, consultar o [último CD concluído](https://github.com/RafaCartaxo/nxgest/actions/workflows/cd.yml); promoções posteriores seguem o mesmo fluxo.
 
-## Publicação comprovada
+## Ambiente e publicação
 
-| Item | Evidência |
+| Item | Estado / evidência |
 |---|---|
 | Produção | https://nxgest.com.br |
-| Staging | https://nxgestao.duckdns.org |
-| SHA publicado | `f804aaf6702a00dab522afa88758e2b70e01a8dc` |
-| CI/build único | [44764236119 — success](https://github.com/RafaCartaxo/nxgest/actions/runs/44764236119) |
-| Staging | [44765108964 — success](https://github.com/RafaCartaxo/nxgest/actions/runs/44765108964) |
-| CD e finalização | [44765426852 — success](https://github.com/RafaCartaxo/nxgest/actions/runs/44765426852) |
-| Imagem nos dois ambientes | `sha256:8da0c59a1aae20e2a61fec358c37edcd2ee6bf6a6994f497435be8700ec3e4bf` |
-| Resultado observado | health/DB conectados, recibos atestados e finalização sem pending/active |
-| Modo e aprovações | Pré-clientes; reviewers de staging e production preservados |
-| Prazo das policies vigentes | 23/11/2026 às 23:59:59 UTC; renovação exige fontes/hashes/autoridades coerentes |
+| Homologação | https://nxgestao.duckdns.org |
+| Stack | Node 24.22.3 / PostgreSQL 16 / Express / React-Vite / Caddy / Resend |
+| Revisão da conferência de infraestrutura | `13404ab1c21fe8adc291320ff103b2a3e1f4b1ac` |
+| CI | [44838945789 — success](https://github.com/RafaCartaxo/nxgest/actions/runs/44838945789) |
+| Staging | [44839389817 — success](https://github.com/RafaCartaxo/nxgest/actions/runs/44839389817) |
+| CD e finalização | [44839684929 — success](https://github.com/RafaCartaxo/nxgest/actions/runs/44839684929) |
+| Conferência externa | Health/DB conectados e quatro assets públicos idênticos aos containers, nos dois ambientes |
+| Controlador fixado nos dois ambientes | `13404ab1c21fe8adc291320ff103b2a3e1f4b1ac` |
+| Policies | Válidas até **18/02/2027 23:59:59 UTC** |
+| Aprovações | Environments staging e production preservados; modo pré-clientes |
 
-O gatilho do CD é o sucesso de `Staging verificado` em main, tentativa 1; staging é acionado pelo CI aprovado de um push em main. PR e CI manual não substituem esse evento. Detalhes: [pipeline](qa/05-PIPELINE.md) e [runbook](engineering/06-PRODUCAO.md).
+O gatilho é **push/merge main → CI → Staging verificado → CD**. Staging e produção mantêm aprovação por environment. PR e CI manual não publicam. O build é único; a mesma imagem atestada é promovida. A renovação de policies tem transição explícita e preserva o journal anterior. Ver [runbook](engineering/06-PRODUCAO.md).
 
-## Validação e seus limites
+## Backup e recuperação conferidos
 
-O CI acima registrou **215 testes unitários/UI em 46 arquivos** e **286/286 cenários de smoke**, além dos gates de segurança, deploy e backup com fixtures. O teste de fingerprint passou 7/7. Essas contagens pertencem ao SHA indicado, não são metas fixas para revisões futuras.
+- Conjunto de referência: `20261120T235320Z-1032473-28155`, banco e anexos associados; aplicação retomada em **6 segundos**.
+- Restore real no VPS: **20 tabelas e 9 anexos**, sem divergências ou arquivos órfãos; recursos temporários removidos.
+- Cópia externa privada: dump, uploads, metadados, checksums e imagens exatas da aplicação/PostgreSQL. Restore da mesma cópia passou em outra máquina com Docker 29.6.2; VPS usa Docker 26.1.3.
+- Cron instalado: **02h e 14h UTC**, `/etc/cron.d/nxgest-backup`; log privado. Novos conjuntos são locais ao VPS; a cópia externa periódica ainda é responsabilidade operacional.
+- Imagens importadas com outro identificador só são aceitas quando a configuração exportada corresponde ao hash original. Não editar metadados do bundle para contornar a verificação.
 
-A auditoria documental local cruza 74 rotas/contratos de API e 29 rotas/telas frontend. Links e contagens coerentes não demonstram todos os comportamentos nem atualizam automaticamente instruções de operação. A revisão atual corrigiu README, pipeline, operação e a descrição iterativa de dataFinal; não repetiu uma regressão manual completa de UI.
+Procedimento atual: [backup e recuperação](engineering/09-BACKUP-ROLLBACK.md). Não há restauração automática do banco pelo CD.
 
-## Consolidação operacional em validação
+## Instalação, e-mail e fluxos
 
-- Instalação limpa por `npm ci` e build no Node 24 passaram; 216 testes unitários/UI passaram.
-- Resend aceitou um envio para o destinatário simulado oficial (`delivered@resend.dev`). Não foi usado destinatário humano.
-- Backup real de banco/anexos com retomada da aplicação concluído em 32 segundos. A primeira restauração revelou dependência de `search_path` em `f_unaccent`, corrigida no código e coberta pela validação de schema.
-- Publicação da consolidação e nova restauração no VPS permanecem em execução; não confundir com a publicação comprovada acima.
+Instalação limpa (`npm ci`), build backend/frontend e Docker foram validados com Node24. O [setup de outra máquina](engineering/08-SETUP-NOVA-MAQUINA.md) usa PostgreSQL, sem SQLite/Redis, e distingue desenvolvimento de reconstrução do VPS.
 
-## O que permanece separado
+Resend aceitou o envio pelo runtime Node24 ao destinatário simulado oficial (`delivered@resend.dev`), HTTP200. Isso valida integração de envio, sem afirmar entrega em caixa humana. Timeout e indisponibilidade retornam erro sanitizado.
 
-- **Recuperação:** o experimento BA10 foi arquivado fora da árvore ativa. A consolidação adota pausa controlada para backup associado e ensaio isolado; ver [backup e retorno](engineering/09-BACKUP-ROLLBACK.md). A restauração completa no VPS ainda precisa passar após publicação da correção de `f_unaccent`.
-- **Consolidação:** branch `chore/consolidacao-operacional-20261120`, baseada na main publicada. Todo WIP anterior foi copiado e verificado antes da retirada da árvore ativa. Runtime, CI e instalação passam a Node 24 LTS, sem dependências SQLite.
-- **Limpeza local:** removidos 112 PDFs sintéticos sem referência local e caches antigos (~345 MiB); 6 arquivos não sintéticos preservados; fixtures antigas em quarentena. Código/testes BA10 preservados em snapshot externo.
-- **Recuperação intermediária:** CD44761356067 permaneceu failure após aplicar uma imagem; a reconciliação manual preservou originais e foi registrada separadamente. O CD44765426852 posterior é a prova automática positiva.
+A validação local do fechamento registrou **218 testes unitários/UI em 47 arquivos** e **286/286 cenários de API**, incluindo recusa de leitura/exclusão de anexo sob cliente diferente. Os testes reproduziram essa falha antes da correção. Auditorias cruzam 74 rotas API e 29 rotas/telas frontend; tipos, build, UI, estilos, módulos, docs e links passaram. Não foi repetida uma regressão visual manual de todas as telas.
 
-## Histórico e planejamento
+## Organização e próxima evolução
 
-O [snapshot de 28/08/2026](arquivo/STATUS-2026-08-28.md) preserva planos, métricas e entregas daquele período. Ele não é inventário atual de produção. O [roadmap](product/04-ROADMAP.md) mantém sua matriz histórica com inventário revisado; [índice de planos](plans/README.md) e [backlog](plans/BACKLOG.md) detalham frentes que exigem confirmação própria, sem presumir conclusão.
+Todo WIP anterior foi preservado com hashes fora da árvore ativa antes da consolidação. BA10 e migrador SQLite foram retirados do produto atual. Scripts de segurança, deploy e recuperação ainda usados permanecem; registros operacionais referenciados pelo controlador não são resíduos.
 
-Ver [atualizações](UPDATES.md) e [checklist de 20/11](engineering/tasks/2026-11-20/CHECKLIST.md).
+[Telas](engineering/05-MAPEAMENTO-TELAS.md), [fluxos de uso](product/06-CASOS-DE-USO.md), [API](product/07-CASOS-DE-USO-API.md), [componentes](engineering/design/04-UI-COMPONENTS.md) e [cobertura visual](engineering/design/UI-COVERAGE.md) foram preservados para a repaginação. [Atualizações](UPDATES.md) e [checklist](engineering/tasks/2026-11-20/CHECKLIST.md) registram a consolidação; o [snapshot antigo](arquivo/STATUS-2026-08-28.md) é histórico.

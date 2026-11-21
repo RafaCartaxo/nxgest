@@ -24,6 +24,17 @@ Sucesso exige as duas mensagens `RESTORE_VERIFIED` e `RESTORE_CLEANUP_COMPLETE`.
 
 O teste real de consolidação identificou que `f_unaccent` dependia de `search_path`, impedindo reconstruir seu índice no `pg_restore`. A definição em `src/database.ts` passa a qualificar função e dicionário com `public`; `valida-modelo.mjs` verifica a normalização com `search_path` vazio no CI.
 
+## Restaurar em outra máquina
+
+Foi validado o mesmo conjunto com imagens exportadas do Docker26 (VPS) e importadas no Docker29/containerd, em Linux. Exportar tanto a imagem da aplicação quanto a imagem PostgreSQL indicada por `database_image` nos metadados; uma tag de registry atual não substitui essas identidades. Manter checksums das exportações junto da cópia externa.
+
+1. Importar as duas imagens com `docker image load -i ARQUIVO.tar.gz` e anotar os IDs locais apresentados.
+2. Provisionar jq aprovado em `.git/nxgest-tools/jq` conforme [setup](08-SETUP-NOVA-MAQUINA.md), com hash e permissões conferidos.
+3. Definir `NXGEST_PROJECT_DIR` para o checkout e `NXGEST_BACKUP_DIR` para o diretório privado que contém o bundle; executar o restore check.
+4. Se o Docker representar a imagem importada por manifest digest em vez do config digest de origem, informar `NXGEST_RESTORE_APP_IMAGE` e `NXGEST_RESTORE_DB_IMAGE` com os IDs locais completos. O script exporta a configuração dessas imagens e exige seu hash original antes de criar o banco temporário. Imagem divergente ou exportação ambígua são recusadas. Metadados e checksums originais permanecem intactos.
+
+Os nomes opcionais acima são apenas para o ensaio de restore; não alteram policies ou seleção de imagem do CD. A aplicação atual é `linux/amd64`; outra arquitetura exige emulação compatível ou um build atestado próprio. Executar os scripts operacionais em Linux com ferramentas GNU (WSL2/VM quando necessário).
+
 ## Recuperação da aplicação
 
 Restaurar dados na produção é uma operação diferente do ensaio: exige parada, seleção explícita do conjunto e volumes de destino e validação de compatibilidade entre imagem e schema. A promoção automática atual valida origem da imagem, configuração, banco conectado e health; não executa restauração automática do banco.

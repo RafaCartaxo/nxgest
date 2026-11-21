@@ -21,6 +21,22 @@ Para reconstruir VPS, seguir o [runbook](06-PRODUCAO.md): DNS/TLS, volumes, Post
 
 As instruções por sistema abaixo detalham ferramentas; usar a versão de `.nvmrc` e os comandos do projeto como referência de execução.
 
+## jq para operação e restauração (Linux amd64)
+
+Desenvolvimento não exige jq. Os scripts operacionais precisam do binário fixado e privado no Git dir do checkout:
+
+```bash
+if [ -e .git/nxgest-tools/jq ] || [ -L .git/nxgest-tools/jq ]; then
+  printf '%s\n' 'jq existente: conferir origem/hash antes de alterar.'
+else
+  install -d -m 700 .git/nxgest-tools
+  curl -fsSL https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64 -o .git/nxgest-tools/jq
+  printf '%s\n' 'b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f  .git/nxgest-tools/jq' | sha256sum -c - && chmod 700 .git/nxgest-tools/jq
+fi
+```
+
+Não sobrescrever um jq operacional existente sem conferir sua origem/hash. O restore exige as imagens exatas exportadas junto do backup; diferenças de identidade entre Docker clássico/containerd estão descritas no [procedimento de recuperação](09-BACKUP-ROLLBACK.md).
+
 ## 1. Visão Geral e Filosofia de Portabilidade
 
 O **NX Gest** foi arquitetado para permitir que qualquer desenvolvedor com as devidas autorizações consiga **iniciar ou retomar o trabalho em um computador suportado**, com instruções para Fedora, Ubuntu, Debian, Arch Linux, macOS ou Windows via WSL2. A duração depende da máquina e da rede; 15 minutos é uma meta, não uma medida comprovada.
@@ -62,7 +78,7 @@ Para que essa portabilidade funcione sem imprevistos nem perda de dados em caso 
 
 Antes de clonar o projeto, sua nova máquina precisa de:
 * **Git** (controle de versão)
-* **Node.js 24 LTS LTS** (recomendado via `nvm`) e **npm 9+**
+* **Node.js 24 LTS** (recomendado via `nvm`) e o **npm distribuído com essa versão**
 * **Docker & Docker Compose** (para rodar o PostgreSQL 16 local de desenvolvimento)
 * **OpenSSH Client** (para conexão com a VPS e GitHub)
 

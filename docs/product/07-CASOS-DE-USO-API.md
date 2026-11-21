@@ -356,7 +356,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 **Response 200:** binário do arquivo (`Content-Type` do MIME real, `Content-Disposition: inline`).
 
 ### API-CT-093 — Lista e stream escopados
-**Dado** `GET .../anexos` de cliente do escopo → **Então** 200 com metadados; `GET .../anexos/:id/file` → **Então** 200 binário. **Dado** anexo de cliente fora do escopo (outro operador, `?usuarioId=` de outra subárvore) → **Então** 404.
+**Dado** `GET .../anexos` de cliente do escopo → **Então** 200 com metadados; `GET .../anexos/:id/file` → **Então** 200 binário. **Dado** anexo de cliente fora do escopo (outro operador, `?usuarioId=` de outra subárvore), inclusive usando na URL um cliente autorizado diferente do dono do anexo → **Então** 404.
 
 ## API-UC-046 — Remover anexo
 
@@ -365,7 +365,7 @@ Cenários **manuais** (V9 — empty states) não são cobertos pelo smoke; valid
 **Response 204:** arquivo apagado de `UPLOADS_DIR` + linha removida.
 
 ### API-CT-094 — Remoção
-**Dado** anexo do escopo → **Então** 204 e some da lista e do `file` (404). **Dado** anexo inexistente ou fora do escopo → **Então** 404.
+**Dado** anexo do escopo → **Então** 204 e some da lista e do `file` (404). **Dado** anexo inexistente, fora do escopo ou pertencente a cliente diferente do informado na URL → **Então** 404, sem excluir arquivo nem registro.
 
 ---
 

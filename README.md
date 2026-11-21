@@ -87,7 +87,7 @@ push/merge main → CI e build atestado → aprovação staging → Staging veri
 
 PRs executam checks, mas não publicam. Staging é um workflow separado acionado pelo CI aprovado de push/main; CD é acionado pelo sucesso de `Staging verificado`. A promoção reutiliza a mesma imagem, sem rebuild. O CD manual exige `staging_run`, não uma ref arbitrária. Policies, prazos, controladores e reviewers são gates adicionais.
 
-A cadeia real pré-clientes foi validada em 20/11/2026; consulte [STATUS.md](docs/STATUS.md) para SHA, runs e validade. Isso não comprova recuperação integral com dados: BA10 é trabalho separado, ainda incompleto. Não apagar seus scripts ou suas alterações no backend como se fossem resíduos do diagnóstico do deploy.
+A cadeia real pré-clientes, o backup e a restauração isolada foram validados em 20/11/2026; consulte [STATUS.md](docs/STATUS.md) para evidências e validade das políticas. Banco e anexos foram restaurados no VPS e em outra máquina. O experimento BA10 foi arquivado fora da árvore ativa; a recuperação atual usa manutenção curta explícita.
 
 Para compilar e servir uma instância configurada, `npm run build` e `npm start`. Esses comandos não publicam na VPS; a operação de produção segue o runbook e seus gates.
 

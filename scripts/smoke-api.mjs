@@ -521,6 +521,12 @@ async function main() {
     if (r.data.code !== "ANEXO_LIMITE") throw new Error("code esperado ANEXO_LIMITE")
   })
   await t("ANE-093", "GET file autenticado (200) + DELETE (204)", async () => {
+    // An authorized parent must not grant access to another client's attachment.
+    if (!cliEditId || cliEditId === clienteId) throw new Error("fixture exige clientes distintos")
+    const foreignFile = await req("GET", `/api/clientes/${cliEditId}/anexos/${anexoId}/file`, { token: opToken })
+    expect(foreignFile, 404, "anexo de outro cliente no download")
+    const foreignDelete = await req("DELETE", `/api/clientes/${cliEditId}/anexos/${anexoId}`, { token: opToken })
+    expect(foreignDelete, 404, "anexo de outro cliente na exclusão")
     const res = await fetch(`${BASE}/api/clientes/${clienteId}/anexos/${anexoId}/file`, {
       headers: { Authorization: `Bearer ${opToken}` },
     })

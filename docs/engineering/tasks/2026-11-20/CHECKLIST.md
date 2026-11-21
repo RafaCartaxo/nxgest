@@ -1,56 +1,19 @@
-# CHECKLIST — Coerência documental, README e separação do BA10
+# CHECKLIST — Consolidação operacional
 
-**Data:** 20/11/2026
+**Data:** 20/11/2026. Evidências de infraestrutura no [STATUS](../../../STATUS.md); a versão publicada segue o [último CD concluído](https://github.com/RafaCartaxo/nxgest/actions/workflows/cd.yml).
 
-**Planos/refs:** README, STATUS, runbook, QA, BR-108/PLAN-085 e CI44764236119
+- [x] Preservar todo WIP anterior em snapshot com hashes e retirar BA10 experimental da árvore ativa.
+- [x] Remover migrador/dependências SQLite; alinhar Node24 LTS em instalação, CI e Docker.
+- [x] Revisar README, setup, runbook, modelo físico PostgreSQL, QA e índices; preservar telas/fluxos/componentes.
+- [x] Corrigir f_unaccent para restauração com search_path vazio, com gate no CI.
+- [x] Tratar SIGTERM/SIGINT e conferir encerramento da imagem sem kill forçado.
+- [x] Renovar policies até18/02/2027 e permitir somente transição explicitamente aprovada, sem reescrever journal anterior.
+- [x] Comprovar CI44838945789→staging44839389817→CD44839684929; runtime24.22.3 e assets públicos conferidos.
+- [x] Criar backup real com pausa6s e restaurar20 tabelas/9 anexos no VPS, sem divergências; limpar recursos do ensaio.
+- [x] Instalar cron02h/14hUTC com log privado; preservar procedimento anterior em arquivo operacional.
+- [x] Copiar banco/anexos e imagens da aplicação/PostgreSQL para fora do VPS; restaurar o conjunto em Docker29 e verificar hash de configuração das imagens importadas.
+- [x] Validar Resend pelo mailer compilado Node24 com destinatário simulado; nenhuma caixa humana usada.
+- [x] Reproduzir e corrigir acesso/exclusão de anexo por cliente divergente;218 testes unitários/UI e286 cenários API passaram.
+- [x] Preparar fechamento com testes de portabilidade de restore e documentação atualizada; a promoção desta revisão é conferida pelo workflow CD.
 
-> Revisão solicitada pelo usuário após o CD validado. Alinha documentação ao código/main publicado; preserva o trabalho local BA10 e distingue história de estado atual.
-
-## Status (catálogo oficial)
-
-| Emoji | Significado |
-|---|---|
-| ✅ | Entregue / concluído |
-| 🔵 | Em execução (parcial — parte concluída) |
-| ⏳ | Aguardando algo (deploy, externo, decisão) |
-| 🚨 | Parado há 7+ dias / urgente |
-| ❌ | Bloqueado / falhou |
-| 🐛 | Bug encontrado (referenciar card/CT) |
-| 🔁 | Retestado / revalidado |
-
-## Entregue
-
-- [x] README, índices, STATUS, guias de pipeline/operação/testes e runbook alinhados ao fluxo CI → staging → CD, com aprovações e validade das policies.
-- [x] Snapshot de agosto preservado em docs/arquivo; roadmap distingue inventário atual de planejamento histórico.
-- [x] BA10 documentado como drenagem/barreira/backup/restore parcial, separado do deploy pré-clientes validado. Nenhum descarte dos seus scripts/handlers.
-- [x] BR-108, domínio e PLAN-085 descrevem ajuste de domingo a cada parcela, conforme backend/frontend existentes.
-- [x] npm docs:audit usa o modo estrito já implementado, para falhar diante de divergências.
-
-## Validação (rodar antes de finalizar)
-
-- [x] Tipagem backend e frontend: tsc --noEmit e tsc --noEmit -p frontend/tsconfig.json, ambos exit0.
-- [x] Testes focais existentes de geração/data final e ativação de convite: 37/37 em 3 arquivos.
-- [x] npm run docs:audit (estrito) sem divergências.
-- [x] npm run audit:links sem erros.
-- [x] git diff --check nos arquivos desta revisão.
-
-## Pendências
-
-- [ ] Recuperação integral BA10/backup/rollback continua pendente; não é critério de fechamento desta revisão documental.
-- [ ] Renovação das policies após 23/11/2026 23:59:59 UTC é operação própria; prazo não foi ampliado.
-- [ ] Alterações desta revisão são locais, sobre branch anterior com WIP; não houve commit/push/deploy.
-
-## Observações
-
-A evidência CI215 testes/286 smoke pertence ao SHA f804 publicado. Nesta revisão só a suíte focal foi reexecutada localmente. Não foi feita nova regressão manual completa de UI nem mudança em regra de negócio ou execução de banco/produção. A auditoria estrutural não substitui revisão semântica dos documentos.
-
-## Consolidação operacional posterior, autorizada pelo usuário
-
-- [x] WIP e BA10 preservados em snapshot com hashes fora da árvore ativa; nova branch baseada na main.
-- [x] SQLite retirado; Node 24 LTS alinhado em instalação, CI e Docker.
-- [x] Build e 216 testes unitários/UI passaram.
-- [x] Backup real com pausa e retomada medido em 32 segundos; Resend aceitou envio a destinatário simulado.
-- [x] Corrigida função f_unaccent incompatível com pg_restore; invariantes verificadas com search_path vazio.
-- [ ] Publicar a consolidação pelo CI→staging→CD e repetir restauração real no VPS.
-
-Os itens de BA10 nas seções anteriores registram a revisão documental anterior. O procedimento ativo passou a manutenção curta explícita, sem seus handlers experimentais.
+O snapshot antigo do trabalho BA10 e os protocolos anteriores permanecem arquivados. A estratégia ativa usa manutenção curta explícita; não depende de seus handlers experimentais. Checks de documentação verificam74 rotas API e29 rotas/telas frontend; não equivalem a regressão visual manual completa.

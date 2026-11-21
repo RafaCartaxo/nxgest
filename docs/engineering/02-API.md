@@ -375,7 +375,7 @@ Remove um cliente.
 
 # Anexos do cliente (PLAN-042)
 
-Anexos (comprovante de residência, foto/PDF) escopados ao cliente. Acesso segue a mesma regra do restante do módulo (`resolveUsuarioAlvo`): operador → clientes próprios; admin/sócio → `?usuarioId=` dentro da empresa/subárvore; super admin → `?empresaId=`.
+Anexos (comprovante de residência, foto/PDF) escopados ao cliente. Download e exclusão exigem que o anexo pertença ao `:id` da URL; um cliente autorizado diferente não concede acesso ao anexo e retorna `404 ANEXO_NOT_FOUND`. Acesso segue a mesma regra do restante do módulo (`resolveUsuarioAlvo`): operador → clientes próprios; admin/sócio → `?usuarioId=` dentro da empresa/subárvore; super admin → `?empresaId=`.
 
 ## Endpoints
 

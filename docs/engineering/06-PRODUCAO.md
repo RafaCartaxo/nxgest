@@ -82,7 +82,7 @@ bash /opt/scripts/nxgest/backup-maintenance.sh
 bash /opt/scripts/nxgest/backup-restore-check.sh /opt/backups/ID-EXATO
 ```
 
-A configuração do cron deve usar caminho absoluto e log privado. Cópia externa: transferir o diretório completo e preservar a imagem de origem exportada ou recuperável. `backup:pull` valida integridade, mas não executa restauração.
+O cron está em `/etc/cron.d/nxgest-backup`, às02h/14hUTC, com caminho absoluto e log privado em `/var/log/backup-nxgest.log`. Cópia externa: transferir o diretório completo e preservar a imagem de origem exportada ou recuperável. `backup:pull` valida integridade, mas não executa restauração.
 
 ## 6. Logs e monitoramento
 
