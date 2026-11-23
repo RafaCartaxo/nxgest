@@ -289,11 +289,11 @@ jobs:
           docker save "nxgest-build:$SOURCE_SHA" -o artifact/image.tar
           node -e 'const fs=require("fs"),crypto=require("crypto");const f="artifact/image.tar",h=crypto.createHash("sha256"),s=fs.createReadStream(f);s.on("error",()=>process.exit(1));s.on("data",b=>h.update(b));s.on("end",()=>fs.writeFileSync("artifact/receipt.json",JSON.stringify({version:"nxg-build-receipt-v1",runId:process.env.RUN_ID,attempt:Number(process.env.RUN_ATTEMPT),sourceSha:process.env.SOURCE_SHA,platform:"linux/amd64",imageSize:fs.statSync(f).size,imageSha256:"sha256:"+h.digest("hex")})))'
       - name: Atesta imagem
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: artifact/image.tar
       - name: Atesta recibo
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: artifact/receipt.json
       - name: Publica artefato único

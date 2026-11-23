@@ -132,7 +132,7 @@ jobs:
           export RECURRING_KEY_PATH="$PWD/recurring-private/key" RECURRING_KNOWN_HOSTS="$PWD/recurring-private/known_hosts"
           node scripts/recurring-runner.mjs staging
       - name: Atesta recibo do staging
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: staging-receipt.json
       - name: Publica recibo de staging
